@@ -164,19 +164,13 @@ export default function Game() {
                   scale: countdownLight >= light ? 1 : 0.95
                 }}
                 className={cn(
-                  "w-16 h-20 md:w-20 md:h-24 rounded-lg border-4 transition-colors duration-200",
+                  "w-16 h-16 md:w-20 md:h-20 rounded-full border-4 transition-colors duration-200",
                   countdownLight >= light 
                     ? "bg-red-600 border-red-700 shadow-[0_0_30px_rgba(220,38,38,0.6)]" 
                     : "bg-neutral-200 border-neutral-300"
                 )}
               />
             ))}
-          </div>
-
-          {/* Status text */}
-          <div className="text-2xl font-mono font-medium text-muted-foreground">
-            {countdownLight === 0 && "Get Ready..."}
-            {countdownLight >= 1 && countdownLight <= 5 && `${countdownLight} / 5`}
           </div>
 
         </div>
@@ -199,7 +193,7 @@ export default function Game() {
             {[1, 2, 3, 4, 5].map((light) => (
               <div
                 key={light}
-                className="w-16 h-20 md:w-20 md:h-24 rounded-lg border-4 bg-green-500 border-green-600 shadow-[0_0_30px_rgba(34,197,94,0.6)]"
+                className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 bg-green-500 border-green-600 shadow-[0_0_30px_rgba(34,197,94,0.6)]"
               />
             ))}
           </motion.div>
