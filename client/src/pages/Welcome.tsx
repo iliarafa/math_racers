@@ -1,76 +1,61 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { Play, Wrench, Trophy } from "lucide-react";
-import generatedCar from "@assets/generated_images/red_f1_car_facing_right_on_black_background.png";
+import { Play, Wrench } from "lucide-react";
 
 export default function Welcome() {
   const { state } = useGameState();
 
   return (
     <GameLayout coins={state.coins}>
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center relative">
+      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 py-12">
         
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-2xl w-full space-y-8"
-        >
-          <div className="space-y-4">
-            <h2 className="text-accent text-lg font-bold tracking-[0.2em] uppercase">Rookie Driver Detected</h2>
-            <h1 className="font-racing text-5xl md:text-7xl lg:text-8xl leading-none text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.5)]">
-              GRAND PRIX <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-red-400">MATH RACER</span>
-            </h1>
-            <p className="text-xl text-neutral-400 max-w-lg mx-auto leading-relaxed">
-              Welcome to the pit lane! Your team needs your <span className="text-white font-bold">math skills</span> to fuel the car and win the Championship Cup!
-            </p>
+        <div className="space-y-6 max-w-2xl">
+          <div className="inline-block px-3 py-1 rounded-full bg-secondary text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            2025 Season
           </div>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-primary">
+            Grand Prix <br/>
+            Math Racer
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-lg mx-auto">
+            Solve math problems to race. <br/>
+            Every mistake costs a grid position.
+          </p>
+        </div>
 
-          <div className="grid gap-4 md:grid-cols-2 max-w-md mx-auto w-full">
-             <Link href="/game">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full bg-primary hover:bg-red-500 text-white font-racing text-2xl py-6 px-8 rounded-xl shadow-[0_6px_0_rgb(153,27,27)] active:shadow-none active:translate-y-[6px] transition-all flex items-center justify-center gap-3 border-2 border-white/10"
-              >
-                <Play className="w-8 h-8 fill-current" />
-                START ENGINE
-              </motion.button>
-            </Link>
+        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+          <Link href="/game" className="flex-1">
+            <button className="w-full bg-primary text-primary-foreground hover:opacity-90 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all">
+              <Play className="w-5 h-5" />
+              Start Race
+            </button>
+          </Link>
 
-            <Link href="/garage">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full bg-neutral-800 hover:bg-neutral-700 text-white font-racing text-xl py-6 px-8 rounded-xl shadow-[0_6px_0_rgb(38,38,38)] active:shadow-none active:translate-y-[6px] transition-all flex items-center justify-center gap-3 border-2 border-neutral-600"
-              >
-                <Wrench className="w-6 h-6" />
-                GARAGE
-              </motion.button>
-            </Link>
-          </div>
+          <Link href="/garage" className="flex-1">
+            <button className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all">
+              <Wrench className="w-5 h-5" />
+              Garage
+            </button>
+          </Link>
+        </div>
 
-          <div className="pt-12 relative h-48 flex items-center justify-center">
-             <motion.img 
-               src={generatedCar} 
-               alt="F1 Car"
-               className="w-32 md:w-48 drop-shadow-2xl absolute mix-blend-screen"
-               animate={{ 
-                 y: [0, -5, 0],
-               }}
-               transition={{ 
-                 repeat: Infinity, 
-                 duration: 2,
-                 ease: "easeInOut"
-               }}
-             />
-             <div className="absolute bottom-0 w-64 h-4 bg-black/50 blur-xl rounded-full"></div>
-          </div>
+        <div className="grid grid-cols-3 gap-8 text-center pt-8 border-t border-border w-full max-w-2xl">
+           <div>
+             <div className="text-3xl font-bold">{state.coins}</div>
+             <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Coins Earned</div>
+           </div>
+           <div>
+             <div className="text-3xl font-bold">Lvl {state.currentTrack}</div>
+             <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Current Class</div>
+           </div>
+           <div>
+             <div className="text-3xl font-bold">{state.streak}</div>
+             <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Best Streak</div>
+           </div>
+        </div>
 
-        </motion.div>
       </div>
     </GameLayout>
   );
