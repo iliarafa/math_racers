@@ -14,32 +14,54 @@ export default function Game() {
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0); 
   const [mistakes, setMistakes] = useState(0);
-  const [gameStatus, setGameStatus] = useState<'racing' | 'finished'>('racing');
-  const [elapsedTime, setElapsedTime] = useState(0); // in milliseconds
+  const [gameStatus, setGameStatus] = useState<'countdown' | 'racing' | 'finished'>('countdown');
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [countdownLight, setCountdownLight] = useState(0); // 0 = no lights, 1-5 = lights on, 6 = go!
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize question
+  // Countdown sequence
   useEffect(() => {
-    if (!question && gameStatus === 'racing') {
-      setQuestion(generateQuestion(state.currentTrack));
-    }
-  }, [state.currentTrack, question, gameStatus]);
+    if (gameStatus === 'countdown') {
+      const interval = setInterval(() => {
+        setCountdownLight(prev => {
+          if (prev >= 6) {
+            clearInterval(interval);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 1000);
 
-  // Focus input
+      return () => clearInterval(interval);
+    }
+  }, [gameStatus]);
+
+  // Transition from countdown to racing when lights go out
+  useEffect(() => {
+    if (countdownLight === 6) {
+      const timeout = setTimeout(() => {
+        setGameStatus('racing');
+        setQuestion(generateQuestion(state.currentTrack));
+      }, 1000); // Show "GO" state for 1 second
+      return () => clearTimeout(timeout);
+    }
+  }, [countdownLight, state.currentTrack]);
+
+  // Focus input when racing
   useEffect(() => {
     if (gameStatus === 'racing') {
       inputRef.current?.focus();
     }
   }, [question, feedback, gameStatus]);
 
-  // Timer Logic
+  // Timer Logic - only runs during racing
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (gameStatus === 'racing') {
       const startTime = Date.now() - elapsedTime;
       interval = setInterval(() => {
         setElapsedTime(Date.now() - startTime);
-      }, 10); // Update every 10ms for smooth milliseconds
+      }, 10);
     }
     return () => clearInterval(interval);
   }, [gameStatus]);
@@ -115,12 +137,59 @@ export default function Game() {
     setProgress(0);
     setMistakes(0);
     setElapsedTime(0);
-    setGameStatus('racing');
+    setCountdownLight(0);
+    setGameStatus('countdown');
     setFeedback('idle');
     setAnswer("");
-    setQuestion(generateQuestion(state.currentTrack));
+    setQuestion(null);
     resetStreak();
   };
+
+  // Countdown screen with F1 starting lights
+  if (gameStatus === 'countdown') {
+    return (
+      <GameLayout coins={state.coins} trackName={currentTrackData.name}>
+        <div className="flex-1 flex flex-col items-center justify-center gap-12">
+          
+          {/* F1 Starting Lights */}
+          <div className="flex gap-4">
+            {[1, 2, 3, 4, 5].map((light) => (
+              <motion.div
+                key={light}
+                initial={{ opacity: 0.3 }}
+                animate={{ 
+                  opacity: countdownLight >= light ? 1 : 0.3,
+                  scale: countdownLight >= light ? 1 : 0.95
+                }}
+                className={cn(
+                  "w-16 h-20 md:w-20 md:h-24 rounded-lg border-4 transition-colors duration-200",
+                  countdownLight >= light 
+                    ? "bg-red-600 border-red-700 shadow-[0_0_30px_rgba(220,38,38,0.6)]" 
+                    : "bg-neutral-200 border-neutral-300"
+                )}
+              />
+            ))}
+          </div>
+
+          {/* Status text */}
+          <div className="text-2xl font-mono font-medium text-muted-foreground">
+            {countdownLight === 0 && "Get Ready..."}
+            {countdownLight >= 1 && countdownLight <= 5 && `${countdownLight} / 5`}
+            {countdownLight === 6 && (
+              <motion.span 
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-green-600 text-4xl font-bold"
+              >
+                GO!
+              </motion.span>
+            )}
+          </div>
+
+        </div>
+      </GameLayout>
+    );
+  }
 
   if (gameStatus === 'finished') {
     const { position, driverName } = getRaceResult();
