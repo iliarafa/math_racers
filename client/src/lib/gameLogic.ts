@@ -11,12 +11,37 @@ export interface Question {
 
 export interface GameState {
   coins: number;
-  currentTrack: number; // 1, 2, 3
+  currentTrack: number; // 1, 2, 3 (Difficulty)
   unlockedItems: string[];
   equippedLivery: string;
   equippedTires: string;
   streak: number;
 }
+
+export const RACE_LENGTH = 20;
+
+export const DRIVERS_2025 = [
+  "Max Verstappen",      // 1st (0-1 mistakes)
+  "Lando Norris",        // 2nd
+  "Charles Leclerc",     // 3rd
+  "Lewis Hamilton",      // 4th
+  "Oscar Piastri",       // 5th
+  "George Russell",      // 6th
+  "Carlos Sainz",        // 7th
+  "Fernando Alonso",     // 8th
+  "Yuki Tsunoda",        // 9th
+  "Pierre Gasly",        // 10th
+  "Nico Hulkenberg",     // 11th
+  "Alex Albon",          // 12th
+  "Esteban Ocon",        // 13th
+  "Lance Stroll",        // 14th
+  "Liam Lawson",         // 15th
+  "Franco Colapinto",    // 16th
+  "Oliver Bearman",      // 17th
+  "Kimi Antonelli",      // 18th
+  "Gabriel Bortoleto",   // 19th
+  "Isack Hadjar"         // 20th
+];
 
 const INITIAL_STATE: GameState = {
   coins: 0,
@@ -28,9 +53,9 @@ const INITIAL_STATE: GameState = {
 };
 
 export const TRACKS = [
-  { id: 1, name: "Karting Track", description: "Basic Addition (1-20)", winCondition: 10 },
-  { id: 2, name: "City Circuit", description: "Add (1-50) & Sub", winCondition: 10 },
-  { id: 3, name: "Grand Prix", description: "Add/Sub (1-100) & Mult", winCondition: 15 },
+  { id: 1, name: "Karting Track", description: "Basic Addition (1-20)", winCondition: 20 },
+  { id: 2, name: "City Circuit", description: "Add (1-50) & Sub", winCondition: 20 },
+  { id: 3, name: "Grand Prix", description: "Add/Sub (1-100) & Mult", winCondition: 20 },
 ];
 
 export const SHOP_ITEMS = [

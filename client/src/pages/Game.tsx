@@ -1,39 +1,43 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
+import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, Question, TRACKS, SHOP_ITEMS } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, TRACKS, SHOP_ITEMS, RACE_LENGTH, DRIVERS_2025 } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, Timer, Flag, Zap } from "lucide-react";
+import { Check, X, Timer, Flag, Zap, Trophy, RotateCcw, Home } from "lucide-react";
 import generatedCar from "@assets/generated_images/red_f1_car_facing_right_on_black_background.png";
 import generatedFlag from "@assets/generated_images/seamless_checkered_flag_pattern.png";
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, nextTrack } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak } = useGameState();
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
-  const [progress, setProgress] = useState(0); // 0 to 10
+  const [progress, setProgress] = useState(0); // 0 to 20 (RACE_LENGTH)
+  const [mistakes, setMistakes] = useState(0);
+  const [gameStatus, setGameStatus] = useState<'racing' | 'finished'>('racing');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Initialize question
   useEffect(() => {
-    if (!question) {
+    if (!question && gameStatus === 'racing') {
       setQuestion(generateQuestion(state.currentTrack));
     }
-  }, [state.currentTrack, question]);
+  }, [state.currentTrack, question, gameStatus]);
 
   // Focus input on load and after answer
   useEffect(() => {
-    inputRef.current?.focus();
-  }, [question, feedback]);
+    if (gameStatus === 'racing') {
+      inputRef.current?.focus();
+    }
+  }, [question, feedback, gameStatus]);
 
   const currentTrackData = TRACKS.find(t => t.id === state.currentTrack) || TRACKS[0];
-  const winCondition = currentTrackData.winCondition;
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!question || feedback !== 'idle') return;
+    if (!question || feedback !== 'idle' || gameStatus !== 'racing') return;
 
     const val = parseInt(answer);
     if (isNaN(val)) return;
@@ -43,22 +47,13 @@ export default function Game() {
       setFeedback('correct');
       addCoins(10 + (state.streak >= 2 ? 5 : 0)); // Bonus for streak
       incrementStreak();
-      setProgress(prev => prev + 1);
       
-      // Check for level completion
-      if (progress + 1 >= winCondition) {
-        confetti({
-          particleCount: 150,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
-        setTimeout(() => {
-          nextTrack();
-          setProgress(0);
-          setQuestion(generateQuestion(state.currentTrack + 1)); // Prepare for next track immediately? Or wait?
-          setFeedback('idle');
-          setAnswer("");
-        }, 2000);
+      const newProgress = progress + 1;
+      setProgress(newProgress);
+      
+      // Check for race finish
+      if (newProgress >= RACE_LENGTH) {
+        finishRace();
       } else {
         setTimeout(() => {
           setFeedback('idle');
@@ -70,22 +65,131 @@ export default function Game() {
     } else {
       // Incorrect
       setFeedback('incorrect');
+      setMistakes(prev => prev + 1);
       resetStreak();
-      setTimeout(() => {
-        setFeedback('idle');
-        setAnswer("");
-        inputRef.current?.focus();
-      }, 1000);
+      
+      const newProgress = progress + 1;
+      setProgress(newProgress);
+
+      // Check for race finish even on wrong answer (the race continues, you just lose position)
+      if (newProgress >= RACE_LENGTH) {
+        finishRace();
+      } else {
+        setTimeout(() => {
+          setFeedback('idle');
+          setAnswer("");
+          setQuestion(generateQuestion(state.currentTrack));
+          inputRef.current?.focus();
+        }, 1000);
+      }
     }
   };
 
-  const getLiveryClass = () => {
-    const item = SHOP_ITEMS.find(i => i.id === state.equippedLivery);
-    return item?.color || 'bg-red-600';
+  const finishRace = () => {
+    setFeedback('idle');
+    setGameStatus('finished');
+    if (mistakes <= 1) {
+       confetti({
+          particleCount: 200,
+          spread: 100,
+          origin: { y: 0.6 }
+        });
+    }
   };
 
+  const getRaceResult = () => {
+    // 0-1 mistakes: 1st place
+    // 2 mistakes: 2nd place
+    // 3 mistakes: 3rd place
+    // etc.
+    let position = mistakes <= 1 ? 1 : mistakes;
+    if (position > DRIVERS_2025.length) position = DRIVERS_2025.length;
+    
+    const driverName = DRIVERS_2025[position - 1];
+    return { position, driverName };
+  };
+
+  const restartRace = () => {
+    setProgress(0);
+    setMistakes(0);
+    setGameStatus('racing');
+    setFeedback('idle');
+    setAnswer("");
+    setQuestion(generateQuestion(state.currentTrack));
+    resetStreak();
+  };
+
+  if (gameStatus === 'finished') {
+    const { position, driverName } = getRaceResult();
+    const isWinner = position === 1;
+
+    return (
+      <GameLayout coins={state.coins} trackName={currentTrackData.name}>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-black/80 backdrop-blur-sm z-50 absolute inset-0">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-neutral-900 border-4 border-white/10 p-8 rounded-3xl max-w-2xl w-full shadow-2xl space-y-8"
+          >
+            <div className="space-y-2">
+               <h2 className="text-neutral-400 font-mono tracking-widest uppercase">Race Results</h2>
+               <h1 className="font-racing text-6xl text-white">
+                 P{position}
+               </h1>
+            </div>
+
+            <div className="space-y-4 py-8 border-y border-white/10">
+              <p className="text-2xl text-neutral-300">
+                You finished <span className={cn("font-bold", isWinner ? "text-accent" : "text-white")}>
+                  {position === 1 ? "1st (World Champion!)" : `${position}${position === 2 ? 'nd' : position === 3 ? 'rd' : 'th'} Place`}
+                </span>
+              </p>
+              
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm text-neutral-500 uppercase font-mono">Simulating 2025 Championship Result</p>
+                <div className="flex items-center gap-3 bg-neutral-800 px-6 py-3 rounded-xl border border-neutral-700">
+                   <div className="w-2 h-8 bg-primary rounded-full"></div>
+                   <p className="text-xl text-white font-racing tracking-wide">{driverName}</p>
+                </div>
+              </div>
+              
+              <div className="flex justify-center gap-8 mt-4">
+                 <div className="text-center">
+                   <div className="text-sm text-neutral-500 font-mono uppercase">Mistakes</div>
+                   <div className={cn("text-3xl font-bold", mistakes === 0 ? "text-green-500" : mistakes <= 3 ? "text-yellow-500" : "text-red-500")}>
+                     {mistakes}
+                   </div>
+                 </div>
+                 <div className="text-center">
+                   <div className="text-sm text-neutral-500 font-mono uppercase">Accuracy</div>
+                   <div className="text-3xl font-bold text-white">
+                     {Math.round(((RACE_LENGTH - mistakes) / RACE_LENGTH) * 100)}%
+                   </div>
+                 </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={restartRace}
+                className="bg-primary hover:bg-red-500 text-white font-racing text-xl py-4 rounded-xl flex items-center justify-center gap-2 transition-colors"
+              >
+                <RotateCcw className="w-5 h-5" /> RACE AGAIN
+              </button>
+              <Link href="/">
+                <button className="bg-neutral-800 hover:bg-neutral-700 text-white font-racing text-xl py-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                  <Home className="w-5 h-5" /> MAIN MENU
+                </button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </GameLayout>
+    );
+  }
+
   return (
-    <GameLayout coins={state.coins} trackName={currentTrackData.name}>
+    <GameLayout coins={state.coins} trackName={`${currentTrackData.name} (${progress + 1}/${RACE_LENGTH})`}>
       <div className="flex-1 flex flex-col relative">
         
         {/* Race Visualization Area */}
@@ -100,7 +204,7 @@ export default function Game() {
            <div 
              className="absolute top-0 bottom-0 w-16 bg-checkered z-0 transition-all duration-1000"
              style={{ 
-               right: `${Math.max(0, 100 - (progress / winCondition) * 100)}%`,
+               right: `${Math.max(0, 100 - (progress / RACE_LENGTH) * 100)}%`,
                transform: 'translateX(100%)'
              }}
            ></div>
@@ -109,15 +213,11 @@ export default function Game() {
            <motion.div 
              className="absolute top-1/2 -translate-y-1/2 z-10"
              animate={{ 
-               left: `${(progress / winCondition) * 80 + 5}%`, // Move from 5% to 85%
+               left: `${(progress / RACE_LENGTH) * 80 + 5}%`, // Move from 5% to 85%
              }}
              transition={{ type: "spring", stiffness: 50 }}
            >
              <div className="relative">
-               {/* Since we can't easily tint the raster image, we'll use the generated red car and maybe overlay a hue-rotate filter for other colors if needed, 
-                   but for now let's stick to the generated red car. The 'Livery' logic in code changes 'bg-color' which won't affect the image.
-                   FIX: Use a CSS filter to hue-rotate the car for different teams.
-               */}
                <img 
                  src={generatedCar} 
                  alt="Player Car" 
@@ -160,7 +260,12 @@ export default function Game() {
                      {feedback === 'idle' ? 'AWAITING INPUT' : feedback === 'correct' ? 'SECTOR CLEAR' : 'ENGINE STALL'}
                    </span>
                  </div>
-                 <div className="text-accent font-mono text-sm">LAP {progress + 1}/{winCondition}</div>
+                 <div className="flex items-center gap-4">
+                    <div className="text-red-500 font-mono text-sm flex items-center gap-1">
+                        <X className="w-4 h-4" /> {mistakes} Mistakes
+                    </div>
+                    <div className="text-accent font-mono text-sm">LAP {progress + 1}/{RACE_LENGTH}</div>
+                 </div>
                </div>
 
                <div className="mt-8 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
