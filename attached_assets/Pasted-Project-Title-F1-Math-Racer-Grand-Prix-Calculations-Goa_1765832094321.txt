@@ -1,0 +1,46 @@
+Project Title: F1 Math Racer: Grand Prix Calculations Goal: Create an interactive and gamified math practice app for an 8-year-old, focusing on addition, subtraction, and basic multiplication, all within a high-speed "Formula 1 Racing" theme. Language/Framework: HTML, CSS, JavaScript (Vanilla JS for client-side interactivity).
+
+Core Functionality Requirements:
+Welcome Screen:
+Title: "F1 Math Racer: Grand Prix"
+Button: A big "Start Your Engines!" button.
+Intro Text: "Welcome, Rookie Driver! Your team needs your math skills to fuel the car and win the Championship Cup!"
+Math Problem Generation:
+Operation Selection: Start with addition. As the player levels up, introduce subtraction, then multiplication.
+Number Ranges:
+Addition: Numbers up to 50 initially, then up to 100.
+Subtraction: Numbers up to 50 (positive results only).
+Multiplication: Basic facts (2x2 through 10x10) for higher levels.
+Question Format: clearly display the question (e.g., 25+13=?) inside a "Pit Board" graphic.
+User Input & Feedback:
+Input Field: A clear box for the answer.
+Submit Button: Label it "Speed Boost!" or "Accelerate!".
+Instant Feedback:
+Correct: "Fastest Lap!", "Green Light!", "Perfect Sector!" (with an engine rev sound).
+Incorrect: "Engine Stalled!", "Box Box Box (Try again)!", "Spin out!" (with a screeching tire sound; highlight input red).
+Gamification Elements:
+Currency ("Pit Coins"):
+Each correct answer earns 10 "Pit Coins."
+Bonus coins for streaks (e.g., "3 Fast Laps in a Row!").
+Display a coin counter with a wrench or tire icon.
+Levels ("Circuits"):
+Instead of planets, use Race Tracks.
+Track 1 (Karting Track): Basic Addition (1-20).
+Track 2 (City Circuit): Addition (1-50) & Subtraction.
+Track 3 (Grand Prix Circuit): Addition/Subtraction (1-100) & Multiplication.
+Level Up Condition: Answering 10 questions correctly "wins the race" and unlocks the next Track. Show a checkered flag animation.
+The "Garage" (Shop System):
+A separate screen accessible from the game.
+Players spend Pit Coins to unlock visual upgrades:
+Car Liveries: Change the car color (Red Ferrari style, Silver Mercedes style, Papaya Orange).
+Helmets: Unlock different driver helmet designs.
+Tires: Upgrade to "Soft" (Red), "Medium" (Yellow), or "Hard" (White) tires purely for visuals.
+Persistent Progress: Use localStorage to save Pit Coins, current Track, and unlocked Garage items.
+Visual/Audio Enhancements:
+Racing Theme: Background should look like a race track or asphalt. Fonts should look digital or sporty (like a scoreboard).
+Sound Effects: Engine revs for correct answers, tire screech for wrong answers, crowd cheering for leveling up.
+Animations: A small car at the bottom of the screen that moves forward slightly with every correct answer.
+Technical Considerations:
+HTML: index.html for the layout.
+CSS: style.css for racing colors (Red, White, Black, Checkered patterns).
+JS: script.js to handle logic, random numbers, and the Garage/Shop purchase logic.
