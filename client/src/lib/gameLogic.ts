@@ -21,24 +21,24 @@ export interface GameState {
 export const RACE_LENGTH = 20;
 
 export const DRIVERS_2025 = [
-  "Max Verstappen",      // 1st (0-1 mistakes)
-  "Lando Norris",        // 2nd
-  "Charles Leclerc",     // 3rd
-  "Lewis Hamilton",      // 4th
-  "Oscar Piastri",       // 5th
-  "George Russell",      // 6th
-  "Carlos Sainz",        // 7th
-  "Fernando Alonso",     // 8th
-  "Yuki Tsunoda",        // 9th
-  "Pierre Gasly",        // 10th
-  "Nico Hulkenberg",     // 11th
-  "Alex Albon",          // 12th
-  "Esteban Ocon",        // 13th
-  "Lance Stroll",        // 14th
-  "Liam Lawson",         // 15th
-  "Franco Colapinto",    // 16th
-  "Oliver Bearman",      // 17th
-  "Kimi Antonelli",      // 18th
+  "Lando Norris",        // 1st - World Champion (0-1 mistakes)
+  "Max Verstappen",      // 2nd
+  "Oscar Piastri",       // 3rd
+  "George Russell",      // 4th
+  "Charles Leclerc",     // 5th
+  "Lewis Hamilton",      // 6th
+  "Kimi Antonelli",      // 7th
+  "Alexander Albon",     // 8th
+  "Carlos Sainz",        // 9th
+  "Fernando Alonso",     // 10th
+  "Yuki Tsunoda",        // 11th
+  "Pierre Gasly",        // 12th
+  "Nico Hulkenberg",     // 13th
+  "Esteban Ocon",        // 14th
+  "Lance Stroll",        // 15th
+  "Liam Lawson",         // 16th
+  "Franco Colapinto",    // 17th
+  "Oliver Bearman",      // 18th
   "Gabriel Bortoleto",   // 19th
   "Isack Hadjar"         // 20th
 ];

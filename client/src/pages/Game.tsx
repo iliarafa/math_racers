@@ -14,18 +14,20 @@ export default function Game() {
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0); 
   const [mistakes, setMistakes] = useState(0);
-  const [gameStatus, setGameStatus] = useState<'countdown' | 'racing' | 'finished'>('countdown');
+  const [gameStatus, setGameStatus] = useState<'countdown' | 'go' | 'racing' | 'finished'>('countdown');
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [countdownLight, setCountdownLight] = useState(0); // 0 = no lights, 1-5 = lights on, 6 = go!
+  const [countdownLight, setCountdownLight] = useState(0); // 0 = no lights, 1-5 = lights on
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Countdown sequence
+  // Countdown sequence: 5 lights, one per second
   useEffect(() => {
     if (gameStatus === 'countdown') {
       const interval = setInterval(() => {
         setCountdownLight(prev => {
-          if (prev >= 6) {
+          if (prev >= 5) {
             clearInterval(interval);
+            // Transition to GO state
+            setGameStatus('go');
             return prev;
           }
           return prev + 1;
@@ -36,16 +38,16 @@ export default function Game() {
     }
   }, [gameStatus]);
 
-  // Transition from countdown to racing when lights go out
+  // GO state: show green for 1 second, then start racing
   useEffect(() => {
-    if (countdownLight === 6) {
+    if (gameStatus === 'go') {
+      setQuestion(generateQuestion(state.currentTrack));
       const timeout = setTimeout(() => {
         setGameStatus('racing');
-        setQuestion(generateQuestion(state.currentTrack));
-      }, 1000); // Show "GO" state for 1 second
+      }, 1000);
       return () => clearTimeout(timeout);
     }
-  }, [countdownLight, state.currentTrack]);
+  }, [gameStatus, state.currentTrack]);
 
   // Focus input when racing
   useEffect(() => {
@@ -175,15 +177,45 @@ export default function Game() {
           <div className="text-2xl font-mono font-medium text-muted-foreground">
             {countdownLight === 0 && "Get Ready..."}
             {countdownLight >= 1 && countdownLight <= 5 && `${countdownLight} / 5`}
-            {countdownLight === 6 && (
-              <motion.span 
-                initial={{ scale: 0.5, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="text-green-600 text-4xl font-bold"
-              >
-                GO!
-              </motion.span>
-            )}
+          </div>
+
+        </div>
+      </GameLayout>
+    );
+  }
+
+  // GO state - lights out, green indicator
+  if (gameStatus === 'go') {
+    return (
+      <GameLayout coins={state.coins} trackName={currentTrackData.name}>
+        <div className="flex-1 flex flex-col items-center justify-center gap-8">
+          
+          {/* Green GO indicator */}
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="flex gap-4"
+          >
+            {[1, 2, 3, 4, 5].map((light) => (
+              <div
+                key={light}
+                className="w-16 h-20 md:w-20 md:h-24 rounded-lg border-4 bg-green-500 border-green-600 shadow-[0_0_30px_rgba(34,197,94,0.6)]"
+              />
+            ))}
+          </motion.div>
+
+          <motion.div 
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-6xl font-bold text-green-600"
+          >
+            GO!
+          </motion.div>
+
+          {/* Stopwatch preview in green */}
+          <div className="flex items-center gap-2 text-2xl font-mono font-medium text-green-600 bg-green-100 px-6 py-2 rounded-full">
+            <Timer className="w-5 h-5" />
+            {formatTime(0)}
           </div>
 
         </div>
