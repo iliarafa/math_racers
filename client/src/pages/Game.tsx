@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, Question, TRACKS, RACE_LENGTH, DRIVERS_2025 } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, ArrowRight } from "lucide-react";
+import { Check, X, RotateCcw, Home, ArrowRight, Timer } from "lucide-react";
 
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak } = useGameState();
@@ -15,6 +15,7 @@ export default function Game() {
   const [progress, setProgress] = useState(0); 
   const [mistakes, setMistakes] = useState(0);
   const [gameStatus, setGameStatus] = useState<'racing' | 'finished'>('racing');
+  const [elapsedTime, setElapsedTime] = useState(0); // in milliseconds
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Initialize question
@@ -30,6 +31,25 @@ export default function Game() {
       inputRef.current?.focus();
     }
   }, [question, feedback, gameStatus]);
+
+  // Timer Logic
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (gameStatus === 'racing') {
+      const startTime = Date.now() - elapsedTime;
+      interval = setInterval(() => {
+        setElapsedTime(Date.now() - startTime);
+      }, 100); // Update every 100ms
+    }
+    return () => clearInterval(interval);
+  }, [gameStatus]);
+
+  const formatTime = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   const currentTrackData = TRACKS.find(t => t.id === state.currentTrack) || TRACKS[0];
 
@@ -94,6 +114,7 @@ export default function Game() {
   const restartRace = () => {
     setProgress(0);
     setMistakes(0);
+    setElapsedTime(0);
     setGameStatus('racing');
     setFeedback('idle');
     setAnswer("");
@@ -120,6 +141,10 @@ export default function Game() {
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Driver Match</span>
                 <span className="font-bold">{driverName}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Time</span>
+                <span className="font-bold font-mono">{formatTime(elapsedTime)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Mistakes</span>
@@ -152,11 +177,11 @@ export default function Game() {
     <GameLayout coins={state.coins} trackName={currentTrackData.name}>
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-8 gap-12">
         
-        {/* Progress Bar */}
+        {/* Progress Bar & Stats */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground font-medium">
              <span>Lap {progress + 1} of {RACE_LENGTH}</span>
-             <span>{mistakes} Mistakes</span>
+             <span className={cn(mistakes > 0 ? "text-red-600" : "")}>{mistakes} Mistakes</span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
              <motion.div 
@@ -168,8 +193,15 @@ export default function Game() {
           </div>
         </div>
 
-        {/* Question Area */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-12">
+        {/* Stopwatch & Question Area */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-8">
+          
+          {/* Stopwatch */}
+          <div className="flex items-center gap-2 text-2xl font-mono font-medium text-primary bg-secondary/50 px-6 py-2 rounded-full">
+            <Timer className="w-5 h-5" />
+            {formatTime(elapsedTime)}
+          </div>
+
           <div className="text-6xl md:text-8xl font-bold tracking-tighter flex items-center gap-6">
             <span className="tabular-nums">{question?.num1}</span>
             <span className="text-muted-foreground font-light">{question?.operation === 'x' ? '×' : question?.operation}</span>
