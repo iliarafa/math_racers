@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Trophy, Wrench, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
-import generatedCar from "@assets/generated_images/top_down_view_of_a_red_f1_race_car_vector_illustration.png";
+import generatedCar from "@assets/generated_images/red_f1_car_facing_right_on_black_background.png";
 
 interface GameLayoutProps {
   children: React.ReactNode;

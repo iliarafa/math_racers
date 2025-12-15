@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { Play, Wrench, Trophy } from "lucide-react";
-import generatedCar from "@assets/generated_images/top_down_view_of_a_red_f1_race_car_vector_illustration.png";
+import generatedCar from "@assets/generated_images/red_f1_car_facing_right_on_black_background.png";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -57,7 +57,7 @@ export default function Welcome() {
              <motion.img 
                src={generatedCar} 
                alt="F1 Car"
-               className="w-32 md:w-48 drop-shadow-2xl absolute"
+               className="w-32 md:w-48 drop-shadow-2xl absolute mix-blend-screen"
                animate={{ 
                  y: [0, -5, 0],
                }}

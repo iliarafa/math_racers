@@ -4,7 +4,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, SHOP_ITEMS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Lock, Check, ChevronLeft } from "lucide-react";
-import generatedCar from "@assets/generated_images/top_down_view_of_a_red_f1_race_car_vector_illustration.png";
+import generatedCar from "@assets/generated_images/red_f1_car_facing_right_on_black_background.png";
 import generatedHelmet from "@assets/generated_images/racing_helmet_icon.png";
 
 export default function Garage() {
@@ -47,7 +47,7 @@ export default function Garage() {
                 src={generatedCar} 
                 alt="Your Car"
                 className={cn(
-                   "w-48 drop-shadow-2xl transition-all duration-500",
+                   "w-48 drop-shadow-2xl transition-all duration-500 mix-blend-screen",
                    state.equippedLivery === 'blue-livery' && "hue-rotate-180",
                    state.equippedLivery === 'orange-livery' && "hue-rotate-30",
                    state.equippedLivery === 'silver-livery' && "grayscale contrast-125",

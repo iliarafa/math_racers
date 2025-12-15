@@ -5,7 +5,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, Question, TRACKS, SHOP_ITEMS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, Timer, Flag, Zap } from "lucide-react";
-import generatedCar from "@assets/generated_images/top_down_view_of_a_red_f1_race_car_vector_illustration.png";
+import generatedCar from "@assets/generated_images/red_f1_car_facing_right_on_black_background.png";
 import generatedFlag from "@assets/generated_images/seamless_checkered_flag_pattern.png";
 
 export default function Game() {
@@ -121,7 +121,7 @@ export default function Game() {
                <img 
                  src={generatedCar} 
                  alt="Player Car" 
-                 className={cn("w-24 md:w-32 drop-shadow-lg transform rotate-90", 
+                 className={cn("w-24 md:w-32 drop-shadow-lg mix-blend-screen", 
                    state.equippedLivery === 'blue-livery' && "hue-rotate-180",
                    state.equippedLivery === 'orange-livery' && "hue-rotate-30",
                    state.equippedLivery === 'silver-livery' && "grayscale contrast-125",
