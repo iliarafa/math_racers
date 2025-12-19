@@ -55,7 +55,7 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
             id="track-s1"
             d={circuit.paths.s1}
             stroke={SECTOR_COLORS.s1}
-            strokeWidth="15"
+            strokeWidth="8"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -65,7 +65,7 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
             id="track-s2"
             d={circuit.paths.s2}
             stroke={SECTOR_COLORS.s2}
-            strokeWidth="15"
+            strokeWidth="8"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -75,31 +75,10 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
             id="track-s3"
             d={circuit.paths.s3}
             stroke={SECTOR_COLORS.s3}
-            strokeWidth="15"
+            strokeWidth="8"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
-          />
-          <path
-            d={circuit.paths.s1}
-            stroke="#fff"
-            strokeWidth="1"
-            fill="none"
-            strokeDasharray="5,5"
-          />
-          <path
-            d={circuit.paths.s2}
-            stroke="#fff"
-            strokeWidth="1"
-            fill="none"
-            strokeDasharray="5,5"
-          />
-          <path
-            d={circuit.paths.s3}
-            stroke="#fff"
-            strokeWidth="1"
-            fill="none"
-            strokeDasharray="5,5"
           />
         </svg>
         <div
