@@ -16,8 +16,7 @@ export default function Welcome() {
             2025 Season
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-primary">
-            Grand Prix <br/>
-            Math Racer
+            Math Racers
           </h1>
           <p className="text-xl text-muted-foreground max-w-lg mx-auto">
             Solve math problems to race. <br/>
