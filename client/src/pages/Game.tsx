@@ -106,11 +106,14 @@ export default function Game() {
 
     if (val === question.answer) {
       setFeedback('correct');
-      addCoins(10);
+      const isDrsActive = selectedCircuit.drsZones.includes(progress);
+      const baseCoins = isDrsActive ? 20 : 10;
+      addCoins(baseCoins);
       incrementStreak();
       incrementLaps();
       const difficultyPoints = selectedDriver?.difficulty === 'hard' ? 3 : selectedDriver?.difficulty === 'medium' ? 2 : 1;
-      addCareerPoints(difficultyPoints);
+      const totalPoints = isDrsActive ? difficultyPoints * 2 : difficultyPoints;
+      addCareerPoints(totalPoints);
       
       const newProgress = progress + 1;
       setProgress(newProgress);

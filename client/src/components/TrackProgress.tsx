@@ -104,20 +104,9 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
         <div
           id="drs-indicator"
           data-testid="drs-indicator"
-          className="drs-box"
-          style={{
-            padding: '4px 12px',
-            borderRadius: '4px',
-            fontWeight: 'bold',
-            fontSize: '12px',
-            textTransform: 'uppercase',
-            backgroundColor: isDrsActive ? '#00ff00' : '#333',
-            color: isDrsActive ? '#000' : '#888',
-            boxShadow: isDrsActive ? '0 0 10px #00ff00' : 'none',
-            transition: 'all 0.3s ease'
-          }}
+          className={`drs-box ${isDrsActive ? 'drs-active' : ''}`}
         >
-          {isDrsActive ? 'DRS ENABLED' : 'DRS DISABLED'}
+          {isDrsActive ? 'DRS ON' : 'DRS DISABLED'}
         </div>
         <span>{Math.round((progress / total) * 100)}%</span>
       </div>
