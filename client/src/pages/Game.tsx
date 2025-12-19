@@ -131,6 +131,7 @@ export default function Game() {
     } else {
       setFeedback('incorrect');
       setShowPenalty(true);
+      setElapsedTime(prev => prev + 5000);
       setTimeout(() => setShowPenalty(false), 1500);
       const newMistakes = mistakes + 1;
       setMistakes(newMistakes);
@@ -452,7 +453,7 @@ export default function Game() {
               )}
               {feedback === 'incorrect' && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-red-600 font-medium flex items-center gap-2">
-                  <X className="w-5 h-5" /> Incorrect
+                  <X className="w-5 h-5" /> +5s PENALTY
                 </motion.div>
               )}
             </AnimatePresence>
