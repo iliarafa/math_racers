@@ -27,7 +27,7 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
     const s3Length = s3Ref.current.getTotalLength();
     const totalLength = s1Length + s2Length + s3Length;
 
-    const progressRatio = Math.min(progress / total, 1);
+    const progressRatio = total > 0 ? Math.min(progress / total, 1) : 0;
     const targetLength = progressRatio * totalLength;
 
     let point: DOMPoint;
@@ -40,7 +40,7 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
     }
 
     setCarPosition({ x: point.x, y: point.y });
-  }, [progress, total, circuit.paths]);
+  }, [progress, total, circuit.paths.s1, circuit.paths.s2, circuit.paths.s3]);
 
   return (
     <div className="w-full max-w-md mx-auto" data-testid="track-progress">
