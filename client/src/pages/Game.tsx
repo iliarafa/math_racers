@@ -17,12 +17,15 @@ export default function Game() {
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0); 
   const [mistakes, setMistakes] = useState(0);
-  const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished'>('driver_select');
+  const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
   const [showPenalty, setShowPenalty] = useState(false);
+  const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
   const inputRef = useRef<HTMLInputElement>(null);
+  const penaltyTimeRef = useRef(0);
+  const raceStartTimeRef = useRef<number | null>(null);
 
   // Countdown sequence: 5 lights, one per second
   useEffect(() => {
@@ -64,9 +67,12 @@ export default function Game() {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (gameStatus === 'racing') {
-      const startTime = Date.now() - elapsedTime;
+      if (raceStartTimeRef.current === null) {
+        raceStartTimeRef.current = Date.now();
+      }
       interval = setInterval(() => {
-        setElapsedTime(Date.now() - startTime);
+        const baseTime = Date.now() - raceStartTimeRef.current!;
+        setElapsedTime(baseTime + penaltyTimeRef.current);
       }, 10);
     }
     return () => clearInterval(interval);
@@ -76,7 +82,7 @@ export default function Game() {
   useEffect(() => {
     if (!selectedDriver && gameStatus !== 'driver_select') {
       setGameStatus('driver_select');
-    } else if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished')) {
+    } else if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
       setGameStatus('selecting');
     }
   }, [selectedDriver, selectedCircuit, gameStatus]);
@@ -129,13 +135,32 @@ export default function Game() {
         }, 600);
       }
     } else {
-      setFeedback('incorrect');
-      setShowPenalty(true);
-      setElapsedTime(prev => prev + 5000);
-      setTimeout(() => setShowPenalty(false), 1500);
       const newMistakes = mistakes + 1;
       setMistakes(newMistakes);
+      setFeedback('incorrect');
+      setShowPenalty(true);
       resetStreak();
+      
+      if (newMistakes === 1) {
+        setPenaltyMessage({ text: 'TRACK LIMITS', color: 'yellow' });
+        penaltyTimeRef.current += 2000;
+        setElapsedTime(prev => prev + 2000);
+      } else if (newMistakes === 2) {
+        setPenaltyMessage({ text: 'TRACK LIMITS (2nd Warning)', color: 'yellow' });
+        penaltyTimeRef.current += 3000;
+        setElapsedTime(prev => prev + 3000);
+      } else if (newMistakes === 3) {
+        setPenaltyMessage({ text: '+5 SECOND PENALTY', color: 'red' });
+        penaltyTimeRef.current += 5000;
+        setElapsedTime(prev => prev + 5000);
+      } else if (newMistakes >= 4) {
+        setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
+        setFinalMistakes(newMistakes);
+        setGameStatus('crashed');
+        return;
+      }
+      
+      setTimeout(() => setShowPenalty(false), 1500);
       
       const newProgress = progress + 1;
       setProgress(newProgress);
@@ -182,6 +207,9 @@ export default function Game() {
     setAnswer("");
     setQuestion(null);
     resetStreak();
+    penaltyTimeRef.current = 0;
+    raceStartTimeRef.current = null;
+    setPenaltyMessage({ text: '', color: 'red' });
   };
 
   // Driver Selection Screen
@@ -330,6 +358,54 @@ export default function Game() {
     );
   }
 
+  if (gameStatus === 'crashed') {
+    return (
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
+        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full py-12">
+          <div className="bg-card border border-red-500 rounded-xl p-8 w-full text-center space-y-8 shadow-sm">
+            
+            <div className="space-y-2">
+               <div className="text-sm font-medium text-red-600 uppercase tracking-widest">Race Over</div>
+               <div className="text-6xl font-bold tracking-tighter text-red-600">DNF</div>
+               <div className="text-xl font-medium text-red-600">Car Retired</div>
+            </div>
+
+            <div className="py-6 border-y border-border space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Circuit</span>
+                <span className="font-bold">{selectedCircuit?.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Questions Answered</span>
+                <span className="font-bold">{progress}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Time Before Crash</span>
+                <span className="font-bold font-mono">{formatTime(elapsedTime)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Mistakes</span>
+                <span className="font-bold text-red-600">{finalMistakes}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-3">
+              <button onClick={restartRace} className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2" data-testid="button-try-again">
+                <RotateCcw className="w-4 h-4" /> Try Again
+              </button>
+              <Link href="/garage">
+                <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-return-garage">
+                  <Home className="w-4 h-4" /> Return to Garage
+                </button>
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      </GameLayout>
+    );
+  }
+
   if (gameStatus === 'finished') {
     const { position, driverName } = getRaceResult();
     const isWinner = position === 1;
@@ -452,8 +528,16 @@ export default function Game() {
                 </motion.div>
               )}
               {feedback === 'incorrect' && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-red-600 font-medium flex items-center gap-2">
-                  <X className="w-5 h-5" /> +5s PENALTY
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0 }} 
+                  className={cn(
+                    "font-medium flex items-center gap-2",
+                    penaltyMessage.color === 'yellow' ? "text-yellow-600" : "text-red-600"
+                  )}
+                >
+                  <X className="w-5 h-5" /> {penaltyMessage.text}
                 </motion.div>
               )}
             </AnimatePresence>
