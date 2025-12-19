@@ -3,20 +3,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, Question, TRACKS, RACE_LENGTH, DRIVERS_2025 } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, DRIVERS_2025, Circuit } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, ArrowRight, Timer } from "lucide-react";
+import { Check, X, RotateCcw, Home, ArrowRight, Timer, MapPin } from "lucide-react";
 
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak } = useGameState();
+  const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0); 
   const [mistakes, setMistakes] = useState(0);
-  const [gameStatus, setGameStatus] = useState<'countdown' | 'go' | 'racing' | 'finished'>('countdown');
+  const [gameStatus, setGameStatus] = useState<'selecting' | 'countdown' | 'go' | 'racing' | 'finished'>('selecting');
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [countdownLight, setCountdownLight] = useState(0); // 0 = no lights, 1-5 = lights on
+  const [countdownLight, setCountdownLight] = useState(0);
+  const [finalMistakes, setFinalMistakes] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Countdown sequence: 5 lights, one per second
@@ -26,7 +28,6 @@ export default function Game() {
         setCountdownLight(prev => {
           if (prev >= 5) {
             clearInterval(interval);
-            // Transition to GO state
             setGameStatus('go');
             return prev;
           }
@@ -40,14 +41,14 @@ export default function Game() {
 
   // GO state: show green for 1 second, then start racing
   useEffect(() => {
-    if (gameStatus === 'go') {
-      setQuestion(generateQuestion(state.currentTrack));
+    if (gameStatus === 'go' && selectedCircuit) {
+      setQuestion(generateQuestion(selectedCircuit.id));
       const timeout = setTimeout(() => {
         setGameStatus('racing');
       }, 1000);
       return () => clearTimeout(timeout);
     }
-  }, [gameStatus, state.currentTrack]);
+  }, [gameStatus, selectedCircuit]);
 
   // Focus input when racing
   useEffect(() => {
@@ -75,11 +76,14 @@ export default function Game() {
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
   };
 
-  const currentTrackData = TRACKS.find(t => t.id === state.currentTrack) || TRACKS[0];
+  const handleCircuitSelect = (circuit: Circuit) => {
+    setSelectedCircuit(circuit);
+    setGameStatus('countdown');
+  };
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!question || feedback !== 'idle' || gameStatus !== 'racing') return;
+    if (!question || feedback !== 'idle' || gameStatus !== 'racing' || !selectedCircuit) return;
 
     const val = parseInt(answer);
     if (isNaN(val)) return;
@@ -93,44 +97,46 @@ export default function Game() {
       setProgress(newProgress);
       
       if (newProgress >= RACE_LENGTH) {
-        finishRace();
+        finishRace(mistakes);
       } else {
         setTimeout(() => {
           setFeedback('idle');
           setAnswer("");
-          setQuestion(generateQuestion(state.currentTrack));
+          setQuestion(generateQuestion(selectedCircuit.id));
         }, 600);
       }
     } else {
       setFeedback('incorrect');
-      setMistakes(prev => prev + 1);
+      const newMistakes = mistakes + 1;
+      setMistakes(newMistakes);
       resetStreak();
       
       const newProgress = progress + 1;
       setProgress(newProgress);
 
       if (newProgress >= RACE_LENGTH) {
-        finishRace();
+        finishRace(newMistakes);
       } else {
         setTimeout(() => {
           setFeedback('idle');
           setAnswer("");
-          setQuestion(generateQuestion(state.currentTrack));
+          setQuestion(generateQuestion(selectedCircuit.id));
         }, 800);
       }
     }
   };
 
-  const finishRace = () => {
+  const finishRace = (mistakeCount: number) => {
+    setFinalMistakes(mistakeCount);
     setFeedback('idle');
     setGameStatus('finished');
-    if (mistakes <= 1) {
+    if (mistakeCount <= 1) {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
     }
   };
 
   const getRaceResult = () => {
-    let position = mistakes <= 1 ? 1 : mistakes;
+    let position = finalMistakes <= 1 ? 1 : finalMistakes;
     if (position > DRIVERS_2025.length) position = DRIVERS_2025.length;
     return { position, driverName: DRIVERS_2025[position - 1] };
   };
@@ -138,19 +144,90 @@ export default function Game() {
   const restartRace = () => {
     setProgress(0);
     setMistakes(0);
+    setFinalMistakes(0);
     setElapsedTime(0);
     setCountdownLight(0);
-    setGameStatus('countdown');
+    setGameStatus('selecting');
+    setSelectedCircuit(null);
     setFeedback('idle');
     setAnswer("");
     setQuestion(null);
     resetStreak();
   };
 
+  // Circuit Selection Screen
+  if (gameStatus === 'selecting') {
+    return (
+      <GameLayout coins={state.coins} trackName="Select Circuit">
+        <div className="flex-1 flex flex-col py-6 px-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-1">Choose Your Circuit</h2>
+            <p className="text-muted-foreground">Each track tests a different math skill</p>
+          </div>
+          
+          <div className="grid gap-4 max-w-2xl mx-auto w-full">
+            {CIRCUITS.map((circuit) => (
+              <motion.button
+                key={circuit.id}
+                onClick={() => handleCircuitSelect(circuit)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary transition-colors flex gap-4 items-center"
+                data-testid={`circuit-${circuit.id}`}
+              >
+                <div className="w-20 h-20 rounded-lg bg-secondary flex-shrink-0 overflow-hidden">
+                  <img 
+                    src={circuit.mapUrl} 
+                    alt={circuit.name}
+                    className="w-full h-full object-contain p-2"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    <span className="font-bold truncate">{circuit.name}</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground mb-2">{circuit.description}</div>
+                  <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                    {circuit.type}
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              </motion.button>
+            ))}
+          </div>
+          
+          <div className="mt-6 text-center">
+            <Link href="/">
+              <button className="text-muted-foreground hover:text-foreground transition-colors text-sm">
+                ← Back to Menu
+              </button>
+            </Link>
+          </div>
+        </div>
+      </GameLayout>
+    );
+  }
+
+  // Guard: redirect to selection if no circuit selected (handled in useEffect to avoid state update during render)
+  useEffect(() => {
+    if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished')) {
+      setGameStatus('selecting');
+    }
+  }, [selectedCircuit, gameStatus]);
+
+  // Show nothing while redirecting
+  if (!selectedCircuit) {
+    return null;
+  }
+
   // Countdown screen with F1 starting lights
   if (gameStatus === 'countdown') {
     return (
-      <GameLayout coins={state.coins} trackName={currentTrackData.name}>
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
         <div className="flex-1 flex flex-col items-center justify-center gap-12">
           
           {/* F1 Starting Lights */}
@@ -181,7 +258,7 @@ export default function Game() {
   // GO state - lights out, green indicator
   if (gameStatus === 'go') {
     return (
-      <GameLayout coins={state.coins} trackName={currentTrackData.name}>
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
         <div className="flex-1 flex flex-col items-center justify-center gap-8">
           
           {/* Green GO indicator */}
@@ -222,7 +299,7 @@ export default function Game() {
     const isWinner = position === 1;
 
     return (
-      <GameLayout coins={state.coins} trackName={currentTrackData.name}>
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
         <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full py-12">
           <div className="bg-card border border-border rounded-xl p-8 w-full text-center space-y-8 shadow-sm">
             
@@ -238,25 +315,29 @@ export default function Game() {
                 <span className="font-bold">{driverName}</span>
               </div>
               <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Circuit</span>
+                <span className="font-bold">{selectedCircuit?.name}</span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Total Time</span>
                 <span className="font-bold font-mono">{formatTime(elapsedTime)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Mistakes</span>
-                <span className={cn("font-bold", mistakes === 0 ? "text-green-600" : "text-red-600")}>{mistakes}</span>
+                <span className={cn("font-bold", finalMistakes === 0 ? "text-green-600" : "text-red-600")}>{finalMistakes}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Accuracy</span>
-                <span className="font-bold">{Math.round(((RACE_LENGTH - mistakes) / RACE_LENGTH) * 100)}%</span>
+                <span className="font-bold">{Math.round(((RACE_LENGTH - finalMistakes) / RACE_LENGTH) * 100)}%</span>
               </div>
             </div>
 
             <div className="grid gap-3">
-              <button onClick={restartRace} className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2">
+              <button onClick={restartRace} className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2" data-testid="button-race-again">
                 <RotateCcw className="w-4 h-4" /> Race Again
               </button>
               <Link href="/">
-                <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
+                <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-main-menu">
                   <Home className="w-4 h-4" /> Main Menu
                 </button>
               </Link>
@@ -268,14 +349,15 @@ export default function Game() {
     );
   }
 
+  // Racing phase
   return (
-    <GameLayout coins={state.coins} trackName={currentTrackData.name}>
+    <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
       <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-8 gap-12">
         
         {/* Progress Bar & Stats */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground font-medium">
-             <span>Lap {progress + 1} of {RACE_LENGTH}</span>
+             <span>Question {progress + 1} of {RACE_LENGTH}</span>
              <span className={cn(mistakes > 0 ? "text-red-600" : "")}>{mistakes} Mistakes</span>
           </div>
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
@@ -297,11 +379,9 @@ export default function Game() {
             {formatTime(elapsedTime)}
           </div>
 
-          <div className="text-6xl md:text-8xl font-bold tracking-tighter flex items-center gap-6">
-            <span className="tabular-nums">{question?.num1}</span>
-            <span className="text-muted-foreground font-light">{question?.operation === 'x' ? '×' : question?.operation}</span>
-            <span className="tabular-nums">{question?.num2}</span>
-            <span className="text-muted-foreground font-light">=</span>
+          {/* Question Display */}
+          <div className="text-5xl md:text-7xl font-bold tracking-tight text-center px-4">
+            {question?.display}
           </div>
 
           <form onSubmit={handleSubmit} className="w-full max-w-xs relative">
@@ -318,6 +398,7 @@ export default function Game() {
               )}
               placeholder="?"
               autoFocus
+              data-testid="input-answer"
             />
             {feedback === 'idle' && answer && (
                <div className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground animate-pulse">

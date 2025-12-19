@@ -17,7 +17,6 @@ export interface Circuit {
 
 export interface GameState {
   coins: number;
-  selectedCircuit: string | null;
   unlockedItems: string[];
   equippedLivery: string;
   equippedTires: string;
@@ -89,7 +88,6 @@ export const CIRCUITS: Circuit[] = [
 
 const INITIAL_STATE: GameState = {
   coins: 0,
-  selectedCircuit: null,
   unlockedItems: ['red-livery', 'hard-tires'],
   equippedLivery: 'red-livery',
   equippedTires: 'hard-tires',
@@ -109,7 +107,18 @@ export const SHOP_ITEMS = [
 export function useGameState() {
   const [state, setState] = useState<GameState>(() => {
     const saved = localStorage.getItem('f1-math-racer-state');
-    return saved ? JSON.parse(saved) : INITIAL_STATE;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Migrate old state format - ensure all required fields exist
+      return {
+        coins: parsed.coins ?? 0,
+        unlockedItems: parsed.unlockedItems ?? ['red-livery', 'hard-tires'],
+        equippedLivery: parsed.equippedLivery ?? 'red-livery',
+        equippedTires: parsed.equippedTires ?? 'hard-tires',
+        streak: parsed.streak ?? 0,
+      };
+    }
+    return INITIAL_STATE;
   });
 
   useEffect(() => {
@@ -126,10 +135,6 @@ export function useGameState() {
 
   const resetStreak = () => {
     setState(prev => ({ ...prev, streak: 0 }));
-  };
-
-  const selectCircuit = (circuitId: string) => {
-    setState(prev => ({ ...prev, selectedCircuit: circuitId }));
   };
 
   const buyItem = (itemId: string, cost: number) => {
@@ -158,7 +163,6 @@ export function useGameState() {
     addCoins,
     incrementStreak,
     resetStreak,
-    selectCircuit,
     buyItem,
     equipItem
   };
