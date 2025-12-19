@@ -106,7 +106,7 @@ export const CIRCUITS: Circuit[] = [
     type: "Division",
     description: "",
     mapUrl: "",
-    pathData: "M 50 100 Q 50 50 100 50 T 150 100 T 200 50 T 250 100"
+    pathData: "M 250 125 L 180 125 Q 160 125 155 105 Q 150 85 180 75 Q 210 65 210 45 Q 210 25 180 25 L 140 25 L 120 35 L 110 55 Q 100 85 70 85 L 50 85 Q 20 85 20 60 L 20 50 Q 20 20 50 20 L 100 20 L 130 30 L 160 35 L 190 35 L 250 35 Q 280 35 280 80 Q 280 125 250 125 Z"
   },
   {
     id: "silverstone",
