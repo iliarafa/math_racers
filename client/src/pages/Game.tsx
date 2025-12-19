@@ -172,37 +172,24 @@ export default function Game() {
             <p className="text-muted-foreground">Each track tests a different math skill</p>
           </div>
           
-          <div className="grid gap-4 max-w-2xl mx-auto w-full">
+          <div className="grid gap-3 max-w-2xl mx-auto w-full">
             {CIRCUITS.map((circuit) => (
               <motion.button
                 key={circuit.id}
                 onClick={() => handleCircuitSelect(circuit)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-card border border-border rounded-xl p-4 text-left hover:border-primary transition-colors flex gap-4 items-center"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="p-4 text-left hover:bg-secondary/50 transition-colors flex items-center justify-between rounded-lg"
                 data-testid={`circuit-${circuit.id}`}
               >
-                <div className="w-20 h-20 rounded-lg bg-secondary flex-shrink-0 overflow-hidden">
-                  <img 
-                    src={circuit.mapUrl} 
-                    alt={circuit.name}
-                    className="w-full h-full object-contain p-2"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <span className="font-bold">{circuit.name}</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    <span className="font-bold truncate">{circuit.name}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground mb-2">{circuit.description}</div>
-                  <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                    {circuit.type}
-                  </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-muted-foreground">{circuit.type}</span>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground flex-shrink-0" />
               </motion.button>
             ))}
           </div>
