@@ -188,7 +188,7 @@ export default function Game() {
                 onClick={() => handleDriverSelect(driver)}
                 whileHover={{ opacity: 0.7 }}
                 whileTap={{ scale: 0.98 }}
-                className="py-3 text-left transition-opacity"
+                className="py-3 transition-opacity text-center"
                 data-testid={`driver-${driver.id}`}
               >
                 <span className="font-bold text-lg">{driver.name}</span>
