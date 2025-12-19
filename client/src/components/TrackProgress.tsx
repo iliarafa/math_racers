@@ -24,52 +24,43 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
 
   return (
     <div className="w-full max-w-md mx-auto" data-testid="track-progress">
-      <svg 
-        viewBox="0 0 300 160" 
-        className="w-full h-auto"
-        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+      <div 
+        id="circuit-visualizer" 
+        style={{ position: 'relative', width: '300px', height: '160px', margin: '0 auto' }}
       >
-        <path
-          d={circuit.pathData}
-          fill="none"
-          stroke="#e5e5e5"
-          strokeWidth="16"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        
-        <path
-          ref={pathRef}
-          d={circuit.pathData}
-          fill="none"
-          stroke="#d4d4d4"
-          strokeWidth="12"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        
-        <path
-          d={circuit.pathData}
-          fill="none"
-          stroke="white"
-          strokeWidth="1"
-          strokeDasharray="8 8"
-          strokeLinecap="round"
-        />
-        
-        <circle
-          cx={carPosition.x}
-          cy={carPosition.y}
-          r="8"
-          fill="var(--team-color)"
-          stroke="white"
-          strokeWidth="3"
-          style={{ 
-            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-            transition: 'cx 0.3s ease-out, cy 0.3s ease-out'
+        <svg width="300" height="160" style={{ overflow: 'visible' }}>
+          <path
+            ref={pathRef}
+            id="track-path"
+            d={circuit.pathData}
+            stroke="#555"
+            strokeWidth="20"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            id="track-centerline"
+            d={circuit.pathData}
+            stroke="#fff"
+            strokeWidth="2"
+            fill="none"
+            strokeDasharray="5,5"
+          />
+        </svg>
+        <div
+          id="racing-car"
+          style={{
+            position: 'absolute',
+            fontSize: '24px',
+            transform: 'translate(-50%, -50%)',
+            transition: 'all 0.5s ease',
+            left: `${carPosition.x}px`,
+            top: `${carPosition.y}px`
           }}
-        />
-      </svg>
+        >
+          🏎️
+        </div>
+      </div>
       
       <div className="flex justify-between text-sm text-muted-foreground mt-2 px-1">
         <span>Lap {progress} / {total}</span>
