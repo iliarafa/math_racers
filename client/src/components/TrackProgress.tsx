@@ -36,7 +36,8 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
     } else if (targetLength <= s1Length + s2Length) {
       point = s2Ref.current.getPointAtLength(targetLength - s1Length);
     } else {
-      point = s3Ref.current.getPointAtLength(targetLength - s1Length - s2Length);
+      const distOnS3 = Math.min(targetLength - s1Length - s2Length, s3Length);
+      point = s3Ref.current.getPointAtLength(distOnS3);
     }
 
     setCarPosition({ x: point.x, y: point.y });
