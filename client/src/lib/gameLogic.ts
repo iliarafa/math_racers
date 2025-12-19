@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
 
-export type Operation = '+' | '-' | 'x';
+export type Operation = '+' | '-' | 'x' | '÷' | 'var';
 
 export interface Question {
-  num1: number;
-  num2: number;
-  operation: Operation;
+  display: string;
   answer: number;
+}
+
+export interface Circuit {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  mapUrl: string;
 }
 
 export interface GameState {
   coins: number;
-  currentTrack: number; // 1, 2, 3 (Difficulty)
+  selectedCircuit: string | null;
   unlockedItems: string[];
   equippedLivery: string;
   equippedTires: string;
@@ -43,20 +49,52 @@ export const DRIVERS_2025 = [
   "Isack Hadjar"         // 20th
 ];
 
+export const CIRCUITS: Circuit[] = [
+  {
+    id: "monza",
+    name: "Monza (Italy)",
+    type: "Multiplication",
+    description: "The Temple of Speed",
+    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/b/b8/Monza_track_map.svg"
+  },
+  {
+    id: "spa",
+    name: "Spa (Belgium)",
+    type: "Addition",
+    description: "The Longest Lap",
+    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/5/54/Spa-Francorchamps_of_Belgium.svg"
+  },
+  {
+    id: "monaco",
+    name: "Monaco",
+    type: "Subtraction",
+    description: "Street Circuit",
+    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/3/36/Monte_Carlo_Formula_1_track_map.svg"
+  },
+  {
+    id: "suzuka",
+    name: "Suzuka (Japan)",
+    type: "Division",
+    description: "Figure-8 Track",
+    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/4/40/Suzuka_circuit_map_2005.svg"
+  },
+  {
+    id: "silverstone",
+    name: "Silverstone (UK)",
+    type: "Variables",
+    description: "Home of F1",
+    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Silverstone_Circuit_2020.svg"
+  }
+];
+
 const INITIAL_STATE: GameState = {
   coins: 0,
-  currentTrack: 1,
+  selectedCircuit: null,
   unlockedItems: ['red-livery', 'hard-tires'],
   equippedLivery: 'red-livery',
   equippedTires: 'hard-tires',
   streak: 0,
 };
-
-export const TRACKS = [
-  { id: 1, name: "Karting Track", description: "Basic Addition (1-20)", winCondition: 20 },
-  { id: 2, name: "City Circuit", description: "Add (1-50) & Sub", winCondition: 20 },
-  { id: 3, name: "Grand Prix", description: "Add/Sub (1-100) & Mult", winCondition: 20 },
-];
 
 export const SHOP_ITEMS = [
   { id: 'red-livery', name: 'Ferrari Red', type: 'livery', cost: 0, color: 'bg-red-600' },
@@ -90,10 +128,8 @@ export function useGameState() {
     setState(prev => ({ ...prev, streak: 0 }));
   };
 
-  const nextTrack = () => {
-    if (state.currentTrack < 3) {
-      setState(prev => ({ ...prev, currentTrack: prev.currentTrack + 1 }));
-    }
+  const selectCircuit = (circuitId: string) => {
+    setState(prev => ({ ...prev, selectedCircuit: circuitId }));
   };
 
   const buyItem = (itemId: string, cost: number) => {
@@ -122,56 +158,77 @@ export function useGameState() {
     addCoins,
     incrementStreak,
     resetStreak,
-    nextTrack,
+    selectCircuit,
     buyItem,
     equipItem
   };
 }
 
-export function generateQuestion(trackLevel: number): Question {
-  let num1, num2, operation: Operation = '+';
+export function generateQuestion(circuitId: string): Question {
+  const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
   
-  // Track 1: Addition 1-20
-  if (trackLevel === 1) {
-    num1 = Math.floor(Math.random() * 10) + 1;
-    num2 = Math.floor(Math.random() * 10) + 1;
-    operation = '+';
-  } 
-  // Track 2: Addition 1-50 & Subtraction
-  else if (trackLevel === 2) {
-    const isAdd = Math.random() > 0.5;
-    if (isAdd) {
-      num1 = Math.floor(Math.random() * 25) + 1;
-      num2 = Math.floor(Math.random() * 25) + 1;
-      operation = '+';
-    } else {
-      num1 = Math.floor(Math.random() * 50) + 10;
-      num2 = Math.floor(Math.random() * (num1 - 1)) + 1; // Ensure positive result
-      operation = '-';
-    }
-  } 
-  // Track 3: Add/Sub 1-100 & Mult (2-10)
-  else {
-    const type = Math.random();
-    if (type < 0.4) { // Addition
-      num1 = Math.floor(Math.random() * 50) + 10;
-      num2 = Math.floor(Math.random() * 50) + 10;
-      operation = '+';
-    } else if (type < 0.7) { // Subtraction
-      num1 = Math.floor(Math.random() * 100) + 20;
-      num2 = Math.floor(Math.random() * (num1 - 10)) + 1;
-      operation = '-';
-    } else { // Multiplication
-      num1 = Math.floor(Math.random() * 9) + 2; // 2 to 10
-      num2 = Math.floor(Math.random() * 9) + 2;
-      operation = 'x';
-    }
+  let num1: number, num2: number, display: string, answer: number;
+  
+  switch (circuit.type) {
+    case "Multiplication":
+      num1 = Math.floor(Math.random() * 10) + 2; // 2-11
+      num2 = Math.floor(Math.random() * 10) + 2; // 2-11
+      display = `${num1} × ${num2}`;
+      answer = num1 * num2;
+      break;
+      
+    case "Addition":
+      num1 = Math.floor(Math.random() * 50) + 10; // 10-59
+      num2 = Math.floor(Math.random() * 50) + 10; // 10-59
+      display = `${num1} + ${num2}`;
+      answer = num1 + num2;
+      break;
+      
+    case "Subtraction":
+      num1 = Math.floor(Math.random() * 50) + 20; // 20-69
+      num2 = Math.floor(Math.random() * (num1 - 5)) + 1; // Ensure positive result
+      display = `${num1} − ${num2}`;
+      answer = num1 - num2;
+      break;
+      
+    case "Division":
+      // Generate division with whole number results
+      answer = Math.floor(Math.random() * 10) + 2; // 2-11
+      num2 = Math.floor(Math.random() * 10) + 2; // 2-11
+      num1 = answer * num2;
+      display = `${num1} ÷ ${num2}`;
+      break;
+      
+    case "Variables":
+      // Simple algebra: x + a = b or a - x = b or ax = b
+      const varType = Math.floor(Math.random() * 3);
+      if (varType === 0) {
+        // x + a = b
+        answer = Math.floor(Math.random() * 15) + 3;
+        const a = Math.floor(Math.random() * 10) + 2;
+        const b = answer + a;
+        display = `x + ${a} = ${b}, x = ?`;
+      } else if (varType === 1) {
+        // a - x = b
+        answer = Math.floor(Math.random() * 10) + 2;
+        const b = Math.floor(Math.random() * 10) + 2;
+        const a = b + answer;
+        display = `${a} − x = ${b}, x = ?`;
+      } else {
+        // ax = b
+        answer = Math.floor(Math.random() * 10) + 2;
+        const a = Math.floor(Math.random() * 5) + 2; // 2-6
+        const b = a * answer;
+        display = `${a}x = ${b}, x = ?`;
+      }
+      break;
+      
+    default:
+      num1 = Math.floor(Math.random() * 10) + 1;
+      num2 = Math.floor(Math.random() * 10) + 1;
+      display = `${num1} + ${num2}`;
+      answer = num1 + num2;
   }
-
-  let answer = 0;
-  if (operation === '+') answer = num1 + num2;
-  if (operation === '-') answer = num1 - num2;
-  if (operation === 'x') answer = num1 * num2;
-
-  return { num1, num2, operation, answer };
+  
+  return { display, answer };
 }
