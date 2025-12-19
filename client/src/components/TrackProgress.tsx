@@ -8,8 +8,8 @@ interface TrackProgressProps {
 }
 
 const SECTOR_COLORS = {
-  s1: "#e10600",
-  s2: "#0090d0", 
+  s1: "#ff2800",
+  s2: "#0600ef", 
   s3: "#ffd700"
 };
 
@@ -51,27 +51,33 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
         <svg width="300" height="160" style={{ overflow: 'visible' }}>
           <path
             ref={s1Ref}
+            id="track-s1"
             d={circuit.paths.s1}
             stroke={SECTOR_COLORS.s1}
-            strokeWidth="12"
+            strokeWidth="15"
             fill="none"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
           <path
             ref={s2Ref}
+            id="track-s2"
             d={circuit.paths.s2}
             stroke={SECTOR_COLORS.s2}
-            strokeWidth="12"
+            strokeWidth="15"
             fill="none"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
           <path
             ref={s3Ref}
+            id="track-s3"
             d={circuit.paths.s3}
             stroke={SECTOR_COLORS.s3}
-            strokeWidth="12"
+            strokeWidth="15"
             fill="none"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
           <path
             d={circuit.paths.s1}
@@ -101,7 +107,8 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
             position: 'absolute',
             fontSize: '24px',
             transform: 'translate(-50%, -50%)',
-            transition: 'all 0.5s ease',
+            transition: 'all 0.3s ease',
+            zIndex: 10,
             left: `${carPosition.x}px`,
             top: `${carPosition.y}px`
           }}
