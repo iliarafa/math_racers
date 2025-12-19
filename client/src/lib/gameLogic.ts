@@ -82,7 +82,7 @@ export const CIRCUITS: Circuit[] = [
     type: "Multiplication",
     description: "",
     mapUrl: "",
-    pathData: "M 40 120 L 40 40 Q 40 10 100 10 L 250 10 Q 290 10 290 50 L 290 100 Q 290 140 250 140 L 80 140 Q 40 140 40 120 Z"
+    pathData: "M 200 130 L 70 130 L 60 120 L 50 130 Q 30 130 30 90 Q 30 60 80 50 L 90 45 L 100 50 L 120 45 Q 140 20 150 45 L 160 85 L 170 95 L 180 85 L 250 85 Q 290 85 290 110 Q 290 130 250 130 Z"
   },
   {
     id: "spa",
