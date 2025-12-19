@@ -3,19 +3,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, DRIVERS_2025, Circuit } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, ArrowRight } from "lucide-react";
 
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak } = useGameState();
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0); 
   const [mistakes, setMistakes] = useState(0);
-  const [gameStatus, setGameStatus] = useState<'selecting' | 'countdown' | 'go' | 'racing' | 'finished'>('selecting');
+  const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished'>('driver_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -41,14 +42,14 @@ export default function Game() {
 
   // GO state: show green for 1 second, then start racing
   useEffect(() => {
-    if (gameStatus === 'go' && selectedCircuit) {
-      setQuestion(generateQuestion(selectedCircuit.id));
+    if (gameStatus === 'go' && selectedCircuit && selectedDriver) {
+      setQuestion(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
       const timeout = setTimeout(() => {
         setGameStatus('racing');
       }, 1000);
       return () => clearTimeout(timeout);
     }
-  }, [gameStatus, selectedCircuit]);
+  }, [gameStatus, selectedCircuit, selectedDriver]);
 
   // Focus input when racing
   useEffect(() => {
@@ -69,12 +70,19 @@ export default function Game() {
     return () => clearInterval(interval);
   }, [gameStatus]);
 
-  // Guard: redirect to selection if no circuit selected
+  // Guard: redirect to proper selection if missing driver/circuit
   useEffect(() => {
-    if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished')) {
+    if (!selectedDriver && gameStatus !== 'driver_select') {
+      setGameStatus('driver_select');
+    } else if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished')) {
       setGameStatus('selecting');
     }
-  }, [selectedCircuit, gameStatus]);
+  }, [selectedDriver, selectedCircuit, gameStatus]);
+
+  const handleDriverSelect = (driver: Driver) => {
+    setSelectedDriver(driver);
+    setGameStatus('selecting');
+  };
 
   const formatTime = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
@@ -109,7 +117,7 @@ export default function Game() {
         setTimeout(() => {
           setFeedback('idle');
           setAnswer("");
-          setQuestion(generateQuestion(selectedCircuit.id));
+          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy'));
         }, 600);
       }
     } else {
@@ -127,7 +135,7 @@ export default function Game() {
         setTimeout(() => {
           setFeedback('idle');
           setAnswer("");
-          setQuestion(generateQuestion(selectedCircuit.id));
+          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy'));
         }, 800);
       }
     }
@@ -154,13 +162,52 @@ export default function Game() {
     setFinalMistakes(0);
     setElapsedTime(0);
     setCountdownLight(0);
-    setGameStatus('selecting');
+    setGameStatus('driver_select');
+    setSelectedDriver(null);
     setSelectedCircuit(null);
     setFeedback('idle');
     setAnswer("");
     setQuestion(null);
     resetStreak();
   };
+
+  // Driver Selection Screen
+  if (gameStatus === 'driver_select') {
+    return (
+      <GameLayout coins={state.coins} trackName="Select Driver">
+        <div className="flex-1 flex flex-col py-6 px-4">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-1">Choose Your Driver</h2>
+            <p className="text-muted-foreground">Each driver has a different difficulty level</p>
+          </div>
+          
+          <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
+            {DRIVERS.map((driver) => (
+              <motion.button
+                key={driver.id}
+                onClick={() => handleDriverSelect(driver)}
+                whileHover={{ opacity: 0.7 }}
+                whileTap={{ scale: 0.98 }}
+                className="py-3 text-left transition-opacity"
+                data-testid={`driver-${driver.id}`}
+              >
+                <span className="font-bold text-lg">{driver.name}</span>
+                <span className="text-xs text-muted-foreground ml-2">{driver.label}</span>
+              </motion.button>
+            ))}
+          </div>
+          
+          <div className="mt-6 text-center">
+            <Link href="/">
+              <button className="text-muted-foreground hover:text-foreground transition-colors text-sm">
+                ← Back to Menu
+              </button>
+            </Link>
+          </div>
+        </div>
+      </GameLayout>
+    );
+  }
 
   // Circuit Selection Screen
   if (gameStatus === 'selecting') {

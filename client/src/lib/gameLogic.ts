@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 
 export type Operation = '+' | '-' | 'x' | '÷' | 'var';
+export type Difficulty = 'easy' | 'medium' | 'hard';
 
 export interface Question {
   display: string;
   answer: number;
+}
+
+export interface Driver {
+  id: string;
+  name: string;
+  difficulty: Difficulty;
+  label: string;
 }
 
 export interface Circuit {
@@ -24,6 +32,12 @@ export interface GameState {
 }
 
 export const RACE_LENGTH = 20;
+
+export const DRIVERS: Driver[] = [
+  { id: "kimi", name: "Kimi Antonelli", difficulty: "easy", label: "Rookie (Age 8)" },
+  { id: "lando", name: "Lando Norris", difficulty: "medium", label: "Pro (Age 9)" },
+  { id: "max", name: "Max Verstappen", difficulty: "hard", label: "Champion (Age 10)" }
+];
 
 export const DRIVERS_2025 = [
   "Lando Norris",        // 1st - World Champion (0-1 mistakes)
@@ -168,68 +182,66 @@ export function useGameState() {
   };
 }
 
-export function generateQuestion(circuitId: string): Question {
+export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy'): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
+  
+  // Difficulty multipliers: easy = smaller numbers, hard = larger numbers
+  const range = difficulty === 'easy' ? { min: 2, max: 10 } : difficulty === 'medium' ? { min: 5, max: 15 } : { min: 10, max: 20 };
   
   let num1: number, num2: number, display: string, answer: number;
   
   switch (circuit.type) {
     case "Multiplication":
-      num1 = Math.floor(Math.random() * 10) + 2; // 2-11
-      num2 = Math.floor(Math.random() * 10) + 2; // 2-11
+      num1 = Math.floor(Math.random() * (range.max - range.min)) + range.min;
+      num2 = Math.floor(Math.random() * (range.max - range.min)) + range.min;
       display = `${num1} × ${num2}`;
       answer = num1 * num2;
       break;
       
     case "Addition":
-      num1 = Math.floor(Math.random() * 50) + 10; // 10-59
-      num2 = Math.floor(Math.random() * 50) + 10; // 10-59
+      num1 = Math.floor(Math.random() * (range.max * 3)) + range.min;
+      num2 = Math.floor(Math.random() * (range.max * 3)) + range.min;
       display = `${num1} + ${num2}`;
       answer = num1 + num2;
       break;
       
     case "Subtraction":
-      num1 = Math.floor(Math.random() * 50) + 20; // 20-69
-      num2 = Math.floor(Math.random() * (num1 - 5)) + 1; // Ensure positive result
+      num1 = Math.floor(Math.random() * (range.max * 3)) + range.max;
+      num2 = Math.floor(Math.random() * (num1 - 5)) + 1;
       display = `${num1} − ${num2}`;
       answer = num1 - num2;
       break;
       
     case "Division":
-      // Generate division with whole number results
-      answer = Math.floor(Math.random() * 10) + 2; // 2-11
-      num2 = Math.floor(Math.random() * 10) + 2; // 2-11
+      answer = Math.floor(Math.random() * range.max) + 2;
+      num2 = Math.floor(Math.random() * range.max) + 2;
       num1 = answer * num2;
       display = `${num1} ÷ ${num2}`;
       break;
       
     case "Variables":
-      // Simple algebra: x + a = b or a - x = b or ax = b
       const varType = Math.floor(Math.random() * 3);
       if (varType === 0) {
-        // x + a = b
-        answer = Math.floor(Math.random() * 15) + 3;
-        const a = Math.floor(Math.random() * 10) + 2;
+        answer = Math.floor(Math.random() * range.max) + 2;
+        const a = Math.floor(Math.random() * range.max) + 2;
         const b = answer + a;
         display = `x + ${a} = ${b}, x = ?`;
       } else if (varType === 1) {
-        // a - x = b
-        answer = Math.floor(Math.random() * 10) + 2;
-        const b = Math.floor(Math.random() * 10) + 2;
+        answer = Math.floor(Math.random() * range.max) + 2;
+        const b = Math.floor(Math.random() * range.max) + 2;
         const a = b + answer;
         display = `${a} − x = ${b}, x = ?`;
       } else {
-        // ax = b
-        answer = Math.floor(Math.random() * 10) + 2;
-        const a = Math.floor(Math.random() * 5) + 2; // 2-6
+        answer = Math.floor(Math.random() * range.max) + 2;
+        const a = Math.floor(Math.random() * 5) + 2;
         const b = a * answer;
         display = `${a}x = ${b}, x = ?`;
       }
       break;
       
     default:
-      num1 = Math.floor(Math.random() * 10) + 1;
-      num2 = Math.floor(Math.random() * 10) + 1;
+      num1 = Math.floor(Math.random() * range.max) + 1;
+      num2 = Math.floor(Math.random() * range.max) + 1;
       display = `${num1} + ${num2}`;
       answer = num1 + num2;
   }
