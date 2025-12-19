@@ -21,6 +21,7 @@ export interface Circuit {
   type: string;
   description: string;
   mapUrl: string;
+  pathData: string;
 }
 
 export interface GameState {
@@ -80,35 +81,40 @@ export const CIRCUITS: Circuit[] = [
     name: "Monza",
     type: "Multiplication",
     description: "",
-    mapUrl: ""
+    mapUrl: "",
+    pathData: "M 40 120 L 40 40 Q 40 10 100 10 L 250 10 Q 290 10 290 50 L 290 100 Q 290 140 250 140 L 80 140 Q 40 140 40 120 Z"
   },
   {
     id: "spa",
     name: "Spa",
     type: "Addition",
     description: "",
-    mapUrl: ""
+    mapUrl: "",
+    pathData: "M 50 130 L 20 80 L 80 20 L 250 20 L 280 80 L 200 140 L 100 130 Z"
   },
   {
     id: "monaco",
     name: "Monaco",
     type: "Subtraction",
     description: "",
-    mapUrl: ""
+    mapUrl: "",
+    pathData: "M 20 100 L 20 50 L 80 50 L 80 20 L 150 20 L 150 80 L 200 80 L 200 120 L 100 120 L 100 140 L 20 140 Z"
   },
   {
     id: "suzuka",
     name: "Suzuka",
     type: "Division",
     description: "",
-    mapUrl: ""
+    mapUrl: "",
+    pathData: "M 50 100 Q 50 50 100 50 T 150 100 T 200 50 T 250 100"
   },
   {
     id: "silverstone",
     name: "Silverstone",
     type: "Variables",
     description: "",
-    mapUrl: ""
+    mapUrl: "",
+    pathData: "M 50 100 L 50 50 L 100 20 L 200 20 L 250 50 L 250 100 L 200 130 L 100 130 Z"
   }
 ];
 

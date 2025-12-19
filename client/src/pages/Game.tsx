@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
+import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, ArrowRight } from "lucide-react";
@@ -379,22 +380,21 @@ export default function Game() {
   // Racing phase
   return (
     <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-8 gap-12">
+      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-4 gap-6">
         
-        {/* Progress Bar & Stats */}
+        {/* Track Progress Visualization */}
         <div className="space-y-2">
-          <div className="flex justify-between text-sm text-muted-foreground font-medium">
+          <div className="flex justify-between text-sm text-muted-foreground font-medium px-1">
              <span>Question {progress + 1} of {RACE_LENGTH}</span>
              <span className={cn(mistakes > 0 ? "text-red-600" : "")}>{mistakes} Mistakes</span>
           </div>
-          <div className="h-2 bg-secondary rounded-full overflow-hidden">
-             <motion.div 
-               className="h-full bg-primary"
-               initial={{ width: 0 }}
-               animate={{ width: `${(progress / RACE_LENGTH) * 100}%` }}
-               transition={{ type: "spring", stiffness: 50 }}
-             />
-          </div>
+          {selectedCircuit && (
+            <TrackProgress 
+              circuit={selectedCircuit} 
+              progress={progress} 
+              total={RACE_LENGTH} 
+            />
+          )}
         </div>
 
         {/* Stopwatch & Question Area */}
