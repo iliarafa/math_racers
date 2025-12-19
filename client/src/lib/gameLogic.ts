@@ -51,38 +51,38 @@ export const DRIVERS_2025 = [
 export const CIRCUITS: Circuit[] = [
   {
     id: "monza",
-    name: "Monza (Italy)",
+    name: "Monza",
     type: "Multiplication",
-    description: "The Temple of Speed",
-    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/b/b8/Monza_track_map.svg"
+    description: "",
+    mapUrl: ""
   },
   {
     id: "spa",
-    name: "Spa (Belgium)",
+    name: "Spa",
     type: "Addition",
-    description: "The Longest Lap",
-    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/5/54/Spa-Francorchamps_of_Belgium.svg"
+    description: "",
+    mapUrl: ""
   },
   {
     id: "monaco",
     name: "Monaco",
     type: "Subtraction",
-    description: "Street Circuit",
-    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/3/36/Monte_Carlo_Formula_1_track_map.svg"
+    description: "",
+    mapUrl: ""
   },
   {
     id: "suzuka",
-    name: "Suzuka (Japan)",
+    name: "Suzuka",
     type: "Division",
-    description: "Figure-8 Track",
-    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/4/40/Suzuka_circuit_map_2005.svg"
+    description: "",
+    mapUrl: ""
   },
   {
     id: "silverstone",
-    name: "Silverstone (UK)",
+    name: "Silverstone",
     type: "Variables",
-    description: "Home of F1",
-    mapUrl: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Silverstone_Circuit_2020.svg"
+    description: "",
+    mapUrl: ""
   }
 ];
 

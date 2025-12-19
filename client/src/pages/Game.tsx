@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, DRIVERS_2025, Circuit } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, ArrowRight, Timer, MapPin } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer } from "lucide-react";
 
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak } = useGameState();
@@ -172,24 +172,18 @@ export default function Game() {
             <p className="text-muted-foreground">Each track tests a different math skill</p>
           </div>
           
-          <div className="grid gap-3 max-w-2xl mx-auto w-full">
+          <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
             {CIRCUITS.map((circuit) => (
               <motion.button
                 key={circuit.id}
                 onClick={() => handleCircuitSelect(circuit)}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className="p-4 text-left hover:bg-secondary/50 transition-colors flex items-center justify-between rounded-lg"
+                whileHover={{ opacity: 0.7 }}
+                whileTap={{ scale: 0.98 }}
+                className="py-3 text-left transition-opacity"
                 data-testid={`circuit-${circuit.id}`}
               >
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <span className="font-bold">{circuit.name}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground">{circuit.type}</span>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                </div>
+                <span className="font-bold text-lg">{circuit.name}</span>
+                <span className="text-xs text-muted-foreground ml-2">{circuit.type}</span>
               </motion.button>
             ))}
           </div>
