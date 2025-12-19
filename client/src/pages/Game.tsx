@@ -69,6 +69,13 @@ export default function Game() {
     return () => clearInterval(interval);
   }, [gameStatus]);
 
+  // Guard: redirect to selection if no circuit selected
+  useEffect(() => {
+    if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished')) {
+      setGameStatus('selecting');
+    }
+  }, [selectedCircuit, gameStatus]);
+
   const formatTime = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
@@ -210,18 +217,6 @@ export default function Game() {
         </div>
       </GameLayout>
     );
-  }
-
-  // Guard: redirect to selection if no circuit selected (handled in useEffect to avoid state update during render)
-  useEffect(() => {
-    if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished')) {
-      setGameStatus('selecting');
-    }
-  }, [selectedCircuit, gameStatus]);
-
-  // Show nothing while redirecting
-  if (!selectedCircuit) {
-    return null;
   }
 
   // Countdown screen with F1 starting lights
