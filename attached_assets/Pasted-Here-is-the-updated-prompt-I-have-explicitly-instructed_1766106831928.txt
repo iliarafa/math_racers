@@ -1,0 +1,47 @@
+Here is the updated prompt. I have explicitly instructed the Agent to wipe and replace the current Garage content with the new "F1 Dashboard" features.
+Prompt for Replit Agent:
+I need to completely replace the current content of the "Garage" tab.
+
+Please delete the existing HTML/logic for the Garage and replace it with a new **"F1 Engineering Dashboard"**.
+
+**1. REPLACE `showGarage()` FUNCTION:**
+Modify `script.js` to clear the Garage container and render this new structure:
+
+* **Header:** "Team Garage"
+* **Section 1: The Paint Shop (Livery)**
+    * Display a label: "Select Team Livery".
+    * Render 4 circular buttons (color swatches):
+        * **Red** (`#ff2800` - Ferrari style)
+        * **Papaya** (`#ff8000` - McLaren style)
+        * **Blue** (`#0600ef` - Red Bull style)
+        * **Silver** (`#00d2be` - Mercedes style)
+    * *Logic:* Clicking a color immediately updates the app's CSS variables (buttons, borders, headers) and saves the choice to `localStorage` key `teamColor`.
+
+* **Section 2: Telemetry (Stats)**
+    * Display a grid of 3 data boxes (styled like a dashboard):
+        * **Total Laps:** (Read from `localStorage` `totalLaps`)
+        * **Career Points:** (Read from `localStorage` `careerPoints`)
+        * **Races Won:** (Read from `localStorage` `racesWon`)
+    * *Note:* Ensure you initialize these keys to `0` if they don't exist.
+
+* **Section 3: Pit Radio (Settings)**
+    * Display a toggle switch or checkbox labeled "Pit Radio (Sound Effects)".
+    * *Logic:* Toggling this saves a boolean to `localStorage` `soundEnabled`.
+
+* **Section 4: Danger Zone**
+    * A red button labeled "RETIRE CAR (Reset Save)".
+    * *Logic:* Clicking this triggers a `confirm()` alert. If yes, `localStorage.clear()` and reload the page.
+
+**2. UPDATE GAME ENGINE:**
+* Modify the `checkAnswer` or game completion logic to actually update the stats:
+    * Increment `totalLaps` for every correct answer.
+    * Add points to `careerPoints` based on difficulty (Easy=1, Medium=2, Hard=3).
+    * Increment `racesWon` when a user finishes a full question set.
+
+**3. STYLING (CSS):**
+* Style the Telemetry boxes to look "technical" (e.g., monospace font, dark background, neon borders).
+* Make the Color Swatches large and circular.
+* Ensure the "Retire Car" button is distinct and separated at the bottom.
+
+**IMPORTANT:** This new code must completely replace whatever is currently inside the Garage tab.
+
