@@ -95,3 +95,27 @@ body {
   color: #000 !important;
   box-shadow: 0 0 15px #00ff00;
 }
+
+.penalty-box {
+  background-color: #333;
+  color: white;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 5px;
+  transition: all 0.3s;
+  font-size: 14px;
+  display: none;
+}
+
+.penalty-active {
+  display: block !important;
+  background-color: #ff0000 !important;
+  color: #fff !important;
+  box-shadow: 0 0 15px #ff0000;
+  animation: penalty-flash 0.5s ease-in-out 3;
+}
+
+@keyframes penalty-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

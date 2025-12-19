@@ -21,6 +21,7 @@ export default function Game() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
+  const [showPenalty, setShowPenalty] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Countdown sequence: 5 lights, one per second
@@ -129,6 +130,8 @@ export default function Game() {
       }
     } else {
       setFeedback('incorrect');
+      setShowPenalty(true);
+      setTimeout(() => setShowPenalty(false), 1500);
       const newMistakes = mistakes + 1;
       setMistakes(newMistakes);
       resetStreak();
@@ -168,6 +171,7 @@ export default function Game() {
     setProgress(0);
     setMistakes(0);
     setFinalMistakes(0);
+    setShowPenalty(false);
     setElapsedTime(0);
     setCountdownLight(0);
     setGameStatus('driver_select');
@@ -395,7 +399,8 @@ export default function Game() {
             <TrackProgress 
               circuit={selectedCircuit} 
               progress={progress} 
-              total={RACE_LENGTH} 
+              total={RACE_LENGTH}
+              showPenalty={showPenalty}
             />
           )}
         </div>

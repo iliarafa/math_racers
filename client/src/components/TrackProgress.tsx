@@ -5,6 +5,7 @@ interface TrackProgressProps {
   circuit: Circuit;
   progress: number;
   total: number;
+  showPenalty?: boolean;
 }
 
 const SECTOR_COLORS = {
@@ -13,7 +14,7 @@ const SECTOR_COLORS = {
   s3: "#ffd700"
 };
 
-export function TrackProgress({ circuit, progress, total }: TrackProgressProps) {
+export function TrackProgress({ circuit, progress, total, showPenalty = false }: TrackProgressProps) {
   const s1Ref = useRef<SVGPathElement>(null);
   const s2Ref = useRef<SVGPathElement>(null);
   const s3Ref = useRef<SVGPathElement>(null);
@@ -101,12 +102,23 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
       
       <div className="flex justify-between items-center text-sm text-muted-foreground mt-2 px-1">
         <span>Lap {progress} / {total}</span>
-        <div
-          id="drs-indicator"
-          data-testid="drs-indicator"
-          className={`drs-box ${isDrsActive ? 'drs-active' : ''}`}
-        >
-          {isDrsActive ? 'DRS ON' : 'DRS DISABLED'}
+        <div id="dashboard-container" style={{ display: 'flex', gap: '15px', justifyContent: 'center', alignItems: 'center' }}>
+          <div
+            id="drs-indicator"
+            data-testid="drs-indicator"
+            className={`drs-box ${isDrsActive ? 'drs-active' : ''}`}
+          >
+            {isDrsActive ? 'DRS ON' : 'DRS'}
+          </div>
+          {showPenalty && (
+            <div
+              id="penalty-light"
+              data-testid="penalty-light"
+              className="penalty-box penalty-active"
+            >
+              !
+            </div>
+          )}
         </div>
         <span>{Math.round((progress / total) * 100)}%</span>
       </div>
