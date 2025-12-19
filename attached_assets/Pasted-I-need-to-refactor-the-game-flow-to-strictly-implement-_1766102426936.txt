@@ -1,0 +1,65 @@
+I need to refactor the game flow to strictly implement a "Circuit Selection" phase before the race begins. 
+
+Please modify the `script.js` (and `style.css` if needed) to perform the following steps:
+
+1. **DEFINE THE DATA:**
+   Replace or add this constant to store circuit data, including the math operations and Wikipedia map images:
+   ```javascript
+   const CIRCUITS = [
+     {
+       id: "monza",
+       name: "Monza (Italy)",
+       type: "Multiplication",
+       description: "The Temple of Speed",
+       mapUrl: "[https://upload.wikimedia.org/wikipedia/commons/b/b8/Monza_track_map.svg](https://upload.wikimedia.org/wikipedia/commons/b/b8/Monza_track_map.svg)",
+       questions: [
+         { q: "4 x 5", a: 20 }, { q: "6 x 6", a: 36 }, { q: "8 x 3", a: 24 },
+         { q: "7 x 4", a: 28 }, { q: "9 x 5", a: 45 }, { q: "12 x 2", a: 24 }
+       ]
+     },
+     {
+       id: "spa",
+       name: "Spa (Belgium)",
+       type: "Addition",
+       description: "The Longest Lap",
+       mapUrl: "[https://upload.wikimedia.org/wikipedia/commons/5/54/Spa-Francorchamps_of_Belgium.svg](https://upload.wikimedia.org/wikipedia/commons/5/54/Spa-Francorchamps_of_Belgium.svg)",
+       questions: [
+         { q: "20 + 15", a: 35 }, { q: "45 + 10", a: 55 }, { q: "30 + 30", a: 60 },
+         { q: "18 + 22", a: 40 }, { q: "50 + 25", a: 75 }, { q: "100 + 50", a: 150 }
+       ]
+     },
+     {
+       id: "monaco",
+       name: "Monaco",
+       type: "Subtraction",
+       description: "Street Circuit",
+       mapUrl: "[https://upload.wikimedia.org/wikipedia/commons/3/36/Monte_Carlo_Formula_1_track_map.svg](https://upload.wikimedia.org/wikipedia/commons/3/36/Monte_Carlo_Formula_1_track_map.svg)",
+       questions: [
+         { q: "25 - 10", a: 15 }, { q: "50 - 20", a: 30 }, { q: "18 - 9", a: 9 },
+         { q: "30 - 15", a: 15 }, { q: "42 - 12", a: 30 }, { q: "100 - 1", a: 99 }
+       ]
+     },
+     {
+       id: "suzuka",
+       name: "Suzuka (Japan)",
+       type: "Division",
+       description: "Figure-8 Track",
+       mapUrl: "[https://upload.wikimedia.org/wikipedia/commons/4/40/Suzuka_circuit_map_2005.svg](https://upload.wikimedia.org/wikipedia/commons/4/40/Suzuka_circuit_map_2005.svg)",
+       questions: [
+         { q: "20 / 2", a: 10 }, { q: "30 / 5", a: 6 }, { q: "16 / 4", a: 4 },
+         { q: "24 / 6", a: 4 }, { q: "81 / 9", a: 9 }, { q: "100 / 10", a: 10 }
+       ]
+     },
+     {
+       id: "silverstone",
+       name: "Silverstone (UK)",
+       type: "Variables",
+       description: "Home of F1",
+       mapUrl: "[https://upload.wikimedia.org/wikipedia/commons/a/aa/Silverstone_Circuit_2020.svg](https://upload.wikimedia.org/wikipedia/commons/a/aa/Silverstone_Circuit_2020.svg)",
+       questions: [
+         { q: "x + 5 = 15, x=", a: 10 }, { q: "y - 3 = 7, y=", a: 10 },
+         { q: "x + 10 = 20, x=", a: 10 }, { q: "10 - x = 2, x=", a: 8 },
+         { q: "2x = 12, x=", a: 6 }, { q: "3y = 30, y=", a: 10 }
+       ]
+     }
+   ];
