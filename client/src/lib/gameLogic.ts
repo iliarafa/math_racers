@@ -90,7 +90,7 @@ export const CIRCUITS: Circuit[] = [
     type: "Addition",
     description: "",
     mapUrl: "",
-    pathData: "M 50 130 L 20 80 L 80 20 L 250 20 L 280 80 L 200 140 L 100 130 Z"
+    pathData: "M 90 120 L 50 135 L 40 125 Q 60 110 80 100 L 200 30 L 220 30 L 230 40 Q 260 50 260 80 L 230 100 L 270 120 Q 180 150 110 130 L 100 125 L 90 120 Z"
   },
   {
     id: "monaco",
