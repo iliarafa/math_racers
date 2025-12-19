@@ -7,20 +7,40 @@ interface TrackProgressProps {
   total: number;
 }
 
+const SECTOR_COLORS = {
+  s1: "#e10600",
+  s2: "#0090d0", 
+  s3: "#ffd700"
+};
+
 export function TrackProgress({ circuit, progress, total }: TrackProgressProps) {
-  const pathRef = useRef<SVGPathElement>(null);
+  const s1Ref = useRef<SVGPathElement>(null);
+  const s2Ref = useRef<SVGPathElement>(null);
+  const s3Ref = useRef<SVGPathElement>(null);
   const [carPosition, setCarPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    if (!pathRef.current) return;
+    if (!s1Ref.current || !s2Ref.current || !s3Ref.current) return;
 
-    const path = pathRef.current;
-    const pathLength = path.getTotalLength();
+    const s1Length = s1Ref.current.getTotalLength();
+    const s2Length = s2Ref.current.getTotalLength();
+    const s3Length = s3Ref.current.getTotalLength();
+    const totalLength = s1Length + s2Length + s3Length;
+
     const progressRatio = Math.min(progress / total, 1);
-    const point = path.getPointAtLength(pathLength * progressRatio);
-    
+    const targetLength = progressRatio * totalLength;
+
+    let point: DOMPoint;
+    if (targetLength <= s1Length) {
+      point = s1Ref.current.getPointAtLength(targetLength);
+    } else if (targetLength <= s1Length + s2Length) {
+      point = s2Ref.current.getPointAtLength(targetLength - s1Length);
+    } else {
+      point = s3Ref.current.getPointAtLength(targetLength - s1Length - s2Length);
+    }
+
     setCarPosition({ x: point.x, y: point.y });
-  }, [progress, total, circuit.pathData]);
+  }, [progress, total, circuit.paths]);
 
   return (
     <div className="w-full max-w-md mx-auto" data-testid="track-progress">
@@ -30,19 +50,47 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
       >
         <svg width="300" height="160" style={{ overflow: 'visible' }}>
           <path
-            ref={pathRef}
-            id="track-path"
-            d={circuit.pathData}
-            stroke="#555"
-            strokeWidth="20"
+            ref={s1Ref}
+            d={circuit.paths.s1}
+            stroke={SECTOR_COLORS.s1}
+            strokeWidth="12"
             fill="none"
             strokeLinecap="round"
           />
           <path
-            id="track-centerline"
-            d={circuit.pathData}
+            ref={s2Ref}
+            d={circuit.paths.s2}
+            stroke={SECTOR_COLORS.s2}
+            strokeWidth="12"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            ref={s3Ref}
+            d={circuit.paths.s3}
+            stroke={SECTOR_COLORS.s3}
+            strokeWidth="12"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d={circuit.paths.s1}
             stroke="#fff"
-            strokeWidth="2"
+            strokeWidth="1"
+            fill="none"
+            strokeDasharray="5,5"
+          />
+          <path
+            d={circuit.paths.s2}
+            stroke="#fff"
+            strokeWidth="1"
+            fill="none"
+            strokeDasharray="5,5"
+          />
+          <path
+            d={circuit.paths.s3}
+            stroke="#fff"
+            strokeWidth="1"
             fill="none"
             strokeDasharray="5,5"
           />

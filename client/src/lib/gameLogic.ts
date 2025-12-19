@@ -15,13 +15,19 @@ export interface Driver {
   label: string;
 }
 
+export interface CircuitPaths {
+  s1: string;
+  s2: string;
+  s3: string;
+}
+
 export interface Circuit {
   id: string;
   name: string;
   type: string;
   description: string;
   mapUrl: string;
-  pathData: string;
+  paths: CircuitPaths;
 }
 
 export interface GameState {
@@ -78,43 +84,63 @@ export const DRIVERS_2025 = [
 export const CIRCUITS: Circuit[] = [
   {
     id: "monza",
-    name: "Monza",
+    name: "Monza (Italy)",
     type: "Multiplication",
-    description: "",
+    description: "The Temple of Speed",
     mapUrl: "",
-    pathData: "M 200 130 L 70 130 L 60 120 L 50 130 Q 30 130 30 90 Q 30 60 80 50 L 90 45 L 100 50 L 120 45 Q 140 20 150 45 L 160 85 L 170 95 L 180 85 L 250 85 Q 290 85 290 110 Q 290 130 250 130 Z"
+    paths: {
+      s1: "M 200 130 L 70 130 L 60 120 L 50 130 Q 30 130 30 90 Q 30 60 80 50 L 90 45",
+      s2: "M 90 45 L 100 50 L 120 45 Q 140 20 150 45 L 160 85 L 170 95 L 180 85",
+      s3: "M 180 85 L 250 85 Q 290 85 290 110 Q 290 130 250 130 L 200 130"
+    }
   },
   {
     id: "spa",
-    name: "Spa",
+    name: "Spa (Belgium)",
     type: "Addition",
-    description: "",
+    description: "The Longest Lap",
     mapUrl: "",
-    pathData: "M 90 120 L 50 135 L 40 125 Q 60 110 80 100 L 200 30 L 220 30 L 230 40 Q 260 50 260 80 L 230 100 L 270 120 Q 180 150 110 130 L 100 125 L 90 120 Z"
+    paths: {
+      s1: "M 90 120 L 50 135 L 40 125 Q 60 110 80 100 L 200 30 L 220 30",
+      s2: "M 220 30 L 230 40 Q 260 50 260 80 L 230 100 L 270 120",
+      s3: "M 270 120 Q 180 150 110 130 L 100 125 L 90 120"
+    }
   },
   {
     id: "monaco",
     name: "Monaco",
     type: "Subtraction",
-    description: "",
+    description: "Street Circuit",
     mapUrl: "",
-    pathData: "M 20 100 L 20 50 L 80 50 L 80 20 L 150 20 L 150 80 L 200 80 L 200 120 L 100 120 L 100 140 L 20 140 Z"
+    paths: {
+      s1: "M 180 110 L 220 110 L 220 130 L 50 130 L 50 110 L 70 110",
+      s2: "M 70 110 L 80 90 L 70 70 L 50 70 L 50 50 L 90 30 L 130 30 L 140 50 L 140 100 L 110 120",
+      s3: "M 110 120 L 150 120 L 170 100 L 180 110"
+    }
   },
   {
     id: "suzuka",
-    name: "Suzuka",
+    name: "Suzuka (Japan)",
     type: "Division",
-    description: "",
+    description: "Figure-8 Track",
     mapUrl: "",
-    pathData: "M 250 125 L 180 125 Q 160 125 155 105 Q 150 85 180 75 Q 210 65 210 45 Q 210 25 180 25 L 140 25 L 120 35 L 110 55 Q 100 85 70 85 L 50 85 Q 20 85 20 60 L 20 50 Q 20 20 50 20 L 100 20 L 130 30 L 160 35 L 190 35 L 250 35 Q 280 35 280 80 Q 280 125 250 125 Z"
+    paths: {
+      s1: "M 250 125 L 180 125 Q 160 125 155 105 Q 150 85 180 75 Q 210 65 210 45 Q 210 25 180 25 L 140 25 L 120 35",
+      s2: "M 120 35 L 110 55 Q 100 85 70 85 L 50 85 Q 20 85 20 60 L 20 50 Q 20 20 50 20 L 100 20 L 130 30 L 160 35",
+      s3: "M 160 35 L 190 35 L 250 35 Q 280 35 280 80 Q 280 125 250 125"
+    }
   },
   {
     id: "silverstone",
-    name: "Silverstone",
+    name: "Silverstone (UK)",
     type: "Variables",
-    description: "",
+    description: "Home of F1",
     mapUrl: "",
-    pathData: "M 50 100 L 50 50 L 100 20 L 200 20 L 250 50 L 250 100 L 200 130 L 100 130 Z"
+    paths: {
+      s1: "M 145 25 L 190 15 Q 210 15 215 35 L 200 70 L 180 100 Q 170 120 145 125 L 135 120 L 125 130 Q 110 145 90 145 L 70 145 Q 50 145 50 125 L 55 115 L 80 60 L 85 50 Q 95 35 75 35",
+      s2: "M 75 35 Q 55 35 55 65 Q 55 95 80 95 L 100 95 L 120 70 L 140 25 Q 150 5 170 5 L 200 5 Q 225 5 230 25 L 230 40 Q 230 60 250 65 L 265 60 Q 285 55 285 85 L 285 115",
+      s3: "M 285 115 Q 285 140 255 140 L 220 140 L 200 115 L 190 125 L 175 125 Q 155 125 150 105 L 145 25"
+    }
   }
 ];
 
