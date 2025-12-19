@@ -114,7 +114,7 @@ export function TrackProgress({ circuit, progress, total, showPenalty = false }:
             <div
               id="penalty-light"
               data-testid="penalty-light"
-              className="penalty-box penalty-active"
+              className="penalty-box"
             >
               !
             </div>
