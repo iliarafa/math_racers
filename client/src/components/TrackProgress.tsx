@@ -19,6 +19,8 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
   const s3Ref = useRef<SVGPathElement>(null);
   const [carPosition, setCarPosition] = useState({ x: 0, y: 0 });
 
+  const isDrsActive = circuit.drsZones.includes(progress);
+
   useEffect(() => {
     if (!s1Ref.current || !s2Ref.current || !s3Ref.current) return;
 
@@ -97,8 +99,26 @@ export function TrackProgress({ circuit, progress, total }: TrackProgressProps) 
         </div>
       </div>
       
-      <div className="flex justify-between text-sm text-muted-foreground mt-2 px-1">
+      <div className="flex justify-between items-center text-sm text-muted-foreground mt-2 px-1">
         <span>Lap {progress} / {total}</span>
+        <div
+          id="drs-indicator"
+          data-testid="drs-indicator"
+          className="drs-box"
+          style={{
+            padding: '4px 12px',
+            borderRadius: '4px',
+            fontWeight: 'bold',
+            fontSize: '12px',
+            textTransform: 'uppercase',
+            backgroundColor: isDrsActive ? '#00ff00' : '#333',
+            color: isDrsActive ? '#000' : '#888',
+            boxShadow: isDrsActive ? '0 0 10px #00ff00' : 'none',
+            transition: 'all 0.3s ease'
+          }}
+        >
+          {isDrsActive ? 'DRS ENABLED' : 'DRS DISABLED'}
+        </div>
         <span>{Math.round((progress / total) * 100)}%</span>
       </div>
     </div>
