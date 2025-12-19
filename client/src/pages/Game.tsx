@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, ArrowRight } from "lucide-react";
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon } = useGameState();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [question, setQuestion] = useState<Question | null>(null);
@@ -107,6 +107,9 @@ export default function Game() {
       setFeedback('correct');
       addCoins(10);
       incrementStreak();
+      incrementLaps();
+      const difficultyPoints = selectedDriver?.difficulty === 'hard' ? 3 : selectedDriver?.difficulty === 'medium' ? 2 : 1;
+      addCareerPoints(difficultyPoints);
       
       const newProgress = progress + 1;
       setProgress(newProgress);
@@ -147,6 +150,7 @@ export default function Game() {
     setGameStatus('finished');
     if (mistakeCount <= 1) {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+       incrementRacesWon();
     }
   };
 

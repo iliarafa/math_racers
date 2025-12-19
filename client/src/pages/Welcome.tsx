@@ -15,7 +15,7 @@ export default function Welcome() {
           <div className="inline-block px-3 py-1 rounded-full bg-secondary text-xs font-medium uppercase tracking-wider text-muted-foreground">
             2025 Season
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-primary">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter" style={{ color: 'var(--team-color)' }}>
             Math Racers
           </h1>
           <p className="text-xl text-muted-foreground max-w-lg mx-auto">
@@ -26,7 +26,10 @@ export default function Welcome() {
 
         <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
           <Link href="/game" className="flex-1">
-            <button className="w-full bg-primary text-primary-foreground hover:opacity-90 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all">
+            <button 
+              className="w-full text-white hover:opacity-90 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all"
+              style={{ backgroundColor: 'var(--team-color)' }}
+            >
               <Play className="w-5 h-5" />
               Start Race
             </button>

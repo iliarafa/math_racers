@@ -43,6 +43,7 @@
 
 :root {
   /* Clean Minimal Theme */
+  --team-color: #ff2800;
   --background: 0 0% 100%;
   --foreground: 0 0% 10%;
 

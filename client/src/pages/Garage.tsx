@@ -1,121 +1,124 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, SHOP_ITEMS } from "@/lib/gameLogic";
+import { useGameState, TEAM_COLORS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Lock, Check, ChevronLeft } from "lucide-react";
+import { ChevronLeft, Check, AlertTriangle } from "lucide-react";
 
 export default function Garage() {
-  const { state, buyItem, equipItem } = useGameState();
+  const { state, setTeamColor, toggleSound, resetAllData } = useGameState();
 
-  const liveries = SHOP_ITEMS.filter(i => i.type === 'livery');
-  const tires = SHOP_ITEMS.filter(i => i.type === 'tires');
+  const handleRetireCar = () => {
+    if (confirm("Are you sure you want to retire your car? This will reset ALL your progress, including coins, stats, and settings.")) {
+      resetAllData();
+    }
+  };
 
   return (
     <GameLayout coins={state.coins}>
-      <div className="space-y-8">
+      <div className="space-y-8 max-w-2xl mx-auto">
         
         <div className="flex items-center gap-4">
           <Link href="/">
-            <button className="p-2 -ml-2 hover:bg-secondary rounded-full transition-colors">
+            <button className="p-2 -ml-2 hover:bg-secondary rounded-full transition-colors" data-testid="button-back">
               <ChevronLeft className="w-6 h-6" />
             </button>
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Garage</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Team Garage</h1>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12">
+        <section className="space-y-4">
+          <div className="border-b border-border pb-2">
+            <h2 className="font-semibold">Paint Shop</h2>
+            <p className="text-xs text-muted-foreground">Select Team Livery</p>
+          </div>
           
-          {/* Simple Inventory List - Liveries */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 border-b border-border pb-2">
-               <h2 className="font-semibold">Team Colors</h2>
-               <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{liveries.length} items</span>
+          <div className="flex gap-4">
+            {TEAM_COLORS.map(color => {
+              const isSelected = state.teamColor === color.hex;
+              return (
+                <button
+                  key={color.id}
+                  onClick={() => setTeamColor(color.hex)}
+                  className={cn(
+                    "w-14 h-14 rounded-full transition-all relative",
+                    isSelected && "ring-2 ring-offset-2 ring-offset-background ring-white"
+                  )}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                  data-testid={`color-${color.id}`}
+                >
+                  {isSelected && (
+                    <Check className="w-6 h-6 text-white absolute inset-0 m-auto drop-shadow-md" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div className="border-b border-border pb-2">
+            <h2 className="font-semibold">Telemetry</h2>
+            <p className="text-xs text-muted-foreground">Career Statistics</p>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 text-center" data-testid="stat-laps">
+              <div className="text-3xl font-mono font-bold text-cyan-400">{state.totalLaps}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Total Laps</div>
             </div>
-            
-            <div className="grid gap-3">
-              {liveries.map(item => {
-                const isUnlocked = state.unlockedItems.includes(item.id);
-                const isEquipped = state.equippedLivery === item.id;
-
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => isUnlocked ? equipItem(item.id, 'livery') : buyItem(item.id, item.cost)}
-                    className={cn(
-                      "flex items-center justify-between p-4 rounded-lg border transition-all text-left",
-                      isEquipped ? "border-primary ring-1 ring-primary" : "border-border hover:border-gray-300",
-                      !isUnlocked && "opacity-70"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn("w-6 h-6 rounded-full border border-black/10", item.color)}></div>
-                      <div>
-                        <div className="font-medium text-sm">{item.name}</div>
-                        {!isUnlocked && <div className="text-xs text-muted-foreground">{item.cost} Coins</div>}
-                      </div>
-                    </div>
-
-                    <div>
-                      {isEquipped ? (
-                        <Check className="w-4 h-4 text-primary" />
-                      ) : isUnlocked ? (
-                        <div className="text-xs font-medium text-muted-foreground">Select</div>
-                      ) : (
-                        <Lock className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </button>
-                )
-              })}
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 text-center" data-testid="stat-points">
+              <div className="text-3xl font-mono font-bold text-green-400">{state.careerPoints}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Career Points</div>
             </div>
-          </section>
-
-          {/* Tires */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-2 border-b border-border pb-2">
-               <h2 className="font-semibold">Compounds</h2>
-               <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{tires.length} items</span>
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 text-center" data-testid="stat-wins">
+              <div className="text-3xl font-mono font-bold text-yellow-400">{state.racesWon}</div>
+              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Races Won</div>
             </div>
+          </div>
+        </section>
 
-             <div className="grid gap-3">
-              {tires.map(item => {
-                const isUnlocked = state.unlockedItems.includes(item.id);
-                const isEquipped = state.equippedTires === item.id;
+        <section className="space-y-4">
+          <div className="border-b border-border pb-2">
+            <h2 className="font-semibold">Pit Radio</h2>
+            <p className="text-xs text-muted-foreground">Audio Settings</p>
+          </div>
+          
+          <label className="flex items-center justify-between p-4 rounded-lg border border-border cursor-pointer hover:bg-secondary/50 transition-colors" data-testid="toggle-sound">
+            <span className="font-medium">Sound Effects</span>
+            <button
+              onClick={toggleSound}
+              className={cn(
+                "w-12 h-7 rounded-full transition-colors relative",
+                state.soundEnabled ? "bg-green-500" : "bg-neutral-600"
+              )}
+            >
+              <span 
+                className={cn(
+                  "absolute top-1 w-5 h-5 rounded-full bg-white transition-transform",
+                  state.soundEnabled ? "translate-x-6" : "translate-x-1"
+                )}
+              />
+            </button>
+          </label>
+        </section>
 
-                return (
-                   <button
-                    key={item.id}
-                    onClick={() => isUnlocked ? equipItem(item.id, 'tires') : buyItem(item.id, item.cost)}
-                    className={cn(
-                      "flex items-center justify-between p-4 rounded-lg border transition-all text-left",
-                      isEquipped ? "border-primary ring-1 ring-primary" : "border-border hover:border-gray-300",
-                      !isUnlocked && "opacity-70"
-                    )}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={cn("w-6 h-6 rounded-full border-4 bg-neutral-900", item.color)}></div>
-                       <div>
-                        <div className="font-medium text-sm">{item.name}</div>
-                        {!isUnlocked && <div className="text-xs text-muted-foreground">{item.cost} Coins</div>}
-                      </div>
-                    </div>
+        <section className="space-y-4 pt-8 border-t border-border">
+          <div className="pb-2">
+            <h2 className="font-semibold text-red-500">Danger Zone</h2>
+            <p className="text-xs text-muted-foreground">Irreversible actions</p>
+          </div>
+          
+          <button
+            onClick={handleRetireCar}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            data-testid="button-retire"
+          >
+            <AlertTriangle className="w-5 h-5" />
+            RETIRE CAR (Reset Save)
+          </button>
+        </section>
 
-                    <div>
-                      {isEquipped ? (
-                        <Check className="w-4 h-4 text-primary" />
-                      ) : isUnlocked ? (
-                        <div className="text-xs font-medium text-muted-foreground">Select</div>
-                      ) : (
-                        <Lock className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
-
-        </div>
       </div>
     </GameLayout>
   );

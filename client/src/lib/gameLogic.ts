@@ -29,7 +29,19 @@ export interface GameState {
   equippedLivery: string;
   equippedTires: string;
   streak: number;
+  totalLaps: number;
+  careerPoints: number;
+  racesWon: number;
+  teamColor: string;
+  soundEnabled: boolean;
 }
+
+export const TEAM_COLORS = [
+  { id: 'ferrari', name: 'Ferrari', hex: '#ff2800' },
+  { id: 'mclaren', name: 'McLaren', hex: '#ff8000' },
+  { id: 'redbull', name: 'Red Bull', hex: '#0600ef' },
+  { id: 'mercedes', name: 'Mercedes', hex: '#00d2be' },
+];
 
 export const RACE_LENGTH = 20;
 
@@ -106,6 +118,11 @@ const INITIAL_STATE: GameState = {
   equippedLivery: 'red-livery',
   equippedTires: 'hard-tires',
   streak: 0,
+  totalLaps: 0,
+  careerPoints: 0,
+  racesWon: 0,
+  teamColor: '#ff2800',
+  soundEnabled: true,
 };
 
 export const SHOP_ITEMS = [
@@ -123,13 +140,17 @@ export function useGameState() {
     const saved = localStorage.getItem('f1-math-racer-state');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // Migrate old state format - ensure all required fields exist
       return {
         coins: parsed.coins ?? 0,
         unlockedItems: parsed.unlockedItems ?? ['red-livery', 'hard-tires'],
         equippedLivery: parsed.equippedLivery ?? 'red-livery',
         equippedTires: parsed.equippedTires ?? 'hard-tires',
         streak: parsed.streak ?? 0,
+        totalLaps: parsed.totalLaps ?? 0,
+        careerPoints: parsed.careerPoints ?? 0,
+        racesWon: parsed.racesWon ?? 0,
+        teamColor: parsed.teamColor ?? '#ff2800',
+        soundEnabled: parsed.soundEnabled ?? true,
       };
     }
     return INITIAL_STATE;
@@ -138,6 +159,10 @@ export function useGameState() {
   useEffect(() => {
     localStorage.setItem('f1-math-racer-state', JSON.stringify(state));
   }, [state]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--team-color', state.teamColor);
+  }, [state.teamColor]);
 
   const addCoins = (amount: number) => {
     setState(prev => ({ ...prev, coins: prev.coins + amount }));
@@ -172,13 +197,44 @@ export function useGameState() {
     }
   };
 
+  const setTeamColor = (color: string) => {
+    setState(prev => ({ ...prev, teamColor: color }));
+  };
+
+  const toggleSound = () => {
+    setState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
+  };
+
+  const incrementLaps = () => {
+    setState(prev => ({ ...prev, totalLaps: prev.totalLaps + 1 }));
+  };
+
+  const addCareerPoints = (points: number) => {
+    setState(prev => ({ ...prev, careerPoints: prev.careerPoints + points }));
+  };
+
+  const incrementRacesWon = () => {
+    setState(prev => ({ ...prev, racesWon: prev.racesWon + 1 }));
+  };
+
+  const resetAllData = () => {
+    localStorage.removeItem('f1-math-racer-state');
+    setState(INITIAL_STATE);
+  };
+
   return {
     state,
     addCoins,
     incrementStreak,
     resetStreak,
     buyItem,
-    equipItem
+    equipItem,
+    setTeamColor,
+    toggleSound,
+    incrementLaps,
+    addCareerPoints,
+    incrementRacesWon,
+    resetAllData
   };
 }
 
