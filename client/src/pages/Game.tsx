@@ -464,7 +464,7 @@ export default function Game() {
   // Racing phase
   return (
     <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-4 gap-6">
+      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-4 px-4 gap-4 md:gap-6">
         
         {/* Track Progress Visualization */}
         <div className="space-y-2">
@@ -492,7 +492,7 @@ export default function Game() {
           </div>
 
           {/* Question Display */}
-          <div className="text-5xl md:text-7xl font-bold tracking-tight text-center px-4">
+          <div className="text-4xl md:text-7xl font-bold tracking-tight text-center px-4">
             {question?.display}
           </div>
 
@@ -500,10 +500,11 @@ export default function Game() {
             <input
               ref={inputRef}
               type="number"
+              inputMode="numeric"
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               className={cn(
-                "w-full h-24 text-center text-5xl font-bold bg-transparent border-b-4 outline-none transition-all placeholder:text-muted-foreground/20",
+                "w-full h-20 md:h-24 text-center text-4xl md:text-5xl font-bold bg-transparent border-b-4 outline-none transition-all placeholder:text-muted-foreground/20",
                 feedback === 'idle' && "border-border focus:border-primary",
                 feedback === 'correct' && "border-green-500 text-green-600",
                 feedback === 'incorrect' && "border-red-500 text-red-600"

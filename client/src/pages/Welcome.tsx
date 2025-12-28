@@ -8,7 +8,7 @@ export default function Welcome() {
 
   return (
     <GameLayout coins={state.coins}>
-      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 py-12">
+      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 md:space-y-12 py-8 md:py-12 px-4">
         
         <div className="space-y-6 max-w-2xl">
           <div className="inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider text-muted-foreground bg-[#ffffff]">

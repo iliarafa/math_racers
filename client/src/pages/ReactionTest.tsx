@@ -129,17 +129,17 @@ export default function ReactionTest() {
 
   return (
     <GameLayout coins={state.coins} trackName="Reflex Training">
-      <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full py-8 px-4 space-y-8">
+      <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full py-6 md:py-8 px-4 space-y-6 md:space-y-8">
         
-        <div className="bg-black rounded-xl p-6 shadow-2xl border-4 border-zinc-800">
-          <div className="flex gap-3 justify-center">
+        <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
+          <div className="flex gap-2 md:gap-3 justify-center">
             {lights.map((isOn, index) => (
               <div
                 key={index}
                 className={cn(
-                  "w-12 h-12 md:w-16 md:h-16 rounded-full transition-all duration-100 border-4",
+                  "w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4",
                   isOn 
-                    ? "bg-red-600 border-red-500 shadow-[0_0_30px_rgba(220,38,38,0.8)]" 
+                    ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]" 
                     : "bg-zinc-800 border-zinc-700"
                 )}
                 data-testid={`light-${index}`}
@@ -155,7 +155,7 @@ export default function ReactionTest() {
         <button
           onClick={gameState === 'jumpstart' || gameState === 'result' ? resetGame : handleLaunch}
           className={cn(
-            "w-full max-w-xs h-20 rounded-xl font-bold text-2xl transition-all flex items-center justify-center gap-3",
+            "w-full max-w-xs h-16 md:h-20 rounded-xl font-bold text-xl md:text-2xl transition-all flex items-center justify-center gap-2 md:gap-3",
             gameState === 'go' && "bg-green-600 text-white hover:bg-green-500 animate-pulse",
             gameState === 'idle' && "bg-primary text-primary-foreground hover:opacity-90",
             (gameState === 'sequence' || gameState === 'waiting') && "bg-yellow-600 text-white hover:bg-yellow-500",

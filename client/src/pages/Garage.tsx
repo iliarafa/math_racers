@@ -15,7 +15,7 @@ export default function Garage() {
 
   return (
     <GameLayout coins={state.coins}>
-      <div className="space-y-8 max-w-2xl mx-auto">
+      <div className="space-y-6 md:space-y-8 max-w-2xl mx-auto px-4">
         
         <div className="flex items-center gap-4">
           <Link href="/">
@@ -32,7 +32,7 @@ export default function Garage() {
             <p className="text-xs text-muted-foreground">Select Team Livery</p>
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-3 md:gap-4">
             {TEAM_COLORS.map(color => {
               const isSelected = state.teamColor === color.hex;
               return (
@@ -40,7 +40,7 @@ export default function Garage() {
                   key={color.id}
                   onClick={() => setTeamColor(color.hex)}
                   className={cn(
-                    "w-14 h-14 rounded-full transition-all relative",
+                    "w-12 h-12 md:w-14 md:h-14 rounded-full transition-all relative",
                     isSelected && "ring-2 ring-offset-2 ring-offset-background ring-white"
                   )}
                   style={{ backgroundColor: color.hex }}
@@ -48,7 +48,7 @@ export default function Garage() {
                   data-testid={`color-${color.id}`}
                 >
                   {isSelected && (
-                    <Check className="w-6 h-6 text-white absolute inset-0 m-auto drop-shadow-md" />
+                    <Check className="w-5 h-5 md:w-6 md:h-6 text-white absolute inset-0 m-auto drop-shadow-md" />
                   )}
                 </button>
               );
@@ -62,18 +62,18 @@ export default function Garage() {
             <p className="text-xs text-muted-foreground">Career Statistics</p>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 text-center" data-testid="stat-laps">
-              <div className="text-3xl font-mono font-bold text-cyan-400">{state.totalLaps}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Total Laps</div>
+          <div className="grid grid-cols-3 gap-2 md:gap-4">
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 text-center" data-testid="stat-laps">
+              <div className="text-2xl md:text-3xl font-mono font-bold text-cyan-400">{state.totalLaps}</div>
+              <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Total Laps</div>
             </div>
-            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 text-center" data-testid="stat-points">
-              <div className="text-3xl font-mono font-bold text-green-400">{state.careerPoints}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Career Points</div>
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 text-center" data-testid="stat-points">
+              <div className="text-2xl md:text-3xl font-mono font-bold text-green-400">{state.careerPoints}</div>
+              <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Career Pts</div>
             </div>
-            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4 text-center" data-testid="stat-wins">
-              <div className="text-3xl font-mono font-bold text-yellow-400">{state.racesWon}</div>
-              <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Races Won</div>
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 text-center" data-testid="stat-wins">
+              <div className="text-2xl md:text-3xl font-mono font-bold text-yellow-400">{state.racesWon}</div>
+              <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Races Won</div>
             </div>
           </div>
         </section>
