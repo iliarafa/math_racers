@@ -11,7 +11,7 @@ export default function Welcome() {
       <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 py-12">
         
         <div className="space-y-6 max-w-2xl">
-          <div className="inline-block px-3 py-1 rounded-full bg-secondary text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider text-muted-foreground bg-[#ffffff]">
             2025 Season
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter" style={{ color: 'var(--team-color)' }}>
