@@ -28,32 +28,19 @@ export default function Garage() {
 
         <section className="space-y-4">
           <div className="border-b border-border pb-2">
-            <h2 className="font-semibold">Paint Shop</h2>
-            <p className="text-xs text-muted-foreground">Select Team Livery</p>
+            <h2 className="font-semibold">Strategy Room</h2>
+            <p className="text-xs text-muted-foreground">Math Reference Guide</p>
           </div>
           
-          <div className="flex flex-wrap gap-3 md:gap-4">
-            {TEAM_COLORS.map(color => {
-              const isSelected = state.teamColor === color.hex;
-              return (
-                <button
-                  key={color.id}
-                  onClick={() => setTeamColor(color.hex)}
-                  className={cn(
-                    "w-12 h-12 md:w-14 md:h-14 rounded-full transition-all relative",
-                    isSelected && "ring-2 ring-offset-2 ring-offset-background ring-white"
-                  )}
-                  style={{ backgroundColor: color.hex }}
-                  title={color.name}
-                  data-testid={`color-${color.id}`}
-                >
-                  {isSelected && (
-                    <Check className="w-5 h-5 md:w-6 md:h-6 text-white absolute inset-0 m-auto drop-shadow-md" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <Link href="/strategy">
+            <button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              data-testid="button-strategy-guide"
+            >
+              <BookOpen className="w-5 h-5" />
+              Open Strategy Guide
+            </button>
+          </Link>
         </section>
 
         <section className="space-y-4">
@@ -105,19 +92,32 @@ export default function Garage() {
 
         <section className="space-y-4">
           <div className="border-b border-border pb-2">
-            <h2 className="font-semibold">Strategy Room</h2>
-            <p className="text-xs text-muted-foreground">Math Reference Guide</p>
+            <h2 className="font-semibold">Paint Shop</h2>
+            <p className="text-xs text-muted-foreground">Select Team Livery</p>
           </div>
           
-          <Link href="/strategy">
-            <button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-              data-testid="button-strategy-guide"
-            >
-              <BookOpen className="w-5 h-5" />
-              Open Strategy Guide
-            </button>
-          </Link>
+          <div className="flex flex-wrap gap-3 md:gap-4">
+            {TEAM_COLORS.map(color => {
+              const isSelected = state.teamColor === color.hex;
+              return (
+                <button
+                  key={color.id}
+                  onClick={() => setTeamColor(color.hex)}
+                  className={cn(
+                    "w-12 h-12 md:w-14 md:h-14 rounded-full transition-all relative",
+                    isSelected && "ring-2 ring-offset-2 ring-offset-background ring-white"
+                  )}
+                  style={{ backgroundColor: color.hex }}
+                  title={color.name}
+                  data-testid={`color-${color.id}`}
+                >
+                  {isSelected && (
+                    <Check className="w-5 h-5 md:w-6 md:h-6 text-white absolute inset-0 m-auto drop-shadow-md" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         <section className="space-y-4 pt-8 border-t border-border">
