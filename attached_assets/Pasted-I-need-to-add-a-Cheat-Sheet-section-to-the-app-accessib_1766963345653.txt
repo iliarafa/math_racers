@@ -1,0 +1,41 @@
+I need to add a "Cheat Sheet" section to the app, accessible from the Garage. We will call it the **"Strategy Guide"**.
+
+Please update `index.html`, `style.css`, and `script.js` to implement the following:
+
+### 1. UPDATE GARAGE HTML
+Inside the Garage view (below the "Danger Zone" or near the top), add a new button:
+* **Label:** "📘 Open Strategy Guide"
+* **Style:** Blue or White button, distinct from the "Retire Car" button.
+* **Action:** Clicking it hides the Garage and opens the new `#strategy-view`.
+
+### 2. CREATE THE STRATEGY VIEW (HTML)
+Create a new container `<div id="strategy-view">` that contains:
+* **Header:** "Race Strategy & Data"
+* **Navigation Tabs:** 5 Buttons to switch between topics:
+    1.  **Multiplication** (The Grid)
+    2.  **Division** (Pit Stops)
+    3.  **Addition** (Overtakes)
+    4.  **Subtraction** (Gaps)
+    5.  **Variables** (The X-Factor)
+* **Content Area:** A display area that changes based on the selected tab.
+* **Back Button:** "Return to Garage".
+
+### 3. JAVASCRIPT LOGIC
+* **Navigation:** Create functions to handle switching tabs. Show the "Multiplication" tab by default.
+* **Content Generation:**
+    * **Multiplication:** Dynamically generate a **1-9 Times Table Grid**. It should look like a data matrix.
+    * **Division:** Show "Fact Families" (e.g., "If 3 x 4 = 12, then 12 / 4 = 3").
+    * **Addition/Subtraction:** Show simple "Number Bonds" or visual examples.
+    * **Variables:** Explain that "x" is just a mystery number waiting to be found (e.g., "$x + 2 = 5$ means: What number plus 2 equals 5?").
+
+### 4. CSS STYLING
+* **The View:** Dark background, technical font (Monospace).
+* **Multiplication Grid:**
+    * Use CSS Grid to display numbers 1-9 horizontally and vertically.
+    * Highlight the squares on hover.
+    * Make the headers (1-9 row and 1-9 column) a different color (e.g., Red).
+* **Cheat Sheet Cards:** Style the text explanations like "Tech Cards" with borders and glowing edges.
+* **Tabs:** Make the active tab look "lit up" (brighter background).
+
+### 5. INTEGRATION
+* Ensure the user can get from **Garage -> Strategy Guide** and back to **Garage** without losing their current car settings.
