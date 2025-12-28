@@ -27,8 +27,8 @@ export default function Welcome() {
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/game" className="flex-1">
               <button 
-                className="w-full text-white hover:opacity-90 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all"
-                style={{ backgroundColor: 'var(--team-color)' }}
+                className="w-full bg-white hover:opacity-90 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all"
+                style={{ color: 'var(--team-color)' }}
                 data-testid="button-start-race"
               >
                 <Play className="w-5 h-5" />
