@@ -37,7 +37,7 @@ export default function Welcome() {
             </Link>
 
             <Link href="/garage" className="flex-1">
-              <button className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all" data-testid="button-garage">
+              <button className="w-full text-secondary-foreground hover:bg-secondary/80 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all bg-[#ffffffcc]" data-testid="button-garage">
                 <Wrench className="w-5 h-5" />
                 Garage
               </button>
