@@ -501,6 +501,7 @@ export default function Game() {
               ref={inputRef}
               type="number"
               inputMode="numeric"
+              enterKeyHint="go"
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               className={cn(
