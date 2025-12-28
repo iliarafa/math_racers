@@ -26,14 +26,14 @@ function MultiplicationGrid() {
         <p className="text-sm text-neutral-400 mb-4">Hover over any cell to highlight the row and column factors.</p>
       </div>
       
-      <div className="overflow-x-auto">
-        <div className="grid-container font-mono" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(40px, 1fr))', gap: '2px' }}>
-          <div className="grid-header-corner bg-neutral-800 p-2 text-center font-bold text-neutral-500">×</div>
+      <div className="overflow-x-auto -mx-2 px-2">
+        <div className="grid-container font-mono text-xs md:text-base" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(32px, 1fr))', gap: '2px', minWidth: '340px' }}>
+          <div className="grid-header-corner bg-neutral-800 p-1.5 md:p-2 text-center font-bold text-neutral-500">×</div>
           {numbers.map(n => (
             <div 
               key={`header-${n}`} 
               className={cn(
-                "grid-header bg-red-900/60 p-2 text-center font-bold text-red-300 transition-colors",
+                "grid-header bg-red-900/60 p-1.5 md:p-2 text-center font-bold text-red-300 transition-colors",
                 hoveredCell?.col === n && "bg-red-700 text-white"
               )}
             >
@@ -46,7 +46,7 @@ function MultiplicationGrid() {
               <div 
                 key={`row-header-${row}`}
                 className={cn(
-                  "grid-header bg-red-900/60 p-2 text-center font-bold text-red-300 transition-colors",
+                  "grid-header bg-red-900/60 p-1.5 md:p-2 text-center font-bold text-red-300 transition-colors",
                   hoveredCell?.row === row && "bg-red-700 text-white"
                 )}
               >
@@ -61,7 +61,7 @@ function MultiplicationGrid() {
                     onMouseEnter={() => setHoveredCell({ row, col })}
                     onMouseLeave={() => setHoveredCell(null)}
                     className={cn(
-                      "p-2 text-center transition-all cursor-pointer border border-neutral-700",
+                      "p-1.5 md:p-2 text-center transition-all cursor-pointer border border-neutral-700",
                       isIntersection 
                         ? "bg-yellow-500 text-black font-bold scale-110 z-10 shadow-lg shadow-yellow-500/50" 
                         : isHighlighted 
@@ -292,7 +292,7 @@ export default function StrategyGuide() {
               </button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white font-mono">RACE STRATEGY & DATA</h1>
+              <h1 className="text-lg md:text-2xl font-bold tracking-tight text-white font-mono">RACE STRATEGY & DATA</h1>
               <p className="text-xs text-neutral-400">Your complete math reference guide</p>
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function StrategyGuide() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-lg font-mono text-sm transition-all",
+                  "flex items-center gap-1.5 px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg font-mono text-xs md:text-sm transition-all",
                   activeTab === tab.id
                     ? "bg-white text-black shadow-lg shadow-white/20"
                     : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white"
@@ -311,7 +311,7 @@ export default function StrategyGuide() {
                 data-testid={`tab-${tab.id}`}
               >
                 {tab.icon}
-                {tab.label}
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
           </div>
