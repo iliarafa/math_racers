@@ -45,7 +45,7 @@ export default function Welcome() {
           </div>
 
           <Link href="/reaction">
-            <button className="w-full bg-yellow-600 text-white hover:bg-yellow-500 h-12 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all" data-testid="button-reflex-training">
+            <button className="w-full hover:bg-yellow-500 h-12 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all bg-[#ffffff] text-[#000000]" data-testid="button-reflex-training">
               <Zap className="w-5 h-5" />
               Reflex Training
             </button>
