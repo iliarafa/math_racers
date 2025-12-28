@@ -33,16 +33,16 @@ export default function ReactionTest() {
     setLights([false, false, false, false, false]);
     startTimeRef.current = null;
 
-    let currentLight = 0;
-    const turnOnNext = () => {
-      if (currentLight < 5) {
-        setLights(prev => {
-          const newLights = [...prev];
-          newLights[currentLight] = true;
-          return newLights;
-        });
-        currentLight++;
-        sequenceTimeoutRef.current = setTimeout(turnOnNext, 1000);
+    const turnOnLight = (index: number) => {
+      if (index < 5) {
+        setLights([
+          index >= 0,
+          index >= 1,
+          index >= 2,
+          index >= 3,
+          index >= 4,
+        ]);
+        sequenceTimeoutRef.current = setTimeout(() => turnOnLight(index + 1), 1000);
       } else {
         setGameState('waiting');
         const randomDelay = 200 + Math.random() * 2800;
@@ -54,7 +54,7 @@ export default function ReactionTest() {
       }
     };
 
-    sequenceTimeoutRef.current = setTimeout(turnOnNext, 1000);
+    sequenceTimeoutRef.current = setTimeout(() => turnOnLight(0), 1000);
   };
 
   const handleLaunch = () => {
