@@ -15,9 +15,7 @@ export function GameLayout({ children, coins, trackName }: GameLayoutProps) {
       <header className="border-b border-border py-4 px-6 flex justify-between items-center bg-white sticky top-0 z-50">
         <div className="flex items-center gap-6">
           <Link href="/">
-            <h1 className="text-xl font-bold tracking-tight cursor-pointer hover:opacity-70 transition-opacity">
-              F1 MATH RACER
-            </h1>
+            <h1 className="text-xl font-bold tracking-tight cursor-pointer hover:opacity-70 transition-opacity">MATH RACERS</h1>
           </Link>
           
           {trackName && (
@@ -42,7 +40,6 @@ export function GameLayout({ children, coins, trackName }: GameLayoutProps) {
           </div>
         </div>
       </header>
-
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col max-w-5xl mx-auto w-full p-6">
         {children}
