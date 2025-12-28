@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, TEAM_COLORS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, Check, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Check, AlertTriangle, BookOpen } from "lucide-react";
 
 export default function Garage() {
   const { state, setTeamColor, toggleSound, resetAllData } = useGameState();
@@ -101,6 +101,23 @@ export default function Garage() {
               />
             </button>
           </label>
+        </section>
+
+        <section className="space-y-4">
+          <div className="border-b border-border pb-2">
+            <h2 className="font-semibold">Strategy Room</h2>
+            <p className="text-xs text-muted-foreground">Math Reference Guide</p>
+          </div>
+          
+          <Link href="/strategy">
+            <button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+              data-testid="button-strategy-guide"
+            >
+              <BookOpen className="w-5 h-5" />
+              Open Strategy Guide
+            </button>
+          </Link>
         </section>
 
         <section className="space-y-4 pt-8 border-t border-border">
