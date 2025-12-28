@@ -496,7 +496,7 @@ export default function Game() {
             {question?.display}
           </div>
 
-          <form onSubmit={handleSubmit} className="w-full max-w-xs relative">
+          <form onSubmit={handleSubmit} className="w-full max-w-xs flex items-center gap-2">
             <input
               ref={inputRef}
               type="number"
@@ -505,7 +505,7 @@ export default function Game() {
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               className={cn(
-                "w-full h-20 md:h-24 text-center text-4xl md:text-5xl font-bold bg-transparent border-b-4 outline-none transition-all placeholder:text-muted-foreground/20",
+                "flex-1 h-20 md:h-24 text-center text-4xl md:text-5xl font-bold bg-transparent border-b-4 outline-none transition-all placeholder:text-muted-foreground/20",
                 feedback === 'idle' && "border-border focus:border-primary",
                 feedback === 'correct' && "border-green-500 text-green-600",
                 feedback === 'incorrect' && "border-red-500 text-red-600"
@@ -514,11 +514,19 @@ export default function Game() {
               autoFocus
               data-testid="input-answer"
             />
-            {feedback === 'idle' && answer && (
-               <div className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground animate-pulse">
-                 <ArrowRight className="w-6 h-6" />
-               </div>
-            )}
+            <button
+              type="submit"
+              disabled={!answer || feedback !== 'idle'}
+              className={cn(
+                "w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all",
+                answer && feedback === 'idle' 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-muted text-muted-foreground"
+              )}
+              data-testid="button-submit-answer"
+            >
+              <Check className="w-8 h-8" />
+            </button>
           </form>
 
           {/* Minimal Feedback */}
