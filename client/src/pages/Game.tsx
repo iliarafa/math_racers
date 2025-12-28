@@ -6,7 +6,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, ArrowRight } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete } from "lucide-react";
 
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon } = useGameState();
@@ -23,7 +23,6 @@ export default function Game() {
   const [finalMistakes, setFinalMistakes] = useState(0);
   const [showPenalty, setShowPenalty] = useState(false);
   const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
-  const inputRef = useRef<HTMLInputElement>(null);
   const penaltyTimeRef = useRef(0);
   const raceStartTimeRef = useRef<number | null>(null);
 
@@ -56,12 +55,6 @@ export default function Game() {
     }
   }, [gameStatus, selectedCircuit, selectedDriver]);
 
-  // Focus input when racing
-  useEffect(() => {
-    if (gameStatus === 'racing') {
-      inputRef.current?.focus();
-    }
-  }, [question, feedback, gameStatus]);
 
   // Timer Logic - only runs during racing
   useEffect(() => {
@@ -496,38 +489,61 @@ export default function Game() {
             {question?.display}
           </div>
 
-          <form onSubmit={handleSubmit} className="w-full max-w-xs flex items-center gap-2">
-            <input
-              ref={inputRef}
-              type="number"
-              inputMode="numeric"
-              enterKeyHint="go"
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              className={cn(
-                "flex-1 h-20 md:h-24 text-center text-4xl md:text-5xl font-bold bg-transparent border-b-4 outline-none transition-all placeholder:text-muted-foreground/20",
-                feedback === 'idle' && "border-border focus:border-primary",
-                feedback === 'correct' && "border-green-500 text-green-600",
-                feedback === 'incorrect' && "border-red-500 text-red-600"
-              )}
-              placeholder="?"
-              autoFocus
-              data-testid="input-answer"
-            />
+          <div
+            className={cn(
+              "w-full max-w-xs h-16 md:h-20 text-center text-4xl md:text-5xl font-bold border-b-4 flex items-center justify-center",
+              feedback === 'idle' && "border-border",
+              feedback === 'correct' && "border-green-500 text-green-600",
+              feedback === 'incorrect' && "border-red-500 text-red-600"
+            )}
+            data-testid="display-answer"
+          >
+            {answer || <span className="text-muted-foreground/20">?</span>}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 w-full max-w-xs mt-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+              <button
+                key={num}
+                type="button"
+                onClick={() => feedback === 'idle' && setAnswer(prev => prev + num.toString())}
+                className="h-14 md:h-16 rounded-lg bg-secondary text-secondary-foreground text-2xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
+                data-testid={`keypad-${num}`}
+              >
+                {num}
+              </button>
+            ))}
             <button
-              type="submit"
+              type="button"
+              onClick={() => feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
+              className="h-14 md:h-16 rounded-lg bg-muted text-muted-foreground text-xl font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center"
+              data-testid="keypad-delete"
+            >
+              <Delete className="w-6 h-6" />
+            </button>
+            <button
+              type="button"
+              onClick={() => feedback === 'idle' && setAnswer(prev => prev + '0')}
+              className="h-14 md:h-16 rounded-lg bg-secondary text-secondary-foreground text-2xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
+              data-testid="keypad-0"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSubmit()}
               disabled={!answer || feedback !== 'idle'}
               className={cn(
-                "w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center transition-all",
-                answer && feedback === 'idle' 
-                  ? "bg-primary text-primary-foreground" 
+                "h-14 md:h-16 rounded-lg text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                answer && feedback === 'idle'
+                  ? "bg-green-600 text-white hover:bg-green-500"
                   : "bg-muted text-muted-foreground"
               )}
-              data-testid="button-submit-answer"
+              data-testid="keypad-submit"
             >
-              <Check className="w-8 h-8" />
+              <Check className="w-6 h-6" />
             </button>
-          </form>
+          </div>
 
           {/* Minimal Feedback */}
           <div className="h-8 flex items-center justify-center">
