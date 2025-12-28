@@ -50,9 +50,9 @@ export function TrackProgress({ circuit, progress, total, showPenalty = false }:
     <div className="w-full max-w-md mx-auto" data-testid="track-progress">
       <div 
         id="circuit-visualizer" 
-        style={{ position: 'relative', width: '300px', height: '160px', margin: '0 auto' }}
+        className="relative mx-auto w-[200px] h-[107px] md:w-[300px] md:h-[160px]"
       >
-        <svg width="300" height="160" style={{ overflow: 'visible' }}>
+        <svg viewBox="0 0 300 160" className="w-full h-full" style={{ overflow: 'visible' }}>
           <path
             ref={s1Ref}
             id="track-s1"

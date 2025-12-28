@@ -457,7 +457,7 @@ export default function Game() {
   // Racing phase
   return (
     <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-4 px-4 gap-4 md:gap-6">
+      <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full py-2 md:py-4 px-4 gap-2 md:gap-4">
         
         {/* Track Progress Visualization */}
         <div className="space-y-2">
@@ -476,22 +476,22 @@ export default function Game() {
         </div>
 
         {/* Stopwatch & Question Area */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-8">
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 md:gap-6">
           
           {/* Stopwatch */}
-          <div className="flex items-center gap-2 text-2xl font-mono font-medium text-primary bg-secondary/50 px-6 py-2 rounded-full">
-            <Timer className="w-5 h-5" />
+          <div className="flex items-center gap-2 text-xl md:text-2xl font-mono font-medium text-primary bg-secondary/50 px-4 md:px-6 py-1.5 md:py-2 rounded-full">
+            <Timer className="w-4 h-4 md:w-5 md:h-5" />
             {formatTime(elapsedTime)}
           </div>
 
           {/* Question Display */}
-          <div className="text-4xl md:text-7xl font-bold tracking-tight text-center px-4">
+          <div className="text-3xl md:text-6xl font-bold tracking-tight text-center px-4">
             {question?.display}
           </div>
 
           <div
             className={cn(
-              "w-full max-w-xs h-16 md:h-20 text-center text-4xl md:text-5xl font-bold border-b-4 flex items-center justify-center",
+              "w-full max-w-xs h-12 md:h-16 text-center text-3xl md:text-4xl font-bold border-b-4 flex items-center justify-center",
               feedback === 'idle' && "border-border",
               feedback === 'correct' && "border-green-500 text-green-600",
               feedback === 'incorrect' && "border-red-500 text-red-600"
@@ -501,13 +501,13 @@ export default function Game() {
             {answer || <span className="text-muted-foreground/20">?</span>}
           </div>
 
-          <div className="grid grid-cols-3 gap-2 w-full max-w-xs mt-4">
+          <div className="grid grid-cols-3 gap-1.5 md:gap-2 w-full max-w-xs mt-2 md:mt-4 pb-[env(safe-area-inset-bottom)]">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
               <button
                 key={num}
                 type="button"
                 onClick={() => feedback === 'idle' && setAnswer(prev => prev + num.toString())}
-                className="h-14 md:h-16 rounded-lg bg-secondary text-secondary-foreground text-2xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
+                className="h-11 md:h-14 rounded-lg bg-secondary text-secondary-foreground text-xl md:text-2xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
                 data-testid={`keypad-${num}`}
               >
                 {num}
@@ -516,15 +516,15 @@ export default function Game() {
             <button
               type="button"
               onClick={() => feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
-              className="h-14 md:h-16 rounded-lg bg-muted text-muted-foreground text-xl font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center"
+              className="h-11 md:h-14 rounded-lg bg-muted text-muted-foreground text-lg md:text-xl font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center"
               data-testid="keypad-delete"
             >
-              <Delete className="w-6 h-6" />
+              <Delete className="w-5 h-5 md:w-6 md:h-6" />
             </button>
             <button
               type="button"
               onClick={() => feedback === 'idle' && setAnswer(prev => prev + '0')}
-              className="h-14 md:h-16 rounded-lg bg-secondary text-secondary-foreground text-2xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
+              className="h-11 md:h-14 rounded-lg bg-secondary text-secondary-foreground text-xl md:text-2xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
               data-testid="keypad-0"
             >
               0
@@ -534,14 +534,14 @@ export default function Game() {
               onClick={() => handleSubmit()}
               disabled={!answer || feedback !== 'idle'}
               className={cn(
-                "h-14 md:h-16 rounded-lg text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                "h-11 md:h-14 rounded-lg text-lg md:text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
                 answer && feedback === 'idle'
                   ? "bg-green-600 text-white hover:bg-green-500"
                   : "bg-muted text-muted-foreground"
               )}
               data-testid="keypad-submit"
             >
-              <Check className="w-6 h-6" />
+              <Check className="w-5 h-5 md:w-6 md:h-6" />
             </button>
           </div>
 
