@@ -1,8 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { Play, Wrench } from "lucide-react";
+import { Play, Wrench, Zap } from "lucide-react";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -24,21 +23,31 @@ export default function Welcome() {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-          <Link href="/game" className="flex-1">
-            <button 
-              className="w-full text-white hover:opacity-90 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all"
-              style={{ backgroundColor: 'var(--team-color)' }}
-            >
-              <Play className="w-5 h-5" />
-              Start Race
-            </button>
-          </Link>
+        <div className="flex flex-col gap-4 w-full max-w-md">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link href="/game" className="flex-1">
+              <button 
+                className="w-full text-white hover:opacity-90 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all"
+                style={{ backgroundColor: 'var(--team-color)' }}
+                data-testid="button-start-race"
+              >
+                <Play className="w-5 h-5" />
+                Start Race
+              </button>
+            </Link>
 
-          <Link href="/garage" className="flex-1">
-            <button className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all">
-              <Wrench className="w-5 h-5" />
-              Garage
+            <Link href="/garage" className="flex-1">
+              <button className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/80 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all" data-testid="button-garage">
+                <Wrench className="w-5 h-5" />
+                Garage
+              </button>
+            </Link>
+          </div>
+
+          <Link href="/reaction">
+            <button className="w-full bg-yellow-600 text-white hover:bg-yellow-500 h-12 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all" data-testid="button-reflex-training">
+              <Zap className="w-5 h-5" />
+              Reflex Training
             </button>
           </Link>
         </div>
