@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { Play, Wrench, Zap } from "lucide-react";
+import heroImage from "@assets/IMG_0301_1767311075554.png";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -17,6 +18,12 @@ export default function Welcome() {
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter" style={{ color: 'var(--team-color)' }}>
             Math Racers
           </h1>
+          <img 
+            src={heroImage} 
+            alt="Math Racers" 
+            className="w-full max-w-xs mx-auto rounded-lg shadow-lg"
+            data-testid="img-hero"
+          />
           <p className="text-xl text-muted-foreground max-w-lg mx-auto">
             Solve math problems to race. <br/>
             Every mistake costs a grid position.
