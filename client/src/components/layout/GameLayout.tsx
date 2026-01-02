@@ -13,11 +13,14 @@ export function GameLayout({ children, coins, trackName }: GameLayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       {/* Minimal Header */}
-      <header className="border-b border-border py-4 px-6 flex justify-between items-center bg-white sticky top-0 z-50">
-        <div className="flex items-center gap-6">
+      <header className="border-b border-border py-3 px-3 md:py-4 md:px-6 flex justify-between items-center bg-white sticky top-0 z-50">
+        <div className="flex items-center gap-4 md:gap-6">
           <Link href="/">
-            <h1 className="text-xl font-bold tracking-tight cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1">
-              MATH RACERS / <img src={f1Logo} alt="F1" className="h-[1.06rem] inline-block" /> EDITION
+            <h1 className="text-sm md:text-xl font-bold tracking-tight cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 whitespace-nowrap">
+              <span className="hidden sm:inline">MATH RACERS /</span>
+              <span className="sm:hidden">MR</span>
+              <img src={f1Logo} alt="F1" className="h-[0.75rem] md:h-[1.06rem] inline-block" />
+              <span className="hidden sm:inline">EDITION</span>
             </h1>
           </Link>
           
@@ -29,15 +32,15 @@ export function GameLayout({ children, coins, trackName }: GameLayoutProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <Link href="/garage">
-            <button className="flex items-center gap-2 text-sm font-medium hover:bg-secondary px-3 py-2 rounded-md transition-colors">
+            <button className="flex items-center gap-2 text-sm font-medium hover:bg-secondary px-2 md:px-3 py-2 rounded-md transition-colors">
               <Wrench className="w-4 h-4" />
-              Garage
+              <span className="hidden sm:inline">Garage</span>
             </button>
           </Link>
           
-          <div className="flex items-center gap-2 font-mono text-sm bg-secondary px-3 py-1.5 rounded-md">
+          <div className="flex items-center gap-1.5 md:gap-2 font-mono text-sm bg-secondary px-2 md:px-3 py-1.5 rounded-md">
             <Trophy className="w-3 h-3" />
             <span>{coins}</span>
           </div>
