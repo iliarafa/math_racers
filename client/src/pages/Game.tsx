@@ -139,14 +139,18 @@ export default function Game() {
         penaltyTimeRef.current += 2000;
         setElapsedTime(prev => prev + 2000);
       } else if (newMistakes === 2) {
-        setPenaltyMessage({ text: 'TRACK LIMITS (2nd Warning)', color: 'yellow' });
-        penaltyTimeRef.current += 3000;
-        setElapsedTime(prev => prev + 3000);
-      } else if (newMistakes === 3) {
+        setPenaltyMessage({ text: 'TRACK LIMITS WARNING', color: 'yellow' });
+        penaltyTimeRef.current += 2000;
+        setElapsedTime(prev => prev + 2000);
+      } else if (newMistakes <= 5) {
         setPenaltyMessage({ text: '+5 SECOND PENALTY', color: 'red' });
         penaltyTimeRef.current += 5000;
         setElapsedTime(prev => prev + 5000);
-      } else if (newMistakes >= 4) {
+      } else if (newMistakes <= 10) {
+        setPenaltyMessage({ text: '+10 SECOND PENALTY', color: 'red' });
+        penaltyTimeRef.current += 10000;
+        setElapsedTime(prev => prev + 10000);
+      } else if (newMistakes >= 11) {
         setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
         setFinalMistakes(newMistakes);
         setGameStatus('crashed');
@@ -174,14 +178,21 @@ export default function Game() {
     setFinalMistakes(mistakeCount);
     setFeedback('idle');
     setGameStatus('finished');
-    if (mistakeCount <= 1) {
+    if (mistakeCount === 0) {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
        incrementRacesWon();
     }
   };
 
   const getRaceResult = () => {
-    let position = finalMistakes <= 1 ? 1 : finalMistakes;
+    let position: number;
+    if (finalMistakes === 0) {
+      position = 1;
+    } else if (finalMistakes <= 2) {
+      position = 2;
+    } else {
+      position = finalMistakes;
+    }
     if (position > DRIVERS_2025.length) position = DRIVERS_2025.length;
     return { position, driverName: DRIVERS_2025[position - 1] };
   };
