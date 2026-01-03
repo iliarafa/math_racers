@@ -226,7 +226,6 @@ export default function Game() {
                 data-testid={`driver-${driver.id}`}
               >
                 <span className="font-bold text-lg">{driver.name}</span>
-                <span className="text-xs text-muted-foreground ml-2">{driver.label}</span>
               </motion.button>
             ))}
           </div>

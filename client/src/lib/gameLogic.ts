@@ -54,9 +54,9 @@ export const TEAM_COLORS = [
 export const RACE_LENGTH = 20;
 
 export const DRIVERS: Driver[] = [
-  { id: "kimi", name: "Kimi Antonelli", difficulty: "easy", label: "Rookie" },
-  { id: "lando", name: "Lando Norris", difficulty: "medium", label: "Pro" },
-  { id: "max", name: "Max Verstappen", difficulty: "hard", label: "Champion" }
+  { id: "rookie", name: "Rookie", difficulty: "easy", label: "Rookie" },
+  { id: "pro", name: "Pro", difficulty: "medium", label: "Pro" },
+  { id: "champion", name: "Champion", difficulty: "hard", label: "Champion" }
 ];
 
 export const DRIVERS_2025 = [
