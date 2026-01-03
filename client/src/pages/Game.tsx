@@ -80,6 +80,26 @@ export default function Game() {
     }
   }, [selectedDriver, selectedCircuit, gameStatus]);
 
+  // Keyboard input for desktop
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameStatus !== 'racing' && gameStatus !== 'go') return;
+      if (feedback !== 'idle') return;
+      
+      if (e.key >= '0' && e.key <= '9') {
+        setAnswer(prev => prev + e.key);
+      } else if (e.key === 'Backspace') {
+        setAnswer(prev => prev.slice(0, -1));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameStatus, feedback, question, answer, selectedCircuit, progress, mistakes]);
+
   const handleDriverSelect = (driver: Driver) => {
     setSelectedDriver(driver);
     setGameStatus('selecting');
