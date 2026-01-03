@@ -269,11 +269,11 @@ export default function Game() {
                 onClick={() => handleCircuitSelect(circuit)}
                 whileHover={{ opacity: 0.7 }}
                 whileTap={{ scale: 0.98 }}
-                className="py-3 transition-opacity text-center"
+                className="py-5 transition-opacity text-center"
                 data-testid={`circuit-${circuit.id}`}
               >
-                <span className="font-bold text-lg">{circuit.name}</span>
-                <span className="text-xs text-muted-foreground ml-2">{circuit.type}</span>
+                <span className="font-bold text-xl">{circuit.name}</span>
+                <span className="text-sm text-muted-foreground ml-2">{circuit.type}</span>
               </motion.button>
             ))}
           </div>
@@ -507,7 +507,7 @@ export default function Game() {
             )}
             data-testid="display-answer"
           >
-            {answer || <span className="text-muted-foreground/20">?</span>}
+            {answer || <span className="text-muted-foreground/20">0</span>}
           </div>
 
           <div className="grid grid-cols-3 gap-1.5 md:gap-2 w-full max-w-xs mt-2 md:mt-4 pb-[env(safe-area-inset-bottom)]">
