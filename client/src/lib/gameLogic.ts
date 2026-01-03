@@ -85,7 +85,7 @@ export const DRIVERS_2025 = [
 export const CIRCUITS: Circuit[] = [
   {
     id: "monza",
-    name: "MONZA",
+    name: "Monza (Italy)",
     type: "Multiplication",
     description: "The Temple of Speed",
     mapUrl: "",
@@ -98,7 +98,7 @@ export const CIRCUITS: Circuit[] = [
   },
   {
     id: "spa",
-    name: "SPA",
+    name: "Spa (Belgium)",
     type: "Addition",
     description: "The Longest Lap",
     mapUrl: "",
@@ -111,7 +111,7 @@ export const CIRCUITS: Circuit[] = [
   },
   {
     id: "monaco",
-    name: "MONACO",
+    name: "Monaco",
     type: "Subtraction",
     description: "Street Circuit",
     mapUrl: "",
@@ -124,7 +124,7 @@ export const CIRCUITS: Circuit[] = [
   },
   {
     id: "suzuka",
-    name: "SUZUKA",
+    name: "Suzuka (Japan)",
     type: "Division",
     description: "Figure-8 Track",
     mapUrl: "",
@@ -137,7 +137,7 @@ export const CIRCUITS: Circuit[] = [
   },
   {
     id: "silverstone",
-    name: "SILVERSTONE",
+    name: "Silverstone (UK)",
     type: "Variables",
     description: "Home of F1",
     mapUrl: "",
