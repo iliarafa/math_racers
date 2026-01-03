@@ -211,7 +211,7 @@ export default function Game() {
       <GameLayout coins={state.coins} trackName="Select Driver">
         <div className="flex-1 flex flex-col py-6 px-4">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-1">Choose Your Driver</h2>
+            <h2 className="text-2xl font-bold mb-1">Choose Your Level</h2>
             <p className="text-muted-foreground">Each driver has a different difficulty level</p>
           </div>
           
