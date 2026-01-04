@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { Play, Wrench, Zap } from "lucide-react";
-import heroImage from "@assets/IMG_0301_1767311075554.png";
+import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -19,7 +19,7 @@ export default function Welcome() {
           <img 
             src={heroImage} 
             alt="Math Racers" 
-            className="w-auto max-w-[80%] mx-auto -my-8"
+            className="w-auto max-w-[80%] mx-auto"
             data-testid="img-hero"
           />
           <p className="text-xl text-muted-foreground max-w-lg mx-auto">
