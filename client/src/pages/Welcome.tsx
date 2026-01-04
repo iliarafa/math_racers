@@ -19,7 +19,7 @@ export default function Welcome() {
           <img 
             src={heroImage} 
             alt="Math Racers" 
-            className="w-auto max-w-full mx-auto"
+            className="w-auto max-w-[80%] mx-auto"
             data-testid="img-hero"
           />
           <p className="text-xl text-muted-foreground max-w-lg mx-auto">
