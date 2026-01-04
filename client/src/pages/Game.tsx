@@ -8,6 +8,36 @@ import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, DRIVER
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete } from "lucide-react";
 
+let audioContext: AudioContext | null = null;
+
+const getAudioContext = (): AudioContext => {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  return audioContext;
+};
+
+const playBeep = (frequency: number = 800, duration: number = 150) => {
+  const ctx = getAudioContext();
+  const oscillator = ctx.createOscillator();
+  const gainNode = ctx.createGain();
+  
+  oscillator.connect(gainNode);
+  gainNode.connect(ctx.destination);
+  
+  oscillator.frequency.value = frequency;
+  oscillator.type = 'square';
+  
+  gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
+  
+  oscillator.start(ctx.currentTime);
+  oscillator.stop(ctx.currentTime + duration / 1000);
+};
+
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon } = useGameState();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
@@ -36,6 +66,7 @@ export default function Game() {
             setGameStatus('go');
             return prev;
           }
+          playBeep(800, 150);
           return prev + 1;
         });
       }, 1000);
