@@ -12,7 +12,7 @@ export default function Welcome() {
       <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 md:space-y-12 py-8 md:py-12 px-4">
         
         <div className="space-y-6 max-w-2xl">
-          <div className="inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider text-muted-foreground bg-[#ffffff]">2026 Season</div>
+          <div className="inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-[0.5em] text-muted-foreground bg-[#ffffff]">2026 Season</div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter" style={{ color: '#E10600' }}>
             Math Racers
           </h1>
