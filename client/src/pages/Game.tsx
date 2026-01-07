@@ -66,14 +66,16 @@ export default function Game() {
             setGameStatus('go');
             return prev;
           }
-          playBeep(800, 150);
+          if (state.soundEnabled) {
+            playBeep(800, 150);
+          }
           return prev + 1;
         });
       }, 1000);
 
       return () => clearInterval(interval);
     }
-  }, [gameStatus]);
+  }, [gameStatus, state.soundEnabled]);
 
   // GO state: show green for 1 second, then start racing
   useEffect(() => {
