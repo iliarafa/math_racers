@@ -57,7 +57,7 @@ An educational F1-themed racing game where kids solve math problems to race. Fea
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/math-racers.git
+git clone https://github.com/iliarafa/math-racers.git
 cd math-racers
 ```
 
