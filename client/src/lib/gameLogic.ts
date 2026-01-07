@@ -27,6 +27,7 @@ export interface Circuit {
   type: string;
   description: string;
   mapUrl: string;
+  trackImageUrl?: string;
   paths: CircuitPaths;
   drsZones: number[];
 }
@@ -89,10 +90,11 @@ export const CIRCUITS: Circuit[] = [
     type: "Multiplication",
     description: "The Temple of Speed",
     mapUrl: "",
+    trackImageUrl: "/monza-track.jpeg",
     paths: {
-      s1: "M 280 140 L 200 140 L 185 135 L 175 145 L 160 140 L 100 130 Q 60 125 50 100 L 45 80",
-      s2: "M 45 80 L 40 60 Q 35 40 50 30 L 80 25 Q 100 20 120 30 L 140 35 L 160 30",
-      s3: "M 160 30 L 180 40 L 175 55 L 180 70 Q 200 90 240 100 L 260 110 Q 290 125 290 140 L 280 140"
+      s1: "M 0 0 L 1 0",
+      s2: "M 1 0 L 2 0",
+      s3: "M 2 0 L 3 0"
     },
     drsZones: [2, 8]
   },
