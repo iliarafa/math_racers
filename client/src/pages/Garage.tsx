@@ -82,8 +82,8 @@ export default function Garage() {
             >
               <span 
                 className={cn(
-                  "absolute top-1 w-5 h-5 rounded-full bg-white transition-transform",
-                  state.soundEnabled ? "translate-x-6" : "translate-x-1"
+                  "absolute top-1 w-5 h-5 rounded-full bg-white transition-all duration-200 ease-in-out",
+                  state.soundEnabled ? "left-6" : "left-1"
                 )}
               />
             </button>
