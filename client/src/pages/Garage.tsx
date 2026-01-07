@@ -102,7 +102,7 @@ export default function Garage() {
             data-testid="button-retire"
           >
             <AlertTriangle className="w-5 h-5" />
-            RETIRE CAR (Reset Save)
+            RETIRE CAR
           </button>
         </section>
 
