@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { useRef, useState, useLayoutEffect } from "react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { Play, Wrench, Zap } from "lucide-react";
@@ -6,14 +7,32 @@ import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
 
 export default function Welcome() {
   const { state } = useGameState();
+  const h1Ref = useRef<HTMLHeadingElement>(null);
+  const [badgeWidth, setBadgeWidth] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    const updateWidth = () => {
+      if (h1Ref.current) {
+        setBadgeWidth(h1Ref.current.getBoundingClientRect().width);
+      }
+    };
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
 
   return (
     <GameLayout coins={state.coins}>
       <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 md:space-y-12 py-8 md:py-12 px-4">
         
         <div className="space-y-6 max-w-2xl">
-          <div className="inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-[0.7em] text-muted-foreground bg-[#ffffff]">2026 Season</div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter" style={{ color: '#E10600' }}>
+          <div 
+            className="mx-auto px-3 py-1 rounded-full text-xs font-medium uppercase tracking-[0.3em] text-muted-foreground bg-[#ffffff] text-center"
+            style={badgeWidth ? { width: badgeWidth } : undefined}
+          >
+            2026 Season
+          </div>
+          <h1 ref={h1Ref} className="text-5xl md:text-7xl font-bold tracking-tighter" style={{ color: '#E10600' }}>
             Math Racers
           </h1>
           <img 
