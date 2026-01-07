@@ -55,6 +55,7 @@ export function TrackProgress({ circuit, progress, total, showPenalty = false }:
             src={circuit.trackImageUrl} 
             alt={`${circuit.name} track map`}
             className="w-full h-auto max-h-[200px] md:max-h-[280px] object-contain"
+            style={{ mixBlendMode: 'screen' }}
           />
         </div>
       ) : (
