@@ -36,7 +36,7 @@ export default function Welcome() {
                 data-testid="button-start-race"
               >
                 <Play className="w-5 h-5" />
-                Start Race
+                Race Now
               </button>
             </Link>
 
