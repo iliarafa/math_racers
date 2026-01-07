@@ -55,31 +55,36 @@ export default function Game() {
   const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
   const penaltyTimeRef = useRef(0);
   const raceStartTimeRef = useRef<number | null>(null);
+  const soundEnabledRef = useRef(state.soundEnabled);
+  
+  useEffect(() => {
+    soundEnabledRef.current = state.soundEnabled;
+  }, [state.soundEnabled]);
 
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
+      let lightCount = 0;
       const interval = setInterval(() => {
-        setCountdownLight(prev => {
-          if (prev >= 5) {
-            clearInterval(interval);
-            if (state.soundEnabled) {
-              playBeep(1200, 200);
-            }
-            setQuestion(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
-            setGameStatus('racing');
-            return prev;
+        if (lightCount >= 5) {
+          clearInterval(interval);
+          if (soundEnabledRef.current) {
+            playBeep(1200, 200);
           }
-          if (state.soundEnabled) {
-            playBeep(800, 150);
-          }
-          return prev + 1;
-        });
+          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
+          setGameStatus('racing');
+          return;
+        }
+        if (soundEnabledRef.current) {
+          playBeep(800, 150);
+        }
+        lightCount++;
+        setCountdownLight(lightCount);
       }, 1000);
 
       return () => clearInterval(interval);
     }
-  }, [gameStatus, state.soundEnabled, selectedCircuit, selectedDriver]);
+  }, [gameStatus, selectedCircuit, selectedDriver]);
 
 
   // Timer Logic - only runs during racing
