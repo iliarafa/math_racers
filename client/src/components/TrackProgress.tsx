@@ -23,7 +23,6 @@ export function TrackProgress({ circuit, progress, total, showPenalty = false }:
   const isDrsActive = circuit.drsZones.includes(progress);
 
   useEffect(() => {
-    if (circuit.trackImageUrl) return;
     if (!s1Ref.current || !s2Ref.current || !s3Ref.current) return;
 
     const s1Length = s1Ref.current.getTotalLength();
@@ -45,72 +44,61 @@ export function TrackProgress({ circuit, progress, total, showPenalty = false }:
     }
 
     setCarPosition({ x: point.x, y: point.y });
-  }, [progress, total, circuit.paths.s1, circuit.paths.s2, circuit.paths.s3, circuit.trackImageUrl]);
+  }, [progress, total, circuit.paths.s1, circuit.paths.s2, circuit.paths.s3]);
 
   return (
-    <div className="w-full max-w-lg mx-auto" data-testid="track-progress">
-      {circuit.trackImageUrl ? (
-        <div className="relative mx-auto">
-          <img 
-            src={circuit.trackImageUrl} 
-            alt={`${circuit.name} track map`}
-            className="w-full h-auto max-h-[200px] md:max-h-[280px] object-contain"
-            style={{ mixBlendMode: 'screen' }}
+    <div className="w-full max-w-md mx-auto" data-testid="track-progress">
+      <div 
+        id="circuit-visualizer" 
+        className="relative mx-auto w-[200px] h-[107px] md:w-[300px] md:h-[160px]"
+      >
+        <svg viewBox="0 0 300 160" className="w-full h-full" style={{ overflow: 'visible' }}>
+          <path
+            ref={s1Ref}
+            id="track-s1"
+            d={circuit.paths.s1}
+            stroke={SECTOR_COLORS.s1}
+            strokeWidth="8"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-        </div>
-      ) : (
-        <div 
-          id="circuit-visualizer" 
-          className="relative mx-auto w-[200px] h-[107px] md:w-[300px] md:h-[160px]"
+          <path
+            ref={s2Ref}
+            id="track-s2"
+            d={circuit.paths.s2}
+            stroke={SECTOR_COLORS.s2}
+            strokeWidth="8"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            ref={s3Ref}
+            id="track-s3"
+            d={circuit.paths.s3}
+            stroke={SECTOR_COLORS.s3}
+            strokeWidth="8"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <div
+          id="racing-car"
+          style={{
+            position: 'absolute',
+            fontSize: '24px',
+            transform: 'translate(-50%, -50%)',
+            transition: 'all 0.3s ease',
+            zIndex: 10,
+            left: `${carPosition.x}px`,
+            top: `${carPosition.y}px`
+          }}
         >
-          <svg viewBox="0 0 300 160" className="w-full h-full" style={{ overflow: 'visible' }}>
-            <path
-              ref={s1Ref}
-              id="track-s1"
-              d={circuit.paths.s1}
-              stroke={SECTOR_COLORS.s1}
-              strokeWidth="8"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              ref={s2Ref}
-              id="track-s2"
-              d={circuit.paths.s2}
-              stroke={SECTOR_COLORS.s2}
-              strokeWidth="8"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              ref={s3Ref}
-              id="track-s3"
-              d={circuit.paths.s3}
-              stroke={SECTOR_COLORS.s3}
-              strokeWidth="8"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <div
-            id="racing-car"
-            style={{
-              position: 'absolute',
-              fontSize: '24px',
-              transform: 'translate(-50%, -50%)',
-              transition: 'all 0.3s ease',
-              zIndex: 10,
-              left: `${carPosition.x}px`,
-              top: `${carPosition.y}px`
-            }}
-          >
-            🏎️
-          </div>
+          🏎️
         </div>
-      )}
+      </div>
       
       <div className="flex justify-between items-center text-sm text-muted-foreground mt-2 px-1">
         <span>Lap {progress} / {total}</span>
