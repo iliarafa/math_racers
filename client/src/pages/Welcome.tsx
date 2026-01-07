@@ -23,8 +23,7 @@ export default function Welcome() {
             data-testid="img-hero"
           />
           <p className="text-xl text-muted-foreground max-w-lg mx-auto">
-            Solve math problems to race. <br/>
-            Every mistake costs a grid position.
+            Race by solving math.
           </p>
         </div>
 
