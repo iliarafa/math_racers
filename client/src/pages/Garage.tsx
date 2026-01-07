@@ -90,36 +90,6 @@ export default function Garage() {
           </label>
         </section>
 
-        <section className="space-y-4">
-          <div className="border-b border-border pb-2">
-            <h2 className="font-semibold">Paint Shop</h2>
-            <p className="text-xs text-muted-foreground">Select Team Livery</p>
-          </div>
-          
-          <div className="flex flex-wrap gap-3 md:gap-4">
-            {TEAM_COLORS.map(color => {
-              const isSelected = state.teamColor === color.hex;
-              return (
-                <button
-                  key={color.id}
-                  onClick={() => setTeamColor(color.hex)}
-                  className={cn(
-                    "w-12 h-12 md:w-14 md:h-14 rounded-full transition-all relative",
-                    isSelected && "ring-2 ring-offset-2 ring-offset-background ring-white"
-                  )}
-                  style={{ backgroundColor: color.hex }}
-                  title={color.name}
-                  data-testid={`color-${color.id}`}
-                >
-                  {isSelected && (
-                    <Check className="w-5 h-5 md:w-6 md:h-6 text-white absolute inset-0 m-auto drop-shadow-md" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
         <section className="space-y-4 pt-8 border-t border-border">
           <div className="pb-2">
             <h2 className="font-semibold text-red-500">Danger Zone</h2>
