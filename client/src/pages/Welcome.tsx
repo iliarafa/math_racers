@@ -56,16 +56,7 @@ export default function Welcome() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 text-center pt-8 border-t border-border w-full max-w-md">
-           <div>
-             <div className="text-3xl font-bold">{state.coins}</div>
-             <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Pit Coins</div>
-           </div>
-           <div>
-             <div className="text-3xl font-bold">{state.streak}</div>
-             <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">Best Streak</div>
-           </div>
-        </div>
+        
 
       </div>
     </GameLayout>
