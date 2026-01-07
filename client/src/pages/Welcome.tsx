@@ -13,7 +13,7 @@ export default function Welcome() {
         
         <div className="space-y-6 max-w-2xl">
           <div className="inline-block px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider text-muted-foreground bg-[#ffffff]">2026 Season</div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter" style={{ color: 'var(--team-color)' }}>
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter" style={{ color: '#E10600' }}>
             Math Racers
           </h1>
           <img 
