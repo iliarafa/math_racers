@@ -31,7 +31,7 @@ export default function Welcome() {
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href="/game" className="flex-1">
               <button 
-                className="w-[85%] mx-auto hover:bg-neutral-800 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all bg-[#ffffff] text-[#000000]"
+                className="w-[85%] mx-auto bg-white hover:bg-gray-100 h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all text-black hover:text-red-500"
                 data-testid="button-start-race"
               >
                 <Play className="w-5 h-5" />
