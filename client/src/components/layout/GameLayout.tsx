@@ -17,8 +17,8 @@ export function GameLayout({ children, coins, trackName }: GameLayoutProps) {
         <div className="flex items-center gap-4 md:gap-6">
           <Link href="/">
             <h1 className="text-sm md:text-xl font-bold tracking-tight cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 whitespace-nowrap">
-              <span className="hidden sm:inline">MATH RACERS /</span>
-              <span className="sm:hidden">MR</span>
+              <span className="hidden sm:inline font-f1">MATH RACERS /</span>
+              <span className="sm:hidden font-f1">MR</span>
               <img src={f1Logo} alt="F1" className="h-[0.75rem] md:h-[1.06rem] inline-block" />
               <span className="hidden sm:inline">EDITION</span>
             </h1>
