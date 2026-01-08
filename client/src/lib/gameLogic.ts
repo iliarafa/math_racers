@@ -42,6 +42,7 @@ export interface GameState {
   racesWon: number;
   teamColor: string;
   soundEnabled: boolean;
+  personalBests: { [circuitId: string]: number };
 }
 
 export const TEAM_COLORS = [
@@ -161,6 +162,7 @@ const INITIAL_STATE: GameState = {
   racesWon: 0,
   teamColor: '#ff2800',
   soundEnabled: true,
+  personalBests: {},
 };
 
 export const SHOP_ITEMS = [
@@ -175,27 +177,37 @@ export const SHOP_ITEMS = [
 
 export function useGameState() {
   const [state, setState] = useState<GameState>(() => {
-    const saved = localStorage.getItem('f1-math-racer-state');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        coins: parsed.coins ?? 0,
-        unlockedItems: parsed.unlockedItems ?? ['red-livery', 'hard-tires'],
-        equippedLivery: parsed.equippedLivery ?? 'red-livery',
-        equippedTires: parsed.equippedTires ?? 'hard-tires',
-        streak: parsed.streak ?? 0,
-        totalLaps: parsed.totalLaps ?? 0,
-        careerPoints: parsed.careerPoints ?? 0,
-        racesWon: parsed.racesWon ?? 0,
-        teamColor: parsed.teamColor ?? '#ff2800',
-        soundEnabled: parsed.soundEnabled ?? true,
-      };
+    try {
+      const saved = localStorage.getItem('f1-math-racer-state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          coins: parsed.coins ?? 0,
+          unlockedItems: parsed.unlockedItems ?? ['red-livery', 'hard-tires'],
+          equippedLivery: parsed.equippedLivery ?? 'red-livery',
+          equippedTires: parsed.equippedTires ?? 'hard-tires',
+          streak: parsed.streak ?? 0,
+          totalLaps: parsed.totalLaps ?? 0,
+          careerPoints: parsed.careerPoints ?? 0,
+          racesWon: parsed.racesWon ?? 0,
+          teamColor: parsed.teamColor ?? '#ff2800',
+          soundEnabled: parsed.soundEnabled ?? true,
+          personalBests: parsed.personalBests ?? {},
+        };
+      }
+    } catch (error) {
+      console.error('Failed to load saved state:', error);
     }
     return INITIAL_STATE;
   });
 
   useEffect(() => {
-    localStorage.setItem('f1-math-racer-state', JSON.stringify(state));
+    try {
+      localStorage.setItem('f1-math-racer-state', JSON.stringify(state));
+    } catch (error) {
+      console.error('Failed to save state:', error);
+      // Could show a toast notification here if needed
+    }
   }, [state]);
 
   useEffect(() => {
@@ -255,9 +267,28 @@ export function useGameState() {
     setState(prev => ({ ...prev, racesWon: prev.racesWon + 1 }));
   };
 
+  const updatePersonalBest = (circuitId: string, time: number) => {
+    setState(prev => {
+      const currentBest = prev.personalBests[circuitId];
+      if (!currentBest || time < currentBest) {
+        return {
+          ...prev,
+          personalBests: { ...prev.personalBests, [circuitId]: time }
+        };
+      }
+      return prev;
+    });
+  };
+
   const resetAllData = () => {
-    localStorage.removeItem('f1-math-racer-state');
-    setState(INITIAL_STATE);
+    try {
+      localStorage.removeItem('f1-math-racer-state');
+      setState(INITIAL_STATE);
+    } catch (error) {
+      console.error('Failed to reset data:', error);
+      // Still attempt to reset state even if localStorage fails
+      setState(INITIAL_STATE);
+    }
   };
 
   return {
@@ -272,6 +303,7 @@ export function useGameState() {
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,
+    updatePersonalBest,
     resetAllData
   };
 }

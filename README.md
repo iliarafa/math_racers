@@ -12,11 +12,11 @@ An educational F1-themed racing game where kids solve math problems to race. Fea
 - **Desktop Keyboard Support**: Type answers using physical keyboard (0-9, Backspace, Enter)
 
 ### Tracks
-- **MONZA** - Addition (1-20)
-- **SPA** - Addition & Subtraction (1-50)
-- **MONACO** - All operations (1-50)
-- **SUZUKA** - All operations (1-100)
-- **SILVERSTONE** - All operations (1-100)
+- **MONZA** - Multiplication (The Temple of Speed)
+- **SPA** - Addition (The Longest Lap)
+- **MONACO** - Subtraction (Street Circuit)
+- **SUZUKA** - Division (Figure-8 Track)
+- **SILVERSTONE** - Variables (Home of F1)
 
 ### Difficulty Levels
 - **Rookie** - Easier problems
