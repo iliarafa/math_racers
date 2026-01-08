@@ -34,14 +34,13 @@ const initAudio = () => {
     oscillator.stop(ctx.currentTime + 0.001);
     audioInitialized = true;
   } catch (e) {
-    console.log('Audio init failed:', e);
+    // Silent fail
   }
 };
 
 const playBeep = (frequency: number = 800, duration: number = 150) => {
   try {
     const ctx = getAudioContext();
-    console.log('Playing beep, context state:', ctx.state);
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
     
@@ -57,7 +56,7 @@ const playBeep = (frequency: number = 800, duration: number = 150) => {
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + duration / 1000);
   } catch (e) {
-    console.error('Beep error:', e);
+    // Silent fail for audio issues
   }
 };
 
@@ -91,12 +90,10 @@ export default function Game() {
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
-      console.log('Countdown starting, soundEnabled:', soundEnabledRef.current);
       let lightCount = 0;
       const interval = setInterval(() => {
         if (lightCount >= 5) {
           clearInterval(interval);
-          console.log('Final beep, soundEnabled:', soundEnabledRef.current);
           if (soundEnabledRef.current) {
             playBeep(1200, 200);
           }
