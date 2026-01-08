@@ -9,24 +9,24 @@ interface TrackProgressProps {
 }
 
 const TURN_POSITIONS = [
-  { id: 1, x: 420, y: 590 },
-  { id: 2, x: 420, y: 450 },
-  { id: 3, x: 240, y: 450 },
-  { id: 4, x: 155, y: 335 },
-  { id: 5, x: 95, y: 280 },
-  { id: 6, x: 105, y: 165 },
-  { id: 7, x: 235, y: 85 },
-  { id: 8, x: 485, y: 335 },
-  { id: 9, x: 530, y: 260 },
-  { id: 10, x: 535, y: 400 },
-  { id: 11, x: 895, y: 300 },
+  { id: 1, x: 443, y: 578 },
+  { id: 2, x: 443, y: 442 },
+  { id: 3, x: 253, y: 442 },
+  { id: 4, x: 163, y: 328 },
+  { id: 5, x: 100, y: 275 },
+  { id: 6, x: 110, y: 160 },
+  { id: 7, x: 248, y: 82 },
+  { id: 8, x: 512, y: 328 },
+  { id: 9, x: 560, y: 255 },
+  { id: 10, x: 565, y: 392 },
+  { id: 11, x: 945, y: 295 },
 ];
 
-const HIGHLIGHT_RADIUS = 22;
+const HIGHLIGHT_RADIUS = 23;
 
 export function TrackProgress({ circuit, progress, total, showPenalty = false }: TrackProgressProps) {
   const isDrsActive = circuit.drsZones.includes(progress);
-  const currentTurn = progress;
+  const currentTurn = progress + 1;
 
   return (
     <div className="w-full max-w-lg mx-auto" data-testid="track-progress">
@@ -35,14 +35,14 @@ export function TrackProgress({ circuit, progress, total, showPenalty = false }:
         className="relative mx-auto flex justify-center items-center"
       >
         <svg 
-          viewBox="0 0 1024 768" 
+          viewBox="0 0 1080 720" 
           className="w-full max-w-[400px] h-auto"
           style={{ overflow: 'visible' }}
         >
           <image 
             href={monzaTrackImage} 
-            width="1024" 
-            height="768"
+            width="1080" 
+            height="720"
             data-testid="track-image"
           />
           {TURN_POSITIONS.map((turn) => (
