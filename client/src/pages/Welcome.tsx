@@ -18,6 +18,7 @@ export default function Welcome() {
             src={logoImage} 
             alt="Math Racer" 
             className="w-auto max-w-[80%] mx-auto"
+            style={{ mixBlendMode: 'multiply' }}
             data-testid="img-logo"
           />
           <img 
