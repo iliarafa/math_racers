@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Trophy, Wrench, Flag, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logoImage from "@assets/Screenshot_2026-01-08_at_10.44.48_AM_1767888534040.png";
 
 interface GameLayoutProps {
   children: React.ReactNode;
@@ -15,11 +16,11 @@ export function GameLayout({ children, coins, trackName }: GameLayoutProps) {
       <header className="border-b border-border py-3 px-3 md:py-4 md:px-6 flex justify-between items-center bg-white sticky top-0 z-50">
         <div className="flex items-center gap-4 md:gap-6">
           <Link href="/">
-            <h1 className="text-sm md:text-xl font-bold tracking-tight cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 whitespace-nowrap">
-              <span className="hidden sm:inline">MATH RACERS /</span>
-              <span className="sm:hidden">MR</span>
-              <span className="hidden sm:inline">EDITION</span>
-            </h1>
+            <img 
+              src={logoImage} 
+              alt="Math Racer" 
+              className="h-8 md:h-10 w-auto cursor-pointer hover:opacity-70 transition-opacity"
+            />
           </Link>
           
           {trackName && (
