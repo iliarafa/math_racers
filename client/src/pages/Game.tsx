@@ -371,7 +371,7 @@ export default function Game() {
               onClick={() => setIsPracticeMode(false)}
               className={cn(
                 "px-4 py-2 rounded-lg font-medium transition-all",
-                !isPracticeMode ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                !isPracticeMode ? "bg-red-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
               )}
               data-testid="button-race-mode"
             >
@@ -381,19 +381,13 @@ export default function Game() {
               onClick={() => setIsPracticeMode(true)}
               className={cn(
                 "px-4 py-2 rounded-lg font-medium transition-all",
-                isPracticeMode ? "bg-blue-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                isPracticeMode ? "bg-green-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
               )}
               data-testid="button-practice-mode"
             >
               Practice Mode
             </button>
           </div>
-
-          {isPracticeMode && (
-            <div className="text-center mb-4 text-sm text-blue-400">
-              No penalties • Continuous practice • Track your speed
-            </div>
-          )}
 
           <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
             {CIRCUITS.map((circuit) => {
@@ -713,7 +707,7 @@ export default function Game() {
         <div className="flex justify-between text-sm text-muted-foreground font-medium px-1">
           <div className="flex items-center gap-2">
             <span>Question {progress + 1} of {RACE_LENGTH}</span>
-            {isPracticeMode && <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">PRACTICE</span>}
+            {isPracticeMode && <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>}
           </div>
           <div className="flex items-center gap-3">
             <button
