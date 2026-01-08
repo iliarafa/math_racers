@@ -39,21 +39,26 @@ const initAudio = () => {
 };
 
 const playBeep = (frequency: number = 800, duration: number = 150) => {
-  const ctx = getAudioContext();
-  const oscillator = ctx.createOscillator();
-  const gainNode = ctx.createGain();
-  
-  oscillator.connect(gainNode);
-  gainNode.connect(ctx.destination);
-  
-  oscillator.frequency.value = frequency;
-  oscillator.type = 'square';
-  
-  gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
-  
-  oscillator.start(ctx.currentTime);
-  oscillator.stop(ctx.currentTime + duration / 1000);
+  try {
+    const ctx = getAudioContext();
+    console.log('Playing beep, context state:', ctx.state);
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'square';
+    
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + duration / 1000);
+  } catch (e) {
+    console.error('Beep error:', e);
+  }
 };
 
 export default function Game() {
@@ -86,10 +91,12 @@ export default function Game() {
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
+      console.log('Countdown starting, soundEnabled:', soundEnabledRef.current);
       let lightCount = 0;
       const interval = setInterval(() => {
         if (lightCount >= 5) {
           clearInterval(interval);
+          console.log('Final beep, soundEnabled:', soundEnabledRef.current);
           if (soundEnabledRef.current) {
             playBeep(1200, 200);
           }
