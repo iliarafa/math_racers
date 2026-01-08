@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play } from "lucide-react";
 
 let audioContext: AudioContext | null = null;
+let audioInitialized = false;
 
 const getAudioContext = (): AudioContext => {
   if (!audioContext) {
@@ -18,6 +19,23 @@ const getAudioContext = (): AudioContext => {
     audioContext.resume();
   }
   return audioContext;
+};
+
+const initAudio = () => {
+  if (audioInitialized) return;
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.001);
+    audioInitialized = true;
+  } catch (e) {
+    console.log('Audio init failed:', e);
+  }
 };
 
 const playBeep = (frequency: number = 800, duration: number = 150) => {
@@ -143,6 +161,7 @@ export default function Game() {
   }, [gameStatus, feedback, question, answer, selectedCircuit, progress, mistakes, isPaused]);
 
   const handleDriverSelect = (driver: Driver) => {
+    initAudio();
     setSelectedDriver(driver);
     setGameStatus('selecting');
   };
@@ -155,6 +174,7 @@ export default function Game() {
   };
 
   const handleCircuitSelect = (circuit: Circuit) => {
+    initAudio();
     setSelectedCircuit(circuit);
     setGameStatus('countdown');
   };
