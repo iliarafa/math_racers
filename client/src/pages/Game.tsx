@@ -703,10 +703,14 @@ export default function Game() {
           </div>
         )}
 
-        {/* Practice badge and controls - always on top */}
+        {/* Mode badge and controls - always on top */}
         <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-1">
           <div className="flex items-center">
-            {isPracticeMode && <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>}
+            {isPracticeMode ? (
+              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
+            ) : (
+              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE</span>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -716,7 +720,7 @@ export default function Game() {
             >
               <Pause className="w-5 h-5" />
             </button>
-            <span className={cn(mistakes > 0 ? "text-red-600" : "")}>{mistakes} Mistakes</span>
+            <span className={cn(mistakes > 0 ? "text-red-600" : "")}>Track Limits: {mistakes}</span>
           </div>
         </div>
 
