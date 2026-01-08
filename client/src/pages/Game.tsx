@@ -704,12 +704,14 @@ export default function Game() {
         )}
 
         {/* Question counter and mistakes - always on top */}
-        <div className="flex justify-between text-sm text-muted-foreground font-medium px-1">
-          <div className="flex items-center gap-2">
+        <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-1">
+          <div className="flex items-center gap-2 flex-1">
             <span>Question {progress + 1} of {RACE_LENGTH}</span>
+          </div>
+          <div className="flex items-center justify-center flex-1">
             {isPracticeMode && <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-end gap-3 flex-1">
             <button
               onClick={() => setIsPaused(true)}
               className="p-1 hover:bg-secondary rounded transition-colors"
