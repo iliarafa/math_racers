@@ -3,7 +3,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { Play, Wrench, Zap } from "lucide-react";
 import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
-import logoImage from "@assets/Screenshot_2026-01-08_at_10.44.48_AM_1767887102399.png";
+import logoImage from "@assets/Screenshot_2026-01-08_at_10.44.48_AM_1767887886420.png";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -18,7 +18,6 @@ export default function Welcome() {
             src={logoImage} 
             alt="Math Racer" 
             className="w-auto max-w-[80%] mx-auto"
-            style={{ mixBlendMode: 'multiply' }}
             data-testid="img-logo"
           />
           <img 
