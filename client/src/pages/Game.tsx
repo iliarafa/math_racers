@@ -375,7 +375,7 @@ export default function Game() {
               )}
               data-testid="button-race-mode"
             >
-              Race Mode
+              RACE
             </button>
             <button
               onClick={() => setIsPracticeMode(true)}
@@ -385,7 +385,7 @@ export default function Game() {
               )}
               data-testid="button-practice-mode"
             >
-              Practice Mode
+              PRACTICE
             </button>
           </div>
 
