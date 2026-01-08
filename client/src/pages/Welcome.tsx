@@ -12,20 +12,20 @@ export default function Welcome() {
     <GameLayout coins={state.coins} hideHeader>
       <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 md:space-y-12 py-8 md:py-12 px-4">
         
-        <div className="space-y-6 max-w-2xl">
+        <div className="space-y-6 max-w-2xl flex flex-col items-center">
           <img 
             src={logoImage} 
             alt="Math Racer" 
-            className="w-auto max-w-[80%] mx-auto"
+            className="w-auto max-w-[80%]"
             data-testid="img-logo"
           />
           <img 
             src={heroImage} 
             alt="Math Racers" 
-            className="w-auto max-w-[65%] mx-auto"
+            className="w-auto max-w-[65%]"
             data-testid="img-hero"
           />
-          <p className="text-xl text-muted-foreground max-w-lg mx-auto">
+          <p className="text-xl text-muted-foreground max-w-lg text-center">
             Race by solving math.
           </p>
         </div>
