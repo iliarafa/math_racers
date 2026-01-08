@@ -3,7 +3,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { Play, Wrench, Zap } from "lucide-react";
 import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
-import logoImage from "@assets/Screenshot_2026-01-08_at_10.44.48_AM_1767887886420.png";
+import logoImage from "@assets/1Asset_3@2x_1767889326255.png";
 
 export default function Welcome() {
   const { state } = useGameState();

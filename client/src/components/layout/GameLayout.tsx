@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Trophy, Wrench, Flag, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
-import logoImage from "@assets/Screenshot_2026-01-08_at_10.44.48_AM_1767888534040.png";
+import logoImage from "@assets/1Asset_3@2x_1767889326255.png";
 
 interface GameLayoutProps {
   children: React.ReactNode;
