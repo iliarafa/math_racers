@@ -515,7 +515,7 @@ export default function Game() {
                 <span className="font-bold">{selectedCircuit?.name}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Questions Answered</span>
+                <span className="text-muted-foreground">Laps Completed</span>
                 <span className="font-bold">{progress}</span>
               </div>
               <div className="flex justify-between items-center">
@@ -706,7 +706,7 @@ export default function Game() {
         {/* Question counter and mistakes - always on top */}
         <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-1">
           <div className="flex items-center gap-2 flex-1">
-            <span>Question {progress + 1} of {RACE_LENGTH}</span>
+            <span>Lap {progress + 1} of {RACE_LENGTH}</span>
           </div>
           <div className="flex items-center justify-center flex-1">
             {isPracticeMode && <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>}
