@@ -713,13 +713,15 @@ export default function Game() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsPaused(true)}
-              className="p-1 hover:bg-secondary rounded transition-colors"
-              data-testid="button-pause"
-            >
-              <Pause className="w-5 h-5" />
-            </button>
+            {!isPracticeMode && (
+              <button
+                onClick={() => setIsPaused(true)}
+                className="p-1 hover:bg-secondary rounded transition-colors"
+                data-testid="button-pause"
+              >
+                <Pause className="w-5 h-5" />
+              </button>
+            )}
             <span className={cn(mistakes > 0 ? "text-red-600" : "")}>Track Limits: {mistakes}</span>
           </div>
         </div>
