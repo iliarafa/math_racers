@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { Trophy, Wrench, Flag, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
-import f1Logo from "@assets/IMG_0307_1767311729254.jpeg";
 
 interface GameLayoutProps {
   children: React.ReactNode;
@@ -19,7 +18,6 @@ export function GameLayout({ children, coins, trackName }: GameLayoutProps) {
             <h1 className="text-sm md:text-xl font-bold tracking-tight cursor-pointer hover:opacity-70 transition-opacity flex items-center gap-1 whitespace-nowrap">
               <span className="hidden sm:inline">MATH RACERS /</span>
               <span className="sm:hidden">MR</span>
-              <img src={f1Logo} alt="F1" className="h-[0.75rem] md:h-[1.06rem] inline-block" />
               <span className="hidden sm:inline">EDITION</span>
             </h1>
           </Link>
