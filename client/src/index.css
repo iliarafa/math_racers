@@ -1,18 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@font-face {
-  font-family: 'Formula1 Display';
-  src: url('/fonts/Formula1-Display.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-f1: 'Formula1 Display', sans-serif;
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
@@ -86,10 +77,6 @@
 
 body {
   @apply font-sans antialiased bg-background text-foreground;
-}
-
-.font-f1 {
-  font-family: 'Formula1 Display', sans-serif;
 }
 
 .drs-box {
