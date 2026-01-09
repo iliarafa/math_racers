@@ -72,6 +72,7 @@ export default function Game() {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0);
+  const [lapResults, setLapResults] = useState<('correct' | 'incorrect')[]>([]);
   const [mistakes, setMistakes] = useState(0);
   const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -205,11 +206,13 @@ export default function Game() {
 
       const newProgress = progress + 1;
       setProgress(newProgress);
+      setLapResults(prev => [...prev, 'correct']);
 
       if (newProgress >= raceLength) {
         if (isPracticeMode) {
           // In practice mode, reset and continue
           setProgress(0);
+          setLapResults([]);
           setMistakes(0);
           setElapsedTime(0);
           penaltyTimeRef.current = 0;
@@ -274,11 +277,13 @@ export default function Game() {
 
       const newProgress = progress + 1;
       setProgress(newProgress);
+      setLapResults(prev => [...prev, 'incorrect']);
 
       if (newProgress >= raceLength) {
         if (isPracticeMode) {
           // In practice mode, reset and continue
           setProgress(0);
+          setLapResults([]);
           setMistakes(0);
           setElapsedTime(0);
           penaltyTimeRef.current = 0;
@@ -326,6 +331,7 @@ export default function Game() {
 
   const restartRace = () => {
     setProgress(0);
+    setLapResults([]);
     setMistakes(0);
     setFinalMistakes(0);
     setShowPenalty(false);
@@ -880,16 +886,24 @@ export default function Game() {
               {Array.from({ length: raceLength }).map((_, i) => {
                 const isCompleted = i < progress;
                 const isCurrent = i === progress;
-                const isOvertake = selectedCircuit?.drsZones?.includes(i + 1);
+                const lapResult = lapResults[i];
+                
+                // Count correct answers up to this lap
+                let correctCount = 0;
+                for (let j = 0; j <= i && j < lapResults.length; j++) {
+                  if (lapResults[j] === 'correct') correctCount++;
+                }
+                const isPurple = lapResult === 'correct' && correctCount > 5;
                 
                 return (
                   <div
                     key={i}
                     className={cn(
                       "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                      isCompleted && isOvertake && "bg-yellow-500",
-                      isCompleted && !isOvertake && "bg-blue-500",
-                      isCurrent && "bg-blue-400/50",
+                      isCompleted && lapResult === 'correct' && isPurple && "bg-purple-500",
+                      isCompleted && lapResult === 'correct' && !isPurple && "bg-green-500",
+                      isCompleted && lapResult === 'incorrect' && "bg-red-500",
+                      isCurrent && "bg-gray-400/50",
                       !isCompleted && !isCurrent && "bg-transparent"
                     )}
                   />
