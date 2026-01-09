@@ -811,11 +811,10 @@ export default function Game() {
           </div>
         </div>
 
-        {/* Main content - centered */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-1 px-4 min-h-0 overflow-hidden">
-          
-          {/* Track Limits Warning - Above Timer */}
-          <div className="h-6 flex items-center justify-center">
+        {/* Main content - compact header zone */}
+        <div className="flex flex-col items-center px-4 pt-1">
+          {/* Track Limits Warning */}
+          <div className="h-5 flex items-center justify-center">
             <AnimatePresence>
               {showPenalty && (
                 <motion.div
@@ -826,7 +825,7 @@ export default function Game() {
                   <motion.div
                     animate={{ opacity: [1, 0.3, 1] }}
                     transition={{ duration: 0.3, repeat: 3 }}
-                    className="bg-red-600 text-white px-3 py-1 rounded-lg font-bold text-xs"
+                    className="bg-red-600 text-white px-3 py-0.5 rounded-lg font-bold text-xs"
                   >
                     TRACK LIMITS
                   </motion.div>
@@ -835,39 +834,63 @@ export default function Game() {
             </AnimatePresence>
           </div>
 
-          {/* Stopwatch */}
-          <div className="flex items-center gap-2 text-lg font-mono font-medium text-primary">
-            <Timer className="w-4 h-4" />
-            {formatTime(elapsedTime)}
+          {/* Timer + Question + Answer - compact row */}
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-1.5 text-base font-mono font-medium text-primary">
+              <Timer className="w-4 h-4" />
+              {formatTime(elapsedTime)}
+            </div>
+            <div className="text-4xl sm:text-5xl font-bold tracking-tight">
+              {question?.display}
+            </div>
+            <div
+              className={cn(
+                "text-4xl sm:text-5xl font-bold min-w-[60px] text-center",
+                feedback === 'idle' && "text-muted-foreground/50",
+                feedback === 'correct' && "text-green-600",
+                feedback === 'incorrect' && "text-red-600"
+              )}
+              data-testid="display-answer"
+            >
+              {answer || "0"}
+            </div>
           </div>
 
-          {/* Question Display */}
-          <div className="text-4xl sm:text-5xl font-bold tracking-tight text-center">
-            {question?.display}
+          {/* Minimal Feedback */}
+          <div className="h-5 flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              {feedback === 'correct' && (
+                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-1 text-xs">
+                  <Check className="w-3 h-3" /> Correct
+                </motion.div>
+              )}
+              {feedback === 'incorrect' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 5 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0 }} 
+                  className={cn(
+                    "font-medium flex items-center gap-1 text-xs",
+                    penaltyMessage.color === 'yellow' ? "text-yellow-600" : "text-red-600"
+                  )}
+                >
+                  <X className="w-3 h-3" /> {penaltyMessage.text}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+        </div>
 
-          {/* Answer Display */}
-          <div
-            className={cn(
-              "text-3xl sm:text-4xl font-bold h-10 sm:h-12 flex items-center justify-center min-w-[80px]",
-              feedback === 'idle' && "text-muted-foreground/50",
-              feedback === 'correct' && "text-green-600",
-              feedback === 'incorrect' && "text-red-600"
-            )}
-            data-testid="display-answer"
-          >
-            {answer || "0"}
-          </div>
-
-          {/* Keypad - responsive sizing */}
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-[280px] sm:max-w-sm">
+        {/* Large Keypad - takes remaining space */}
+        <div className="flex-1 flex flex-col justify-center items-center px-4 min-h-0">
+          <div className="grid grid-cols-3 gap-2 w-full max-w-md">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
                 key={num}
                 type="button"
                 onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
                 disabled={isPaused}
-                className="h-12 sm:h-16 rounded-lg sm:rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+                className="h-[72px] sm:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-3xl sm:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
                 data-testid={`keypad-${num}`}
               >
                 {num}
@@ -877,16 +900,16 @@ export default function Game() {
               type="button"
               onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
               disabled={isPaused}
-              className="h-12 sm:h-16 rounded-lg sm:rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
+              className="h-[72px] sm:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
               data-testid="keypad-delete"
             >
-              <Delete className="w-6 h-6 sm:w-7 sm:h-7" />
+              <Delete className="w-8 h-8" />
             </button>
             <button
               type="button"
               onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
               disabled={isPaused}
-              className="h-12 sm:h-16 rounded-lg sm:rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+              className="h-[72px] sm:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-3xl sm:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
               data-testid="keypad-0"
             >
               0
@@ -896,45 +919,21 @@ export default function Game() {
               onClick={() => handleSubmit()}
               disabled={!answer || feedback !== 'idle' || isPaused}
               className={cn(
-                "h-12 sm:h-16 rounded-lg sm:rounded-xl text-lg sm:text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                "h-[72px] sm:h-[84px] rounded-xl text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center",
                 answer && feedback === 'idle' && !isPaused
                   ? "bg-green-600 text-white hover:bg-green-500"
                   : "bg-muted text-muted-foreground"
               )}
               data-testid="keypad-submit"
             >
-              <Check className="w-6 h-6 sm:w-7 sm:h-7" />
+              <Check className="w-8 h-8" />
             </button>
-          </div>
-
-          {/* Minimal Feedback */}
-          <div className="h-5 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              {feedback === 'correct' && (
-                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-1 text-xs sm:text-sm">
-                  <Check className="w-3 h-3 sm:w-4 sm:h-4" /> Correct
-                </motion.div>
-              )}
-              {feedback === 'incorrect' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 5 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  exit={{ opacity: 0 }} 
-                  className={cn(
-                    "font-medium flex items-center gap-1 text-xs sm:text-sm",
-                    penaltyMessage.color === 'yellow' ? "text-yellow-600" : "text-red-600"
-                  )}
-                >
-                  <X className="w-3 h-3 sm:w-4 sm:h-4" /> {penaltyMessage.text}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
         </div>
 
         {/* Horizontal Progress Bar at Bottom */}
-        <div className="px-4 pb-3 pt-1">
-          <div className="relative h-6 bg-muted rounded-full overflow-hidden">
+        <div className="px-4 pb-2">
+          <div className="relative h-5 bg-muted rounded-full overflow-hidden">
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
               {Array.from({ length: raceLength }).map((_, i) => {
@@ -970,18 +969,18 @@ export default function Game() {
               className="absolute top-1/2 -translate-y-1/2 z-10"
               animate={{ left: `${(progress / raceLength) * 100}%` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{ marginLeft: "-12px" }}
+              style={{ marginLeft: "-10px" }}
             >
-              <div className="w-6 h-4 bg-foreground rounded-sm flex items-center justify-center">
-                <div className="w-4 h-2 bg-primary rounded-sm" />
+              <div className="w-5 h-3 bg-foreground rounded-sm flex items-center justify-center">
+                <div className="w-3 h-1.5 bg-primary rounded-sm" />
               </div>
             </motion.div>
           </div>
           
           {/* Progress text */}
-          <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
-            <span>Lap {progress + 1} / {raceLength}</span>
-            <span className={cn(mistakes > 0 && "text-red-500")}>Track Limits: {mistakes}</span>
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5 px-1">
+            <span>Lap {progress + 1}/{raceLength}</span>
+            <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
           </div>
         </div>
 
