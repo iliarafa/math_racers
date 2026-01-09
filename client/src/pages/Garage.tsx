@@ -5,7 +5,15 @@ import { cn } from "@/lib/utils";
 import { ChevronLeft, Check, AlertTriangle, BookOpen, FileText } from "lucide-react";
 
 export default function Garage() {
-  const { state, setTeamColor, toggleSound, resetAllData } = useGameState();
+  const { state, setTeamColor, toggleSound, resetAllData, getTopLapTimes } = useGameState();
+  const topTimes = getTopLapTimes(3);
+
+  const formatTime = (ms: number) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    const milliseconds = ms % 1000;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+  };
 
   const handleRetireCar = () => {
     if (confirm("Are you sure you want to retire your car? This will reset ALL your progress, including coins, stats, and settings.")) {
@@ -78,6 +86,22 @@ export default function Garage() {
               <div className="text-2xl md:text-3xl font-mono font-bold text-yellow-400">{state.racesWon}</div>
               <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Races Won</div>
             </div>
+          </div>
+          
+          <div className="border border-border rounded-lg p-4" data-testid="session-lap-times">
+            <h3 className="text-sm font-semibold mb-2">Session Best Laps</h3>
+            {topTimes.length > 0 ? (
+              <div className="space-y-1 text-sm font-mono">
+                {topTimes.map((time, index) => (
+                  <div key={index} className="flex justify-between">
+                    <span className="text-muted-foreground">P{index + 1}</span>
+                    <span className={index === 0 ? "text-purple-400 font-bold" : "text-muted-foreground"}>{formatTime(time)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No races completed this session</p>
+            )}
           </div>
         </section>
 

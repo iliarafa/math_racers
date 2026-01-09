@@ -176,6 +176,8 @@ export const SHOP_ITEMS = [
 ];
 
 export function useGameState() {
+  const [sessionLapTimes, setSessionLapTimes] = useState<number[]>([]);
+  
   const [state, setState] = useState<GameState>(() => {
     try {
       const saved = localStorage.getItem('f1-math-racer-state');
@@ -284,15 +286,25 @@ export function useGameState() {
     try {
       localStorage.removeItem('f1-math-racer-state');
       setState(INITIAL_STATE);
+      setSessionLapTimes([]);
     } catch (error) {
       console.error('Failed to reset data:', error);
-      // Still attempt to reset state even if localStorage fails
       setState(INITIAL_STATE);
+      setSessionLapTimes([]);
     }
+  };
+
+  const recordLapTime = (time: number) => {
+    setSessionLapTimes(prev => [...prev, time].sort((a, b) => a - b).slice(0, 10));
+  };
+
+  const getTopLapTimes = (count: number = 3) => {
+    return sessionLapTimes.slice(0, count);
   };
 
   return {
     state,
+    sessionLapTimes,
     addCoins,
     incrementStreak,
     resetStreak,
@@ -304,7 +316,9 @@ export function useGameState() {
     addCareerPoints,
     incrementRacesWon,
     updatePersonalBest,
-    resetAllData
+    resetAllData,
+    recordLapTime,
+    getTopLapTimes
   };
 }
 

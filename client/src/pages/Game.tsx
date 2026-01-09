@@ -61,7 +61,7 @@ const playBeep = (frequency: number = 800, duration: number = 150) => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime } = useGameState();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [isPracticeMode, setIsPracticeMode] = useState(false);
@@ -302,9 +302,10 @@ export default function Game() {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
        incrementRacesWon();
     }
-    // Update personal best time (only in race mode, not practice)
+    // Update personal best time and record session lap time (only in race mode, not practice)
     if (!isPracticeMode && selectedCircuit) {
       updatePersonalBest(selectedCircuit.id, elapsedTime);
+      recordLapTime(elapsedTime);
     }
   };
 
