@@ -25,9 +25,7 @@ export default function Welcome() {
             className="w-auto max-w-[65%]"
             data-testid="img-hero"
           />
-          <p className="text-xl text-muted-foreground max-w-lg text-center">
-            Race by solving math.
-          </p>
+          <p className="text-xl text-muted-foreground max-w-lg text-center">fueled by Math.</p>
         </div>
 
         <div className="flex flex-col gap-4 w-full max-w-md">
