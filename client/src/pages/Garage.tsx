@@ -198,7 +198,7 @@ export default function Garage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-base mb-1">TRACK LIMITS</h3>
-                    <p className="text-white text-sm">Wrong answers make you spin and lose time. 4 warnings give you a 5 second penalty.</p>
+                    <p className="text-white text-sm">Wrong answers make you spin and lose time. Four warnings cost you a 5" penalty.</p>
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-base mb-1">REALISM MODE</h3>
