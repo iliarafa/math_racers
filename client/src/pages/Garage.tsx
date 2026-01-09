@@ -166,7 +166,7 @@ export default function Garage() {
               {showRegulations && (
                 <div className="px-4 pb-4 text-sm text-white/70 space-y-2 border-t border-[#333] pt-3">
                   <p><span className="font-bold text-white">RACE</span> — Answer 20 questions to finish.</p>
-                  <p><span className="font-bold text-white">OVERTAKE</span> — Yellow zones give double points and coins.</p>
+                  <p><span className="font-bold text-white">OVERTAKE</span> — Solve correctly in detection points to engage Active Aero, reduce drag and fly.</p>
                   <p><span className="font-bold text-white">PENALTIES</span> — Wrong answers add time. Too many = crash!</p>
                 </div>
               )}
