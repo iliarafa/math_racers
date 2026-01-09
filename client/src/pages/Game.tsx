@@ -583,29 +583,21 @@ export default function Game() {
           </div>
 
           <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
-            {CIRCUITS.map((circuit) => {
-              const personalBest = state.personalBests[circuit.id];
-              return (
-                <motion.button
-                  key={circuit.id}
-                  onClick={() => handleCircuitSelect(circuit)}
-                  whileHover={{ opacity: 0.7 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="py-5 transition-opacity text-center"
-                  data-testid={`circuit-${circuit.id}`}
-                >
-                  <div>
-                    <span className="font-bold text-xl">{circuit.name}</span>
-                    <span className="text-sm text-muted-foreground ml-2">{circuit.type}</span>
-                  </div>
-                  {personalBest && (
-                    <div className="text-xs text-green-500 mt-1">
-                      Best: {formatTime(personalBest)}
-                    </div>
-                  )}
-                </motion.button>
-              );
-            })}
+            {CIRCUITS.map((circuit) => (
+              <motion.button
+                key={circuit.id}
+                onClick={() => handleCircuitSelect(circuit)}
+                whileHover={{ opacity: 0.7 }}
+                whileTap={{ scale: 0.98 }}
+                className="py-5 transition-opacity text-center"
+                data-testid={`circuit-${circuit.id}`}
+              >
+                <div>
+                  <span className="font-bold text-xl">{circuit.name}</span>
+                  <span className="text-sm text-muted-foreground ml-2">{circuit.type}</span>
+                </div>
+              </motion.button>
+            ))}
           </div>
 
           <div className="mt-6 text-center">
