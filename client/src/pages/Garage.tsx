@@ -55,7 +55,7 @@ export default function Garage() {
           <div className="space-y-3 text-sm" data-testid="regulations-content">
             <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4">
               <h3 className="font-semibold text-green-400 mb-2">Race Format</h3>
-              <p className="text-muted-foreground">Answer 11 math questions to complete a lap. Each correct answer advances you through one turn of the track.</p>
+              <p className="text-muted-foreground">Answer 20 math questions to complete a race. Each correct answer advances you closer to the finish line.</p>
             </div>
             
             <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4">
