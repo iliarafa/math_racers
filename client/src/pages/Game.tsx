@@ -792,51 +792,51 @@ export default function Game() {
               {answer || <span className="text-muted-foreground/20">0</span>}
             </div>
 
-            <div className="grid grid-cols-3 gap-2 landscape:gap-1.5 w-full max-w-md landscape:max-w-xs mt-2 landscape:mt-2 pb-[env(safe-area-inset-bottom)]">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+            <div className="grid grid-cols-3 gap-3 w-full max-w-sm mt-4 pb-[env(safe-area-inset-bottom)]">
+              {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
+                  disabled={isPaused}
+                  className="h-16 sm:h-20 rounded-xl bg-secondary text-secondary-foreground text-3xl sm:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+                  data-testid={`keypad-${num}`}
+                >
+                  {num}
+                </button>
+              ))}
               <button
-                key={num}
                 type="button"
-                onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
+                onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
                 disabled={isPaused}
-                className="h-14 sm:h-16 md:h-14 rounded-lg bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-2xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
-                data-testid={`keypad-${num}`}
+                className="h-16 sm:h-20 rounded-xl bg-muted text-muted-foreground text-2xl font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
+                data-testid="keypad-delete"
               >
-                {num}
+                <Delete className="w-7 h-7 sm:w-8 sm:h-8" />
               </button>
-            ))}
-            <button
-              type="button"
-              onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
-              disabled={isPaused}
-              className="h-14 sm:h-16 md:h-14 rounded-lg bg-muted text-muted-foreground text-xl sm:text-2xl md:text-xl font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
-              data-testid="keypad-delete"
-            >
-              <Delete className="w-6 h-6 sm:w-7 sm:h-7 md:w-6 md:h-6" />
-            </button>
-            <button
-              type="button"
-              onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
-              disabled={isPaused}
-              className="h-14 sm:h-16 md:h-14 rounded-lg bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-2xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
-              data-testid="keypad-0"
-            >
-              0
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSubmit()}
-              disabled={!answer || feedback !== 'idle' || isPaused}
-              className={cn(
-                "h-14 sm:h-16 md:h-14 rounded-lg text-xl sm:text-2xl md:text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
-                answer && feedback === 'idle' && !isPaused
-                  ? "bg-green-600 text-white hover:bg-green-500"
-                  : "bg-muted text-muted-foreground"
-              )}
-              data-testid="keypad-submit"
-            >
-              <Check className="w-6 h-6 sm:w-7 sm:h-7 md:w-6 md:h-6" />
-            </button>
+              <button
+                type="button"
+                onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
+                disabled={isPaused}
+                className="h-16 sm:h-20 rounded-xl bg-secondary text-secondary-foreground text-3xl sm:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+                data-testid="keypad-0"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSubmit()}
+                disabled={!answer || feedback !== 'idle' || isPaused}
+                className={cn(
+                  "h-16 sm:h-20 rounded-xl text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                  answer && feedback === 'idle' && !isPaused
+                    ? "bg-green-600 text-white hover:bg-green-500"
+                    : "bg-muted text-muted-foreground"
+                )}
+                data-testid="keypad-submit"
+              >
+                <Check className="w-7 h-7 sm:w-8 sm:h-8" />
+              </button>
             </div>
 
             {/* Minimal Feedback */}
