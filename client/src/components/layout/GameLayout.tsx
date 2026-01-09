@@ -9,13 +9,15 @@ interface GameLayoutProps {
   trackName?: string;
   hideHeader?: boolean;
   lockViewport?: boolean;
+  darkBackground?: boolean;
 }
 
-export function GameLayout({ children, coins, trackName, hideHeader = false, lockViewport = false }: GameLayoutProps) {
+export function GameLayout({ children, coins, trackName, hideHeader = false, lockViewport = false, darkBackground = false }: GameLayoutProps) {
   return (
     <div className={cn(
-      "bg-background text-foreground flex flex-col font-sans",
-      lockViewport ? "h-screen overflow-hidden" : "min-h-screen"
+      "text-foreground flex flex-col font-sans",
+      lockViewport ? "h-screen overflow-hidden" : "min-h-screen",
+      darkBackground ? "bg-black" : "bg-background"
     )}>
       {!hideHeader && (
         <header className="border-b border-border py-3 px-3 md:py-4 md:px-6 flex justify-between items-center bg-white sticky top-0 z-50">
@@ -54,7 +56,8 @@ export function GameLayout({ children, coins, trackName, hideHeader = false, loc
       {/* Main Content Area */}
       <main className={cn(
         "flex-1 flex flex-col max-w-5xl mx-auto w-full min-h-0",
-        lockViewport ? "p-0" : "p-6"
+        lockViewport ? "p-0" : "p-6",
+        darkBackground && "bg-black"
       )}>
         {children}
       </main>
