@@ -42,7 +42,7 @@ export default function Garage() {
           
           <Link href="/strategy">
             <button
-              className="w-full hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 bg-[#000000]"
+              className="w-full hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 bg-[#000000]"
               data-testid="button-strategy-guide"
             >
               <BarChart3 className="w-5 h-5" />
