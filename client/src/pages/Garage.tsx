@@ -123,10 +123,6 @@ export default function Garage() {
         </section>
 
         <section className="space-y-4">
-          <div>
-            <h2 className="font-semibold">Pit Radio</h2>
-          </div>
-          
           <label className="flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors pl-[0px] pr-[0px]" data-testid="toggle-sound">
             <span className="font-semibold">Beeps</span>
             <button
