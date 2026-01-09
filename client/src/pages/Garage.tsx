@@ -200,6 +200,10 @@ export default function Garage() {
                     <h3 className="font-bold text-white text-base mb-1">TRACK LIMITS</h3>
                     <p className="text-white text-sm">Wrong answers make you spin and lose time.</p>
                   </div>
+                  <div>
+                    <h3 className="font-bold text-white text-base mb-1">REALISM MODE</h3>
+                    <p className="text-white text-sm">Race the full Grand Prix distance with realistic lap counts for each circuit.</p>
+                  </div>
                 </div>
               )}
             </div>
