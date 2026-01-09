@@ -125,11 +125,10 @@ export default function Garage() {
         <section className="space-y-4">
           <div>
             <h2 className="font-semibold">Pit Radio</h2>
-            <p className="text-xs text-muted-foreground">Audio Settings</p>
           </div>
           
           <label className="flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors pl-[0px] pr-[0px]" data-testid="toggle-sound">
-            <span className="font-semibold">Sound Effects</span>
+            <span className="font-semibold">beeps</span>
             <button
               onClick={toggleSound}
               className={cn(
