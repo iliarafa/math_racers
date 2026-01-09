@@ -6,10 +6,9 @@ import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronDown, TrendingUp, Volume2, VolumeX, Flag, Gauge, Clock } from "lucide-react";
 
 export default function Garage() {
-  const { state, toggleSound, toggleSimMode, resetAllData, getTopLapTimes, getLapHistory } = useGameState();
+  const { state, toggleSound, toggleSimMode, resetAllData, getLapHistory } = useGameState();
   const [showRegulations, setShowRegulations] = useState(false);
   const [showFullLog, setShowFullLog] = useState(false);
-  const topTimes = getTopLapTimes(3);
   const lapHistory = getLapHistory(20);
 
   const formatTime = (ms: number) => {
@@ -112,24 +111,6 @@ export default function Garage() {
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
                 </div>
-              </div>
-              
-              <div className="mt-4 pt-3 border-t border-[#333]" data-testid="session-lap-times">
-                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Session Best Laps</p>
-                {topTimes.length > 0 ? (
-                  <div className="flex gap-4 text-sm font-mono">
-                    {topTimes.slice(0, 3).map((time, index) => (
-                      <div key={index} className="flex items-center gap-1">
-                        <span className="text-white/40">P{index + 1}</span>
-                        <span className={index === 0 ? "font-bold" : "text-white/60"} style={index === 0 ? { color: state.teamColor } : {}}>
-                          {formatTime(time)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-white/40">No races completed this session</p>
-                )}
               </div>
             </div>
 
