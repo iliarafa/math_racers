@@ -138,11 +138,10 @@ export default function Garage() {
           
           <button
             onClick={handleRetireCar}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
             data-testid="button-retire"
           >
-            <AlertTriangle className="w-5 h-5" />
-            RETIRE CAR
+            RETIRE
           </button>
         </section>
 
