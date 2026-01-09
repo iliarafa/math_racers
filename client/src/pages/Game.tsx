@@ -771,23 +771,23 @@ export default function Game() {
         </div>
 
         {/* Main content - centered */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 min-h-0">
+        <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4 min-h-0 overflow-hidden">
           
           {/* Stopwatch */}
-          <div className="flex items-center gap-2 text-xl font-mono font-medium text-primary">
-            <Timer className="w-5 h-5" />
+          <div className="flex items-center gap-2 text-lg font-mono font-medium text-primary">
+            <Timer className="w-4 h-4" />
             {formatTime(elapsedTime)}
           </div>
 
           {/* Question Display */}
-          <div className="text-5xl font-bold tracking-tight text-center">
+          <div className="text-4xl sm:text-5xl font-bold tracking-tight text-center">
             {question?.display}
           </div>
 
           {/* Answer Display */}
           <div
             className={cn(
-              "text-4xl font-bold h-14 flex items-center justify-center min-w-[100px]",
+              "text-3xl sm:text-4xl font-bold h-10 sm:h-12 flex items-center justify-center min-w-[80px]",
               feedback === 'idle' && "text-muted-foreground/50",
               feedback === 'correct' && "text-green-600",
               feedback === 'incorrect' && "text-red-600"
@@ -797,15 +797,15 @@ export default function Game() {
             {answer || "0"}
           </div>
 
-          {/* Keypad - wide and centered */}
-          <div className="grid grid-cols-3 gap-2 w-full max-w-md">
+          {/* Keypad - responsive sizing */}
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-[280px] sm:max-w-sm">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
                 key={num}
                 type="button"
                 onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
                 disabled={isPaused}
-                className="aspect-square rounded-xl bg-secondary text-secondary-foreground text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+                className="h-12 sm:h-16 rounded-lg sm:rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
                 data-testid={`keypad-${num}`}
               >
                 {num}
@@ -815,16 +815,16 @@ export default function Game() {
               type="button"
               onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
               disabled={isPaused}
-              className="aspect-square rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
+              className="h-12 sm:h-16 rounded-lg sm:rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
               data-testid="keypad-delete"
             >
-              <Delete className="w-8 h-8" />
+              <Delete className="w-6 h-6 sm:w-7 sm:h-7" />
             </button>
             <button
               type="button"
               onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
               disabled={isPaused}
-              className="aspect-square rounded-xl bg-secondary text-secondary-foreground text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+              className="h-12 sm:h-16 rounded-lg sm:rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
               data-testid="keypad-0"
             >
               0
@@ -834,36 +834,36 @@ export default function Game() {
               onClick={() => handleSubmit()}
               disabled={!answer || feedback !== 'idle' || isPaused}
               className={cn(
-                "aspect-square rounded-xl text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                "h-12 sm:h-16 rounded-lg sm:rounded-xl text-lg sm:text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
                 answer && feedback === 'idle' && !isPaused
                   ? "bg-green-600 text-white hover:bg-green-500"
                   : "bg-muted text-muted-foreground"
               )}
               data-testid="keypad-submit"
             >
-              <Check className="w-8 h-8" />
+              <Check className="w-6 h-6 sm:w-7 sm:h-7" />
             </button>
           </div>
 
           {/* Minimal Feedback */}
-          <div className="h-6 flex items-center justify-center">
+          <div className="h-5 flex items-center justify-center">
             <AnimatePresence mode="wait">
               {feedback === 'correct' && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-2 text-sm">
-                  <Check className="w-4 h-4" /> Correct
+                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-1 text-xs sm:text-sm">
+                  <Check className="w-3 h-3 sm:w-4 sm:h-4" /> Correct
                 </motion.div>
               )}
               {feedback === 'incorrect' && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }} 
+                  initial={{ opacity: 0, y: 5 }} 
                   animate={{ opacity: 1, y: 0 }} 
                   exit={{ opacity: 0 }} 
                   className={cn(
-                    "font-medium flex items-center gap-2 text-sm",
+                    "font-medium flex items-center gap-1 text-xs sm:text-sm",
                     penaltyMessage.color === 'yellow' ? "text-yellow-600" : "text-red-600"
                   )}
                 >
-                  <X className="w-4 h-4" /> {penaltyMessage.text}
+                  <X className="w-3 h-3 sm:w-4 sm:h-4" /> {penaltyMessage.text}
                 </motion.div>
               )}
             </AnimatePresence>
