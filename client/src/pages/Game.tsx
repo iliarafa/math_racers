@@ -254,22 +254,19 @@ export default function Game() {
       const speed: 'fast' | 'normal' | 'slow' = responseTime < 1000 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
       
       // Purple mode logic:
-      // - Need 5 consecutive correct to build streak
-      // - 6th consecutive correct answer (if fast <1s) becomes first purple
+      // - Need 4 consecutive correct to build streak
+      // - 5th consecutive correct answer (if not slow, i.e. <2s) becomes first purple
       // - Once in purple, must answer fast (<1s) to stay in purple
-      // - Any slow or incorrect answer breaks purple mode
+      // - Any slow (>=1s) or incorrect answer breaks purple mode
       
       if (inPurpleMode) {
-        // Already in purple mode - check if we maintain it
+        // Already in purple mode - must be fast (<1s) to maintain it
         if (speed !== 'fast') {
-          // Slow answer breaks purple mode
           setInPurpleMode(false);
         }
-        // If fast, stay in purple (no action needed)
       } else {
         // Not in purple mode - check if we should enter
         // Count consecutive correct answers from recent history
-        // A slow answer after entering purple resets the streak
         let consecutiveCorrect = 0;
         let purpleWasActive = false;
         
@@ -277,22 +274,20 @@ export default function Game() {
           const lap = lapResults[j];
           if (lap.result === 'correct') {
             if (purpleWasActive) {
-              // Was in purple - check if this answer breaks it
+              // Was in purple - must be fast to maintain
               if (lap.speed !== 'fast') {
-                // Slow answer breaks purple, restart streak from here
+                // Not fast breaks purple, restart streak
                 consecutiveCorrect = 1;
                 purpleWasActive = false;
               }
-              // If fast, continue in purple
             } else {
               consecutiveCorrect++;
-              // Check if we entered purple mode at this point (6th consecutive + fast)
-              if (consecutiveCorrect >= 6 && lap.speed === 'fast') {
+              // 5th consecutive + not slow = enter purple
+              if (consecutiveCorrect >= 5 && lap.speed !== 'slow') {
                 purpleWasActive = true;
               }
             }
           } else {
-            // Incorrect resets everything
             consecutiveCorrect = 0;
             purpleWasActive = false;
           }
@@ -303,8 +298,8 @@ export default function Game() {
           consecutiveCorrect++;
         }
         
-        // Enter purple mode if we have 6+ consecutive correct AND this answer is fast
-        if (consecutiveCorrect >= 6 && speed === 'fast') {
+        // Enter purple mode: 5th consecutive + not slow (under 2s)
+        if (consecutiveCorrect >= 5 && speed !== 'slow') {
           setInPurpleMode(true);
         }
       }
@@ -965,20 +960,22 @@ export default function Game() {
                 const lapData = lapResults[i];
                 
                 // Calculate purple mode status at this segment
-                // 6th consecutive correct + fast = first purple
+                // 5th consecutive + not slow = enter purple, then must be fast to maintain
                 let consecutiveCorrect = 0;
                 let purpleModeActive = false;
                 for (let j = 0; j <= i && j < lapResults.length; j++) {
                   const lap = lapResults[j];
                   if (lap.result === 'correct') {
                     if (purpleModeActive) {
+                      // Must be fast to maintain purple
                       if (lap.speed !== 'fast') {
                         purpleModeActive = false;
                         consecutiveCorrect = 1;
                       }
                     } else {
                       consecutiveCorrect++;
-                      if (consecutiveCorrect >= 6 && lap.speed === 'fast') {
+                      // 5th consecutive + not slow = enter purple
+                      if (consecutiveCorrect >= 5 && lap.speed !== 'slow') {
                         purpleModeActive = true;
                       }
                     }
