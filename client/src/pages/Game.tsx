@@ -60,6 +60,53 @@ const playBeep = (frequency: number = 800, duration: number = 150) => {
   }
 };
 
+const playCorrectSound = () => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+    oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+    oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
+    
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+const playIncorrectSound = () => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(200, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3);
+    
+    gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime } = useGameState();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
@@ -195,6 +242,9 @@ export default function Game() {
 
     if (val === question.answer) {
       setFeedback('correct');
+      if (soundEnabledRef.current) {
+        playCorrectSound();
+      }
       const isOvertakeActive = selectedCircuit.drsZones.includes(progress);
       const baseCoins = isOvertakeActive ? 20 : 10;
       addCoins(baseCoins);
@@ -231,6 +281,9 @@ export default function Game() {
       const newMistakes = mistakes + 1;
       setMistakes(newMistakes);
       setFeedback('incorrect');
+      if (soundEnabledRef.current) {
+        playIncorrectSound();
+      }
       resetStreak();
 
       // Log the mistake for review
