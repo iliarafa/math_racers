@@ -701,7 +701,7 @@ export default function Game() {
   // Racing phase
   return (
     <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-      <div className="flex-1 flex flex-col w-full py-2 px-4 gap-2 overflow-hidden relative">
+      <div className="flex-1 flex flex-col w-full overflow-hidden relative">
 
         {/* Pause Overlay */}
         {isPaused && (
@@ -728,9 +728,29 @@ export default function Game() {
           </div>
         )}
 
-        {/* Mode badge and controls - always on top */}
-        <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-1">
-          <div className="flex items-center">
+        {/* Track Limits Flash Indicator */}
+        <AnimatePresence>
+          {showPenalty && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-40"
+            >
+              <motion.div
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 0.3, repeat: 3 }}
+                className="bg-red-600 text-white px-3 py-2 rounded-lg font-bold text-sm"
+              >
+                TRACK LIMITS
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mode badge and controls */}
+        <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-2">
+          <div className="flex items-center gap-2">
             {isPracticeMode ? (
               <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
             ) : (
@@ -747,121 +767,151 @@ export default function Game() {
                 <Pause className="w-5 h-5" />
               </button>
             )}
-            <span className={cn(mistakes > 0 ? "text-red-600" : "")}>Track Limits: {mistakes}</span>
           </div>
         </div>
 
-        {/* Main content: side-by-side layout for landscape */}
-        <div className="flex-1 flex flex-col landscape:flex-row gap-4 landscape:gap-6 items-center landscape:items-start justify-center min-h-0">
+        {/* Main content - centered */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 min-h-0">
           
-          {/* Left: Track Map */}
-          <div className="landscape:flex-shrink-0 landscape:w-[45%] flex items-center justify-center">
-            {selectedCircuit && (
-              <TrackProgress 
-                circuit={selectedCircuit} 
-                progress={progress} 
-                total={RACE_LENGTH}
-                showPenalty={showPenalty}
-              />
-            )}
+          {/* Stopwatch */}
+          <div className="flex items-center gap-2 text-xl font-mono font-medium text-primary">
+            <Timer className="w-5 h-5" />
+            {formatTime(elapsedTime)}
           </div>
 
-          {/* Right: Question, Answer, Keypad */}
-          <div className="flex-1 flex flex-col items-center justify-center gap-2 landscape:gap-3 min-h-0">
-            
-            {/* Stopwatch */}
-            <div className="flex items-center gap-2 text-lg landscape:text-xl font-mono font-medium text-primary bg-secondary/50 px-4 py-1 rounded-full">
-              <Timer className="w-4 h-4" />
-              {formatTime(elapsedTime)}
-            </div>
+          {/* Question Display */}
+          <div className="text-5xl font-bold tracking-tight text-center">
+            {question?.display}
+          </div>
 
-            {/* Question Display */}
-            <div className="text-3xl landscape:text-4xl font-bold tracking-tight text-center px-4">
-              {question?.display}
-            </div>
+          {/* Answer Display */}
+          <div
+            className={cn(
+              "text-4xl font-bold h-14 flex items-center justify-center min-w-[100px]",
+              feedback === 'idle' && "text-muted-foreground/50",
+              feedback === 'correct' && "text-green-600",
+              feedback === 'incorrect' && "text-red-600"
+            )}
+            data-testid="display-answer"
+          >
+            {answer || "0"}
+          </div>
 
-            <div
-              className={cn(
-                "w-full max-w-xs h-10 landscape:h-12 text-center text-2xl landscape:text-3xl font-bold border-b-4 flex items-center justify-center",
-                feedback === 'idle' && "border-border",
-                feedback === 'correct' && "border-green-500 text-green-600",
-                feedback === 'incorrect' && "border-red-500 text-red-600"
-              )}
-              data-testid="display-answer"
-            >
-              {answer || <span className="text-muted-foreground/20">0</span>}
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 w-full px-2 mt-4 pb-[env(safe-area-inset-bottom)]">
-              {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
-                  disabled={isPaused}
-                  className="aspect-square rounded-xl bg-secondary text-secondary-foreground text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
-                  data-testid={`keypad-${num}`}
-                >
-                  {num}
-                </button>
-              ))}
+          {/* Keypad - wide and centered */}
+          <div className="grid grid-cols-3 gap-2 w-full max-w-md">
+            {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
+                key={num}
                 type="button"
-                onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
-                disabled={isPaused}
-                className="aspect-square rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
-                data-testid="keypad-delete"
-              >
-                <Delete className="w-8 h-8" />
-              </button>
-              <button
-                type="button"
-                onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
+                onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
                 disabled={isPaused}
                 className="aspect-square rounded-xl bg-secondary text-secondary-foreground text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
-                data-testid="keypad-0"
+                data-testid={`keypad-${num}`}
               >
-                0
+                {num}
               </button>
-              <button
-                type="button"
-                onClick={() => handleSubmit()}
-                disabled={!answer || feedback !== 'idle' || isPaused}
-                className={cn(
-                  "aspect-square rounded-xl text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
-                  answer && feedback === 'idle' && !isPaused
-                    ? "bg-green-600 text-white hover:bg-green-500"
-                    : "bg-muted text-muted-foreground"
-                )}
-                data-testid="keypad-submit"
-              >
-                <Check className="w-8 h-8" />
-              </button>
-            </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
+              disabled={isPaused}
+              className="aspect-square rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
+              data-testid="keypad-delete"
+            >
+              <Delete className="w-8 h-8" />
+            </button>
+            <button
+              type="button"
+              onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
+              disabled={isPaused}
+              className="aspect-square rounded-xl bg-secondary text-secondary-foreground text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+              data-testid="keypad-0"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSubmit()}
+              disabled={!answer || feedback !== 'idle' || isPaused}
+              className={cn(
+                "aspect-square rounded-xl text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                answer && feedback === 'idle' && !isPaused
+                  ? "bg-green-600 text-white hover:bg-green-500"
+                  : "bg-muted text-muted-foreground"
+              )}
+              data-testid="keypad-submit"
+            >
+              <Check className="w-8 h-8" />
+            </button>
+          </div>
 
-            {/* Minimal Feedback */}
-            <div className="h-6 flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                {feedback === 'correct' && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4" /> Correct
-                  </motion.div>
-                )}
-                {feedback === 'incorrect' && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    exit={{ opacity: 0 }} 
+          {/* Minimal Feedback */}
+          <div className="h-6 flex items-center justify-center">
+            <AnimatePresence mode="wait">
+              {feedback === 'correct' && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-2 text-sm">
+                  <Check className="w-4 h-4" /> Correct
+                </motion.div>
+              )}
+              {feedback === 'incorrect' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} 
+                  animate={{ opacity: 1, y: 0 }} 
+                  exit={{ opacity: 0 }} 
+                  className={cn(
+                    "font-medium flex items-center gap-2 text-sm",
+                    penaltyMessage.color === 'yellow' ? "text-yellow-600" : "text-red-600"
+                  )}
+                >
+                  <X className="w-4 h-4" /> {penaltyMessage.text}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Horizontal Progress Bar at Bottom */}
+        <div className="px-4 pb-4 pt-2">
+          <div className="relative h-6 bg-muted rounded-full overflow-hidden">
+            {/* Progress segments */}
+            <div className="absolute inset-0 flex">
+              {Array.from({ length: RACE_LENGTH }).map((_, i) => {
+                const isCompleted = i < progress;
+                const isCurrent = i === progress;
+                const isDRS = selectedCircuit?.drsZones?.includes(i + 1);
+                
+                return (
+                  <div
+                    key={i}
                     className={cn(
-                      "font-medium flex items-center gap-2 text-sm",
-                      penaltyMessage.color === 'yellow' ? "text-yellow-600" : "text-red-600"
+                      "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
+                      isCompleted && isDRS && "bg-yellow-500",
+                      isCompleted && !isDRS && "bg-blue-500",
+                      isCurrent && "bg-blue-400/50",
+                      !isCompleted && !isCurrent && "bg-transparent"
                     )}
-                  >
-                    <X className="w-4 h-4" /> {penaltyMessage.text}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  />
+                );
+              })}
             </div>
+            
+            {/* Car indicator */}
+            <motion.div
+              className="absolute top-1/2 -translate-y-1/2 z-10"
+              animate={{ left: `${(progress / RACE_LENGTH) * 100}%` }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              style={{ marginLeft: "-12px" }}
+            >
+              <div className="w-6 h-4 bg-foreground rounded-sm flex items-center justify-center">
+                <div className="w-4 h-2 bg-primary rounded-sm" />
+              </div>
+            </motion.div>
+          </div>
+          
+          {/* Progress text */}
+          <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
+            <span>Lap {progress + 1} / {RACE_LENGTH}</span>
+            <span className={cn(mistakes > 0 && "text-red-500")}>Track Limits: {mistakes}</span>
           </div>
         </div>
 
