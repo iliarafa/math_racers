@@ -194,7 +194,7 @@ export default function Garage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-base mb-1">OVERTAKE</h3>
-                    <p className="text-white text-sm">Solve correctly in detection points to engage Active Aero, reduce drag and fly.</p>
+                    <p className="text-white text-sm">Solve correctly in detection points to engage Active Aero, reduce drag and fly. Only available in Realism Mode.</p>
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-base mb-1">TRACK LIMITS</h3>
