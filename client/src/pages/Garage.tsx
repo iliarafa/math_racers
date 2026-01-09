@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, TEAM_COLORS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, Check, AlertTriangle, BookOpen } from "lucide-react";
+import { ChevronLeft, Check, AlertTriangle, BookOpen, Scale } from "lucide-react";
 
 export default function Garage() {
   const { state, setTeamColor, toggleSound, resetAllData } = useGameState();
@@ -41,6 +41,38 @@ export default function Garage() {
               Open Strategy Guide
             </button>
           </Link>
+        </section>
+
+        <section className="space-y-4">
+          <div className="border-b border-border pb-2">
+            <h2 className="font-semibold flex items-center gap-2">
+              <Scale className="w-4 h-4" />
+              Regulations
+            </h2>
+            <p className="text-xs text-muted-foreground">How to Play</p>
+          </div>
+          
+          <div className="space-y-3 text-sm" data-testid="regulations-content">
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4">
+              <h3 className="font-semibold text-green-400 mb-2">Race Format</h3>
+              <p className="text-muted-foreground">Answer 11 math questions to complete a lap. Each correct answer advances you through one turn of the track.</p>
+            </div>
+            
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4">
+              <h3 className="font-semibold text-cyan-400 mb-2">DRS Zones</h3>
+              <p className="text-muted-foreground">Some turns are DRS zones (shown on screen). Correct answers in DRS zones earn double points and coins!</p>
+            </div>
+            
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4">
+              <h3 className="font-semibold text-yellow-400 mb-2">Time Penalties</h3>
+              <p className="text-muted-foreground">Wrong answers add time penalties to your race. Too many mistakes and you'll crash out!</p>
+            </div>
+            
+            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-4">
+              <h3 className="font-semibold text-purple-400 mb-2">Difficulty Levels</h3>
+              <p className="text-muted-foreground">Choose your driver to set difficulty. Harder drivers give more points but tougher questions.</p>
+            </div>
+          </div>
         </section>
 
         <section className="space-y-4">
