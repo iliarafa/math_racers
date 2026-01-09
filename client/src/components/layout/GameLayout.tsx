@@ -10,9 +10,10 @@ interface GameLayoutProps {
   hideHeader?: boolean;
   lockViewport?: boolean;
   darkBackground?: boolean;
+  hideGarageButton?: boolean;
 }
 
-export function GameLayout({ children, coins, trackName, hideHeader = false, lockViewport = false, darkBackground = false }: GameLayoutProps) {
+export function GameLayout({ children, coins, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false }: GameLayoutProps) {
   return (
     <div className={cn(
       "text-foreground flex flex-col font-sans",
@@ -39,12 +40,14 @@ export function GameLayout({ children, coins, trackName, hideHeader = false, loc
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <Link href="/garage">
-              <button className="flex items-center gap-2 text-sm font-medium hover:bg-secondary px-2 md:px-3 py-2 rounded-md transition-colors">
-                <Wrench className="w-4 h-4" />
-                <span className="hidden sm:inline">Garage</span>
-              </button>
-            </Link>
+            {!hideGarageButton && (
+              <Link href="/garage">
+                <button className="flex items-center gap-2 text-sm font-medium hover:bg-secondary px-2 md:px-3 py-2 rounded-md transition-colors">
+                  <Wrench className="w-4 h-4" />
+                  <span className="hidden sm:inline">Garage</span>
+                </button>
+              </Link>
+            )}
             
             <div className="flex items-center gap-1.5 md:gap-2 font-mono text-sm bg-secondary px-2 md:px-3 py-1.5 rounded-md">
               <Trophy className="w-3 h-3" />

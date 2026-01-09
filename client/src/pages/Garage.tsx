@@ -26,7 +26,7 @@ export default function Garage() {
   const currentTeam = TEAM_COLORS.find(t => t.hex === state.teamColor) || TEAM_COLORS[0];
 
   return (
-    <GameLayout coins={state.coins}>
+    <GameLayout coins={state.coins} hideGarageButton>
       <div className="min-h-screen p-4 md:p-5 bg-[#ffffff]">
         <div className="max-w-2xl mx-auto">
           
