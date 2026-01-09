@@ -141,11 +141,11 @@ export default function Garage() {
                 data-testid="button-reflex-training"
               >
                 <div className="flex gap-1">
-                  <div className="w-4 h-4 rounded-full bg-red-600" />
-                  <div className="w-4 h-4 rounded-full bg-red-600" />
-                  <div className="w-4 h-4 rounded-full bg-red-600" />
-                  <div className="w-4 h-4 rounded-full bg-red-600" />
-                  <div className="w-4 h-4 rounded-full bg-red-600" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
+                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
                 </div>
                 <span className="text-xs uppercase tracking-widest text-white/70">Reflex Test</span>
               </div>
