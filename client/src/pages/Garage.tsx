@@ -142,7 +142,7 @@ export default function Garage() {
           </label>
           <label className="flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors pl-[0px] pr-[0px]" data-testid="toggle-sim">
             <div>
-              <span className="font-semibold">REALISM</span>
+              <span className="font-semibold">Realism Mode</span>
               <p className="text-xs text-muted-foreground">Full race distance (44-78 laps)</p>
             </div>
             <button
