@@ -834,26 +834,28 @@ export default function Game() {
             </AnimatePresence>
           </div>
 
-          {/* Timer + Question + Answer - compact row */}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <div className="flex items-center gap-1.5 text-base font-mono font-medium text-primary">
-              <Timer className="w-4 h-4" />
-              {formatTime(elapsedTime)}
-            </div>
-            <div className="text-4xl sm:text-5xl font-bold tracking-tight">
-              {question?.display}
-            </div>
-            <div
-              className={cn(
-                "text-4xl sm:text-5xl font-bold min-w-[60px] text-center",
-                feedback === 'idle' && "text-muted-foreground/50",
-                feedback === 'correct' && "text-green-600",
-                feedback === 'incorrect' && "text-red-600"
-              )}
-              data-testid="display-answer"
-            >
-              {answer || "0"}
-            </div>
+          {/* Timer on top */}
+          <div className="flex items-center gap-1.5 text-base font-mono font-medium text-primary">
+            <Timer className="w-4 h-4" />
+            {formatTime(elapsedTime)}
+          </div>
+          
+          {/* Expression below timer */}
+          <div className="text-4xl sm:text-5xl font-bold tracking-tight">
+            {question?.display}
+          </div>
+          
+          {/* Answer display below expression */}
+          <div
+            className={cn(
+              "text-4xl sm:text-5xl font-bold min-w-[60px] text-center",
+              feedback === 'idle' && "text-muted-foreground/50",
+              feedback === 'correct' && "text-green-600",
+              feedback === 'incorrect' && "text-red-600"
+            )}
+            data-testid="display-answer"
+          >
+            {answer || "0"}
           </div>
 
           {/* Minimal Feedback */}
