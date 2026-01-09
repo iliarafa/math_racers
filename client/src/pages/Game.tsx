@@ -119,8 +119,10 @@ export default function Game() {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0);
-  const [lapResults, setLapResults] = useState<('correct' | 'incorrect')[]>([]);
+  const [lapResults, setLapResults] = useState<Array<{ result: 'correct' | 'incorrect'; speed: 'fast' | 'normal' | 'slow' }>>([]);
   const [mistakes, setMistakes] = useState(0);
+  const [inPurpleMode, setInPurpleMode] = useState(false);
+  const questionStartTimeRef = useRef<number>(Date.now());
   const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
@@ -148,6 +150,7 @@ export default function Game() {
             playBeep(1200, 200);
           }
           setQuestion(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
+          questionStartTimeRef.current = Date.now();
           setGameStatus('racing');
           return;
         }
@@ -245,6 +248,66 @@ export default function Game() {
       if (soundEnabledRef.current) {
         playCorrectSound();
       }
+      
+      // Calculate response time and speed category
+      const responseTime = Date.now() - questionStartTimeRef.current;
+      const speed: 'fast' | 'normal' | 'slow' = responseTime < 1000 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
+      
+      // Purple mode logic - use existing state variable, don't reconstruct from history
+      // - Activates after 5 consecutive correct + fast answer
+      // - Once in purple mode, must answer in <1 second to maintain it
+      // - Any slow answer while in purple mode breaks it
+      
+      if (inPurpleMode) {
+        // Already in purple mode - check if we maintain it
+        if (speed !== 'fast') {
+          // Slow answer breaks purple mode
+          setInPurpleMode(false);
+        }
+        // If fast, stay in purple (no action needed)
+      } else {
+        // Not in purple mode - check if we should enter
+        // Count consecutive correct answers, but also track when purple mode would have broken
+        // A slow answer after 5 consecutive correct resets the streak for re-entry purposes
+        let consecutiveCorrect = 0;
+        let purpleWasActive = false;
+        
+        for (let j = 0; j < lapResults.length; j++) {
+          const lap = lapResults[j];
+          if (lap.result === 'correct') {
+            if (purpleWasActive) {
+              // Was in purple - check if this answer breaks it
+              if (lap.speed !== 'fast') {
+                // Slow answer breaks purple, restart streak from here
+                consecutiveCorrect = 1;
+                purpleWasActive = false;
+              }
+              // If fast, continue (streak doesn't matter while in purple)
+            } else {
+              consecutiveCorrect++;
+              // Check if we would enter purple mode at this point
+              if (consecutiveCorrect >= 5 && lap.speed === 'fast') {
+                purpleWasActive = true;
+              }
+            }
+          } else {
+            // Incorrect resets everything
+            consecutiveCorrect = 0;
+            purpleWasActive = false;
+          }
+        }
+        
+        // Include this answer
+        if (!purpleWasActive) {
+          consecutiveCorrect++;
+        }
+        
+        // Enter purple mode if we have 5+ consecutive correct AND this answer is fast
+        if (consecutiveCorrect >= 5 && speed === 'fast') {
+          setInPurpleMode(true);
+        }
+      }
+      
       const isOvertakeActive = selectedCircuit.drsZones.includes(progress);
       const baseCoins = isOvertakeActive ? 20 : 10;
       addCoins(baseCoins);
@@ -256,7 +319,7 @@ export default function Game() {
 
       const newProgress = progress + 1;
       setProgress(newProgress);
-      setLapResults(prev => [...prev, 'correct']);
+      setLapResults(prev => [...prev, { result: 'correct', speed }]);
 
       if (newProgress >= raceLength) {
         if (isPracticeMode) {
@@ -267,6 +330,7 @@ export default function Game() {
           setElapsedTime(0);
           penaltyTimeRef.current = 0;
           raceStartTimeRef.current = Date.now();
+          setInPurpleMode(false);
         } else {
           finishRace(mistakes);
         }
@@ -275,6 +339,7 @@ export default function Game() {
           setFeedback('idle');
           setAnswer("");
           setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy'));
+          questionStartTimeRef.current = Date.now();
         }, 600);
       }
     } else {
@@ -285,6 +350,9 @@ export default function Game() {
         playIncorrectSound();
       }
       resetStreak();
+      
+      // Break purple mode on incorrect answer
+      setInPurpleMode(false);
 
       // Log the mistake for review
       setMistakeLog(prev => [...prev, {
@@ -330,7 +398,7 @@ export default function Game() {
 
       const newProgress = progress + 1;
       setProgress(newProgress);
-      setLapResults(prev => [...prev, 'incorrect']);
+      setLapResults(prev => [...prev, { result: 'incorrect', speed: 'normal' }]);
 
       if (newProgress >= raceLength) {
         if (isPracticeMode) {
@@ -341,6 +409,7 @@ export default function Game() {
           setElapsedTime(0);
           penaltyTimeRef.current = 0;
           raceStartTimeRef.current = Date.now();
+          setInPurpleMode(false);
         } else {
           finishRace(newMistakes);
         }
@@ -349,6 +418,7 @@ export default function Game() {
           setFeedback('idle');
           setAnswer("");
           setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy'));
+          questionStartTimeRef.current = Date.now();
         }, isPracticeMode ? 600 : 800);
       }
     }
@@ -941,25 +1011,62 @@ export default function Game() {
               {Array.from({ length: raceLength }).map((_, i) => {
                 const isCompleted = i < progress;
                 const isCurrent = i === progress;
-                const lapResult = lapResults[i];
+                const lapData = lapResults[i];
                 
-                // Count correct answers up to this lap
-                let correctCount = 0;
+                // Calculate purple mode status at this segment
+                // Purple activates after 5 consecutive correct + fast answer, breaks on slow
+                let consecutiveCorrect = 0;
+                let purpleModeActive = false;
                 for (let j = 0; j <= i && j < lapResults.length; j++) {
-                  if (lapResults[j] === 'correct') correctCount++;
+                  const lap = lapResults[j];
+                  if (lap.result === 'correct') {
+                    if (purpleModeActive) {
+                      // Already in purple - check if we maintain it
+                      if (lap.speed !== 'fast') {
+                        // Slow answer breaks purple mode
+                        purpleModeActive = false;
+                        consecutiveCorrect = 1; // This correct starts a new streak
+                      }
+                      // If fast, stay in purple (no action needed)
+                    } else {
+                      // Not in purple mode - check if we should enter
+                      consecutiveCorrect++;
+                      if (consecutiveCorrect >= 5 && lap.speed === 'fast') {
+                        purpleModeActive = true;
+                      }
+                    }
+                  } else {
+                    // Incorrect resets everything
+                    consecutiveCorrect = 0;
+                    purpleModeActive = false;
+                  }
                 }
-                const isPurple = lapResult === 'correct' && correctCount > 5;
+                
+                // Determine segment color
+                let segmentColor = "bg-transparent";
+                if (isCompleted && lapData) {
+                  if (lapData.result === 'incorrect') {
+                    segmentColor = "bg-red-500";
+                  } else if (lapData.result === 'correct') {
+                    if (lapData.speed === 'slow') {
+                      // Slow answers are always yellow (they also break purple)
+                      segmentColor = "bg-yellow-500";
+                    } else if (purpleModeActive) {
+                      segmentColor = "bg-purple-500";
+                    } else {
+                      segmentColor = "bg-green-500";
+                    }
+                  }
+                } else if (isCurrent) {
+                  segmentColor = "bg-gray-400/50";
+                }
                 
                 return (
                   <div
                     key={i}
                     className={cn(
                       "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                      isCompleted && lapResult === 'correct' && isPurple && "bg-purple-500",
-                      isCompleted && lapResult === 'correct' && !isPurple && "bg-green-500",
-                      isCompleted && lapResult === 'incorrect' && "bg-red-500",
-                      isCurrent && "bg-gray-400/50",
-                      !isCompleted && !isCurrent && "bg-transparent"
+                      segmentColor
                     )}
                   />
                 );
