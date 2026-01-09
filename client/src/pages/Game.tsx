@@ -953,8 +953,90 @@ export default function Game() {
           </div>
         </div>
 
-        {/* Large Keypad - takes remaining space */}
-        <div className="flex-1 flex flex-col justify-center items-center px-4 min-h-0">
+        {/* Progress Bar - between result and keypad */}
+        <div className="flex-1 flex flex-col justify-center px-4">
+          <div className="relative h-5 bg-muted rounded-full overflow-hidden">
+            {/* Progress segments */}
+            <div className="absolute inset-0 flex">
+              {Array.from({ length: raceLength }).map((_, i) => {
+                const isCompleted = i < progress;
+                const isCurrent = i === progress;
+                const lapData = lapResults[i];
+                
+                // Calculate purple mode status at this segment
+                let consecutiveCorrect = 0;
+                let purpleModeActive = false;
+                for (let j = 0; j <= i && j < lapResults.length; j++) {
+                  const lap = lapResults[j];
+                  if (lap.result === 'correct') {
+                    if (purpleModeActive) {
+                      if (lap.speed !== 'fast') {
+                        purpleModeActive = false;
+                        consecutiveCorrect = 1;
+                      }
+                    } else {
+                      consecutiveCorrect++;
+                      if (consecutiveCorrect >= 5 && lap.speed === 'fast') {
+                        purpleModeActive = true;
+                      }
+                    }
+                  } else {
+                    consecutiveCorrect = 0;
+                    purpleModeActive = false;
+                  }
+                }
+                
+                let segmentColor = "bg-transparent";
+                if (isCompleted && lapData) {
+                  if (lapData.result === 'incorrect') {
+                    segmentColor = "bg-red-500";
+                  } else if (lapData.result === 'correct') {
+                    if (lapData.speed === 'slow') {
+                      segmentColor = "bg-yellow-500";
+                    } else if (purpleModeActive) {
+                      segmentColor = "bg-purple-500";
+                    } else {
+                      segmentColor = "bg-green-500";
+                    }
+                  }
+                } else if (isCurrent) {
+                  segmentColor = "bg-gray-400/50";
+                }
+                
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
+                      segmentColor
+                    )}
+                  />
+                );
+              })}
+            </div>
+            
+            {/* Car indicator */}
+            <motion.div
+              className="absolute top-1/2 -translate-y-1/2 z-10"
+              animate={{ left: `${(progress / raceLength) * 100}%` }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              style={{ marginLeft: "-10px" }}
+            >
+              <div className="w-5 h-3 bg-foreground rounded-sm flex items-center justify-center">
+                <div className="w-3 h-1.5 bg-primary rounded-sm" />
+              </div>
+            </motion.div>
+          </div>
+          
+          {/* Progress text */}
+          <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5 px-1">
+            <span>Lap {progress + 1}/{raceLength}</span>
+            <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
+          </div>
+        </div>
+
+        {/* Large Keypad */}
+        <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0">
           <div className="grid grid-cols-3 gap-2 w-full max-w-md">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
@@ -1000,96 +1082,6 @@ export default function Game() {
             >
               <Check className="w-8 h-8" />
             </button>
-          </div>
-        </div>
-
-        {/* Horizontal Progress Bar at Bottom */}
-        <div className="px-4 pb-2">
-          <div className="relative h-5 bg-muted rounded-full overflow-hidden">
-            {/* Progress segments */}
-            <div className="absolute inset-0 flex">
-              {Array.from({ length: raceLength }).map((_, i) => {
-                const isCompleted = i < progress;
-                const isCurrent = i === progress;
-                const lapData = lapResults[i];
-                
-                // Calculate purple mode status at this segment
-                // Purple activates after 5 consecutive correct + fast answer, breaks on slow
-                let consecutiveCorrect = 0;
-                let purpleModeActive = false;
-                for (let j = 0; j <= i && j < lapResults.length; j++) {
-                  const lap = lapResults[j];
-                  if (lap.result === 'correct') {
-                    if (purpleModeActive) {
-                      // Already in purple - check if we maintain it
-                      if (lap.speed !== 'fast') {
-                        // Slow answer breaks purple mode
-                        purpleModeActive = false;
-                        consecutiveCorrect = 1; // This correct starts a new streak
-                      }
-                      // If fast, stay in purple (no action needed)
-                    } else {
-                      // Not in purple mode - check if we should enter
-                      consecutiveCorrect++;
-                      if (consecutiveCorrect >= 5 && lap.speed === 'fast') {
-                        purpleModeActive = true;
-                      }
-                    }
-                  } else {
-                    // Incorrect resets everything
-                    consecutiveCorrect = 0;
-                    purpleModeActive = false;
-                  }
-                }
-                
-                // Determine segment color
-                let segmentColor = "bg-transparent";
-                if (isCompleted && lapData) {
-                  if (lapData.result === 'incorrect') {
-                    segmentColor = "bg-red-500";
-                  } else if (lapData.result === 'correct') {
-                    if (lapData.speed === 'slow') {
-                      // Slow answers are always yellow (they also break purple)
-                      segmentColor = "bg-yellow-500";
-                    } else if (purpleModeActive) {
-                      segmentColor = "bg-purple-500";
-                    } else {
-                      segmentColor = "bg-green-500";
-                    }
-                  }
-                } else if (isCurrent) {
-                  segmentColor = "bg-gray-400/50";
-                }
-                
-                return (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                      segmentColor
-                    )}
-                  />
-                );
-              })}
-            </div>
-            
-            {/* Car indicator */}
-            <motion.div
-              className="absolute top-1/2 -translate-y-1/2 z-10"
-              animate={{ left: `${(progress / raceLength) * 100}%` }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{ marginLeft: "-10px" }}
-            >
-              <div className="w-5 h-3 bg-foreground rounded-sm flex items-center justify-center">
-                <div className="w-3 h-1.5 bg-primary rounded-sm" />
-              </div>
-            </motion.div>
-          </div>
-          
-          {/* Progress text */}
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5 px-1">
-            <span>Lap {progress + 1}/{raceLength}</span>
-            <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
           </div>
         </div>
 
