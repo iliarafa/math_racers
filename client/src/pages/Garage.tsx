@@ -72,7 +72,7 @@ export default function Garage() {
             </div>
 
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
+              className="col-span-2 border border-[#333] rounded-2xl p-4 shadow-lg bg-[#48c1d9]"
               data-testid="card-telemetry"
             >
               <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
