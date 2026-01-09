@@ -42,14 +42,14 @@ export default function Garage() {
           <div className="grid grid-cols-2 gap-4">
             
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform"
+              className="col-span-2 bg-white border border-gray-300 rounded-2xl p-4 shadow-sm active:scale-[0.98] transition-transform"
               data-testid="card-driver-profile"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-white/50 mb-1">Driver Profile</p>
-                  <h2 className="text-xl font-bold text-white">Race Driver</h2>
-                  <p className="text-sm text-white/60 mt-1">Team: {currentTeam.name}</p>
+                  <p className="text-xs uppercase tracking-widest text-gray-500 mb-1">Driver Profile</p>
+                  <h2 className="text-xl font-bold text-gray-900">Race Driver</h2>
+                  <p className="text-sm text-gray-600 mt-1">Team: {currentTeam.name}</p>
                 </div>
                 <div className="flex gap-2">
                   {TEAM_COLORS.map((team) => (
@@ -59,7 +59,7 @@ export default function Garage() {
                       className={cn(
                         "w-8 h-8 rounded-full transition-all border-2",
                         state.teamColor === team.hex 
-                          ? "border-white scale-110 ring-2 ring-white/30" 
+                          ? "border-gray-900 scale-110 ring-2 ring-gray-300" 
                           : "border-transparent hover:scale-105"
                       )}
                       style={{ backgroundColor: team.hex }}
@@ -72,10 +72,10 @@ export default function Garage() {
             </div>
 
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
+              className="col-span-2 bg-white border border-gray-300 rounded-2xl p-4 shadow-sm"
               data-testid="card-telemetry"
             >
-              <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
+              <p className="text-xs uppercase tracking-widest text-gray-500 mb-3">Telemetry</p>
               <div className="flex justify-between items-end">
                 <div className="text-center flex-1" data-testid="stat-laps">
                   <div 
@@ -84,7 +84,7 @@ export default function Garage() {
                   >
                     {state.totalLaps}
                   </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Total Laps</div>
+                  <div className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Total Laps</div>
                 </div>
                 <div className="text-center flex-1" data-testid="stat-points">
                   <div 
@@ -93,7 +93,7 @@ export default function Garage() {
                   >
                     {state.careerPoints}
                   </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Career Pts</div>
+                  <div className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Career Pts</div>
                 </div>
                 <div className="text-center flex-1" data-testid="stat-wins">
                   <div 
@@ -102,25 +102,25 @@ export default function Garage() {
                   >
                     {state.racesWon}
                   </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
+                  <div className="text-[10px] uppercase tracking-widest text-gray-500 mt-1">Races Won</div>
                 </div>
               </div>
               
-              <div className="mt-4 pt-3 border-t border-[#333]" data-testid="session-lap-times">
-                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Session Best Laps</p>
+              <div className="mt-4 pt-3 border-t border-gray-200" data-testid="session-lap-times">
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Session Best Laps</p>
                 {topTimes.length > 0 ? (
                   <div className="flex gap-4 text-sm font-mono">
                     {topTimes.slice(0, 3).map((time, index) => (
                       <div key={index} className="flex items-center gap-1">
-                        <span className="text-white/40">P{index + 1}</span>
-                        <span className={index === 0 ? "font-bold" : "text-white/60"} style={index === 0 ? { color: state.teamColor } : {}}>
+                        <span className="text-gray-500">P{index + 1}</span>
+                        <span className={index === 0 ? "font-bold" : "text-gray-600"} style={index === 0 ? { color: state.teamColor } : {}}>
                           {formatTime(time)}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-white/40">No races completed this session</p>
+                  <p className="text-sm text-gray-500">No races completed this session</p>
                 )}
               </div>
             </div>
