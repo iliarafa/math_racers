@@ -27,7 +27,7 @@ export default function Garage() {
 
   return (
     <GameLayout coins={state.coins}>
-      <div className="min-h-screen bg-[#121212] p-4 md:p-5">
+      <div className="min-h-screen p-4 md:p-5 bg-[#ffffff]">
         <div className="max-w-2xl mx-auto">
           
           <div className="flex items-center gap-3 mb-5">
