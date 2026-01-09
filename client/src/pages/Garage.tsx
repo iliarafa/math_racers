@@ -196,10 +196,7 @@ export default function Garage() {
                   </div>
                   <button
                     onClick={toggleSound}
-                    className={cn(
-                      "w-11 h-6 rounded-full transition-colors relative",
-                      state.soundEnabled ? "bg-green-500" : "bg-[#333]"
-                    )}
+                    className="w-11 h-6 rounded-full transition-colors relative bg-[#00d269]"
                     style={state.soundEnabled ? { backgroundColor: state.teamColor } : {}}
                   >
                     <span 
