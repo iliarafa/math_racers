@@ -155,7 +155,7 @@ export default function Garage() {
               >
                 <div className="flex items-center gap-3">
                   <Flag className="w-5 h-5 text-white/50" />
-                  <span className="text-xs uppercase tracking-widest text-white/70">Race Regulations</span>
+                  <span className="text-xs uppercase tracking-widest text-[#000000b3]">Race Regulations</span>
                 </div>
                 <ChevronDown className={cn(
                   "w-5 h-5 text-white/50 transition-transform",
