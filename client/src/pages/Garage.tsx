@@ -42,14 +42,14 @@ export default function Garage() {
           <div className="grid grid-cols-2 gap-4">
             
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform"
+              className="col-span-2 bg-white border border-[#333] p-4 active:scale-[0.98] transition-transform"
               data-testid="card-driver-profile"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-widest text-white/50 mb-1">Driver Profile</p>
-                  <h2 className="text-xl font-bold text-white">Race Driver</h2>
-                  <p className="text-sm text-white/60 mt-1">Team: {currentTeam.name}</p>
+                  <p className="text-xs uppercase tracking-widest text-black/50 mb-1">Driver Profile</p>
+                  <h2 className="text-xl font-bold text-black">Race Driver</h2>
+                  <p className="text-sm text-black/60 mt-1">Team: {currentTeam.name}</p>
                 </div>
                 <div className="flex gap-2">
                   {TEAM_COLORS.map((team) => (
@@ -72,7 +72,7 @@ export default function Garage() {
             </div>
 
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
+              className="col-span-2 bg-white border border-[#333] p-4"
               data-testid="card-telemetry"
             >
               <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
@@ -127,7 +127,7 @@ export default function Garage() {
 
             <Link href="/strategy" className="col-span-1">
               <div 
-                className="h-full bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#252525] active:scale-[0.98] transition-all min-h-[100px]"
+                className="h-full bg-white border border-[#333] p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 active:scale-[0.98] transition-all min-h-[100px]"
                 data-testid="button-strategy-guide"
               >
                 <BarChart3 className="w-8 h-8 text-purple-400" />
@@ -137,7 +137,7 @@ export default function Garage() {
 
             <Link href="/reaction" className="col-span-1">
               <div 
-                className="h-full bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#252525] active:scale-[0.98] transition-all min-h-[100px]"
+                className="h-full bg-white border border-[#333] p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 active:scale-[0.98] transition-all min-h-[100px]"
                 data-testid="button-reflex-training"
               >
                 <Zap className="w-8 h-8 text-yellow-400" />
@@ -146,7 +146,7 @@ export default function Garage() {
             </Link>
 
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-lg overflow-hidden"
+              className="col-span-2 bg-white border border-[#333] overflow-hidden"
               data-testid="card-regulations"
             >
               <button
@@ -173,7 +173,7 @@ export default function Garage() {
             </div>
 
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
+              className="col-span-2 bg-white border border-[#333] p-4"
               data-testid="card-pit-console"
             >
               <p className="text-xs uppercase tracking-widest text-white/50 mb-4">Pit Console</p>
