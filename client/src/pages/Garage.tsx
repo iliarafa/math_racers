@@ -149,7 +149,7 @@ export default function Garage() {
         <section className="space-y-4 pt-8">
           <div>
             <h2 className="font-semibold text-red-500">Danger Zone</h2>
-            <p className="text-xs text-muted-foreground">Irreversible actions</p>
+            <p className="text-xs text-muted-foreground">Retire to reset your stats.</p>
           </div>
           
           <button
