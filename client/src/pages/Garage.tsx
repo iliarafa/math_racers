@@ -128,7 +128,7 @@ export default function Garage() {
           </div>
           
           <label className="flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors pl-[0px] pr-[0px]" data-testid="toggle-sound">
-            <span className="font-semibold">beeps</span>
+            <span className="font-semibold">Beeps</span>
             <button
               onClick={toggleSound}
               className={cn(
