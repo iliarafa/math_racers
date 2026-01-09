@@ -189,7 +189,7 @@ export default function Garage() {
               {showRegulations && (
                 <div className="px-4 pb-4 space-y-4 pt-2">
                   <div>
-                    <h3 className="font-bold text-white text-base mb-1">RACE</h3>
+                    <h3 className="font-bold text-white mb-1 text-[13px]">RACE</h3>
                     <p className="text-white text-sm">Answer 20 questions to finish.</p>
                   </div>
                   <div>
