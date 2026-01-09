@@ -95,28 +95,19 @@ export default function Garage() {
               <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
               <div className="flex justify-between items-end">
                 <div className="text-center flex-1" data-testid="stat-laps">
-                  <div 
-                    className="text-3xl md:text-4xl font-mono font-bold text-[#ffffff]"
-                    style={{ color: state.teamColor }}
-                  >
+                  <div className="text-3xl md:text-4xl font-mono font-bold text-white">
                     {state.totalLaps}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Total Laps</div>
                 </div>
                 <div className="text-center flex-1" data-testid="stat-points">
-                  <div 
-                    className="text-3xl md:text-4xl font-mono font-bold"
-                    style={{ color: state.teamColor }}
-                  >
+                  <div className="text-3xl md:text-4xl font-mono font-bold text-white">
                     {state.careerPoints}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Career Pts</div>
                 </div>
                 <div className="text-center flex-1" data-testid="stat-wins">
-                  <div 
-                    className="text-3xl md:text-4xl font-mono font-bold"
-                    style={{ color: state.teamColor }}
-                  >
+                  <div className="text-3xl md:text-4xl font-mono font-bold text-white">
                     {state.racesWon}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
