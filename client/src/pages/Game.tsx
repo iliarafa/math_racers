@@ -702,8 +702,8 @@ export default function Game() {
 
   // Racing phase
   return (
-    <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-      <div className="flex-1 flex flex-col w-full overflow-hidden relative">
+    <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+      <div className="flex-1 flex flex-col w-full overflow-hidden relative min-h-0">
 
         {/* Pause Overlay */}
         {isPaused && (
@@ -751,7 +751,7 @@ export default function Game() {
         </AnimatePresence>
 
         {/* Mode badge and controls */}
-        <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-2">
+        <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
           <div className="flex items-center gap-2">
             {isPracticeMode ? (
               <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
@@ -773,7 +773,7 @@ export default function Game() {
         </div>
 
         {/* Main content - centered */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4 min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center gap-1 px-4 min-h-0 overflow-hidden">
           
           {/* Stopwatch */}
           <div className="flex items-center gap-2 text-lg font-mono font-medium text-primary">
@@ -873,7 +873,7 @@ export default function Game() {
         </div>
 
         {/* Horizontal Progress Bar at Bottom */}
-        <div className="px-4 pb-4 pt-2">
+        <div className="px-4 pb-3 pt-1">
           <div className="relative h-6 bg-muted rounded-full overflow-hidden">
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
