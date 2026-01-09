@@ -96,7 +96,7 @@ export default function Garage() {
               <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Total Laps</div>
             </div>
             <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 text-center" data-testid="stat-points">
-              <div className="text-2xl md:text-3xl font-mono font-bold text-green-400">{state.careerPoints}</div>
+              <div className="text-2xl md:text-3xl font-mono font-bold text-[#ffffff]">{state.careerPoints}</div>
               <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Career Pts</div>
             </div>
             <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 text-center" data-testid="stat-wins">
