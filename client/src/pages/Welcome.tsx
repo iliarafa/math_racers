@@ -25,7 +25,7 @@ export default function Welcome() {
             className="w-auto max-w-[65%]"
             data-testid="img-hero"
           />
-          <p className="max-w-lg text-center text-[16px] font-bold text-[#616161]">fueled by Math.</p>
+          <p className="max-w-lg text-center text-[16px] font-bold text-[#616161]">No Risk. Full Math.</p>
         </div>
 
         <div className="flex flex-col gap-4 w-full max-w-md">
