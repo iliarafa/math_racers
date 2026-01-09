@@ -193,7 +193,7 @@ export default function Garage() {
                     <p className="text-white text-[13px]">Answer 20 questions to finish.</p>
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base mb-1">OVERTAKE</h3>
+                    <h3 className="font-bold text-white mb-1 text-[13px]">OVERTAKE</h3>
                     <p className="text-white text-sm">Solve correctly in detection points to engage Active Aero, reduce drag and fly. Only available in Realism Mode.</p>
                   </div>
                   <div>
