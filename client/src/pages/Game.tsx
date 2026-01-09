@@ -835,20 +835,20 @@ export default function Game() {
           </div>
 
           {/* Timer on top */}
-          <div className="flex items-center gap-1.5 text-base font-mono font-medium text-primary">
-            <Timer className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-xl font-mono font-medium text-primary mt-1">
+            <Timer className="w-5 h-5" />
             {formatTime(elapsedTime)}
           </div>
           
           {/* Expression below timer */}
-          <div className="text-4xl sm:text-5xl font-bold tracking-tight">
+          <div className="text-5xl sm:text-6xl font-bold tracking-tight mt-3">
             {question?.display}
           </div>
           
           {/* Answer display below expression */}
           <div
             className={cn(
-              "text-4xl sm:text-5xl font-bold min-w-[60px] text-center",
+              "text-5xl sm:text-6xl font-bold min-w-[80px] text-center mt-3",
               feedback === 'idle' && "text-muted-foreground/50",
               feedback === 'correct' && "text-green-600",
               feedback === 'incorrect' && "text-red-600"
