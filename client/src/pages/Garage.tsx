@@ -32,7 +32,7 @@ export default function Garage() {
           
           <div className="flex items-center gap-3 mb-5">
             <Link href="/">
-              <button className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors" data-testid="button-back">
+              <button className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors text-[#ffffff]" data-testid="button-back">
                 <ChevronLeft className="w-6 h-6 text-white" />
               </button>
             </Link>
