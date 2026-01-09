@@ -35,7 +35,7 @@ export default function Garage() {
         </div>
 
         <section className="space-y-4">
-          <div className="border-b border-border pb-2">
+          <div>
             <h2 className="font-semibold">Strategy Room</h2>
             <p className="text-xs text-muted-foreground">Math Reference Guide</p>
           </div>
@@ -52,7 +52,7 @@ export default function Garage() {
         </section>
 
         <section className="space-y-3">
-          <div className="border-b border-border pb-2">
+          <div>
             <h2 className="font-semibold flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Regulations
@@ -60,7 +60,7 @@ export default function Garage() {
             <p className="text-xs text-muted-foreground">How to Play</p>
           </div>
           
-          <div className="border border-border rounded-lg p-4 text-sm space-y-2" data-testid="regulations-content">
+          <div className="text-sm space-y-2" data-testid="regulations-content">
             <p><span className="font-bold">Race:</span> Answer 20 questions to finish.</p>
             <p><span className="font-bold">DRS Zones:</span> Straights after turns give double points and coins.</p>
             <p><span className="font-bold">Penalties:</span> Wrong answers add time. Too many mistakes = crash!</p>
@@ -68,7 +68,7 @@ export default function Garage() {
         </section>
 
         <section className="space-y-4">
-          <div className="border-b border-border pb-2">
+          <div>
             <h2 className="font-semibold">Telemetry</h2>
             <p className="text-xs text-muted-foreground">Career Statistics</p>
           </div>
@@ -88,7 +88,7 @@ export default function Garage() {
             </div>
           </div>
           
-          <div className="border border-border rounded-lg p-4" data-testid="session-lap-times">
+          <div data-testid="session-lap-times">
             <h3 className="text-sm font-semibold mb-2">Session Best Laps</h3>
             {topTimes.length > 0 ? (
               <div className="space-y-1 text-sm font-mono">
@@ -106,12 +106,12 @@ export default function Garage() {
         </section>
 
         <section className="space-y-4">
-          <div className="border-b border-border pb-2">
+          <div>
             <h2 className="font-semibold">Pit Radio</h2>
             <p className="text-xs text-muted-foreground">Audio Settings</p>
           </div>
           
-          <label className="flex items-center justify-between p-4 rounded-lg border border-border cursor-pointer hover:bg-secondary/50 transition-colors" data-testid="toggle-sound">
+          <label className="flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors" data-testid="toggle-sound">
             <span className="font-medium">Sound Effects</span>
             <button
               onClick={toggleSound}
@@ -130,8 +130,8 @@ export default function Garage() {
           </label>
         </section>
 
-        <section className="space-y-4 pt-8 border-t border-border">
-          <div className="pb-2">
+        <section className="space-y-4 pt-8">
+          <div>
             <h2 className="font-semibold text-red-500">Danger Zone</h2>
             <p className="text-xs text-muted-foreground">Irreversible actions</p>
           </div>
