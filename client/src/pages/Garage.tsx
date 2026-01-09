@@ -79,7 +79,7 @@ export default function Garage() {
               <div className="flex justify-between items-end">
                 <div className="text-center flex-1" data-testid="stat-laps">
                   <div 
-                    className="text-3xl md:text-4xl font-mono font-bold"
+                    className="text-3xl md:text-4xl font-mono font-bold text-[#000000]"
                     style={{ color: state.teamColor }}
                   >
                     {state.totalLaps}
