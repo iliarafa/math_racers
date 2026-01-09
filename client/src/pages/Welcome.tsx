@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { Play, Wrench, Zap } from "lucide-react";
+import { Play, Wrench } from "lucide-react";
 import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
@@ -49,13 +49,6 @@ export default function Welcome() {
               </button>
             </Link>
           </div>
-
-          <Link href="/reaction">
-            <button className="w-full h-12 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all bg-white text-black hover:text-green-500" data-testid="button-reflex-training">
-              <Zap className="w-5 h-5" />
-              Reflex Training
-            </button>
-          </Link>
         </div>
 
         

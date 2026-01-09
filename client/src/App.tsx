@@ -8,7 +8,6 @@ import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/Welcome";
 import Game from "@/pages/Game";
 import Garage from "@/pages/Garage";
-import ReactionTest from "@/pages/ReactionTest";
 import StrategyGuide from "@/pages/StrategyGuide";
 
 function Router() {
@@ -17,7 +16,6 @@ function Router() {
       <Route path="/" component={Welcome} />
       <Route path="/game" component={Game} />
       <Route path="/garage" component={Garage} />
-      <Route path="/reaction" component={ReactionTest} />
       <Route path="/strategy" component={StrategyGuide} />
       <Route component={NotFound} />
     </Switch>
