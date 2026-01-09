@@ -79,7 +79,7 @@ export default function Garage() {
           
           <div className="text-sm space-y-2 bg-[#000000] text-[#ffffff] rounded-xl p-4" data-testid="regulations-content">
             <p><span className="font-bold">Race:</span> Answer 20 questions to finish.</p>
-            <p><span className="font-bold">DRS Zones:</span> Straights after turns give double points and coins.</p>
+            <p><span className="font-bold">OVERTAKE </span> Straights after turns give double points and coins.</p>
             <p><span className="font-bold">Penalties:</span> Wrong answers add time. Too many mistakes = crash!</p>
           </div>
         </section>
