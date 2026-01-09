@@ -154,11 +154,11 @@ export default function Garage() {
                 className="w-full p-4 flex items-center justify-between hover:bg-[#252525] transition-colors bg-[#ffffff]"
               >
                 <div className="flex items-center gap-3">
-                  <Flag className="w-5 h-5 text-white/50" />
+                  <Flag className="w-5 h-5 text-black/50" />
                   <span className="text-xs uppercase tracking-widest text-[#000000b3]">Race Regulations</span>
                 </div>
                 <ChevronDown className={cn(
-                  "w-5 h-5 text-white/50 transition-transform",
+                  "w-5 h-5 text-black/50 transition-transform",
                   showRegulations && "rotate-180"
                 )} />
               </button>
