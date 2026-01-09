@@ -6,7 +6,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3 } from "lucide-react";
 
 let audioContext: AudioContext | null = null;
 let audioInitialized = false;
@@ -119,7 +119,14 @@ export default function Game() {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0);
-  const [lapResults, setLapResults] = useState<Array<{ result: 'correct' | 'incorrect'; speed: 'fast' | 'normal' | 'slow' }>>([]);
+  const [lapResults, setLapResults] = useState<Array<{ 
+    result: 'correct' | 'incorrect'; 
+    speed: 'fast' | 'normal' | 'slow';
+    question: string;
+    playerAnswer: number;
+    correctAnswer: number;
+    sectorColor: 'green' | 'purple' | 'yellow' | 'red';
+  }>>([]);
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
@@ -131,6 +138,7 @@ export default function Game() {
   const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
   const [mistakeLog, setMistakeLog] = useState<Array<{ question: string; yourAnswer: number; correctAnswer: number }>>([]);
   const [showMistakeReview, setShowMistakeReview] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const penaltyTimeRef = useRef(0);
   const raceStartTimeRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(state.soundEnabled);
@@ -259,10 +267,19 @@ export default function Game() {
       // - Once in purple, must answer fast (<1s) to stay in purple
       // - Any slow (>=1s) or incorrect answer breaks purple mode
       
+      // Determine sector color and purple mode state BEFORE updating state
+      let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
+      let newPurpleMode = inPurpleMode;
+      
       if (inPurpleMode) {
         // Already in purple mode - must be fast (<1s) to maintain it
-        if (speed !== 'fast') {
-          setInPurpleMode(false);
+        if (speed === 'fast') {
+          sectorColor = 'purple';
+          // Stay in purple mode
+        } else {
+          // Not fast breaks purple mode
+          sectorColor = speed === 'slow' ? 'yellow' : 'green';
+          newPurpleMode = false;
         }
       } else {
         // Not in purple mode - check if we should enter
@@ -276,10 +293,12 @@ export default function Game() {
             if (purpleWasActive) {
               // Was in purple - must be fast to maintain
               if (lap.speed !== 'fast') {
-                // Not fast breaks purple, restart streak
-                consecutiveCorrect = 1;
+                // Not fast breaks purple, streak resets completely
+                // The breaking lap does NOT count toward next streak
+                consecutiveCorrect = 0;
                 purpleWasActive = false;
               }
+              // If fast, stay in purple (consecutiveCorrect doesn't matter while in purple)
             } else {
               consecutiveCorrect++;
               // 5th consecutive + not slow = enter purple
@@ -300,9 +319,17 @@ export default function Game() {
         
         // Enter purple mode: 5th consecutive + not slow (under 2s)
         if (consecutiveCorrect >= 5 && speed !== 'slow') {
-          setInPurpleMode(true);
+          newPurpleMode = true;
+          sectorColor = 'purple';
+        } else if (speed === 'slow') {
+          sectorColor = 'yellow';
+        } else {
+          sectorColor = 'green';
         }
       }
+      
+      // Update purple mode state
+      setInPurpleMode(newPurpleMode);
       
       const isOvertakeActive = selectedCircuit.drsZones.includes(progress);
       const baseCoins = isOvertakeActive ? 20 : 10;
@@ -315,7 +342,14 @@ export default function Game() {
 
       const newProgress = progress + 1;
       setProgress(newProgress);
-      setLapResults(prev => [...prev, { result: 'correct', speed }]);
+      setLapResults(prev => [...prev, { 
+        result: 'correct', 
+        speed,
+        question: question.display,
+        playerAnswer: val,
+        correctAnswer: question.answer,
+        sectorColor
+      }]);
 
       if (newProgress >= raceLength) {
         if (isPracticeMode) {
@@ -394,7 +428,14 @@ export default function Game() {
 
       const newProgress = progress + 1;
       setProgress(newProgress);
-      setLapResults(prev => [...prev, { result: 'incorrect', speed: 'normal' }]);
+      setLapResults(prev => [...prev, { 
+        result: 'incorrect', 
+        speed: 'normal',
+        question: question.display,
+        playerAnswer: val,
+        correctAnswer: question.answer,
+        sectorColor: 'red'
+      }]);
 
       if (newProgress >= raceLength) {
         if (isPracticeMode) {
@@ -758,6 +799,13 @@ export default function Game() {
                   <X className="w-4 h-4" /> Review {mistakeLog.length} Mistake{mistakeLog.length > 1 ? 's' : ''}
                 </button>
               )}
+              <button
+                onClick={() => setShowAnalytics(true)}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                data-testid="button-analytics"
+              >
+                <BarChart3 className="w-4 h-4" /> Analytics
+              </button>
               <button onClick={restartRace} className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2" data-testid="button-race-again">
                 <RotateCcw className="w-4 h-4" /> Race Again
               </button>
@@ -816,6 +864,93 @@ export default function Game() {
                   data-testid="button-close-review-bottom"
                 >
                   Close Review
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Analytics Modal */}
+          {showAnalytics && (
+            <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+              <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold">Race Analytics</h2>
+                  <button
+                    onClick={() => setShowAnalytics(false)}
+                    className="p-2 hover:bg-secondary rounded-full transition-colors"
+                    data-testid="button-close-analytics"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Summary Stats */}
+                <div className="grid grid-cols-4 gap-3 mb-6">
+                  <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-purple-400">
+                      {lapResults.filter(l => l.sectorColor === 'purple').length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Purple</div>
+                  </div>
+                  <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-green-400">
+                      {lapResults.filter(l => l.sectorColor === 'green').length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Green</div>
+                  </div>
+                  <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-yellow-400">
+                      {lapResults.filter(l => l.sectorColor === 'yellow').length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Yellow</div>
+                  </div>
+                  <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-red-400">
+                      {lapResults.filter(l => l.sectorColor === 'red').length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Red</div>
+                  </div>
+                </div>
+
+                {/* Lap-by-lap breakdown */}
+                <div className="space-y-2">
+                  {lapResults.map((lap, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center gap-3 bg-secondary/30 border border-border rounded-lg p-3"
+                    >
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
+                        lap.sectorColor === 'purple' && "bg-purple-600",
+                        lap.sectorColor === 'green' && "bg-green-600",
+                        lap.sectorColor === 'yellow' && "bg-yellow-600",
+                        lap.sectorColor === 'red' && "bg-red-600"
+                      )}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-mono font-bold">{lap.question}</div>
+                      </div>
+                      <div className="text-right">
+                        {lap.result === 'correct' ? (
+                          <span className="text-green-500 font-bold">{lap.playerAnswer}</span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-red-500 line-through">{lap.playerAnswer}</span>
+                            <span className="text-green-500 font-bold">{lap.correctAnswer}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setShowAnalytics(false)}
+                  className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all"
+                  data-testid="button-close-analytics-bottom"
+                >
+                  Close Analytics
                 </button>
               </div>
             </div>
@@ -959,45 +1094,13 @@ export default function Game() {
                 const isCurrent = i === progress;
                 const lapData = lapResults[i];
                 
-                // Calculate purple mode status at this segment
-                // 5th consecutive + not slow = enter purple, then must be fast to maintain
-                let consecutiveCorrect = 0;
-                let purpleModeActive = false;
-                for (let j = 0; j <= i && j < lapResults.length; j++) {
-                  const lap = lapResults[j];
-                  if (lap.result === 'correct') {
-                    if (purpleModeActive) {
-                      // Must be fast to maintain purple
-                      if (lap.speed !== 'fast') {
-                        purpleModeActive = false;
-                        consecutiveCorrect = 1;
-                      }
-                    } else {
-                      consecutiveCorrect++;
-                      // 5th consecutive + not slow = enter purple
-                      if (consecutiveCorrect >= 5 && lap.speed !== 'slow') {
-                        purpleModeActive = true;
-                      }
-                    }
-                  } else {
-                    consecutiveCorrect = 0;
-                    purpleModeActive = false;
-                  }
-                }
-                
+                // Use stored sectorColor directly
                 let segmentColor = "bg-transparent";
                 if (isCompleted && lapData) {
-                  if (lapData.result === 'incorrect') {
-                    segmentColor = "bg-red-500";
-                  } else if (lapData.result === 'correct') {
-                    if (lapData.speed === 'slow') {
-                      segmentColor = "bg-yellow-500";
-                    } else if (purpleModeActive) {
-                      segmentColor = "bg-purple-500";
-                    } else {
-                      segmentColor = "bg-green-500";
-                    }
-                  }
+                  segmentColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
+                                 lapData.sectorColor === 'green' ? "bg-green-500" :
+                                 lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
+                                 lapData.sectorColor === 'red' ? "bg-red-500" : "bg-transparent";
                 } else if (isCurrent) {
                   segmentColor = "bg-gray-400/50";
                 }
