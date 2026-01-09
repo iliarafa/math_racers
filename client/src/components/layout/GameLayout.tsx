@@ -53,7 +53,7 @@ export function GameLayout({ children, coins, trackName, hideHeader = false, loc
       )}
       {/* Main Content Area */}
       <main className={cn(
-        "flex-1 flex flex-col max-w-5xl mx-auto w-full min-h-0 bg-black",
+        "flex-1 flex flex-col max-w-5xl mx-auto w-full min-h-0",
         lockViewport ? "p-0" : "p-6"
       )}>
         {children}
