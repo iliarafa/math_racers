@@ -42,6 +42,7 @@ export interface GameState {
   racesWon: number;
   teamColor: string;
   soundEnabled: boolean;
+  simMode: boolean;
   personalBests: { [circuitId: string]: number };
 }
 
@@ -53,6 +54,21 @@ export const TEAM_COLORS = [
 ];
 
 export const RACE_LENGTH = 20;
+
+export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
+  suzuka: 53,
+  monaco: 78,
+  spa: 44,
+  silverstone: 52,
+  monza: 53
+};
+
+export const getRaceLength = (circuitId: string, simMode: boolean): number => {
+  if (simMode && SIM_LAP_COUNTS[circuitId]) {
+    return SIM_LAP_COUNTS[circuitId];
+  }
+  return RACE_LENGTH;
+};
 
 export const DRIVERS: Driver[] = [
   { id: "rookie", name: "Rookie", difficulty: "easy", label: "Rookie" },
@@ -162,6 +178,7 @@ const INITIAL_STATE: GameState = {
   racesWon: 0,
   teamColor: '#ff2800',
   soundEnabled: true,
+  simMode: false,
   personalBests: {},
 };
 
@@ -211,6 +228,7 @@ export function useGameState() {
           racesWon: parsed.racesWon ?? 0,
           teamColor: parsed.teamColor ?? '#ff2800',
           soundEnabled: parsed.soundEnabled ?? true,
+          simMode: parsed.simMode ?? false,
           personalBests: parsed.personalBests ?? {},
         };
       }
@@ -279,6 +297,10 @@ export function useGameState() {
     setState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
   };
 
+  const toggleSimMode = () => {
+    setState(prev => ({ ...prev, simMode: !prev.simMode }));
+  };
+
   const incrementLaps = () => {
     setState(prev => ({ ...prev, totalLaps: prev.totalLaps + 1 }));
   };
@@ -337,6 +359,7 @@ export function useGameState() {
     equipItem,
     setTeamColor,
     toggleSound,
+    toggleSimMode,
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,
