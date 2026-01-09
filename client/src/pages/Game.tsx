@@ -792,14 +792,14 @@ export default function Game() {
               {answer || <span className="text-muted-foreground/20">0</span>}
             </div>
 
-            <div className="grid grid-cols-3 gap-3 w-full max-w-sm mt-4 pb-[env(safe-area-inset-bottom)]">
+            <div className="grid grid-cols-3 gap-2 w-full px-2 mt-4 pb-[env(safe-area-inset-bottom)]">
               {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
                 <button
                   key={num}
                   type="button"
                   onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
                   disabled={isPaused}
-                  className="h-16 sm:h-20 rounded-xl bg-secondary text-secondary-foreground text-3xl sm:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+                  className="aspect-square rounded-xl bg-secondary text-secondary-foreground text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
                   data-testid={`keypad-${num}`}
                 >
                   {num}
@@ -809,16 +809,16 @@ export default function Game() {
                 type="button"
                 onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
                 disabled={isPaused}
-                className="h-16 sm:h-20 rounded-xl bg-muted text-muted-foreground text-2xl font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
+                className="aspect-square rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
                 data-testid="keypad-delete"
               >
-                <Delete className="w-7 h-7 sm:w-8 sm:h-8" />
+                <Delete className="w-8 h-8" />
               </button>
               <button
                 type="button"
                 onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
                 disabled={isPaused}
-                className="h-16 sm:h-20 rounded-xl bg-secondary text-secondary-foreground text-3xl sm:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+                className="aspect-square rounded-xl bg-secondary text-secondary-foreground text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
                 data-testid="keypad-0"
               >
                 0
@@ -828,14 +828,14 @@ export default function Game() {
                 onClick={() => handleSubmit()}
                 disabled={!answer || feedback !== 'idle' || isPaused}
                 className={cn(
-                  "h-16 sm:h-20 rounded-xl text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                  "aspect-square rounded-xl text-xl font-bold transition-colors active:scale-95 flex items-center justify-center",
                   answer && feedback === 'idle' && !isPaused
                     ? "bg-green-600 text-white hover:bg-green-500"
                     : "bg-muted text-muted-foreground"
                 )}
                 data-testid="keypad-submit"
               >
-                <Check className="w-7 h-7 sm:w-8 sm:h-8" />
+                <Check className="w-8 h-8" />
               </button>
             </div>
 
