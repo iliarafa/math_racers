@@ -175,8 +175,25 @@ export const SHOP_ITEMS = [
   { id: 'soft-tires', name: 'Soft Tires (Red)', type: 'tires', cost: 250, color: 'border-red-600' },
 ];
 
+const getSessionLapTimes = (): number[] => {
+  try {
+    const saved = sessionStorage.getItem('f1-session-lap-times');
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveSessionLapTimes = (times: number[]) => {
+  try {
+    sessionStorage.setItem('f1-session-lap-times', JSON.stringify(times));
+  } catch {
+    // Silent fail
+  }
+};
+
 export function useGameState() {
-  const [sessionLapTimes, setSessionLapTimes] = useState<number[]>([]);
+  const [sessionLapTimes, setSessionLapTimes] = useState<number[]>(getSessionLapTimes);
   
   const [state, setState] = useState<GameState>(() => {
     try {
@@ -215,6 +232,11 @@ export function useGameState() {
   useEffect(() => {
     document.documentElement.style.setProperty('--team-color', state.teamColor);
   }, [state.teamColor]);
+
+  // Sync session lap times from sessionStorage on mount (for cross-component sharing)
+  useEffect(() => {
+    setSessionLapTimes(getSessionLapTimes());
+  }, []);
 
   const addCoins = (amount: number) => {
     setState(prev => ({ ...prev, coins: prev.coins + amount }));
@@ -285,6 +307,7 @@ export function useGameState() {
   const resetAllData = () => {
     try {
       localStorage.removeItem('f1-math-racer-state');
+      sessionStorage.removeItem('f1-session-lap-times');
       setState(INITIAL_STATE);
       setSessionLapTimes([]);
     } catch (error) {
@@ -295,11 +318,13 @@ export function useGameState() {
   };
 
   const recordLapTime = (time: number) => {
-    setSessionLapTimes(prev => [...prev, time].sort((a, b) => a - b).slice(0, 10));
+    const newTimes = [...sessionLapTimes, time].sort((a, b) => a - b).slice(0, 10);
+    setSessionLapTimes(newTimes);
+    saveSessionLapTimes(newTimes);
   };
 
   const getTopLapTimes = (count: number = 3) => {
-    return sessionLapTimes.slice(0, count);
+    return getSessionLapTimes().slice(0, count);
   };
 
   return {
