@@ -736,26 +736,6 @@ export default function Game() {
           </div>
         )}
 
-        {/* Track Limits Flash Indicator */}
-        <AnimatePresence>
-          {showPenalty && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-40"
-            >
-              <motion.div
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 0.3, repeat: 3 }}
-                className="bg-red-600 text-white px-3 py-2 rounded-lg font-bold text-sm"
-              >
-                TRACK LIMITS
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Mode badge and controls */}
         <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
           <div className="flex items-center gap-2">
@@ -781,6 +761,27 @@ export default function Game() {
         {/* Main content - centered */}
         <div className="flex-1 flex flex-col items-center justify-center gap-1 px-4 min-h-0 overflow-hidden">
           
+          {/* Track Limits Warning - Above Timer */}
+          <div className="h-6 flex items-center justify-center">
+            <AnimatePresence>
+              {showPenalty && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <motion.div
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 0.3, repeat: 3 }}
+                    className="bg-red-600 text-white px-3 py-1 rounded-lg font-bold text-xs"
+                  >
+                    TRACK LIMITS
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Stopwatch */}
           <div className="flex items-center gap-2 text-lg font-mono font-medium text-primary">
             <Timer className="w-4 h-4" />
