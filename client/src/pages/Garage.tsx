@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, TEAM_COLORS } from "@/lib/gameLogic";
+import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronDown, BarChart3, Zap, Volume2, VolumeX, Flag, Gauge } from "lucide-react";
+import { ChevronLeft, ChevronDown, BarChart3, Volume2, VolumeX, Flag, Gauge, Clock } from "lucide-react";
 
 export default function Garage() {
-  const { state, toggleSound, toggleSimMode, resetAllData, getTopLapTimes, setTeamColor } = useGameState();
+  const { state, toggleSound, toggleSimMode, resetAllData, getTopLapTimes, getLapHistory } = useGameState();
   const [showRegulations, setShowRegulations] = useState(false);
+  const [showFullLog, setShowFullLog] = useState(false);
   const topTimes = getTopLapTimes(3);
+  const lapHistory = getLapHistory(20);
 
   const formatTime = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
@@ -22,8 +24,6 @@ export default function Garage() {
       resetAllData();
     }
   };
-
-  const currentTeam = TEAM_COLORS.find(t => t.hex === state.teamColor) || TEAM_COLORS[0];
 
   return (
     <GameLayout coins={state.coins} hideGarageButton>
@@ -42,32 +42,49 @@ export default function Garage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div 
-              className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform"
-              data-testid="card-driver-profile"
+              className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-lg overflow-hidden"
+              data-testid="card-racer-log"
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-widest text-white/50 mb-1">Driver Profile</p>
-                  <h2 className="text-xl font-bold text-white">Race Driver</h2>
-                  <p className="text-sm text-white/60 mt-1">Team: {currentTeam.name}</p>
+              <button
+                onClick={() => setShowFullLog(!showFullLog)}
+                className="w-full p-4 flex items-center justify-between hover:bg-[#252525] transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-white/50" />
+                  <span className="text-xs uppercase tracking-widest text-white/70">Racer Log</span>
                 </div>
-                <div className="flex gap-2">
-                  {TEAM_COLORS.map((team) => (
-                    <button
-                      key={team.id}
-                      onClick={() => setTeamColor(team.hex)}
-                      className={cn(
-                        "w-11 h-11 rounded-full transition-all border-2",
-                        state.teamColor === team.hex 
-                          ? "border-white scale-110 ring-2 ring-white/30" 
-                          : "border-transparent hover:scale-105"
-                      )}
-                      style={{ backgroundColor: team.hex }}
-                      title={team.name}
-                      data-testid={`color-${team.id}`}
-                    />
-                  ))}
-                </div>
+                <ChevronDown className={cn(
+                  "w-5 h-5 text-white/50 transition-transform",
+                  showFullLog && "rotate-180"
+                )} />
+              </button>
+              
+              <div className="px-4 pb-4">
+                {lapHistory.length > 0 ? (
+                  <div className="space-y-2">
+                    {(showFullLog ? lapHistory : lapHistory.slice(0, 3)).map((lap, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center justify-between py-2 border-b border-[#333] last:border-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-white/40 text-xs font-mono w-6">#{index + 1}</span>
+                          <span className="text-white/80 text-sm">{lap.trackName}</span>
+                        </div>
+                        <span className="text-white font-mono text-sm" style={{ color: index === 0 ? state.teamColor : undefined }}>
+                          {formatTime(lap.time)}
+                        </span>
+                      </div>
+                    ))}
+                    {!showFullLog && lapHistory.length > 3 && (
+                      <p className="text-xs text-white/40 text-center pt-2">
+                        Tap to see {lapHistory.length - 3} more laps
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-white/40 text-center py-2">No races completed yet</p>
+                )}
               </div>
             </div>
 

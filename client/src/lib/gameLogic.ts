@@ -31,6 +31,12 @@ export interface Circuit {
   drsZones: number[];
 }
 
+export interface LapEntry {
+  time: number;
+  trackName: string;
+  timestamp: number;
+}
+
 export interface GameState {
   coins: number;
   unlockedItems: string[];
@@ -44,6 +50,7 @@ export interface GameState {
   soundEnabled: boolean;
   simMode: boolean;
   personalBests: { [circuitId: string]: number };
+  lapHistory: LapEntry[];
 }
 
 export const TEAM_COLORS = [
@@ -180,6 +187,7 @@ const INITIAL_STATE: GameState = {
   soundEnabled: true,
   simMode: false,
   personalBests: {},
+  lapHistory: [],
 };
 
 export const SHOP_ITEMS = [
@@ -230,6 +238,7 @@ export function useGameState() {
           soundEnabled: parsed.soundEnabled ?? true,
           simMode: parsed.simMode ?? false,
           personalBests: parsed.personalBests ?? {},
+          lapHistory: parsed.lapHistory ?? [],
         };
       }
     } catch (error) {
@@ -339,14 +348,30 @@ export function useGameState() {
     }
   };
 
-  const recordLapTime = (time: number) => {
+  const recordLapTime = (time: number, trackName?: string) => {
     const newTimes = [...sessionLapTimes, time].sort((a, b) => a - b).slice(0, 10);
     setSessionLapTimes(newTimes);
     saveSessionLapTimes(newTimes);
+    
+    if (trackName) {
+      const newLapEntry: LapEntry = {
+        time,
+        trackName,
+        timestamp: Date.now()
+      };
+      setState(prev => ({
+        ...prev,
+        lapHistory: [newLapEntry, ...prev.lapHistory].slice(0, 100)
+      }));
+    }
   };
 
   const getTopLapTimes = (count: number = 3) => {
     return getSessionLapTimes().slice(0, count);
+  };
+
+  const getLapHistory = (count: number = 20): LapEntry[] => {
+    return state.lapHistory.slice(0, count);
   };
 
   return {
@@ -366,7 +391,8 @@ export function useGameState() {
     updatePersonalBest,
     resetAllData,
     recordLapTime,
-    getTopLapTimes
+    getTopLapTimes,
+    getLapHistory
   };
 }
 
