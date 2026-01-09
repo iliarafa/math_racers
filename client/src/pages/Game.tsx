@@ -4,7 +4,7 @@ import confetti from "canvas-confetti";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play } from "lucide-react";
 
@@ -64,6 +64,8 @@ export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime } = useGameState();
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
+  
+  const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
@@ -204,7 +206,7 @@ export default function Game() {
       const newProgress = progress + 1;
       setProgress(newProgress);
 
-      if (newProgress >= RACE_LENGTH) {
+      if (newProgress >= raceLength) {
         if (isPracticeMode) {
           // In practice mode, reset and continue
           setProgress(0);
@@ -273,7 +275,7 @@ export default function Game() {
       const newProgress = progress + 1;
       setProgress(newProgress);
 
-      if (newProgress >= RACE_LENGTH) {
+      if (newProgress >= raceLength) {
         if (isPracticeMode) {
           // In practice mode, reset and continue
           setProgress(0);
@@ -617,7 +619,7 @@ export default function Game() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Accuracy</span>
-                <span className="font-bold">{Math.round(((RACE_LENGTH - finalMistakes) / RACE_LENGTH) * 100)}%</span>
+                <span className="font-bold">{Math.round(((raceLength - finalMistakes) / raceLength) * 100)}%</span>
               </div>
             </div>
 
@@ -875,7 +877,7 @@ export default function Game() {
           <div className="relative h-6 bg-muted rounded-full overflow-hidden">
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
-              {Array.from({ length: RACE_LENGTH }).map((_, i) => {
+              {Array.from({ length: raceLength }).map((_, i) => {
                 const isCompleted = i < progress;
                 const isCurrent = i === progress;
                 const isDRS = selectedCircuit?.drsZones?.includes(i + 1);
@@ -898,7 +900,7 @@ export default function Game() {
             {/* Car indicator */}
             <motion.div
               className="absolute top-1/2 -translate-y-1/2 z-10"
-              animate={{ left: `${(progress / RACE_LENGTH) * 100}%` }}
+              animate={{ left: `${(progress / raceLength) * 100}%` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               style={{ marginLeft: "-12px" }}
             >
@@ -910,7 +912,7 @@ export default function Game() {
           
           {/* Progress text */}
           <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
-            <span>Lap {progress + 1} / {RACE_LENGTH}</span>
+            <span>Lap {progress + 1} / {raceLength}</span>
             <span className={cn(mistakes > 0 && "text-red-500")}>Track Limits: {mistakes}</span>
           </div>
         </div>

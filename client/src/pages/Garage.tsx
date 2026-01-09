@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { ChevronLeft, BarChart3, FileText, Zap } from "lucide-react";
 
 export default function Garage() {
-  const { state, toggleSound, resetAllData, getTopLapTimes } = useGameState();
+  const { state, toggleSound, toggleSimMode, resetAllData, getTopLapTimes } = useGameState();
   const topTimes = getTopLapTimes(3);
 
   const formatTime = (ms: number) => {
@@ -136,6 +136,26 @@ export default function Garage() {
                 className={cn(
                   "absolute top-1 w-5 h-5 rounded-full bg-white transition-all duration-200 ease-in-out",
                   state.soundEnabled ? "left-6" : "left-1"
+                )}
+              />
+            </button>
+          </label>
+          <label className="flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors pl-[0px] pr-[0px]" data-testid="toggle-sim">
+            <div>
+              <span className="font-semibold">SIM</span>
+              <p className="text-xs text-muted-foreground">Full race distance (44-78 laps)</p>
+            </div>
+            <button
+              onClick={toggleSimMode}
+              className={cn(
+                "w-12 h-7 rounded-full transition-colors relative",
+                state.simMode ? "bg-green-500" : "bg-neutral-600"
+              )}
+            >
+              <span 
+                className={cn(
+                  "absolute top-1 w-5 h-5 rounded-full bg-white transition-all duration-200 ease-in-out",
+                  state.simMode ? "left-6" : "left-1"
                 )}
               />
             </button>
