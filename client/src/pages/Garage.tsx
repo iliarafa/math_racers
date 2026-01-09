@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState } from "@/lib/gameLogic";
+import { useGameState, TEAM_COLORS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, BarChart3, FileText, Zap } from "lucide-react";
+import { ChevronLeft, ChevronDown, BarChart3, Zap, Volume2, VolumeX, Flag, Gauge } from "lucide-react";
 
 export default function Garage() {
-  const { state, toggleSound, toggleSimMode, resetAllData, getTopLapTimes } = useGameState();
+  const { state, toggleSound, toggleSimMode, resetAllData, getTopLapTimes, setTeamColor } = useGameState();
+  const [showRegulations, setShowRegulations] = useState(false);
   const topTimes = getTopLapTimes(3);
 
   const formatTime = (ms: number) => {
@@ -16,167 +18,230 @@ export default function Garage() {
   };
 
   const handleRetireCar = () => {
-    if (confirm("Are you sure you want to retire your car? This will reset ALL your progress, including coins, stats, and settings.")) {
+    if (confirm("Are you sure you want to retire? This will reset ALL your progress.")) {
       resetAllData();
     }
   };
 
+  const currentTeam = TEAM_COLORS.find(t => t.hex === state.teamColor) || TEAM_COLORS[0];
+
   return (
     <GameLayout coins={state.coins}>
-      <div className="space-y-6 md:space-y-8 max-w-2xl mx-auto px-4">
-        
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <button className="p-2 -ml-2 hover:bg-secondary rounded-full transition-colors" data-testid="button-back">
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-          </Link>
-          <h1 className="text-2xl font-bold tracking-tight">Team Garage</h1>
-        </div>
-
-        <section className="space-y-4">
-          <div>
-            <h2 className="font-semibold">Strategy Room</h2>
-            <p className="text-xs text-muted-foreground">Math Reference Guide</p>
-          </div>
+      <div className="min-h-screen bg-[#121212] p-4 md:p-5">
+        <div className="max-w-2xl mx-auto">
           
-          <Link href="/strategy">
-            <button
-              className="w-full hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 bg-[#000000]"
-              data-testid="button-strategy-guide"
+          <div className="flex items-center gap-3 mb-5">
+            <Link href="/">
+              <button className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors" data-testid="button-back">
+                <ChevronLeft className="w-6 h-6 text-white" />
+              </button>
+            </Link>
+            <h1 className="text-lg font-bold tracking-widest uppercase text-white/80">Engineering Dashboard</h1>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            
+            <div 
+              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform"
+              data-testid="card-driver-profile"
             >
-              <BarChart3 className="w-5 h-5" />
-              Open Strategy Guide
-            </button>
-          </Link>
-        </section>
-
-        <section className="space-y-4">
-          <div>
-            <h2 className="font-semibold">Reflex Training</h2>
-            <p className="text-xs text-muted-foreground">Practice your race starts</p>
-          </div>
-          
-          <Link href="/reaction">
-            <button
-              className="w-full hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 bg-[#000000]"
-              data-testid="button-reflex-training"
-            >
-              <Zap className="w-5 h-5" />
-              Open Reflex Training
-            </button>
-          </Link>
-        </section>
-
-        <section className="space-y-3">
-          <div>
-            <h2 className="font-semibold flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Regulations
-            </h2>
-            <p className="text-xs text-muted-foreground">How to Play</p>
-          </div>
-          
-          <div className="text-sm space-y-2 bg-[#000000] text-[#ffffff] rounded-xl p-4" data-testid="regulations-content">
-            <p><span className="font-bold">RACE</span> Answer 20 questions to finish.</p>
-            <p><span className="font-bold">OVERTAKE</span> Straights after turns give double points and coins.</p>
-            <p><span className="font-bold">PENALTIES</span> Wrong answers add time. Too many mistakes = crash!</p>
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <div>
-            <h2 className="font-semibold">Telemetry</h2>
-            <p className="text-xs text-muted-foreground">Career Statistics</p>
-          </div>
-          
-          <div className="grid grid-cols-3 gap-2 md:gap-4">
-            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 text-center" data-testid="stat-laps">
-              <div className="text-2xl md:text-3xl font-mono font-bold text-[#ffffff]">{state.totalLaps}</div>
-              <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Total Laps</div>
-            </div>
-            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 text-center" data-testid="stat-points">
-              <div className="text-2xl md:text-3xl font-mono font-bold text-[#ffffff]">{state.careerPoints}</div>
-              <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Career Pts</div>
-            </div>
-            <div className="bg-neutral-900 border border-neutral-700 rounded-lg p-3 md:p-4 text-center" data-testid="stat-wins">
-              <div className="text-2xl md:text-3xl font-mono font-bold text-[#ffffff]">{state.racesWon}</div>
-              <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mt-1">Races Won</div>
-            </div>
-          </div>
-          
-          <div data-testid="session-lap-times">
-            <h3 className="text-sm font-semibold mb-2">Session Best Laps</h3>
-            {topTimes.length > 0 ? (
-              <div className="space-y-1 text-sm font-mono">
-                {topTimes.map((time, index) => (
-                  <div key={index} className="flex justify-between">
-                    <span className="text-muted-foreground">P{index + 1}</span>
-                    <span className={index === 0 ? "text-purple-400 font-bold" : "text-muted-foreground"}>{formatTime(time)}</span>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-white/50 mb-1">Driver Profile</p>
+                  <h2 className="text-xl font-bold text-white">Race Driver</h2>
+                  <p className="text-sm text-white/60 mt-1">Team: {currentTeam.name}</p>
+                </div>
+                <div className="flex gap-2">
+                  {TEAM_COLORS.map((team) => (
+                    <button
+                      key={team.id}
+                      onClick={() => setTeamColor(team.hex)}
+                      className={cn(
+                        "w-8 h-8 rounded-full transition-all border-2",
+                        state.teamColor === team.hex 
+                          ? "border-white scale-110 ring-2 ring-white/30" 
+                          : "border-transparent hover:scale-105"
+                      )}
+                      style={{ backgroundColor: team.hex }}
+                      title={team.name}
+                      data-testid={`color-${team.id}`}
+                    />
+                  ))}
+                </div>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No races completed this session</p>
-            )}
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <label className="flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors pl-[0px] pr-[0px]" data-testid="toggle-sound">
-            <span className="font-semibold">Beeps</span>
-            <button
-              onClick={toggleSound}
-              className={cn(
-                "w-12 h-7 rounded-full transition-colors relative",
-                state.soundEnabled ? "bg-green-500" : "bg-neutral-600"
-              )}
-            >
-              <span 
-                className={cn(
-                  "absolute top-1 w-5 h-5 rounded-full bg-white transition-all duration-200 ease-in-out",
-                  state.soundEnabled ? "left-6" : "left-1"
-                )}
-              />
-            </button>
-          </label>
-          <label className="flex items-center justify-between p-4 rounded-lg cursor-pointer hover:bg-secondary/50 transition-colors pl-[0px] pr-[0px]" data-testid="toggle-sim">
-            <div>
-              <span className="font-semibold">Realism Mode</span>
-              <p className="text-xs text-muted-foreground">Full race distance (44-78 laps)</p>
             </div>
-            <button
-              onClick={toggleSimMode}
-              className={cn(
-                "w-12 h-7 rounded-full transition-colors relative",
-                state.simMode ? "bg-green-500" : "bg-neutral-600"
-              )}
+
+            <div 
+              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
+              data-testid="card-telemetry"
             >
-              <span 
-                className={cn(
-                  "absolute top-1 w-5 h-5 rounded-full bg-white transition-all duration-200 ease-in-out",
-                  state.simMode ? "left-6" : "left-1"
-                )}
-              />
-            </button>
-          </label>
-        </section>
+              <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
+              <div className="flex justify-between items-end">
+                <div className="text-center flex-1" data-testid="stat-laps">
+                  <div 
+                    className="text-3xl md:text-4xl font-mono font-bold"
+                    style={{ color: state.teamColor }}
+                  >
+                    {state.totalLaps}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Total Laps</div>
+                </div>
+                <div className="text-center flex-1" data-testid="stat-points">
+                  <div 
+                    className="text-3xl md:text-4xl font-mono font-bold"
+                    style={{ color: state.teamColor }}
+                  >
+                    {state.careerPoints}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Career Pts</div>
+                </div>
+                <div className="text-center flex-1" data-testid="stat-wins">
+                  <div 
+                    className="text-3xl md:text-4xl font-mono font-bold"
+                    style={{ color: state.teamColor }}
+                  >
+                    {state.racesWon}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
+                </div>
+              </div>
+              
+              {topTimes.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-[#333]" data-testid="session-lap-times">
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Session Best</p>
+                  <div className="flex gap-4 text-sm font-mono">
+                    {topTimes.slice(0, 3).map((time, index) => (
+                      <div key={index} className="flex items-center gap-1">
+                        <span className="text-white/40">P{index + 1}</span>
+                        <span className={index === 0 ? "font-bold" : "text-white/60"} style={index === 0 ? { color: state.teamColor } : {}}>
+                          {formatTime(time)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-        <section className="space-y-4 pt-8">
-          <div>
-            <h2 className="font-semibold text-red-500">Danger Zone</h2>
-            <p className="text-xs text-muted-foreground">Retire to reset your stats.</p>
+            <Link href="/strategy" className="col-span-1">
+              <div 
+                className="h-full bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#252525] active:scale-[0.98] transition-all min-h-[100px]"
+                data-testid="button-strategy-guide"
+              >
+                <BarChart3 className="w-8 h-8 text-purple-400" />
+                <span className="text-xs uppercase tracking-widest text-white/70">Strategy Guide</span>
+              </div>
+            </Link>
+
+            <Link href="/reaction" className="col-span-1">
+              <div 
+                className="h-full bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#252525] active:scale-[0.98] transition-all min-h-[100px]"
+                data-testid="button-reflex-training"
+              >
+                <Zap className="w-8 h-8 text-yellow-400" />
+                <span className="text-xs uppercase tracking-widest text-white/70">Reflex Test</span>
+              </div>
+            </Link>
+
+            <div 
+              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-lg overflow-hidden"
+              data-testid="card-regulations"
+            >
+              <button
+                onClick={() => setShowRegulations(!showRegulations)}
+                className="w-full p-4 flex items-center justify-between hover:bg-[#252525] transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Flag className="w-5 h-5 text-white/50" />
+                  <span className="text-xs uppercase tracking-widest text-white/70">Race Regulations</span>
+                </div>
+                <ChevronDown className={cn(
+                  "w-5 h-5 text-white/50 transition-transform",
+                  showRegulations && "rotate-180"
+                )} />
+              </button>
+              
+              {showRegulations && (
+                <div className="px-4 pb-4 text-sm text-white/70 space-y-2 border-t border-[#333] pt-3">
+                  <p><span className="font-bold text-white">RACE</span> — Answer 20 questions to finish.</p>
+                  <p><span className="font-bold text-white">OVERTAKE</span> — Yellow zones give double points and coins.</p>
+                  <p><span className="font-bold text-white">PENALTIES</span> — Wrong answers add time. Too many = crash!</p>
+                </div>
+              )}
+            </div>
+
+            <div 
+              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
+              data-testid="card-pit-console"
+            >
+              <p className="text-xs uppercase tracking-widest text-white/50 mb-4">Pit Console</p>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between" data-testid="toggle-sound">
+                  <div className="flex items-center gap-3">
+                    {state.soundEnabled ? (
+                      <Volume2 className="w-5 h-5 text-white/50" />
+                    ) : (
+                      <VolumeX className="w-5 h-5 text-white/50" />
+                    )}
+                    <span className="text-sm text-white/80">Pit Radio</span>
+                  </div>
+                  <button
+                    onClick={toggleSound}
+                    className={cn(
+                      "w-11 h-6 rounded-full transition-colors relative",
+                      state.soundEnabled ? "bg-green-500" : "bg-[#333]"
+                    )}
+                    style={state.soundEnabled ? { backgroundColor: state.teamColor } : {}}
+                  >
+                    <span 
+                      className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-in-out",
+                        state.soundEnabled ? "left-6" : "left-1"
+                      )}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between" data-testid="toggle-sim">
+                  <div className="flex items-center gap-3">
+                    <Gauge className="w-5 h-5 text-white/50" />
+                    <div>
+                      <span className="text-sm text-white/80">Realism Mode</span>
+                      <p className="text-[10px] text-white/40">Full race distance</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={toggleSimMode}
+                    className={cn(
+                      "w-11 h-6 rounded-full transition-colors relative",
+                      state.simMode ? "bg-green-500" : "bg-[#333]"
+                    )}
+                    style={state.simMode ? { backgroundColor: state.teamColor } : {}}
+                  >
+                    <span 
+                      className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-in-out",
+                        state.simMode ? "left-6" : "left-1"
+                      )}
+                    />
+                  </button>
+                </div>
+
+                <div className="pt-3 border-t border-[#333] mt-4">
+                  <button
+                    onClick={handleRetireCar}
+                    className="text-xs text-red-400/70 hover:text-red-400 transition-colors uppercase tracking-widest"
+                    data-testid="button-retire"
+                  >
+                    Retire from Championship →
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
-          
-          <button
-            onClick={handleRetireCar}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-            data-testid="button-retire"
-          >
-            RETIRE
-          </button>
-        </section>
-
+        </div>
       </div>
     </GameLayout>
   );
