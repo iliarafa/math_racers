@@ -137,10 +137,16 @@ export default function Garage() {
 
             <Link href="/reaction" className="col-span-1">
               <div 
-                className="h-full border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#252525] active:scale-[0.98] transition-all min-h-[100px] bg-[#191fb3]"
+                className="h-full border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px] bg-black"
                 data-testid="button-reflex-training"
               >
-                <Zap className="w-8 h-8 text-yellow-400" />
+                <div className="flex gap-1">
+                  <div className="w-4 h-4 rounded-full bg-red-600" />
+                  <div className="w-4 h-4 rounded-full bg-red-600" />
+                  <div className="w-4 h-4 rounded-full bg-red-600" />
+                  <div className="w-4 h-4 rounded-full bg-red-600" />
+                  <div className="w-4 h-4 rounded-full bg-red-600" />
+                </div>
                 <span className="text-xs uppercase tracking-widest text-white/70">Reflex Test</span>
               </div>
             </Link>
