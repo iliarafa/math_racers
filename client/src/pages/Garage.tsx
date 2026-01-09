@@ -186,7 +186,7 @@ export default function Garage() {
                     ) : (
                       <VolumeX className="w-5 h-5 text-white/50" />
                     )}
-                    <span className="text-sm text-white/80">Pit Radio</span>
+                    <span className="text-sm text-white/80">Beeps</span>
                   </div>
                   <button
                     onClick={toggleSound}
