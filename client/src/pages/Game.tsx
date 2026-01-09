@@ -253,10 +253,11 @@ export default function Game() {
       const responseTime = Date.now() - questionStartTimeRef.current;
       const speed: 'fast' | 'normal' | 'slow' = responseTime < 1000 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
       
-      // Purple mode logic - use existing state variable, don't reconstruct from history
-      // - Activates after 5 consecutive correct + fast answer
-      // - Once in purple mode, must answer in <1 second to maintain it
-      // - Any slow answer while in purple mode breaks it
+      // Purple mode logic:
+      // - Need 5 consecutive correct to build streak
+      // - 6th consecutive correct answer (if fast <1s) becomes first purple
+      // - Once in purple, must answer fast (<1s) to stay in purple
+      // - Any slow or incorrect answer breaks purple mode
       
       if (inPurpleMode) {
         // Already in purple mode - check if we maintain it
@@ -267,8 +268,8 @@ export default function Game() {
         // If fast, stay in purple (no action needed)
       } else {
         // Not in purple mode - check if we should enter
-        // Count consecutive correct answers, but also track when purple mode would have broken
-        // A slow answer after 5 consecutive correct resets the streak for re-entry purposes
+        // Count consecutive correct answers from recent history
+        // A slow answer after entering purple resets the streak
         let consecutiveCorrect = 0;
         let purpleWasActive = false;
         
@@ -282,11 +283,11 @@ export default function Game() {
                 consecutiveCorrect = 1;
                 purpleWasActive = false;
               }
-              // If fast, continue (streak doesn't matter while in purple)
+              // If fast, continue in purple
             } else {
               consecutiveCorrect++;
-              // Check if we would enter purple mode at this point
-              if (consecutiveCorrect >= 5 && lap.speed === 'fast') {
+              // Check if we entered purple mode at this point (6th consecutive + fast)
+              if (consecutiveCorrect >= 6 && lap.speed === 'fast') {
                 purpleWasActive = true;
               }
             }
@@ -302,8 +303,8 @@ export default function Game() {
           consecutiveCorrect++;
         }
         
-        // Enter purple mode if we have 5+ consecutive correct AND this answer is fast
-        if (consecutiveCorrect >= 5 && speed === 'fast') {
+        // Enter purple mode if we have 6+ consecutive correct AND this answer is fast
+        if (consecutiveCorrect >= 6 && speed === 'fast') {
           setInPurpleMode(true);
         }
       }
@@ -964,6 +965,7 @@ export default function Game() {
                 const lapData = lapResults[i];
                 
                 // Calculate purple mode status at this segment
+                // 6th consecutive correct + fast = first purple
                 let consecutiveCorrect = 0;
                 let purpleModeActive = false;
                 for (let j = 0; j <= i && j < lapResults.length; j++) {
@@ -976,7 +978,7 @@ export default function Game() {
                       }
                     } else {
                       consecutiveCorrect++;
-                      if (consecutiveCorrect >= 5 && lap.speed === 'fast') {
+                      if (consecutiveCorrect >= 6 && lap.speed === 'fast') {
                         purpleModeActive = true;
                       }
                     }
