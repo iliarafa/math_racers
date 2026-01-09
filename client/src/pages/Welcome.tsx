@@ -34,18 +34,18 @@ export default function Welcome() {
           <div className="flex flex-col sm:flex-row gap-2">
             <Link href="/game" className="flex-1">
               <button 
-                className="w-full bg-white h-14 rounded-lg font-medium text-lg flex items-center justify-start pl-6 gap-2 transition-all text-black hover:text-red-500"
+                className="w-full bg-white h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all text-black hover:text-red-500"
                 data-testid="button-start-race"
               >
                 <Play className="w-5 h-5" />
-                Race
+                <span className="w-16 text-left">Race</span>
               </button>
             </Link>
 
             <Link href="/garage" className="flex-1">
-              <button className="w-full h-14 rounded-lg font-medium text-lg flex items-center justify-start pl-6 gap-2 transition-all bg-white text-black hover:text-purple-500" data-testid="button-garage">
+              <button className="w-full h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all bg-white text-black hover:text-purple-500" data-testid="button-garage">
                 <Wrench className="w-5 h-5" />
-                Garage
+                <span className="w-16 text-left">Garage</span>
               </button>
             </Link>
           </div>
