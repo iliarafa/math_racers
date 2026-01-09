@@ -4,6 +4,7 @@ import { useGameState } from "@/lib/gameLogic";
 import { Play, Wrench } from "lucide-react";
 import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
+import taglineImage from "@assets/1Asset_5@2x_1768002946873.png";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -25,7 +26,12 @@ export default function Welcome() {
             className="w-auto max-w-[65%]"
             data-testid="img-hero"
           />
-          <p className="max-w-lg text-center text-[16px] font-bold text-[#616161]">No Risk. Full Math.</p>
+          <img 
+            src={taglineImage} 
+            alt="No Risk. Full Math." 
+            className="w-auto max-w-[50%]"
+            data-testid="img-tagline"
+          />
         </div>
 
         <div className="flex flex-col gap-4 w-full max-w-md">
