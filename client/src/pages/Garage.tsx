@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronDown, BarChart3, Volume2, VolumeX, Flag, Gauge, Clock } from "lucide-react";
+import { ChevronLeft, ChevronDown, TrendingUp, Volume2, VolumeX, Flag, Gauge, Clock } from "lucide-react";
 
 export default function Garage() {
   const { state, toggleSound, toggleSimMode, resetAllData, getTopLapTimes, getLapHistory } = useGameState();
@@ -147,7 +147,7 @@ export default function Garage() {
                 className="h-full bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#252525] active:scale-[0.98] transition-all min-h-[100px]"
                 data-testid="button-strategy-guide"
               >
-                <BarChart3 className="w-8 h-8 text-purple-400" />
+                <TrendingUp className="w-8 h-8 text-yellow-400" />
                 <span className="text-xs uppercase tracking-widest text-white/70">Strategy Guide</span>
               </div>
             </Link>
