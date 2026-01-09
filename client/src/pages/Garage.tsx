@@ -106,9 +106,9 @@ export default function Garage() {
                 </div>
               </div>
               
-              {topTimes.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-[#333]" data-testid="session-lap-times">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Session Best</p>
+              <div className="mt-4 pt-3 border-t border-[#333]" data-testid="session-lap-times">
+                <p className="text-[10px] uppercase tracking-widest text-white/40 mb-2">Session Best Laps</p>
+                {topTimes.length > 0 ? (
                   <div className="flex gap-4 text-sm font-mono">
                     {topTimes.slice(0, 3).map((time, index) => (
                       <div key={index} className="flex items-center gap-1">
@@ -119,8 +119,10 @@ export default function Garage() {
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-white/40">No races completed this session</p>
+                )}
+              </div>
             </div>
 
             <Link href="/strategy" className="col-span-1">
