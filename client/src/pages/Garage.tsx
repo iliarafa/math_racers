@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, TEAM_COLORS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, Check, AlertTriangle, BookOpen, FileText, Zap, RotateCcw } from "lucide-react";
+import { ChevronLeft, Check, AlertTriangle, BarChart3, FileText, Zap, RotateCcw } from "lucide-react";
 
 type ReflexState = 'idle' | 'sequence' | 'waiting' | 'go' | 'jumpstart' | 'result';
 
@@ -126,7 +126,7 @@ export default function Garage() {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
               data-testid="button-strategy-guide"
             >
-              <BookOpen className="w-5 h-5" />
+              <BarChart3 className="w-5 h-5" />
               Open Strategy Guide
             </button>
           </Link>
