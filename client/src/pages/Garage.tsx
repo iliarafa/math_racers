@@ -169,28 +169,37 @@ export default function Garage() {
             </Link>
 
             <div 
-              className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-lg overflow-hidden"
+              className="sm:col-span-2 bg-black border border-[#333] rounded-2xl shadow-lg overflow-hidden"
               data-testid="card-regulations"
             >
               <button
                 onClick={() => setShowRegulations(!showRegulations)}
-                className="w-full p-4 flex items-center justify-between hover:bg-red-500 transition-colors bg-[#ffffff]"
+                className="w-full p-4 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors bg-black"
               >
                 <div className="flex items-center gap-3">
-                  <Flag className="w-5 h-5 text-black/50" />
-                  <span className="text-xs uppercase tracking-widest text-[#000000b3]">Race Regulations</span>
+                  <Flag className="w-5 h-5 text-white" />
+                  <span className="text-xs uppercase tracking-widest text-white">Race Regulations</span>
                 </div>
                 <ChevronDown className={cn(
-                  "w-5 h-5 text-black/50 transition-transform",
+                  "w-5 h-5 text-white transition-transform",
                   showRegulations && "rotate-180"
                 )} />
               </button>
               
               {showRegulations && (
-                <div className="px-4 pb-4 text-sm text-white/70 space-y-2 border-t border-[#333] pt-3">
-                  <p><span className="font-bold text-white">RACE</span> — Answer 20 questions to finish.</p>
-                  <p><span className="font-bold text-white">OVERTAKE</span> — Solve correctly in detection points to engage Active Aero, reduce drag and fly.</p>
-                  <p><span className="font-bold text-white">TRACK LIMITS</span> — Wrong answers make you spin and lose time.</p>
+                <div className="px-4 pb-4 space-y-4 pt-2">
+                  <div>
+                    <h3 className="font-bold text-white text-base mb-1">RACE</h3>
+                    <p className="text-white text-sm">Answer 20 questions to finish.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-base mb-1">OVERTAKE</h3>
+                    <p className="text-white text-sm">Solve correctly in detection points to engage Active Aero, reduce drag and fly.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-base mb-1">TRACK LIMITS</h3>
+                    <p className="text-white text-sm">Wrong answers make you spin and lose time.</p>
+                  </div>
                 </div>
               )}
             </div>
