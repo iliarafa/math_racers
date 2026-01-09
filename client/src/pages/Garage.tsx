@@ -141,7 +141,7 @@ export default function Garage() {
             <p className="text-xs text-muted-foreground">Practice your race starts</p>
           </div>
           
-          <div className="bg-black rounded-xl p-4 shadow-lg">
+          <div className="rounded-xl p-4 shadow-lg bg-[#ffffff]">
             <div className="flex gap-2 justify-center mb-4">
               {lights.map((isOn, index) => (
                 <div
