@@ -32,17 +32,17 @@ export default function Garage() {
           
           <div className="flex items-center gap-3 mb-5">
             <Link href="/">
-              <button className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors text-[#000000]" data-testid="button-back">
+              <button className="min-w-11 min-h-11 flex items-center justify-center -ml-2 hover:bg-black/10 rounded-full transition-colors text-[#000000]" data-testid="button-back">
                 <ChevronLeft className="w-6 h-6 text-black" />
               </button>
             </Link>
             <h1 className="text-lg font-bold tracking-widest uppercase text-[#000000cc]"> Dashboard</h1>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform"
+              className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg active:scale-[0.98] transition-transform"
               data-testid="card-driver-profile"
             >
               <div className="flex items-center justify-between">
@@ -57,7 +57,7 @@ export default function Garage() {
                       key={team.id}
                       onClick={() => setTeamColor(team.hex)}
                       className={cn(
-                        "w-8 h-8 rounded-full transition-all border-2",
+                        "w-11 h-11 rounded-full transition-all border-2",
                         state.teamColor === team.hex 
                           ? "border-white scale-110 ring-2 ring-white/30" 
                           : "border-transparent hover:scale-105"
@@ -72,7 +72,7 @@ export default function Garage() {
             </div>
 
             <div 
-              className="col-span-2 border border-[#333] rounded-2xl p-4 shadow-lg bg-[#000000]"
+              className="sm:col-span-2 border border-[#333] rounded-2xl p-4 shadow-lg bg-[#000000]"
               data-testid="card-telemetry"
             >
               <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
@@ -152,7 +152,7 @@ export default function Garage() {
             </Link>
 
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-lg overflow-hidden"
+              className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-lg overflow-hidden"
               data-testid="card-regulations"
             >
               <button
@@ -179,7 +179,7 @@ export default function Garage() {
             </div>
 
             <div 
-              className="col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
+              className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
               data-testid="card-pit-console"
             >
               <p className="text-xs uppercase tracking-widest text-white/50 mb-4">Pit Console</p>

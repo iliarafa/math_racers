@@ -42,8 +42,8 @@ export function GameLayout({ children, coins, trackName, hideHeader = false, loc
           <div className="flex items-center gap-2 md:gap-4">
             {!hideGarageButton && (
               <Link href="/garage">
-                <button className="flex items-center gap-2 text-sm font-medium hover:bg-secondary px-2 md:px-3 py-2 rounded-md transition-colors">
-                  <Wrench className="w-4 h-4" />
+                <button className="flex items-center justify-center gap-2 text-sm font-medium hover:bg-secondary min-w-11 min-h-11 px-3 rounded-md transition-colors">
+                  <Wrench className="w-5 h-5" />
                   <span className="hidden sm:inline">Garage</span>
                 </button>
               </Link>

@@ -208,8 +208,8 @@ export default function ReactionTest() {
         </button>
 
         <Link href="/garage">
-          <button className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2" data-testid="button-back-garage">
-            <ChevronLeft className="w-4 h-4" /> Back to Garage
+          <button className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 min-h-11 px-3" data-testid="button-back-garage">
+            <ChevronLeft className="w-5 h-5" /> Back to Garage
           </button>
         </Link>
 

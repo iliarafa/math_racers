@@ -285,7 +285,7 @@ export default function StrategyGuide() {
           <div className="flex items-center gap-4">
             <Link href="/garage">
               <button 
-                className="p-2 -ml-2 hover:bg-neutral-800 rounded-full transition-colors text-white" 
+                className="min-w-11 min-h-11 flex items-center justify-center -ml-2 hover:bg-neutral-800 rounded-full transition-colors text-white" 
                 data-testid="button-back-to-garage"
               >
                 <ChevronLeft className="w-6 h-6" />
@@ -303,7 +303,7 @@ export default function StrategyGuide() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-2.5 py-1.5 md:px-4 md:py-2 rounded-lg font-mono text-xs md:text-sm transition-all",
+                  "flex items-center gap-1.5 px-3 min-h-11 min-w-11 rounded-lg font-mono text-xs md:text-sm transition-all",
                   activeTab === tab.id
                     ? "bg-white text-black shadow-lg shadow-white/20"
                     : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white"
@@ -323,7 +323,7 @@ export default function StrategyGuide() {
           <div className="pt-6 border-t border-neutral-800">
             <Link href="/garage">
               <button 
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors font-mono text-sm"
+                className="flex items-center gap-2 px-4 min-h-11 rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors font-mono text-sm"
                 data-testid="button-return-garage"
               >
                 <ChevronLeft className="w-4 h-4" />
