@@ -8,6 +8,40 @@ import { ChevronLeft, RotateCcw, Zap } from "lucide-react";
 
 type GameState = 'idle' | 'sequence' | 'waiting' | 'go' | 'jumpstart' | 'result';
 
+let audioContext: AudioContext | null = null;
+
+const getAudioContext = (): AudioContext => {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  return audioContext;
+};
+
+const playBeep = (frequency: number = 800, duration: number = 150) => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'square';
+    
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + duration / 1000);
+  } catch (e) {
+    console.error('Audio playback failed:', e);
+  }
+};
+
 export default function ReactionTest() {
   const { state } = useGameState();
   const [gameState, setGameState] = useState<GameState>('idle');
@@ -15,6 +49,11 @@ export default function ReactionTest() {
   const [reactionTime, setReactionTime] = useState<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const soundEnabledRef = useRef(state.soundEnabled);
+
+  useEffect(() => {
+    soundEnabledRef.current = state.soundEnabled;
+  }, [state.soundEnabled]);
 
   const clearAllTimeouts = () => {
     if (sequenceTimeoutRef.current) {
@@ -36,12 +75,18 @@ export default function ReactionTest() {
     const turnOnLight = (index: number) => {
       if (index < 5) {
         setLights([index >= 0, index >= 1, index >= 2, index >= 3, index >= 4]);
+        if (soundEnabledRef.current) {
+          playBeep(800, 150);
+        }
         sequenceTimeoutRef.current = setTimeout(() => turnOnLight(index + 1), 1000);
       } else {
         setGameState('waiting');
         const randomDelay = 200 + Math.random() * 2800;
         sequenceTimeoutRef.current = setTimeout(() => {
           setLights([false, false, false, false, false]);
+          if (soundEnabledRef.current) {
+            playBeep(1200, 200);
+          }
           startTimeRef.current = Date.now();
           setGameState('go');
         }, randomDelay);
