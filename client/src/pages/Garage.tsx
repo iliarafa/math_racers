@@ -201,7 +201,7 @@ export default function Garage() {
                     <p className="text-white text-[13px]">Wrong answers make you spin and lose time. Four warnings cost you a 5" penalty.</p>
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base mb-1">REALISM MODE</h3>
+                    <h3 className="font-bold text-white mb-1 text-[13px]">REALISM MODE</h3>
                     <p className="text-white text-sm">Race the full Grand Prix distance with realistic lap counts for each circuit.</p>
                   </div>
                 </div>
