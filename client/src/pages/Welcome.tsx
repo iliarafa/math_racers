@@ -1,7 +1,5 @@
 import { Link } from "wouter";
-import { AnimatePresence } from "framer-motion";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { Tutorial } from "@/components/Tutorial";
 import { useGameState } from "@/lib/gameLogic";
 import { Play, Wrench } from "lucide-react";
 import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
@@ -9,16 +7,10 @@ import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import taglineImage from "@assets/1Asset_5@2x_1768002946873.png";
 
 export default function Welcome() {
-  const { state, completeTutorial } = useGameState();
+  const { state } = useGameState();
 
   return (
     <GameLayout coins={state.coins} hideHeader>
-      <AnimatePresence>
-        {!state.tutorialCompleted && (
-          <Tutorial onComplete={completeTutorial} />
-        )}
-      </AnimatePresence>
-
       <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8 md:space-y-12 py-8 md:py-12 px-4">
         
         <div className="space-y-6 max-w-2xl flex flex-col items-center">
@@ -62,6 +54,8 @@ export default function Welcome() {
             </Link>
           </div>
         </div>
+
+        
 
       </div>
     </GameLayout>
