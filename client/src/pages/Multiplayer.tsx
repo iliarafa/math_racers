@@ -335,7 +335,7 @@ export default function Multiplayer() {
     
     // Calculate response time
     const responseTime = Date.now() - questionStartTimeRef.current;
-    const speed: 'fast' | 'normal' | 'slow' = responseTime < 1700 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
+    const speed: 'fast' | 'normal' | 'slow' = responseTime < 3000 ? 'fast' : responseTime > 5000 ? 'slow' : 'normal';
     
     if (val === currentQuestion.answer) {
       setFeedback("correct");

@@ -301,8 +301,9 @@ export default function Game() {
         playCorrectSound();
       }
       
-      // Calculate speed category
-      const speed: 'fast' | 'normal' | 'slow' = responseTime < 1700 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
+      // Calculate speed category (generous thresholds for kids)
+      // Fast: under 3 seconds, Slow: over 5 seconds
+      const speed: 'fast' | 'normal' | 'slow' = responseTime < 3000 ? 'fast' : responseTime > 5000 ? 'slow' : 'normal';
       
       // Purple mode logic:
       // - Need 4 consecutive correct to build streak
