@@ -963,7 +963,7 @@ export default function Game() {
   // Racing phase
   return (
     <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
-      <div className="flex-1 flex flex-col w-full overflow-hidden relative min-h-0">
+      <div className="flex-1 flex flex-col justify-center w-full overflow-hidden relative min-h-0">
 
         {/* Pause Overlay */}
         {isPaused && (
@@ -1085,7 +1085,7 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        <div className="flex-1 flex flex-col justify-center px-4">
+        <div className="flex flex-col justify-center px-4 py-2">
           <div className="relative h-5 bg-muted rounded-full overflow-hidden">
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
@@ -1138,7 +1138,7 @@ export default function Game() {
         </div>
 
         {/* Large Keypad */}
-        <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0">
+        <div className="flex flex-col justify-start items-center px-4 pb-4 min-h-0">
           <div className="grid grid-cols-3 gap-2 w-full max-w-md">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
