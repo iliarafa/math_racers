@@ -335,7 +335,11 @@ export default function Multiplayer() {
     
     // Calculate response time
     const responseTime = Date.now() - questionStartTimeRef.current;
-    const speed: 'fast' | 'normal' | 'slow' = responseTime < 3000 ? 'fast' : responseTime > 5000 ? 'slow' : 'normal';
+    // Speed thresholds based on difficulty
+    const difficulty = selectedDriver?.difficulty || 'easy';
+    const fastThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000;
+    const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
+    const speed: 'fast' | 'normal' | 'slow' = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
     
     if (val === currentQuestion.answer) {
       setFeedback("correct");
