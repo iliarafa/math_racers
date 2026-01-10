@@ -8,16 +8,6 @@ import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRac
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3 } from "lucide-react";
 
-// Custom racing helmet icon component
-const RacingHelmet = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12 2C7.5 2 4 5.5 4 10c0 2.5 1 4.5 2.5 6l-0.5 4h12l-0.5-4c1.5-1.5 2.5-3.5 2.5-6 0-4.5-3.5-8-8-8z" stroke="currentColor" strokeWidth="1" fill="none"/>
-    <path d="M8 10c0-2.2 1.8-4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-    <path d="M6 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <rect x="5" y="11" width="14" height="3" rx="1" fill="currentColor" opacity="0.3"/>
-  </svg>
-);
-
 // Custom checkered flag icon component
 const CheckeredFlag = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
@@ -569,7 +559,7 @@ export default function Game() {
               )}
               data-testid="button-solo-mode"
             >
-              <RacingHelmet className="w-4 h-4" />
+              <Play className="w-4 h-4" />
               Solo
             </button>
             <button
