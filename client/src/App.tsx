@@ -10,6 +10,7 @@ import Game from "@/pages/Game";
 import Garage from "@/pages/Garage";
 import StrategyGuide from "@/pages/StrategyGuide";
 import ReactionTest from "@/pages/ReactionTest";
+import Multiplayer from "@/pages/Multiplayer";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/garage" component={Garage} />
       <Route path="/strategy" component={StrategyGuide} />
       <Route path="/reaction" component={ReactionTest} />
+      <Route path="/multiplayer" component={Multiplayer} />
       <Route component={NotFound} />
     </Switch>
   );

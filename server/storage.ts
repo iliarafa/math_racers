@@ -1,38 +1,53 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { type User, type InsertUser, type MultiplayerRoom, type InsertRoom, multiplayerRooms } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createRoom(room: InsertRoom): Promise<MultiplayerRoom>;
+  getRoomByCode(code: string): Promise<MultiplayerRoom | undefined>;
+  updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined>;
+  deleteRoom(roomCode: string): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    return undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    return undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    return { ...insertUser, id };
+  }
+
+  async createRoom(room: InsertRoom): Promise<MultiplayerRoom> {
+    const [newRoom] = await db.insert(multiplayerRooms).values(room).returning();
+    return newRoom;
+  }
+
+  async getRoomByCode(code: string): Promise<MultiplayerRoom | undefined> {
+    const [room] = await db.select().from(multiplayerRooms).where(eq(multiplayerRooms.roomCode, code));
+    return room;
+  }
+
+  async updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined> {
+    const [updated] = await db.update(multiplayerRooms)
+      .set(updates)
+      .where(eq(multiplayerRooms.roomCode, roomCode))
+      .returning();
+    return updated;
+  }
+
+  async deleteRoom(roomCode: string): Promise<void> {
+    await db.delete(multiplayerRooms).where(eq(multiplayerRooms.roomCode, roomCode));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { Play, Wrench } from "lucide-react";
+import { Play, Wrench, Users } from "lucide-react";
 import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import taglineImage from "@assets/1Asset_5@2x_1768002946873.png";
@@ -46,13 +46,20 @@ export default function Welcome() {
               </button>
             </Link>
 
-            <Link href="/garage" className="flex-1">
-              <button className="w-full h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all bg-white text-black hover:text-purple-500" data-testid="button-garage">
-                <Wrench className="w-5 h-5" />
-                <span className="w-16 text-left">Garage</span>
+            <Link href="/multiplayer" className="flex-1">
+              <button className="w-full h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all bg-white text-black hover:text-blue-500" data-testid="button-multiplayer">
+                <Users className="w-5 h-5" />
+                <span className="w-16 text-left">1v1</span>
               </button>
             </Link>
           </div>
+          
+          <Link href="/garage" className="w-full">
+            <button className="w-full h-12 rounded-lg font-medium text-base flex items-center justify-center gap-2 transition-all bg-secondary text-secondary-foreground hover:bg-secondary/80" data-testid="button-garage">
+              <Wrench className="w-4 h-4" />
+              Garage
+            </button>
+          </Link>
         </div>
 
         
