@@ -59,6 +59,16 @@ shared/           # Shared types and schemas
 - Race is 20 questions; mistakes determine final grid position
 - 2025 F1 driver names used for leaderboard positions
 
+### Multiplayer System
+
+- **Real-time 1v1 Races**: WebSocket-based multiplayer with 4-digit room codes
+- **Room Flow**: Host creates room, shares code, guest joins, host starts race
+- **Countdown**: 5-second F1-style light countdown before race starts
+- **Dual Progress**: Both players' progress bars displayed during race
+- **Winner Logic**: Fewer mistakes wins; if tied, faster time wins
+- **Server Validation**: Sequential progress validation, prevents premature/fraudulent completion
+- **Database**: Rooms stored in PostgreSQL with questions, players, and status
+
 ## External Dependencies
 
 ### Database
