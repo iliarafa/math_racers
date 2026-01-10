@@ -4,8 +4,24 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, Copy, Check, X, Timer, Delete, Pause, Home, Play } from "lucide-react";
+import { ArrowLeft, Copy, Check, X, Timer, Delete, Pause, Home, Play } from "lucide-react";
 import confetti from "canvas-confetti";
+
+// Custom checkered flag icon component
+const CheckeredFlag = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M4 21V4" />
+    <rect x="4" y="4" width="16" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="4" y="4" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="12" y="4" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="8" y="6.5" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="16" y="6.5" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="4" y="9" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="12" y="9" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="8" y="11.5" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="16" y="11.5" width="4" height="2.5" fill="currentColor" stroke="none" />
+  </svg>
+);
 
 type GameStatus = "lobby" | "waiting" | "countdown" | "racing" | "finished";
 
@@ -366,7 +382,7 @@ export default function Multiplayer() {
             <ArrowLeft className="w-6 h-6" />
           </button>
           
-          <Users className="w-16 h-16 text-primary" />
+          <CheckeredFlag className="w-16 h-16 text-black" />
           <h1 className="text-3xl font-bold">Multiplayer</h1>
           
           {mode === "menu" && (
