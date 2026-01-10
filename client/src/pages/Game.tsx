@@ -590,7 +590,7 @@ export default function Game() {
               
               <button
                 onClick={handleMultiplayerSelect}
-                className="h-14 px-8 bg-blue-600 text-white rounded-lg font-bold text-lg hover:bg-blue-500 transition-all"
+                className="h-14 px-8 text-white rounded-lg font-bold text-lg hover:bg-blue-500 transition-all bg-[#15631a]"
                 data-testid="button-enter-multiplayer"
               >
                 Enter Multiplayer Lobby
