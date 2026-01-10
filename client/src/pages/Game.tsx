@@ -126,6 +126,7 @@ export default function Game() {
     playerAnswer: number;
     correctAnswer: number;
     sectorColor: 'green' | 'purple' | 'yellow' | 'red';
+    responseTime: number;
   }>>([]);
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
@@ -251,14 +252,16 @@ export default function Game() {
     const val = parseInt(answer);
     if (isNaN(val)) return;
 
+    // Calculate response time for all answers
+    const responseTime = Date.now() - questionStartTimeRef.current;
+
     if (val === question.answer) {
       setFeedback('correct');
       if (soundEnabledRef.current) {
         playCorrectSound();
       }
       
-      // Calculate response time and speed category
-      const responseTime = Date.now() - questionStartTimeRef.current;
+      // Calculate speed category
       const speed: 'fast' | 'normal' | 'slow' = responseTime < 1000 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
       
       // Purple mode logic:
@@ -348,7 +351,8 @@ export default function Game() {
         question: question.display,
         playerAnswer: val,
         correctAnswer: question.answer,
-        sectorColor
+        sectorColor,
+        responseTime
       }]);
 
       if (newProgress >= raceLength) {
@@ -434,7 +438,8 @@ export default function Game() {
         question: question.display,
         playerAnswer: val,
         correctAnswer: question.answer,
-        sectorColor: 'red'
+        sectorColor: 'red',
+        responseTime
       }]);
 
       if (newProgress >= raceLength) {
@@ -923,7 +928,10 @@ export default function Game() {
                       <div className="flex-1">
                         <div className="font-mono font-bold">{lap.question}</div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {(lap.responseTime / 1000).toFixed(3)}s
+                        </span>
                         {lap.result === 'correct' ? (
                           <span className="text-green-500 font-bold">{lap.playerAnswer}</span>
                         ) : (
