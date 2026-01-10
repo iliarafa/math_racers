@@ -6,7 +6,23 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, Users } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3 } from "lucide-react";
+
+// Custom checkered flag icon component
+const CheckeredFlag = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M4 21V4" />
+    <rect x="4" y="4" width="16" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="4" y="4" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="12" y="4" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="8" y="6.5" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="16" y="6.5" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="4" y="9" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="12" y="9" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="8" y="11.5" width="4" height="2.5" fill="currentColor" stroke="none" />
+    <rect x="16" y="11.5" width="4" height="2.5" fill="currentColor" stroke="none" />
+  </svg>
+);
 
 let audioContext: AudioContext | null = null;
 let audioInitialized = false;
@@ -551,7 +567,7 @@ export default function Game() {
               className="px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-white bg-[#15631a]"
               data-testid="button-multiplayer-mode"
             >
-              <Users className="w-4 h-4" />
+              <CheckeredFlag className="w-4 h-4" />
               1v1
             </button>
           </div>
@@ -580,7 +596,7 @@ export default function Game() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
               <div className="text-center">
-                <Users className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                <CheckeredFlag className="w-16 h-16 text-blue-500 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold mb-2">1v1 Race</h2>
                 <p className="text-muted-foreground">Race head-to-head against a friend!</p>
               </div>
