@@ -51,6 +51,7 @@ export interface GameState {
   simMode: boolean;
   personalBests: { [circuitId: string]: number };
   lapHistory: LapEntry[];
+  tutorialCompleted: boolean;
 }
 
 export const TEAM_COLORS = [
@@ -188,6 +189,7 @@ const INITIAL_STATE: GameState = {
   simMode: false,
   personalBests: {},
   lapHistory: [],
+  tutorialCompleted: false,
 };
 
 export const SHOP_ITEMS = [
@@ -239,6 +241,7 @@ export function useGameState() {
           simMode: parsed.simMode ?? false,
           personalBests: parsed.personalBests ?? {},
           lapHistory: parsed.lapHistory ?? [],
+          tutorialCompleted: parsed.tutorialCompleted ?? false,
         };
       }
     } catch (error) {
@@ -374,6 +377,10 @@ export function useGameState() {
     return state.lapHistory.slice(0, count);
   };
 
+  const completeTutorial = () => {
+    setState(prev => ({ ...prev, tutorialCompleted: true }));
+  };
+
   return {
     state,
     sessionLapTimes,
@@ -392,7 +399,8 @@ export function useGameState() {
     resetAllData,
     recordLapTime,
     getTopLapTimes,
-    getLapHistory
+    getLapHistory,
+    completeTutorial
   };
 }
 
