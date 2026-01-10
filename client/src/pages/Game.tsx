@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3 } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, Users } from "lucide-react";
 
 let audioContext: AudioContext | null = null;
 let audioInitialized = false;
@@ -109,6 +109,8 @@ const playIncorrectSound = () => {
 
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime } = useGameState();
+  const [, setLocation] = useLocation();
+  const [raceMode, setRaceMode] = useState<'solo' | 'multiplayer'>('solo');
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   
@@ -512,35 +514,89 @@ export default function Game() {
     setQuestion(null);
     setMistakeLog([]);
     setShowMistakeReview(false);
+    setRaceMode('solo');
     resetStreak();
     penaltyTimeRef.current = 0;
     raceStartTimeRef.current = null;
     setPenaltyMessage({ text: '', color: 'red' });
   };
 
+  const handleMultiplayerSelect = () => {
+    setSelectedDriver(null);
+    setSelectedCircuit(null);
+    setGameStatus('driver_select');
+    setLocation('/multiplayer');
+  };
+
   // Driver Selection Screen
   if (gameStatus === 'driver_select') {
     return (
-      <GameLayout coins={state.coins} trackName="Select Driver">
+      <GameLayout coins={state.coins} trackName="Select Mode">
         <div className="flex-1 flex flex-col py-6 px-4">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-1">Choose Your Level</h2>
+          {/* Solo / Multiplayer Toggle */}
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <button
+              onClick={() => setRaceMode('solo')}
+              className={cn(
+                "px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
+                raceMode === 'solo' ? "bg-red-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              )}
+              data-testid="button-solo-mode"
+            >
+              <Play className="w-4 h-4" />
+              Solo
+            </button>
+            <button
+              onClick={() => setRaceMode('multiplayer')}
+              className={cn(
+                "px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
+                raceMode === 'multiplayer' ? "bg-blue-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              )}
+              data-testid="button-multiplayer-mode"
+            >
+              <Users className="w-4 h-4" />
+              1v1
+            </button>
           </div>
-          
-          <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
-            {DRIVERS.map((driver) => (
-              <motion.button
-                key={driver.id}
-                onClick={() => handleDriverSelect(driver)}
-                whileHover={{ opacity: 0.7 }}
-                whileTap={{ scale: 0.98 }}
-                className="py-3 transition-opacity text-center"
-                data-testid={`driver-${driver.id}`}
+
+          {raceMode === 'solo' ? (
+            <>
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold mb-1">Choose Your Level</h2>
+              </div>
+              
+              <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
+                {DRIVERS.map((driver) => (
+                  <motion.button
+                    key={driver.id}
+                    onClick={() => handleDriverSelect(driver)}
+                    whileHover={{ opacity: 0.7 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="py-3 transition-opacity text-center"
+                    data-testid={`driver-${driver.id}`}
+                  >
+                    <span className="font-bold text-lg">{driver.name}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center gap-6">
+              <div className="text-center">
+                <Users className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold mb-2">1v1 Race</h2>
+                <p className="text-muted-foreground">Race head-to-head against a friend!</p>
+              </div>
+              
+              <button
+                onClick={handleMultiplayerSelect}
+                className="h-14 px-8 bg-blue-600 text-white rounded-lg font-bold text-lg hover:bg-blue-500 transition-all"
+                data-testid="button-enter-multiplayer"
               >
-                <span className="font-bold text-lg">{driver.name}</span>
-              </motion.button>
-            ))}
-          </div>
+                Enter Multiplayer Lobby
+              </button>
+            </div>
+          )}
           
           <div className="mt-6 text-center">
             <Link href="/">
