@@ -570,7 +570,7 @@ export default function Game() {
               )}
               data-testid="button-multiplayer-mode"
             >
-              <CheckeredFlag className="w-4 h-4 text-black" />
+              <CheckeredFlag className={cn("w-4 h-4", raceMode === 'multiplayer' ? "text-white" : "text-black")} />
               1v1
             </button>
           </div>
