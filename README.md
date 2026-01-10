@@ -18,11 +18,19 @@ An interactive, gamified math practice web application designed for children. Pl
 - Live progress bars showing both players
 - Winner determined by fewer mistakes; ties broken by time
 
-### Tracks (Difficulty Levels)
+### Circuits (Math Operations)
 
-- **Karting** - Addition (numbers 1-20)
-- **City Circuit** - Addition & Subtraction (numbers 1-50)
-- **Grand Prix** - All operations including multiplication (numbers 1-100)
+- **MONZA** - Multiplication (The Temple of Speed)
+- **SPA** - Addition (The Longest Lap)
+- **MONACO** - Subtraction (Street Circuit)
+- **SUZUKA** - Division (Figure-8 Track)
+- **SILVERSTONE** - Variables (Home of F1)
+
+### Difficulty Levels
+
+- **Rookie** - Numbers 2-10
+- **Pro** - Numbers 5-15
+- **Champion** - Numbers 10-20
 
 ### Speed Feedback System
 
