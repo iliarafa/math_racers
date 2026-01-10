@@ -1085,7 +1085,7 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        <div className="flex flex-col justify-center px-4 mt-[-6px] mb-2">
+        <div className="flex flex-col justify-center px-4 mt-[-18px] mb-2">
           <div className="relative h-5 bg-muted rounded-full overflow-hidden">
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
@@ -1138,7 +1138,7 @@ export default function Game() {
         </div>
 
         {/* Large Keypad */}
-        <div className="flex flex-col justify-start items-center px-4 pb-4 mt-2 min-h-0">
+        <div className="flex flex-col justify-start items-center px-4 pb-4 mt-6 min-h-0">
           <div className="grid grid-cols-3 gap-2 w-full max-w-md">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
