@@ -1,5 +1,5 @@
 import { type User, type InsertUser, type MultiplayerRoom, type InsertRoom, multiplayerRooms } from "@shared/schema";
-import { db } from "./db";
+import { db, withRetry } from "./db";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -28,25 +28,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRoom(room: InsertRoom): Promise<MultiplayerRoom> {
-    const [newRoom] = await db.insert(multiplayerRooms).values(room).returning();
-    return newRoom;
+    return withRetry(async () => {
+      const [newRoom] = await db.insert(multiplayerRooms).values(room).returning();
+      return newRoom;
+    });
   }
 
   async getRoomByCode(code: string): Promise<MultiplayerRoom | undefined> {
-    const [room] = await db.select().from(multiplayerRooms).where(eq(multiplayerRooms.roomCode, code));
-    return room;
+    return withRetry(async () => {
+      const [room] = await db.select().from(multiplayerRooms).where(eq(multiplayerRooms.roomCode, code));
+      return room;
+    });
   }
 
   async updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined> {
-    const [updated] = await db.update(multiplayerRooms)
-      .set(updates)
-      .where(eq(multiplayerRooms.roomCode, roomCode))
-      .returning();
-    return updated;
+    return withRetry(async () => {
+      const [updated] = await db.update(multiplayerRooms)
+        .set(updates)
+        .where(eq(multiplayerRooms.roomCode, roomCode))
+        .returning();
+      return updated;
+    });
   }
 
   async deleteRoom(roomCode: string): Promise<void> {
-    await db.delete(multiplayerRooms).where(eq(multiplayerRooms.roomCode, roomCode));
+    return withRetry(async () => {
+      await db.delete(multiplayerRooms).where(eq(multiplayerRooms.roomCode, roomCode));
+    });
   }
 }
 
