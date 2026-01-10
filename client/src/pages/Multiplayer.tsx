@@ -341,8 +341,8 @@ export default function Multiplayer() {
     const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
     const speed: 'fast' | 'normal' | 'slow' = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
     
-    // Purple retention threshold: 2 seconds for all levels
-    const purpleThreshold = 2000;
+    // Purple retention threshold: 3 seconds for all levels
+    const purpleThreshold = 3000;
     const isPurpleFast = responseTime < purpleThreshold;
     
     if (val === currentQuestion.answer) {
