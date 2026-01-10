@@ -1,50 +1,72 @@
-# Math Racers: F1 Edition
+# F1 Math Racer: Grand Prix
 
-An educational F1-themed racing game where kids solve math problems to race. Features countdown lights with beep sounds, multiple difficulty levels, penalty system, and an F1-themed garage with Strategy Guide math reference.
+An interactive, gamified math practice web application designed for children. Players solve addition, subtraction, and multiplication problems in an F1 racing theme with real-time multiplayer support.
 
 ## Features
 
-### Racing
-- **F1 Starting Sequence**: Authentic 5-light countdown with beep sounds
-- **Math Problems**: Addition, subtraction, and multiplication based on track difficulty
-- **Scoring System**: 0 mistakes = P1, 1-2 = P2, 3+ = position equals mistakes, 11+ = DNF
-- **Time Penalties**: Track limits warnings and time penalties for mistakes
-- **Desktop Keyboard Support**: Type answers using physical keyboard (0-9, Backspace, Enter)
+### Racing Modes
 
-### Tracks
-- **MONZA** - Multiplication (The Temple of Speed)
-- **SPA** - Addition (The Longest Lap)
-- **MONACO** - Subtraction (Street Circuit)
-- **SUZUKA** - Division (Figure-8 Track)
-- **SILVERSTONE** - Variables (Home of F1)
+**Solo Racing**
+- F1-style 5-light countdown with audio cues
+- 20 questions per race
+- Grid position based on mistakes (0 = P1, 1-2 = P2, 3+ = position equals mistakes, 11+ = DNF/Crash)
+- Desktop keyboard support (0-9, Backspace, Enter)
 
-### Difficulty Levels
-- **Rookie** - Easier problems
-- **Pro** - Medium difficulty
-- **Champion** - Challenging problems
+**Real-time Multiplayer**
+- 1v1 head-to-head races via WebSocket
+- 4-digit room codes for easy joining
+- Live progress bars showing both players
+- Winner determined by fewer mistakes; ties broken by time
+
+### Tracks (Difficulty Levels)
+
+- **Karting** - Addition (numbers 1-20)
+- **City Circuit** - Addition & Subtraction (numbers 1-50)
+- **Grand Prix** - All operations including multiplication (numbers 1-100)
+
+### Speed Feedback System
+
+**Standard Mode:**
+- Easy: Fast < 2s (green), Slow > 4s (yellow)
+- Medium: Fast < 3s (green), Slow > 5s (yellow)
+- Hard: Fast < 4s (green), Slow > 7s (yellow)
+
+**Realism Mode (Toggle in Garage):**
+- First 5 questions are calibration phase (all green)
+- Fastest calibration time becomes your personal threshold
+- Questions 6+: At or under threshold = green, over = yellow
+- Wrong answers keep the same question until correct with time penalties
+- Crash at 11 mistakes
+
+### Purple Streak Mode
+- Activate after 5 consecutive correct answers
+- Must answer under 3 seconds to maintain purple status
+- Breaking streak requires 5 fresh correct answers to re-enter
+- Disabled during calibration phase in realism mode
 
 ### Garage
-- **Pit Coins**: Earn virtual currency by answering correctly
-- **Telemetry**: Track your career stats (laps, races won, best streak)
-- **Strategy Guide**: Interactive math reference with:
-  - Multiplication grid (9x9) with hover highlighting
-  - Division fact families
-  - Addition number bonds
-  - Subtraction strategies
-  - Variables explanations
 
-### Reflex Training
-- Reaction time test to sharpen reflexes
+- **Pit Coins**: Earn virtual currency for correct answers
+- **Telemetry**: Career stats (laps completed, races won, best streak)
+- **Liveries & Tires**: Unlock and equip cosmetic items
+- **Realism Mode Toggle**: Switch between standard and calibration-based timing
+- **Strategy Guide**: Interactive math reference with multiplication grid, division facts, and more
+
+### Post-Race Analytics
+- Lap-by-lap breakdown with timing for each question
+- Speed indicator showing fast/slow performance
+- Mistake tracking and final position
 
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite
 - **Styling**: Tailwind CSS v4, Shadcn/ui components
 - **Routing**: Wouter
-- **State**: React Query, localStorage for persistence
+- **State**: React Query, localStorage for game persistence
 - **Animations**: Framer Motion, canvas-confetti
 - **Audio**: Web Audio API for countdown beeps
 - **Backend**: Node.js, Express, TypeScript
+- **Real-time**: WebSocket for multiplayer
 - **Database**: PostgreSQL with Drizzle ORM
 
 ## Getting Started
@@ -57,8 +79,8 @@ An educational F1-themed racing game where kids solve math problems to race. Fea
 
 1. Clone the repository
 ```bash
-git clone https://github.com/iliarafa/math-racers.git
-cd math-racers
+git clone https://github.com/your-repo/f1-math-racer.git
+cd f1-math-racer
 ```
 
 2. Install dependencies
@@ -88,13 +110,14 @@ The app will be available at `http://localhost:5000`
 ```
 client/               # React frontend
   src/
-    pages/            # Route components (Welcome, Game, Garage, StrategyGuide)
+    pages/            # Route components (Welcome, Game, Garage, Multiplayer)
     components/       # UI components and layouts
     lib/              # Game logic, utilities, API client
     hooks/            # Custom React hooks
 server/               # Express backend
   index.ts            # Server entry point
   routes.ts           # API route definitions
+  websocket.ts        # Multiplayer WebSocket handlers
   storage.ts          # Data access layer
 shared/               # Shared types and schemas
   schema.ts           # Drizzle schema and Zod validation
