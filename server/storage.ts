@@ -139,6 +139,96 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
+// Wrapper that falls back to memory storage when database fails
+class FallbackStorage implements IStorage {
+  private primaryStorage: DatabaseStorage;
+  private fallbackStorage: MemoryStorage;
+  private usingFallback = false;
+
+  constructor() {
+    this.primaryStorage = new DatabaseStorage();
+    this.fallbackStorage = new MemoryStorage();
+  }
+
+  getStorageType(): string {
+    return this.usingFallback ? "memory (fallback)" : "database";
+  }
+
+  private async withFallback<T>(operation: () => Promise<T>, fallbackOperation: () => Promise<T>): Promise<T> {
+    if (this.usingFallback) {
+      return fallbackOperation();
+    }
+
+    try {
+      return await operation();
+    } catch (error: any) {
+      const isConnectionError =
+        error.code === 'EAI_AGAIN' ||
+        error.code === 'ECONNREFUSED' ||
+        error.code === 'ETIMEDOUT' ||
+        error.code === 'ENOTFOUND' ||
+        error.message?.includes('EAI_AGAIN') ||
+        error.message?.includes('getaddrinfo');
+
+      if (isConnectionError) {
+        console.log("⚠️ Database unavailable - switching to in-memory storage (LAN mode)");
+        this.usingFallback = true;
+        return fallbackOperation();
+      }
+      throw error;
+    }
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.withFallback(
+      () => this.primaryStorage.getUser(id),
+      () => this.fallbackStorage.getUser(id)
+    );
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return this.withFallback(
+      () => this.primaryStorage.getUserByUsername(username),
+      () => this.fallbackStorage.getUserByUsername(username)
+    );
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    return this.withFallback(
+      () => this.primaryStorage.createUser(user),
+      () => this.fallbackStorage.createUser(user)
+    );
+  }
+
+  async createRoom(room: InsertRoom): Promise<MultiplayerRoom> {
+    return this.withFallback(
+      () => this.primaryStorage.createRoom(room),
+      () => this.fallbackStorage.createRoom(room)
+    );
+  }
+
+  async getRoomByCode(code: string): Promise<MultiplayerRoom | undefined> {
+    return this.withFallback(
+      () => this.primaryStorage.getRoomByCode(code),
+      () => this.fallbackStorage.getRoomByCode(code)
+    );
+  }
+
+  async updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined> {
+    return this.withFallback(
+      () => this.primaryStorage.updateRoom(roomCode, updates),
+      () => this.fallbackStorage.updateRoom(roomCode, updates)
+    );
+  }
+
+  async deleteRoom(roomCode: string): Promise<void> {
+    return this.withFallback(
+      () => this.primaryStorage.deleteRoom(roomCode),
+      () => this.fallbackStorage.deleteRoom(roomCode)
+    );
+  }
+}
+
 // Automatically select storage based on DATABASE_URL availability
 function createStorage(): IStorage {
   if (!process.env.DATABASE_URL) {
@@ -146,14 +236,8 @@ function createStorage(): IStorage {
     return new MemoryStorage();
   }
 
-  try {
-    const storage = new DatabaseStorage();
-    console.log("🌐 DATABASE_URL found - using database storage (Internet mode)");
-    return storage;
-  } catch (error) {
-    console.log("⚠️ Database unavailable - falling back to in-memory storage (LAN mode)");
-    return new MemoryStorage();
-  }
+  console.log("🌐 DATABASE_URL found - using database storage with fallback");
+  return new FallbackStorage();
 }
 
 export const storage = createStorage();
