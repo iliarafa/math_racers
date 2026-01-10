@@ -59,6 +59,24 @@ shared/           # Shared types and schemas
 - Race is 20 questions; mistakes determine final grid position
 - 2025 F1 driver names used for leaderboard positions
 
+### Speed Thresholds
+
+**Standard Mode:**
+- Easy: Fast < 2s, Slow > 4s
+- Medium: Fast < 3s, Slow > 5s  
+- Hard: Fast < 4s, Slow > 7s
+
+**Realism Mode (simMode toggle in Garage):**
+- First 5 questions are calibration phase - all green
+- The fastest of those 5 becomes the personal threshold
+- Questions 6+: ≤ threshold = green, > threshold = yellow
+
+**Purple Mode:**
+- Enters on 5th consecutive correct answer
+- Must answer under 3 seconds to retain purple (all difficulty levels)
+- Breaking purple requires 5 fresh correct answers to re-enter
+- Disabled during calibration phase in realism mode
+
 ### Multiplayer System
 
 - **Real-time 1v1 Races**: WebSocket-based multiplayer with 4-digit room codes
