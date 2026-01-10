@@ -7,6 +7,8 @@ import taglineImage from "@assets/1Asset_5@2x_1768002946873.png";
 import raceButtonImage from "@assets/1Asset_6@2x_1768068792225.png";
 import garageButtonImage from "@assets/1Asset_4@2x_1768068802390.png";
 
+import Gemini_Generated_Image_8kjyrj8kjyrj8kjy from "@assets/Gemini_Generated_Image_8kjyrj8kjyrj8kjy.png";
+
 export default function Welcome() {
   const { state } = useGameState();
 
@@ -38,7 +40,7 @@ export default function Welcome() {
         <div className="flex gap-4 w-full max-w-md justify-center">
           <Link href="/game">
             <img 
-              src={raceButtonImage} 
+              src={Gemini_Generated_Image_8kjyrj8kjyrj8kjy} 
               alt="Race" 
               className="h-16 w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-start-race"
