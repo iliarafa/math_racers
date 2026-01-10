@@ -15,12 +15,12 @@ function getPool(): pg.Pool {
     let connStr = connectionString;
     if (!connStr.includes('connect_timeout')) {
       const separator = connStr.includes('?') ? '&' : '?';
-      connStr = `${connStr}${separator}connect_timeout=30`;
+      connStr = `${connStr}${separator}connect_timeout=5`;
     }
 
     pool = new pg.Pool({
       connectionString: connStr,
-      connectionTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
       idleTimeoutMillis: 30000,
       max: 10,
     });
@@ -45,10 +45,20 @@ export async function withRetry<T>(
       return await operation();
     } catch (error: any) {
       lastError = error;
-      const isRetryable = error.code === 'EAI_AGAIN' ||
-                          error.code === 'ECONNREFUSED' ||
-                          error.code === 'ETIMEDOUT' ||
-                          error.message?.includes('EAI_AGAIN');
+
+      // DNS errors - fail fast, don't retry (let fallback handle it)
+      const isDnsError = error.code === 'EAI_AGAIN' ||
+                         error.code === 'ENOTFOUND' ||
+                         error.message?.includes('EAI_AGAIN') ||
+                         error.message?.includes('getaddrinfo');
+
+      if (isDnsError) {
+        throw error;
+      }
+
+      // Only retry transient connection errors
+      const isRetryable = error.code === 'ECONNREFUSED' ||
+                          error.code === 'ETIMEDOUT';
 
       if (isRetryable && attempt < maxRetries - 1) {
         const delay = initialDelay * Math.pow(2, attempt);
