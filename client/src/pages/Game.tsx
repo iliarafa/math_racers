@@ -310,9 +310,8 @@ export default function Game() {
       const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
       const speed: 'fast' | 'normal' | 'slow' = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
       
-      // Purple retention thresholds (stricter than regular fast)
-      // Easy: < 2s, Medium: < 2.5s, Hard: < 3s
-      const purpleThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 2500 : 3000;
+      // Purple retention threshold: 2 seconds for all levels
+      const purpleThreshold = 2000;
       const isPurpleFast = responseTime < purpleThreshold;
       
       // Purple mode logic:
