@@ -42,7 +42,7 @@ export default function Welcome() {
             <img 
               src={Gemini_Generated_Image_8kjyrj8kjyrj8kjy} 
               alt="Race" 
-              className="h-[4.2rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-[5rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-start-race"
             />
           </Link>
