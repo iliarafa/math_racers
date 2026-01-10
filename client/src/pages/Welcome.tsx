@@ -1,10 +1,11 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { Play, Wrench } from "lucide-react";
 import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import taglineImage from "@assets/1Asset_5@2x_1768002946873.png";
+import raceButtonImage from "@assets/1Asset_6@2x_1768068792225.png";
+import garageButtonImage from "@assets/1Asset_4@2x_1768068802390.png";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -34,25 +35,24 @@ export default function Welcome() {
           />
         </div>
 
-        <div className="flex flex-col gap-4 w-full max-w-md">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Link href="/game" className="flex-1">
-              <button 
-                className="w-full bg-white h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all text-black hover:text-red-500"
-                data-testid="button-start-race"
-              >
-                <Play className="w-5 h-5" />
-                <span className="w-16 text-left">Race</span>
-              </button>
-            </Link>
+        <div className="flex gap-4 w-full max-w-md justify-center">
+          <Link href="/game">
+            <img 
+              src={raceButtonImage} 
+              alt="Race" 
+              className="h-16 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              data-testid="button-start-race"
+            />
+          </Link>
 
-            <Link href="/garage" className="flex-1">
-              <button className="w-full h-14 rounded-lg font-medium text-lg flex items-center justify-center gap-2 transition-all bg-white text-black hover:text-purple-500" data-testid="button-garage">
-                <Wrench className="w-5 h-5" />
-                <span className="w-16 text-left">Garage</span>
-              </button>
-            </Link>
-          </div>
+          <Link href="/garage">
+            <img 
+              src={garageButtonImage} 
+              alt="Garage" 
+              className="h-16 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              data-testid="button-garage"
+            />
+          </Link>
         </div>
 
         
