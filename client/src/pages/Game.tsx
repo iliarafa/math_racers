@@ -171,6 +171,7 @@ export default function Game() {
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
+  const [realismThreshold, setRealismThreshold] = useState<number | null>(null);
   const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
@@ -301,14 +302,49 @@ export default function Game() {
         playCorrectSound();
       }
       
-      // Calculate speed category based on difficulty
-      // Easy (small numbers): Fast < 2s, Slow > 4s
-      // Medium: Fast < 3s, Slow > 5s
-      // Hard (big numbers): Fast < 4s, Slow > 7s
+      // Calculate speed category based on difficulty or realism mode
       const difficulty = selectedDriver?.difficulty || 'easy';
-      const fastThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000;
-      const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
-      const speed: 'fast' | 'normal' | 'slow' = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
+      let speed: 'fast' | 'normal' | 'slow';
+      
+      if (state.simMode) {
+        // Realism mode: first 5 questions are calibration (all green)
+        // Then use fastest of first 5 as the threshold
+        const currentQuestionNumber = progress + 1; // 1-indexed
+        
+        if (currentQuestionNumber <= 5) {
+          // Calibration phase - all correct answers are "fast" (green)
+          speed = 'fast';
+          
+          // After this answer is recorded, check if we need to set threshold
+          // We'll set it after the 5th question using lapResults + this responseTime
+          if (currentQuestionNumber === 5) {
+            // Get all response times from first 4 correct answers plus this one
+            const calibrationTimes = lapResults
+              .filter(lap => lap.result === 'correct')
+              .map(lap => lap.responseTime);
+            calibrationTimes.push(responseTime);
+            
+            // Find the fastest time as the threshold
+            if (calibrationTimes.length > 0) {
+              const fastest = Math.min(...calibrationTimes);
+              setRealismThreshold(fastest);
+            }
+          }
+        } else {
+          // Post-calibration: use personal threshold
+          // <= threshold = green (fast), > threshold = yellow (slow)
+          const threshold = realismThreshold || 3000; // fallback
+          speed = responseTime <= threshold ? 'fast' : 'slow';
+        }
+      } else {
+        // Standard mode thresholds
+        // Easy (small numbers): Fast < 2s, Slow > 4s
+        // Medium: Fast < 3s, Slow > 5s
+        // Hard (big numbers): Fast < 4s, Slow > 7s
+        const fastThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000;
+        const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
+        speed = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
+      }
       
       // Purple retention threshold: 3 seconds for all levels
       const purpleThreshold = 3000;
@@ -318,12 +354,19 @@ export default function Game() {
       // - 5th consecutive correct answer enters purple mode
       // - Once in purple, must answer under purpleThreshold to stay purple
       // - Any answer above threshold or incorrect breaks purple mode
+      // - In realism mode, purple is disabled during calibration (first 5 questions)
       
       // Determine sector color and purple mode state BEFORE updating state
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
       let newPurpleMode = inPurpleMode;
+      const currentQuestionNumber = progress + 1;
+      const isCalibrating = state.simMode && currentQuestionNumber <= 5;
       
-      if (inPurpleMode) {
+      if (isCalibrating) {
+        // During calibration: all correct answers are green, no purple mode
+        sectorColor = 'green';
+        newPurpleMode = false;
+      } else if (inPurpleMode) {
         // Already in purple mode - must be under purple threshold to maintain
         if (isPurpleFast) {
           sectorColor = 'purple';
@@ -408,6 +451,7 @@ export default function Game() {
           penaltyTimeRef.current = 0;
           raceStartTimeRef.current = Date.now();
           setInPurpleMode(false);
+          setRealismThreshold(null);
         } else {
           finishRace(mistakes);
         }
@@ -495,6 +539,7 @@ export default function Game() {
           penaltyTimeRef.current = 0;
           raceStartTimeRef.current = Date.now();
           setInPurpleMode(false);
+          setRealismThreshold(null);
         } else {
           finishRace(newMistakes);
         }
@@ -560,6 +605,8 @@ export default function Game() {
     penaltyTimeRef.current = 0;
     raceStartTimeRef.current = null;
     setPenaltyMessage({ text: '', color: 'red' });
+    setInPurpleMode(false);
+    setRealismThreshold(null);
   };
 
   const handleMultiplayerSelect = () => {

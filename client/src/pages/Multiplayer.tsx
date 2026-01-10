@@ -91,10 +91,12 @@ export default function Multiplayer() {
   const [countdownValue, setCountdownValue] = useState(5);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
+  const [realismThreshold, setRealismThreshold] = useState<number | null>(null);
   const [lapResults, setLapResults] = useState<Array<{
     result: 'correct' | 'incorrect';
     speed: 'fast' | 'normal' | 'slow';
     sectorColor: 'green' | 'purple' | 'yellow' | 'red';
+    responseTime: number;
   }>>([]);
   const [raceResult, setRaceResult] = useState<{
     winnerId: string;
@@ -164,6 +166,7 @@ export default function Multiplayer() {
         // Reset lap results and purple mode for new race
         setLapResults([]);
         setInPurpleMode(false);
+        setRealismThreshold(null);
         setProgress(0);
         setMistakes(0);
         setOpponentProgress(0);
@@ -335,11 +338,38 @@ export default function Multiplayer() {
     
     // Calculate response time
     const responseTime = Date.now() - questionStartTimeRef.current;
-    // Speed thresholds based on difficulty
     const difficulty = selectedDriver?.difficulty || 'easy';
-    const fastThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000;
-    const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
-    const speed: 'fast' | 'normal' | 'slow' = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
+    let speed: 'fast' | 'normal' | 'slow';
+    
+    if (state.simMode) {
+      // Realism mode: first 5 questions are calibration (all green)
+      const currentQuestionNumber = progress + 1;
+      
+      if (currentQuestionNumber <= 5) {
+        speed = 'fast';
+        
+        if (currentQuestionNumber === 5) {
+          // Get all response times from first 4 correct answers plus this one
+          const calibrationTimes = lapResults
+            .filter(lap => lap.result === 'correct')
+            .map(lap => lap.responseTime);
+          calibrationTimes.push(responseTime);
+          
+          // Find the fastest time as the threshold
+          if (calibrationTimes.length > 0) {
+            const fastest = Math.min(...calibrationTimes);
+            setRealismThreshold(fastest);
+          }
+        }
+      } else {
+        const threshold = realismThreshold || 3000;
+        speed = responseTime <= threshold ? 'fast' : 'slow';
+      }
+    } else {
+      const fastThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000;
+      const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
+      speed = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
+    }
     
     // Purple retention threshold: 3 seconds for all levels
     const purpleThreshold = 3000;
@@ -349,10 +379,17 @@ export default function Multiplayer() {
       setFeedback("correct");
       
       // Determine sector color and purple mode state
+      // In realism mode, purple is disabled during calibration (first 5 questions)
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
       let newPurpleMode = inPurpleMode;
+      const currentQuestionNum = progress + 1;
+      const isCalibrating = state.simMode && currentQuestionNum <= 5;
       
-      if (inPurpleMode) {
+      if (isCalibrating) {
+        // During calibration: all correct answers are green, no purple mode
+        sectorColor = 'green';
+        newPurpleMode = false;
+      } else if (inPurpleMode) {
         // Already in purple mode - must be under purple threshold to maintain
         if (isPurpleFast) {
           sectorColor = 'purple';
@@ -402,7 +439,7 @@ export default function Multiplayer() {
       }
       
       setInPurpleMode(newPurpleMode);
-      setLapResults(prev => [...prev, { result: 'correct', speed, sectorColor }]);
+      setLapResults(prev => [...prev, { result: 'correct', speed, sectorColor, responseTime }]);
       
       const newProgress = progress + 1;
       setProgress(newProgress);
@@ -444,7 +481,7 @@ export default function Multiplayer() {
       
       // Break purple mode on incorrect answer
       setInPurpleMode(false);
-      setLapResults(prev => [...prev, { result: 'incorrect', speed: 'normal', sectorColor: 'red' }]);
+      setLapResults(prev => [...prev, { result: 'incorrect', speed: 'normal', sectorColor: 'red', responseTime }]);
       
       const newProgress = progress + 1;
       setProgress(newProgress);
@@ -497,6 +534,7 @@ export default function Multiplayer() {
     setIsHost(false);
     setLapResults([]);
     setInPurpleMode(false);
+    setRealismThreshold(null);
     setLocation("/");
   };
   
