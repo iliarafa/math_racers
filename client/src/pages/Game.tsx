@@ -310,64 +310,62 @@ export default function Game() {
       const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
       const speed: 'fast' | 'normal' | 'slow' = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
       
+      // Purple retention thresholds (stricter than regular fast)
+      // Easy: < 2s, Medium: < 2.5s, Hard: < 3s
+      const purpleThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 2500 : 3000;
+      const isPurpleFast = responseTime < purpleThreshold;
+      
       // Purple mode logic:
-      // - Need 4 consecutive correct to build streak
-      // - 5th consecutive correct answer (if not slow, i.e. <2s) becomes first purple
-      // - Once in purple, must answer fast (<1.7s) to stay in purple
-      // - Any slow (>=1.7s) or incorrect answer breaks purple mode
+      // - 5th consecutive correct answer enters purple mode
+      // - Once in purple, must answer under purpleThreshold to stay purple
+      // - Any answer above threshold or incorrect breaks purple mode
       
       // Determine sector color and purple mode state BEFORE updating state
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
       let newPurpleMode = inPurpleMode;
       
       if (inPurpleMode) {
-        // Already in purple mode - must be fast (<1s) to maintain it
-        if (speed === 'fast') {
+        // Already in purple mode - must be under purple threshold to maintain
+        if (isPurpleFast) {
           sectorColor = 'purple';
           // Stay in purple mode
         } else {
-          // Not fast breaks purple mode
+          // Too slow breaks purple mode
           sectorColor = speed === 'slow' ? 'yellow' : 'green';
           newPurpleMode = false;
         }
       } else {
         // Not in purple mode - check if we should enter
-        // Count consecutive correct answers from recent history
+        // Count consecutive correct answers AFTER losing purple
+        // Skip both the last purple lap AND the breaking lap
         let consecutiveCorrect = 0;
-        let purpleWasActive = false;
+        let lastPurpleIndex = -1;
         
-        for (let j = 0; j < lapResults.length; j++) {
-          const lap = lapResults[j];
-          if (lap.result === 'correct') {
-            if (purpleWasActive) {
-              // Was in purple - must be fast to maintain
-              if (lap.speed !== 'fast') {
-                // Not fast breaks purple, streak resets completely
-                // The breaking lap does NOT count toward next streak
-                consecutiveCorrect = 0;
-                purpleWasActive = false;
-              }
-              // If fast, stay in purple (consecutiveCorrect doesn't matter while in purple)
-            } else {
-              consecutiveCorrect++;
-              // 5th consecutive + not slow = enter purple
-              if (consecutiveCorrect >= 5 && lap.speed !== 'slow') {
-                purpleWasActive = true;
-              }
-            }
-          } else {
-            consecutiveCorrect = 0;
-            purpleWasActive = false;
+        // Find the last purple lap
+        for (let j = lapResults.length - 1; j >= 0; j--) {
+          if (lapResults[j].sectorColor === 'purple') {
+            lastPurpleIndex = j;
+            break;
           }
         }
         
-        // Include this answer
-        if (!purpleWasActive) {
-          consecutiveCorrect++;
+        // Count consecutive correct AFTER the breaking lap
+        // If never had purple (lastPurpleIndex = -1), count from start
+        // If had purple, skip the purple lap AND the lap that broke it
+        const startIndex = lastPurpleIndex === -1 ? 0 : lastPurpleIndex + 2;
+        for (let j = startIndex; j < lapResults.length; j++) {
+          if (lapResults[j].result === 'correct') {
+            consecutiveCorrect++;
+          } else {
+            consecutiveCorrect = 0;
+          }
         }
         
-        // Enter purple mode: 5th consecutive + not slow (under 2s)
-        if (consecutiveCorrect >= 5 && speed !== 'slow') {
+        // Include this answer (it's correct since we're in this branch)
+        consecutiveCorrect++;
+        
+        // Enter purple mode on 5th consecutive correct
+        if (consecutiveCorrect >= 5) {
           newPurpleMode = true;
           sectorColor = 'purple';
         } else if (speed === 'slow') {

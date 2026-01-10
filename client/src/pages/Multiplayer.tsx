@@ -341,6 +341,11 @@ export default function Multiplayer() {
     const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
     const speed: 'fast' | 'normal' | 'slow' = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
     
+    // Purple retention thresholds (stricter than regular fast)
+    // Easy: < 2s, Medium: < 2.5s, Hard: < 3s
+    const purpleThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 2500 : 3000;
+    const isPurpleFast = responseTime < purpleThreshold;
+    
     if (val === currentQuestion.answer) {
       setFeedback("correct");
       
@@ -349,8 +354,8 @@ export default function Multiplayer() {
       let newPurpleMode = inPurpleMode;
       
       if (inPurpleMode) {
-        // Already in purple mode - must be fast (<1.7s) to maintain it
-        if (speed === 'fast') {
+        // Already in purple mode - must be under purple threshold to maintain
+        if (isPurpleFast) {
           sectorColor = 'purple';
         } else {
           sectorColor = speed === 'slow' ? 'yellow' : 'green';
@@ -358,33 +363,36 @@ export default function Multiplayer() {
         }
       } else {
         // Not in purple mode - check if we should enter
+        // Count consecutive correct answers AFTER losing purple
+        // Skip both the last purple lap AND the breaking lap
         let consecutiveCorrect = 0;
-        let purpleWasActive = false;
+        let lastPurpleIndex = -1;
         
-        for (const lap of lapResults) {
-          if (lap.result === 'correct') {
-            if (purpleWasActive) {
-              if (lap.speed !== 'fast') {
-                consecutiveCorrect = 0;
-                purpleWasActive = false;
-              }
-            } else {
-              consecutiveCorrect++;
-              if (consecutiveCorrect >= 5 && lap.speed !== 'slow') {
-                purpleWasActive = true;
-              }
-            }
-          } else {
-            consecutiveCorrect = 0;
-            purpleWasActive = false;
+        // Find the last purple lap
+        for (let j = lapResults.length - 1; j >= 0; j--) {
+          if (lapResults[j].sectorColor === 'purple') {
+            lastPurpleIndex = j;
+            break;
           }
         }
         
-        if (!purpleWasActive) {
-          consecutiveCorrect++;
+        // Count consecutive correct AFTER the breaking lap
+        // If never had purple (lastPurpleIndex = -1), count from start
+        // If had purple, skip the purple lap AND the lap that broke it
+        const startIndex = lastPurpleIndex === -1 ? 0 : lastPurpleIndex + 2;
+        for (let j = startIndex; j < lapResults.length; j++) {
+          if (lapResults[j].result === 'correct') {
+            consecutiveCorrect++;
+          } else {
+            consecutiveCorrect = 0;
+          }
         }
         
-        if (consecutiveCorrect >= 5 && speed !== 'slow') {
+        // Include this answer
+        consecutiveCorrect++;
+        
+        // Enter purple mode on 5th consecutive correct
+        if (consecutiveCorrect >= 5) {
           newPurpleMode = true;
           sectorColor = 'purple';
         } else if (speed === 'slow') {
