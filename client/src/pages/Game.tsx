@@ -262,13 +262,13 @@ export default function Game() {
       }
       
       // Calculate speed category
-      const speed: 'fast' | 'normal' | 'slow' = responseTime < 1500 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
+      const speed: 'fast' | 'normal' | 'slow' = responseTime < 1700 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
       
       // Purple mode logic:
       // - Need 4 consecutive correct to build streak
       // - 5th consecutive correct answer (if not slow, i.e. <2s) becomes first purple
-      // - Once in purple, must answer fast (<1.5s) to stay in purple
-      // - Any slow (>=1.5s) or incorrect answer breaks purple mode
+      // - Once in purple, must answer fast (<1.7s) to stay in purple
+      // - Any slow (>=1.7s) or incorrect answer breaks purple mode
       
       // Determine sector color and purple mode state BEFORE updating state
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
