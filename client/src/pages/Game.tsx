@@ -1138,7 +1138,7 @@ export default function Game() {
         </div>
 
         {/* Large Keypad */}
-        <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0 pb-4">
+        <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0 pb-16 sm:pb-4">
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
