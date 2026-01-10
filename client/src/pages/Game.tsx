@@ -564,10 +564,13 @@ export default function Game() {
             </button>
             <button
               onClick={() => setRaceMode('multiplayer')}
-              className="px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-white bg-[#15631a]"
+              className={cn(
+                "px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
+                raceMode === 'multiplayer' ? "bg-[#15631a] text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              )}
               data-testid="button-multiplayer-mode"
             >
-              <CheckeredFlag className="w-4 h-4" />
+              <CheckeredFlag className="w-4 h-4 text-black" />
               1v1
             </button>
           </div>
@@ -596,7 +599,7 @@ export default function Game() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
               <div className="text-center">
-                <CheckeredFlag className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+                <CheckeredFlag className="w-16 h-16 text-black mx-auto mb-4" />
                 <h2 className="text-2xl font-bold mb-2">1v1 Race</h2>
                 <p className="text-muted-foreground">Race head-to-head against a friend!</p>
               </div>
