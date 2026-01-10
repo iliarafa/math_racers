@@ -578,7 +578,7 @@ export default function Game() {
           {raceMode === 'solo' ? (
             <>
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-1">Choose Your Level</h2>
+                <h2 className="text-2xl font-bold mb-1">Choose Level</h2>
               </div>
               
               <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
