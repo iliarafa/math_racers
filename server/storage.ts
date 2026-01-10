@@ -1,5 +1,4 @@
 import { type User, type InsertUser, type MultiplayerRoom, type InsertRoom, multiplayerRooms } from "@shared/schema";
-import { db, withRetry } from "./db";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -11,9 +10,91 @@ export interface IStorage {
   getRoomByCode(code: string): Promise<MultiplayerRoom | undefined>;
   updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined>;
   deleteRoom(roomCode: string): Promise<void>;
+  getStorageType(): string;
 }
 
+// In-memory storage for LAN play (no database required)
+export class MemoryStorage implements IStorage {
+  private rooms = new Map<string, MultiplayerRoom>();
+  private users = new Map<string, User>();
+
+  getStorageType(): string {
+    return "memory";
+  }
+
+  async getUser(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.username === username);
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = randomUUID();
+    const user = { ...insertUser, id };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async createRoom(room: InsertRoom): Promise<MultiplayerRoom> {
+    const newRoom: MultiplayerRoom = {
+      id: randomUUID(),
+      roomCode: room.roomCode,
+      hostId: room.hostId,
+      hostName: room.hostName,
+      guestId: null,
+      guestName: null,
+      circuitId: room.circuitId,
+      driverId: room.driverId,
+      status: "waiting",
+      questions: null,
+      hostProgress: 0,
+      guestProgress: 0,
+      hostMistakes: 0,
+      guestMistakes: 0,
+      hostFinishTime: null,
+      guestFinishTime: null,
+      winnerId: null,
+      createdAt: new Date(),
+    };
+    this.rooms.set(room.roomCode, newRoom);
+    return newRoom;
+  }
+
+  async getRoomByCode(code: string): Promise<MultiplayerRoom | undefined> {
+    return this.rooms.get(code);
+  }
+
+  async updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined> {
+    const room = this.rooms.get(roomCode);
+    if (!room) return undefined;
+    const updated = { ...room, ...updates };
+    this.rooms.set(roomCode, updated);
+    return updated;
+  }
+
+  async deleteRoom(roomCode: string): Promise<void> {
+    this.rooms.delete(roomCode);
+  }
+}
+
+// Database storage for internet play (requires DATABASE_URL)
 export class DatabaseStorage implements IStorage {
+  private db: any;
+  private withRetry: any;
+
+  constructor() {
+    // Lazy load database module
+    const dbModule = require("./db");
+    this.db = dbModule.db;
+    this.withRetry = dbModule.withRetry;
+  }
+
+  getStorageType(): string {
+    return "database";
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     return undefined;
   }
@@ -28,22 +109,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRoom(room: InsertRoom): Promise<MultiplayerRoom> {
-    return withRetry(async () => {
-      const [newRoom] = await db.insert(multiplayerRooms).values(room).returning();
+    return this.withRetry(async () => {
+      const [newRoom] = await this.db.insert(multiplayerRooms).values(room).returning();
       return newRoom;
     });
   }
 
   async getRoomByCode(code: string): Promise<MultiplayerRoom | undefined> {
-    return withRetry(async () => {
-      const [room] = await db.select().from(multiplayerRooms).where(eq(multiplayerRooms.roomCode, code));
+    return this.withRetry(async () => {
+      const [room] = await this.db.select().from(multiplayerRooms).where(eq(multiplayerRooms.roomCode, code));
       return room;
     });
   }
 
   async updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined> {
-    return withRetry(async () => {
-      const [updated] = await db.update(multiplayerRooms)
+    return this.withRetry(async () => {
+      const [updated] = await this.db.update(multiplayerRooms)
         .set(updates)
         .where(eq(multiplayerRooms.roomCode, roomCode))
         .returning();
@@ -52,10 +133,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteRoom(roomCode: string): Promise<void> {
-    return withRetry(async () => {
-      await db.delete(multiplayerRooms).where(eq(multiplayerRooms.roomCode, roomCode));
+    return this.withRetry(async () => {
+      await this.db.delete(multiplayerRooms).where(eq(multiplayerRooms.roomCode, roomCode));
     });
   }
 }
 
-export const storage = new DatabaseStorage();
+// Automatically select storage based on DATABASE_URL availability
+function createStorage(): IStorage {
+  if (!process.env.DATABASE_URL) {
+    console.log("📡 No DATABASE_URL found - using in-memory storage (LAN mode)");
+    return new MemoryStorage();
+  }
+
+  try {
+    const storage = new DatabaseStorage();
+    console.log("🌐 DATABASE_URL found - using database storage (Internet mode)");
+    return storage;
+  } catch (error) {
+    console.log("⚠️ Database unavailable - falling back to in-memory storage (LAN mode)");
+    return new MemoryStorage();
+  }
+}
+
+export const storage = createStorage();
