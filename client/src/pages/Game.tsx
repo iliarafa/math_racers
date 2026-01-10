@@ -632,7 +632,7 @@ export default function Game() {
       <GameLayout coins={state.coins} trackName="Select Circuit">
         <div className="flex-1 flex flex-col py-6 px-4">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-1">Choose Your Circuit</h2>
+            <h2 className="text-2xl font-bold mb-1">Choose Circuit</h2>
             <p className="text-muted-foreground">Each track tests a different math skill</p>
           </div>
 
