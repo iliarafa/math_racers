@@ -548,10 +548,7 @@ export default function Game() {
             </button>
             <button
               onClick={() => setRaceMode('multiplayer')}
-              className={cn(
-                "px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
-                raceMode === 'multiplayer' ? "bg-blue-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-              )}
+              className="px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 text-white bg-[#15631a]"
               data-testid="button-multiplayer-mode"
             >
               <Users className="w-4 h-4" />
