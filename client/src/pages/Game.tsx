@@ -1013,9 +1013,9 @@ export default function Game() {
         </div>
 
         {/* Main content - compact header zone */}
-        <div className="flex flex-col items-center px-4 pt-1">
+        <div className="flex flex-col items-center px-4 pt-0">
           {/* Track Limits Warning */}
-          <div className="h-5 flex items-center justify-center">
+          <div className="h-4 flex items-center justify-center">
             <AnimatePresence>
               {showPenalty && (
                 <motion.div
@@ -1036,20 +1036,20 @@ export default function Game() {
           </div>
 
           {/* Timer on top */}
-          <div className="flex items-center gap-2 text-xl font-mono font-medium text-primary mt-1">
-            <Timer className="w-5 h-5" />
+          <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
+            <Timer className="w-4 h-4 sm:w-5 sm:h-5" />
             {formatTime(elapsedTime)}
           </div>
           
           {/* Expression below timer */}
-          <div className="text-5xl sm:text-6xl font-bold tracking-tight mt-3">
+          <div className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-2">
             {question?.display}
           </div>
           
           {/* Answer display below expression */}
           <div
             className={cn(
-              "text-5xl sm:text-6xl font-bold min-w-[80px] text-center mt-3",
+              "text-4xl sm:text-5xl md:text-6xl font-bold min-w-[80px] text-center mt-2",
               feedback === 'idle' && "text-muted-foreground/50",
               feedback === 'correct' && "text-green-600",
               feedback === 'incorrect' && "text-red-600"
@@ -1060,7 +1060,7 @@ export default function Game() {
           </div>
 
           {/* Minimal Feedback */}
-          <div className="h-5 flex items-center justify-center">
+          <div className="h-4 flex items-center justify-center">
             <AnimatePresence mode="wait">
               {feedback === 'correct' && (
                 <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-1 text-xs">
@@ -1138,15 +1138,15 @@ export default function Game() {
         </div>
 
         {/* Large Keypad */}
-        <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0">
-          <div className="grid grid-cols-3 gap-2 w-full max-w-md">
+        <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0 pb-4">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
                 key={num}
                 type="button"
                 onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
                 disabled={isPaused}
-                className="h-[72px] sm:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-3xl sm:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
                 data-testid={`keypad-${num}`}
               >
                 {num}
@@ -1156,16 +1156,16 @@ export default function Game() {
               type="button"
               onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
               disabled={isPaused}
-              className="h-[72px] sm:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
+              className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
               data-testid="keypad-delete"
             >
-              <Delete className="w-8 h-8" />
+              <Delete className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
             <button
               type="button"
               onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
               disabled={isPaused}
-              className="h-[72px] sm:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-3xl sm:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+              className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
               data-testid="keypad-0"
             >
               0
@@ -1175,14 +1175,14 @@ export default function Game() {
               onClick={() => handleSubmit()}
               disabled={!answer || feedback !== 'idle' || isPaused}
               className={cn(
-                "h-[72px] sm:h-[84px] rounded-xl text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center",
                 answer && feedback === 'idle' && !isPaused
                   ? "bg-green-600 text-white hover:bg-green-500"
                   : "bg-muted text-muted-foreground"
               )}
               data-testid="keypad-submit"
             >
-              <Check className="w-8 h-8" />
+              <Check className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
           </div>
         </div>
