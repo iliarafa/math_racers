@@ -37,12 +37,12 @@ export default function Welcome() {
           />
         </div>
 
-        <div className="flex gap-4 w-full max-w-md justify-center">
+        <div className="flex gap-8 w-full max-w-md justify-center items-center">
           <Link href="/game">
             <img 
               src={Gemini_Generated_Image_8kjyrj8kjyrj8kjy} 
               alt="Race" 
-              className="h-16 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-14 w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-start-race"
             />
           </Link>
@@ -51,7 +51,7 @@ export default function Welcome() {
             <img 
               src={garageButtonImage} 
               alt="Garage" 
-              className="h-16 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-14 w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-garage"
             />
           </Link>
