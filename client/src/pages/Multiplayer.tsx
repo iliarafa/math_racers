@@ -184,7 +184,7 @@ export default function Multiplayer() {
       
       if (!response.ok) {
         const data = await response.json();
-        setError(data.error || "Failed to create room");
+        setError(data.details || data.error || "Failed to create room");
         return;
       }
       

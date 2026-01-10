@@ -56,7 +56,8 @@ export async function registerRoutes(
       res.json({ roomCode, room });
     } catch (error) {
       console.error("Error creating room:", error);
-      res.status(500).json({ error: "Failed to create room" });
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      res.status(500).json({ error: "Failed to create room", details: errorMessage });
     }
   });
 
