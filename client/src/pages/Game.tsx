@@ -100,6 +100,28 @@ const playCorrectSound = () => {
   }
 };
 
+const playKeypadClick = () => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.frequency.value = 600;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.04);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.04);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
 const playIncorrectSound = () => {
   try {
     const ctx = getAudioContext();
@@ -1216,7 +1238,7 @@ export default function Game() {
               <button
                 key={num}
                 type="button"
-                onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + num.toString())}
+                onClick={() => { if (!isPaused && feedback === 'idle') { playKeypadClick(); setAnswer(prev => prev + num.toString()); } }}
                 disabled={isPaused}
                 className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
                 data-testid={`keypad-${num}`}
@@ -1226,7 +1248,7 @@ export default function Game() {
             ))}
             <button
               type="button"
-              onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev.slice(0, -1))}
+              onClick={() => { if (!isPaused && feedback === 'idle') { playKeypadClick(); setAnswer(prev => prev.slice(0, -1)); } }}
               disabled={isPaused}
               className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
               data-testid="keypad-delete"
@@ -1235,7 +1257,7 @@ export default function Game() {
             </button>
             <button
               type="button"
-              onClick={() => !isPaused && feedback === 'idle' && setAnswer(prev => prev + '0')}
+              onClick={() => { if (!isPaused && feedback === 'idle') { playKeypadClick(); setAnswer(prev => prev + '0'); } }}
               disabled={isPaused}
               className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
               data-testid="keypad-0"

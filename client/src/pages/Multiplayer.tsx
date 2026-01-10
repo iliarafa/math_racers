@@ -23,6 +23,40 @@ const CheckeredFlag = ({ className }: { className?: string }) => (
   </svg>
 );
 
+let audioContext: AudioContext | null = null;
+
+const getAudioContext = (): AudioContext => {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  return audioContext;
+};
+
+const playKeypadClick = () => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    oscillator.frequency.value = 600;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.04);
+    
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.04);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
 type GameStatus = "lobby" | "waiting" | "countdown" | "racing" | "finished";
 
 export default function Multiplayer() {
@@ -742,7 +776,7 @@ export default function Multiplayer() {
                 <button
                   key={num}
                   type="button"
-                  onClick={() => feedback === "idle" && setAnswer(prev => prev + num.toString())}
+                  onClick={() => { if (feedback === "idle") { playKeypadClick(); setAnswer(prev => prev + num.toString()); } }}
                   className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
                 >
                   {num}
@@ -750,14 +784,14 @@ export default function Multiplayer() {
               ))}
               <button
                 type="button"
-                onClick={() => feedback === "idle" && setAnswer(prev => prev.slice(0, -1))}
+                onClick={() => { if (feedback === "idle") { playKeypadClick(); setAnswer(prev => prev.slice(0, -1)); } }}
                 className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center"
               >
                 <Delete className="w-6 h-6 sm:w-8 sm:h-8" />
               </button>
               <button
                 type="button"
-                onClick={() => feedback === "idle" && setAnswer(prev => prev + "0")}
+                onClick={() => { if (feedback === "idle") { playKeypadClick(); setAnswer(prev => prev + "0"); } }}
                 className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
               >
                 0
