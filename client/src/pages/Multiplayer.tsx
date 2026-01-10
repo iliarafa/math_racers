@@ -56,6 +56,12 @@ export default function Multiplayer() {
   const [opponentMistakes, setOpponentMistakes] = useState(0);
   const [countdownValue, setCountdownValue] = useState(5);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [inPurpleMode, setInPurpleMode] = useState(false);
+  const [lapResults, setLapResults] = useState<Array<{
+    result: 'correct' | 'incorrect';
+    speed: 'fast' | 'normal' | 'slow';
+    sectorColor: 'green' | 'purple' | 'yellow' | 'red';
+  }>>([]);
   const [raceResult, setRaceResult] = useState<{
     winnerId: string;
     hostFinishTime: number;
@@ -68,6 +74,7 @@ export default function Multiplayer() {
   const playerIdRef = useRef<string>(Math.random().toString(36).substring(7));
   const raceStartTimeRef = useRef<number | null>(null);
   const questionStartTimeRef = useRef<number>(Date.now());
+  const isHostRef = useRef<boolean>(false);
   
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : 20;
   
@@ -120,9 +127,18 @@ export default function Multiplayer() {
         setGameStatus("racing");
         raceStartTimeRef.current = Date.now();
         questionStartTimeRef.current = Date.now();
+        // Reset lap results and purple mode for new race
+        setLapResults([]);
+        setInPurpleMode(false);
+        setProgress(0);
+        setMistakes(0);
+        setOpponentProgress(0);
+        setOpponentMistakes(0);
+        setCurrentQuestionIndex(0);
         break;
       case "opponent_progress":
-        if (isHost) {
+        // Use ref to avoid stale closure issue
+        if (isHostRef.current) {
           setOpponentProgress(message.guestProgress);
           setOpponentMistakes(message.guestMistakes);
         } else {
@@ -208,6 +224,7 @@ export default function Multiplayer() {
       setRoomCode(data.roomCode);
       setQuestions(tempQuestions);
       setIsHost(true);
+      isHostRef.current = true;
       setGameStatus("waiting");
       connectWebSocket(data.roomCode, true);
     } catch (err) {
@@ -250,6 +267,7 @@ export default function Multiplayer() {
         setQuestions(data.room.questions.map((q: any) => ({ display: q.display, answer: q.answer })));
       }
       setIsHost(false);
+      isHostRef.current = false;
       setGameStatus("waiting");
       connectWebSocket(joinCode.toUpperCase(), false);
     } catch (err) {
@@ -281,8 +299,66 @@ export default function Multiplayer() {
     const currentQuestion = questions[currentQuestionIndex];
     if (!currentQuestion) return;
     
+    // Calculate response time
+    const responseTime = Date.now() - questionStartTimeRef.current;
+    const speed: 'fast' | 'normal' | 'slow' = responseTime < 1700 ? 'fast' : responseTime > 2000 ? 'slow' : 'normal';
+    
     if (val === currentQuestion.answer) {
       setFeedback("correct");
+      
+      // Determine sector color and purple mode state
+      let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
+      let newPurpleMode = inPurpleMode;
+      
+      if (inPurpleMode) {
+        // Already in purple mode - must be fast (<1.7s) to maintain it
+        if (speed === 'fast') {
+          sectorColor = 'purple';
+        } else {
+          sectorColor = speed === 'slow' ? 'yellow' : 'green';
+          newPurpleMode = false;
+        }
+      } else {
+        // Not in purple mode - check if we should enter
+        let consecutiveCorrect = 0;
+        let purpleWasActive = false;
+        
+        for (const lap of lapResults) {
+          if (lap.result === 'correct') {
+            if (purpleWasActive) {
+              if (lap.speed !== 'fast') {
+                consecutiveCorrect = 0;
+                purpleWasActive = false;
+              }
+            } else {
+              consecutiveCorrect++;
+              if (consecutiveCorrect >= 5 && lap.speed !== 'slow') {
+                purpleWasActive = true;
+              }
+            }
+          } else {
+            consecutiveCorrect = 0;
+            purpleWasActive = false;
+          }
+        }
+        
+        if (!purpleWasActive) {
+          consecutiveCorrect++;
+        }
+        
+        if (consecutiveCorrect >= 5 && speed !== 'slow') {
+          newPurpleMode = true;
+          sectorColor = 'purple';
+        } else if (speed === 'slow') {
+          sectorColor = 'yellow';
+        } else {
+          sectorColor = 'green';
+        }
+      }
+      
+      setInPurpleMode(newPurpleMode);
+      setLapResults(prev => [...prev, { result: 'correct', speed, sectorColor }]);
+      
       const newProgress = progress + 1;
       setProgress(newProgress);
       
@@ -320,6 +396,10 @@ export default function Multiplayer() {
       setFeedback("incorrect");
       const newMistakes = mistakes + 1;
       setMistakes(newMistakes);
+      
+      // Break purple mode on incorrect answer
+      setInPurpleMode(false);
+      setLapResults(prev => [...prev, { result: 'incorrect', speed: 'normal', sectorColor: 'red' }]);
       
       const newProgress = progress + 1;
       setProgress(newProgress);
@@ -367,6 +447,11 @@ export default function Multiplayer() {
     if (wsRef.current) {
       wsRef.current.close();
     }
+    // Reset all state when leaving
+    isHostRef.current = false;
+    setIsHost(false);
+    setLapResults([]);
+    setInPurpleMode(false);
     setLocation("/");
   };
   
@@ -605,18 +690,32 @@ export default function Multiplayer() {
 
           {/* Dual Progress Bars */}
           <div className="flex-1 flex flex-col justify-center px-4 gap-2">
-            {/* Your progress */}
+            {/* Your progress - colored segments */}
             <div>
               <div className="flex justify-between text-[10px] text-muted-foreground mb-0.5 px-1">
-                <span className="font-medium text-primary">You</span>
+                <span className={cn("font-medium", inPurpleMode ? "text-purple-500" : "text-primary")}>
+                  You {inPurpleMode && "🔥"}
+                </span>
                 <span>Lap {progress}/{raceLength}</span>
               </div>
-              <div className="relative h-4 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className="absolute inset-y-0 left-0 bg-primary rounded-full"
-                  animate={{ width: `${(progress / raceLength) * 100}%` }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
+              <div className="relative h-4 bg-muted rounded-full overflow-hidden flex">
+                {lapResults.map((lap, index) => {
+                  const segmentWidth = 100 / raceLength;
+                  const colorClass = 
+                    lap.sectorColor === 'purple' ? 'bg-purple-500' :
+                    lap.sectorColor === 'green' ? 'bg-green-500' :
+                    lap.sectorColor === 'yellow' ? 'bg-yellow-500' :
+                    'bg-red-500';
+                  return (
+                    <motion.div
+                      key={index}
+                      className={cn("h-full", colorClass)}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${segmentWidth}%` }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  );
+                })}
               </div>
             </div>
             

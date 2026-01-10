@@ -1,6 +1,7 @@
 import { type User, type InsertUser, type MultiplayerRoom, type InsertRoom, multiplayerRooms } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { db, withRetry } from "./db";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -81,16 +82,6 @@ export class MemoryStorage implements IStorage {
 
 // Database storage for internet play (requires DATABASE_URL)
 export class DatabaseStorage implements IStorage {
-  private db: any;
-  private withRetry: any;
-
-  constructor() {
-    // Lazy load database module
-    const dbModule = require("./db");
-    this.db = dbModule.db;
-    this.withRetry = dbModule.withRetry;
-  }
-
   getStorageType(): string {
     return "database";
   }
@@ -109,22 +100,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRoom(room: InsertRoom): Promise<MultiplayerRoom> {
-    return this.withRetry(async () => {
-      const [newRoom] = await this.db.insert(multiplayerRooms).values(room).returning();
+    return withRetry(async () => {
+      const [newRoom] = await db.insert(multiplayerRooms).values(room).returning();
       return newRoom;
     });
   }
 
   async getRoomByCode(code: string): Promise<MultiplayerRoom | undefined> {
-    return this.withRetry(async () => {
-      const [room] = await this.db.select().from(multiplayerRooms).where(eq(multiplayerRooms.roomCode, code));
+    return withRetry(async () => {
+      const [room] = await db.select().from(multiplayerRooms).where(eq(multiplayerRooms.roomCode, code));
       return room;
     });
   }
 
   async updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined> {
-    return this.withRetry(async () => {
-      const [updated] = await this.db.update(multiplayerRooms)
+    return withRetry(async () => {
+      const [updated] = await db.update(multiplayerRooms)
         .set(updates)
         .where(eq(multiplayerRooms.roomCode, roomCode))
         .returning();
@@ -133,8 +124,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteRoom(roomCode: string): Promise<void> {
-    return this.withRetry(async () => {
-      await this.db.delete(multiplayerRooms).where(eq(multiplayerRooms.roomCode, roomCode));
+    return withRetry(async () => {
+      await db.delete(multiplayerRooms).where(eq(multiplayerRooms.roomCode, roomCode));
     });
   }
 }
