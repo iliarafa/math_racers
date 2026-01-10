@@ -487,8 +487,49 @@ export default function Game() {
         setPenaltyMessage({ text: 'TRY AGAIN', color: 'yellow' });
         setShowPenalty(true);
         setTimeout(() => setShowPenalty(false), 1500);
+        // Clear answer but keep same question
+        setTimeout(() => {
+          setFeedback('idle');
+          setAnswer("");
+        }, 600);
+      } else if (state.simMode) {
+        // Realism mode: must answer correctly before continuing
+        // Apply penalty but don't advance question
+        setShowPenalty(true);
+        
+        // Apply time penalties same as standard mode
+        if (newMistakes === 1) {
+          setPenaltyMessage({ text: 'TRACK LIMITS - TRY AGAIN', color: 'yellow' });
+          penaltyTimeRef.current += 2000;
+          setElapsedTime(prev => prev + 2000);
+        } else if (newMistakes === 2) {
+          setPenaltyMessage({ text: 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
+          penaltyTimeRef.current += 2000;
+          setElapsedTime(prev => prev + 2000);
+        } else if (newMistakes <= 5) {
+          setPenaltyMessage({ text: '+5 SEC PENALTY - TRY AGAIN', color: 'red' });
+          penaltyTimeRef.current += 5000;
+          setElapsedTime(prev => prev + 5000);
+        } else if (newMistakes <= 10) {
+          setPenaltyMessage({ text: '+10 SEC PENALTY - TRY AGAIN', color: 'red' });
+          penaltyTimeRef.current += 10000;
+          setElapsedTime(prev => prev + 10000);
+        } else if (newMistakes >= 11) {
+          setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
+          setFinalMistakes(newMistakes);
+          setGameStatus('crashed');
+          return;
+        }
+
+        setTimeout(() => setShowPenalty(false), 1500);
+        
+        // Clear answer but keep same question - don't reset questionStartTimeRef
+        setTimeout(() => {
+          setFeedback('idle');
+          setAnswer("");
+        }, 600);
       } else {
-        // Race mode: apply penalties
+        // Standard race mode: apply penalties and advance
         setShowPenalty(true);
 
         if (newMistakes === 1) {
@@ -515,41 +556,29 @@ export default function Game() {
         }
 
         setTimeout(() => setShowPenalty(false), 1500);
-      }
 
-      const newProgress = progress + 1;
-      setProgress(newProgress);
-      setLapResults(prev => [...prev, { 
-        result: 'incorrect', 
-        speed: 'normal',
-        question: question.display,
-        playerAnswer: val,
-        correctAnswer: question.answer,
-        sectorColor: 'red',
-        responseTime
-      }]);
+        const newProgress = progress + 1;
+        setProgress(newProgress);
+        setLapResults(prev => [...prev, { 
+          result: 'incorrect', 
+          speed: 'normal',
+          question: question.display,
+          playerAnswer: val,
+          correctAnswer: question.answer,
+          sectorColor: 'red',
+          responseTime
+        }]);
 
-      if (newProgress >= raceLength) {
-        if (isPracticeMode) {
-          // In practice mode, reset and continue
-          setProgress(0);
-          setLapResults([]);
-          setMistakes(0);
-          setElapsedTime(0);
-          penaltyTimeRef.current = 0;
-          raceStartTimeRef.current = Date.now();
-          setInPurpleMode(false);
-          setRealismThreshold(null);
-        } else {
+        if (newProgress >= raceLength) {
           finishRace(newMistakes);
+        } else {
+          setTimeout(() => {
+            setFeedback('idle');
+            setAnswer("");
+            setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy'));
+            questionStartTimeRef.current = Date.now();
+          }, 800);
         }
-      } else {
-        setTimeout(() => {
-          setFeedback('idle');
-          setAnswer("");
-          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy'));
-          questionStartTimeRef.current = Date.now();
-        }, isPracticeMode ? 600 : 800);
       }
     }
   };

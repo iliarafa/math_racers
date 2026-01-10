@@ -86,6 +86,9 @@ shared/           # Shared types and schemas
 - **Winner Logic**: Fewer mistakes wins; if tied, faster time wins
 - **Server Validation**: Sequential progress validation, prevents premature/fraudulent completion
 - **Database**: Rooms stored in PostgreSQL with questions, players, and status
+- **Realism Mode Multiplayer**: Uses mistake_update message type for retry-without-progress syncing
+- **Crash Handling**: At 11 mistakes, sends race_finished with crashed=true flag, server skips progress validation
+- **Known Limitation**: Penalty time not transmitted in mistake_update, causing opponent timer display desync (cosmetic only - race results still correct)
 
 ## External Dependencies
 

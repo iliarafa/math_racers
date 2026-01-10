@@ -74,6 +74,9 @@ function handleMessage(ws: WebSocket, message: any) {
     case "race_finished":
       handleRaceFinished(ws, message);
       break;
+    case "mistake_update":
+      handleMistakeUpdate(ws, message);
+      break;
   }
 }
 
@@ -176,24 +179,52 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
   });
 }
 
-function handleRaceFinished(ws: WebSocket, message: { roomCode: string; finishTime: number; mistakes: number; finalProgress: number }) {
+function handleMistakeUpdate(ws: WebSocket, message: { roomCode: string; mistakes: number }) {
   const room = rooms.get(message.roomCode);
   if (!room || room.status !== "racing") return;
 
   const clientInfo = clientToRoom.get(ws);
   if (!clientInfo) return;
 
-  // Validate that player has completed all laps via progress_update messages
-  // Stored progress must already equal raceLength (all progress updates received)
-  if (message.finalProgress !== room.raceLength) {
-    log(`Rejected race_finished: finalProgress ${message.finalProgress} != raceLength ${room.raceLength}`, "ws");
-    return;
+  // Update mistakes only (no progress change) - used for realism mode retries
+  if (clientInfo.playerId === room.hostId) {
+    room.hostMistakes = message.mistakes;
+  } else {
+    room.guestMistakes = message.mistakes;
+  }
+
+  broadcastToRoom(message.roomCode, {
+    type: "opponent_progress",
+    hostProgress: room.hostProgress,
+    guestProgress: room.guestProgress,
+    hostMistakes: room.hostMistakes,
+    guestMistakes: room.guestMistakes
+  });
+}
+
+function handleRaceFinished(ws: WebSocket, message: { roomCode: string; finishTime: number; mistakes: number; finalProgress: number; crashed?: boolean }) {
+  const room = rooms.get(message.roomCode);
+  if (!room || room.status !== "racing") return;
+
+  const clientInfo = clientToRoom.get(ws);
+  if (!clientInfo) return;
+
+  // For crashes (realism mode 11 mistakes), skip progress validation
+  const isCrash = message.crashed === true;
+  
+  if (!isCrash) {
+    // Validate that player has completed all laps via progress_update messages
+    // Stored progress must already equal raceLength (all progress updates received)
+    if (message.finalProgress !== room.raceLength) {
+      log(`Rejected race_finished: finalProgress ${message.finalProgress} != raceLength ${room.raceLength}`, "ws");
+      return;
+    }
   }
   
   if (clientInfo.playerId === room.hostId) {
     if (room.hostFinished) return; // Already finished - prevent duplicate claims
-    // Stored progress must exactly equal raceLength (completed all progress updates)
-    if (room.hostProgress !== room.raceLength) {
+    // For crashes, skip stored progress validation
+    if (!isCrash && room.hostProgress !== room.raceLength) {
       log(`Rejected host race_finished: stored progress ${room.hostProgress} != raceLength ${room.raceLength}`, "ws");
       return;
     }
@@ -202,8 +233,8 @@ function handleRaceFinished(ws: WebSocket, message: { roomCode: string; finishTi
     room.hostMistakes = message.mistakes;
   } else {
     if (room.guestFinished) return; // Already finished - prevent duplicate claims
-    // Stored progress must exactly equal raceLength (completed all progress updates)
-    if (room.guestProgress !== room.raceLength) {
+    // For crashes, skip stored progress validation
+    if (!isCrash && room.guestProgress !== room.raceLength) {
       log(`Rejected guest race_finished: stored progress ${room.guestProgress} != raceLength ${room.raceLength}`, "ws");
       return;
     }

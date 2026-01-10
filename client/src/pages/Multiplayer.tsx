@@ -111,6 +111,7 @@ export default function Multiplayer() {
   const raceStartTimeRef = useRef<number | null>(null);
   const questionStartTimeRef = useRef<number>(Date.now());
   const isHostRef = useRef<boolean>(false);
+  const penaltyTimeRef = useRef<number>(0);
   
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : 20;
   
@@ -163,6 +164,7 @@ export default function Multiplayer() {
         setGameStatus("racing");
         raceStartTimeRef.current = Date.now();
         questionStartTimeRef.current = Date.now();
+        penaltyTimeRef.current = 0;
         // Reset lap results and purple mode for new race
         setLapResults([]);
         setInPurpleMode(false);
@@ -203,7 +205,7 @@ export default function Multiplayer() {
     if (gameStatus === "racing") {
       interval = setInterval(() => {
         if (raceStartTimeRef.current) {
-          setElapsedTime(Date.now() - raceStartTimeRef.current);
+          setElapsedTime(Date.now() - raceStartTimeRef.current + penaltyTimeRef.current);
         }
       }, 10);
     }
@@ -481,39 +483,89 @@ export default function Multiplayer() {
       
       // Break purple mode on incorrect answer
       setInPurpleMode(false);
-      setLapResults(prev => [...prev, { result: 'incorrect', speed: 'normal', sectorColor: 'red', responseTime }]);
       
-      const newProgress = progress + 1;
-      setProgress(newProgress);
-      
-      // Send progress update
-      if (wsRef.current) {
-        wsRef.current.send(JSON.stringify({
-          type: "progress_update",
-          roomCode,
-          progress: newProgress,
-          mistakes: newMistakes
-        }));
-      }
-      
-      if (newProgress >= raceLength) {
-        const finishTime = Date.now() - (raceStartTimeRef.current || 0);
+      if (state.simMode) {
+        // Realism mode: must answer correctly before continuing
+        // Don't advance progress or lapResults, just count the mistake
+        // Still apply time penalties (use ref so timer picks it up)
+        if (newMistakes <= 2) {
+          penaltyTimeRef.current += 2000;
+        } else if (newMistakes <= 5) {
+          penaltyTimeRef.current += 5000;
+        } else if (newMistakes <= 10) {
+          penaltyTimeRef.current += 10000;
+        }
+        
+        // Check for crash at 11 mistakes
+        if (newMistakes >= 11) {
+          // Notify server/opponent of crash
+          if (wsRef.current) {
+            wsRef.current.send(JSON.stringify({
+              type: "race_finished",
+              roomCode,
+              finishTime: 999999, // Very high time to indicate crash
+              mistakes: newMistakes,
+              finalProgress: progress,
+              crashed: true
+            }));
+          }
+          // Immediately transition to finished state locally
+          setGameStatus("finished");
+          setFeedback("idle");
+          // Result will be updated when opponent finishes or via race_complete message
+          return;
+        }
+        
+        // Send mistake update only (progress unchanged) - use dedicated message type
         if (wsRef.current) {
           wsRef.current.send(JSON.stringify({
-            type: "race_finished",
+            type: "mistake_update",
             roomCode,
-            finishTime,
-            mistakes: newMistakes,
-            finalProgress: newProgress
+            mistakes: newMistakes
           }));
         }
-      } else {
+        
+        // Clear answer but keep same question - don't reset questionStartTimeRef
         setTimeout(() => {
           setFeedback("idle");
           setAnswer("");
-          setCurrentQuestionIndex(prev => prev + 1);
-          questionStartTimeRef.current = Date.now();
         }, 600);
+      } else {
+        // Standard mode: advance progress on incorrect
+        setLapResults(prev => [...prev, { result: 'incorrect', speed: 'normal', sectorColor: 'red', responseTime }]);
+        
+        const newProgress = progress + 1;
+        setProgress(newProgress);
+        
+        // Send progress update
+        if (wsRef.current) {
+          wsRef.current.send(JSON.stringify({
+            type: "progress_update",
+            roomCode,
+            progress: newProgress,
+            mistakes: newMistakes
+          }));
+        }
+        
+        if (newProgress >= raceLength) {
+          const finishTime = Date.now() - (raceStartTimeRef.current || 0);
+          if (wsRef.current) {
+            wsRef.current.send(JSON.stringify({
+              type: "race_finished",
+              roomCode,
+              finishTime,
+              mistakes: newMistakes,
+              finalProgress: newProgress
+            }));
+          }
+        } else {
+          setTimeout(() => {
+            setFeedback("idle");
+            setAnswer("");
+            setCurrentQuestionIndex(prev => prev + 1);
+            questionStartTimeRef.current = Date.now();
+          }, 600);
+        }
       }
     }
   };
