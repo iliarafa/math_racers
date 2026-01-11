@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Link, useLocation } from "wouter";
+import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3 } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Custom checkered flag icon component
 const CheckeredFlag = ({ className }: { className?: string }) => (
@@ -23,6 +24,99 @@ const CheckeredFlag = ({ className }: { className?: string }) => (
     <rect x="16" y="11.5" width="4" height="2.5" fill="currentColor" stroke="none" />
   </svg>
 );
+
+// Circuit Carousel Component
+const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void }) => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'center',
+    skipSnaps: false
+  });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+
+  const onSelectChange = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelectChange();
+    emblaApi.on('select', onSelectChange);
+    emblaApi.on('reInit', onSelectChange);
+  }, [emblaApi, onSelectChange]);
+
+  return (
+    <div className="w-full max-w-lg mx-auto">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={scrollPrev}
+          className="p-2 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
+          data-testid="carousel-prev"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        
+        <div className="overflow-hidden flex-1" ref={emblaRef}>
+          <div className="flex">
+            {CIRCUITS.map((circuit, index) => (
+              <div
+                key={circuit.id}
+                className="flex-[0_0_100%] min-w-0 px-4"
+              >
+                <motion.button
+                  onClick={() => onSelect(circuit)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={cn(
+                    "w-full py-8 rounded-xl border-2 transition-all text-center",
+                    selectedIndex === index 
+                      ? "border-primary bg-secondary/50" 
+                      : "border-border bg-card"
+                  )}
+                  data-testid={`circuit-${circuit.id}`}
+                >
+                  <div className="text-2xl font-bold" style={{ fontFamily: 'Formula1' }}>{circuit.name}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{circuit.type}</div>
+                  <div className="text-xs text-muted-foreground/70 mt-0.5">{circuit.description}</div>
+                </motion.button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={scrollNext}
+          className="p-2 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
+          data-testid="carousel-next"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="flex justify-center gap-2 mt-4">
+        {CIRCUITS.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => emblaApi?.scrollTo(index)}
+            className={cn(
+              "w-2 h-2 rounded-full transition-colors",
+              selectedIndex === index ? "bg-primary" : "bg-border"
+            )}
+            data-testid={`carousel-dot-${index}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 let audioContext: AudioContext | null = null;
 let audioInitialized = false;
@@ -760,23 +854,7 @@ export default function Game() {
             </button>
           </div>
 
-          <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
-            {CIRCUITS.map((circuit) => (
-              <motion.button
-                key={circuit.id}
-                onClick={() => handleCircuitSelect(circuit)}
-                whileHover={{ opacity: 0.7 }}
-                whileTap={{ scale: 0.98 }}
-                className="py-5 transition-opacity text-center"
-                data-testid={`circuit-${circuit.id}`}
-              >
-                <div>
-                  <span className="font-bold text-xl">{circuit.name}</span>
-                  <span className="text-sm text-muted-foreground ml-2">{circuit.type}</span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
+          <CircuitCarousel onSelect={handleCircuitSelect} />
 
           <div className="mt-6 text-center">
             <Link href="/">
