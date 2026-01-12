@@ -825,13 +825,17 @@ export default function Game() {
           <div className="flex-1" />
         </div>
 
-        {/* CHOOSE TRACK Banner - Solo Mode (Full width, no padding) */}
+        {/* CHOOSE TRACK Banner - Solo Mode (Full width, breaks out of container) */}
         {raceMode === 'solo' && (
           <motion.button
             onClick={() => selectedDriver && handleDriverSelect(selectedDriver)}
             whileHover={selectedDriver ? { scale: 1.01 } : {}}
             whileTap={selectedDriver ? { scale: 0.99 } : {}}
-            className={cn("w-full", !selectedDriver && "opacity-50 cursor-not-allowed")}
+            className={cn(
+              "w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]",
+              !selectedDriver && "opacity-50 cursor-not-allowed"
+            )}
+            style={{ width: '100vw' }}
             data-testid="button-choose-track"
             disabled={!selectedDriver}
           >
