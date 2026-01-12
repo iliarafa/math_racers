@@ -244,7 +244,10 @@ const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void })
                 >
                   <div className="text-2xl font-bold" style={{ fontFamily: 'Formula1' }}>{circuit.name}</div>
                   <div className="text-sm text-muted-foreground mt-1">{circuit.type}</div>
-                  <div className="text-xs text-muted-foreground/70 mt-0.5">{circuit.description}</div>
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    <span className="text-lg" data-testid={`flag-${circuit.id}`}>{circuit.flag}</span>
+                    <span className="text-xs text-muted-foreground/70">{circuit.description}</span>
+                  </div>
                 </motion.button>
               </div>
             ))}
