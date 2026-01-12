@@ -825,21 +825,29 @@ export default function Game() {
           <div className="flex-1" />
         </div>
 
-        {/* CHOOSE TRACK Banner - Solo Mode (Full width, breaks out of container) */}
+        {/* CHOOSE TRACK Banner - Solo Mode (Full width, positioned left) */}
         {raceMode === 'solo' && (
           <motion.button
             onClick={() => selectedDriver && handleDriverSelect(selectedDriver)}
             whileHover={selectedDriver ? { scale: 1.01 } : {}}
             whileTap={selectedDriver ? { scale: 0.99 } : {}}
             className={cn(
-              "w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]",
+              "w-screen relative left-1/2 -translate-x-1/2 overflow-hidden",
               !selectedDriver && "opacity-50 cursor-not-allowed"
             )}
-            style={{ width: '100vw' }}
             data-testid="button-choose-track"
             disabled={!selectedDriver}
           >
-            <img src={chooseTrackBanner} alt="Choose Track" className="w-full h-auto" />
+            <img 
+              src={chooseTrackBanner} 
+              alt="Choose Track" 
+              className="h-auto"
+              style={{ 
+                width: '120%',
+                marginLeft: '-20%',
+                maxWidth: 'none'
+              }} 
+            />
           </motion.button>
         )}
 
