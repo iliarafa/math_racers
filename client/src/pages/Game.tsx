@@ -64,6 +64,116 @@ const RandomDiceIcon = ({ className }: { className?: string }) => (
 
 export type Weather = 'dry' | 'wet' | 'random';
 
+const WEATHER_OPTIONS: { id: Weather; name: string; icon: string }[] = [
+  { id: 'dry', name: 'DRY', icon: 'sun' },
+  { id: 'wet', name: 'WET', icon: 'rain' },
+  { id: 'random', name: 'RANDOM', icon: 'random' },
+];
+
+// Weather Carousel Component
+const WeatherCarousel = ({ 
+  onSelect, 
+  selectedWeather 
+}: { 
+  onSelect: (weather: Weather) => void;
+  selectedWeather: Weather;
+}) => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'center',
+    skipSnaps: false,
+    startIndex: WEATHER_OPTIONS.findIndex(w => w.id === selectedWeather)
+  });
+  const [selectedIndex, setSelectedIndex] = useState(WEATHER_OPTIONS.findIndex(w => w.id === selectedWeather));
+
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
+
+  const onSelectChange = useCallback(() => {
+    if (!emblaApi) return;
+    const index = emblaApi.selectedScrollSnap();
+    setSelectedIndex(index);
+    onSelect(WEATHER_OPTIONS[index].id);
+  }, [emblaApi, onSelect]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelectChange();
+    emblaApi.on('select', onSelectChange);
+    emblaApi.on('reInit', onSelectChange);
+  }, [emblaApi, onSelectChange]);
+
+  const getWeatherIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'sun': return weatherSun;
+      case 'rain': return weatherRain;
+      case 'random': return weatherRandom;
+      default: return weatherSun;
+    }
+  };
+
+  return (
+    <div className="w-full max-w-sm mx-auto">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={scrollPrev}
+          className="p-2 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
+          data-testid="weather-carousel-prev"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        
+        <div className="overflow-hidden flex-1" ref={emblaRef}>
+          <div className="flex">
+            {WEATHER_OPTIONS.map((weather, index) => (
+              <div
+                key={weather.id}
+                className="flex-[0_0_100%] min-w-0 px-4"
+              >
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={cn(
+                    "w-full py-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                    selectedIndex === index 
+                      ? "border-primary bg-secondary/50" 
+                      : "border-border bg-card"
+                  )}
+                >
+                  <img src={getWeatherIcon(weather.icon)} alt={weather.name} className="w-12 h-12 object-contain" />
+                  <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{weather.name}</div>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={scrollNext}
+          className="p-2 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
+          data-testid="weather-carousel-next"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="flex justify-center gap-2 mt-3">
+        {WEATHER_OPTIONS.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => emblaApi?.scrollTo(index)}
+            className={cn(
+              "w-2 h-2 rounded-full transition-colors",
+              selectedIndex === index ? "bg-primary" : "bg-border"
+            )}
+            data-testid={`weather-dot-${index}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Circuit Carousel Component
 const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
@@ -978,55 +1088,7 @@ export default function Game() {
             <div className="text-center mb-3">
               <h3 className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>CHOOSE WEATHER</h3>
             </div>
-            <div className="flex items-center justify-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedWeather('dry')}
-                className={cn(
-                  "flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all min-w-[80px]",
-                  selectedWeather === 'dry' 
-                    ? "border-yellow-500 bg-yellow-500/20" 
-                    : "border-border bg-card hover:bg-secondary/30"
-                )}
-                data-testid="button-weather-dry"
-              >
-                <img src={weatherSun} alt="Dry" className="w-10 h-10 object-contain" />
-                <span className="text-xs font-bold tracking-wider">DRY</span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedWeather('wet')}
-                className={cn(
-                  "flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all min-w-[80px]",
-                  selectedWeather === 'wet' 
-                    ? "border-blue-500 bg-blue-500/20" 
-                    : "border-border bg-card hover:bg-secondary/30"
-                )}
-                data-testid="button-weather-wet"
-              >
-                <img src={weatherRain} alt="Wet" className="w-10 h-10 object-contain" />
-                <span className="text-xs font-bold tracking-wider">WET</span>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedWeather('random')}
-                className={cn(
-                  "flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all min-w-[80px]",
-                  selectedWeather === 'random' 
-                    ? "border-purple-500 bg-purple-500/20" 
-                    : "border-border bg-card hover:bg-secondary/30"
-                )}
-                data-testid="button-weather-random"
-              >
-                <img src={weatherRandom} alt="Random" className="w-10 h-10 object-contain" />
-                <span className="text-xs font-bold tracking-wider">RANDOM</span>
-              </motion.button>
-            </div>
+            <WeatherCarousel onSelect={setSelectedWeather} selectedWeather={selectedWeather} />
           </div>
 
           {/* Start Race Button */}
