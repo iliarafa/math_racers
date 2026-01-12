@@ -823,20 +823,23 @@ export default function Game() {
 
           {/* Spacer */}
           <div className="flex-1" />
+        </div>
 
-          {/* CHOOSE TRACK Banner - Solo Mode */}
-          {raceMode === 'solo' && (
-            <motion.button
-              onClick={() => selectedDriver && handleDriverSelect(selectedDriver)}
-              whileHover={selectedDriver ? { scale: 1.02 } : {}}
-              whileTap={selectedDriver ? { scale: 0.98 } : {}}
-              className={cn("w-full", !selectedDriver && "opacity-50 cursor-not-allowed")}
-              data-testid="button-choose-track"
-              disabled={!selectedDriver}
-            >
-              <img src={chooseTrackBanner} alt="Choose Track" className="w-full h-auto" />
-            </motion.button>
-          )}
+        {/* CHOOSE TRACK Banner - Solo Mode (Full width, no padding) */}
+        {raceMode === 'solo' && (
+          <motion.button
+            onClick={() => selectedDriver && handleDriverSelect(selectedDriver)}
+            whileHover={selectedDriver ? { scale: 1.01 } : {}}
+            whileTap={selectedDriver ? { scale: 0.99 } : {}}
+            className={cn("w-full", !selectedDriver && "opacity-50 cursor-not-allowed")}
+            data-testid="button-choose-track"
+            disabled={!selectedDriver}
+          >
+            <img src={chooseTrackBanner} alt="Choose Track" className="w-full h-auto" />
+          </motion.button>
+        )}
+
+        <div className="px-4">
 
           {/* ENTER LOBBY Banner - VS Mode */}
           {raceMode === 'multiplayer' && (
