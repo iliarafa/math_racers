@@ -16,6 +16,9 @@ import tireHard from "@/assets/tire_hard.png";
 import tireMedium from "@/assets/tire_medium.png";
 import tireSoft from "@/assets/tire_soft.png";
 import chooseTrackBanner from "@/assets/choose_track.png";
+import weatherSun from "@/assets/weather_sun.png";
+import weatherRain from "@/assets/weather_rain.png";
+import weatherRandom from "@/assets/weather_random.png";
 
 // Custom checkered flag icon component
 const CheckeredFlag = ({ className }: { className?: string }) => (
@@ -988,7 +991,7 @@ export default function Game() {
                 )}
                 data-testid="button-weather-dry"
               >
-                <SunIcon className="w-8 h-8 text-yellow-500" />
+                <img src={weatherSun} alt="Dry" className="w-10 h-10 object-contain" />
                 <span className="text-xs font-bold tracking-wider">DRY</span>
               </motion.button>
 
@@ -1004,7 +1007,7 @@ export default function Game() {
                 )}
                 data-testid="button-weather-wet"
               >
-                <RainCloudIcon className="w-8 h-8 text-blue-500" />
+                <img src={weatherRain} alt="Wet" className="w-10 h-10 object-contain" />
                 <span className="text-xs font-bold tracking-wider">WET</span>
               </motion.button>
 
@@ -1020,7 +1023,7 @@ export default function Game() {
                 )}
                 data-testid="button-weather-random"
               >
-                <RandomDiceIcon className="w-8 h-8 text-purple-500" />
+                <img src={weatherRandom} alt="Random" className="w-10 h-10 object-contain" />
                 <span className="text-xs font-bold tracking-wider">RANDOM</span>
               </motion.button>
             </div>
