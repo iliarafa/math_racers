@@ -70,6 +70,15 @@ const WEATHER_OPTIONS: { id: Weather; name: string; icon: string }[] = [
   { id: 'random', name: 'RANDOM', icon: 'random' },
 ];
 
+// Historical rain probability for each circuit (based on real F1 data)
+const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
+  "spa": 0.60,        // Spa-Francorchamps: 50-70% -> 60%
+  "silverstone": 0.50, // Silverstone: 40-60% -> 50%
+  "suzuka": 0.42,     // Suzuka: 35-50% -> 42%
+  "monaco": 0.25,     // Monaco: 20-30% -> 25%
+  "monza": 0.20,      // Monza: 15-25% -> 20%
+};
+
 // Weather Carousel Component
 const WeatherCarousel = ({ 
   onSelect, 
@@ -437,10 +446,14 @@ export default function Game() {
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
-      // Resolve random weather at countdown start to ensure it's set before racing
-      const resolvedWeather = selectedWeather === 'random' 
-        ? (Math.random() < 0.5 ? 'dry' : 'wet') 
-        : selectedWeather;
+      // Resolve random weather at countdown start using circuit-specific rain probability
+      let resolvedWeather: 'dry' | 'wet';
+      if (selectedWeather === 'random') {
+        const rainProbability = CIRCUIT_RAIN_PROBABILITY[selectedCircuit.id] || 0.5;
+        resolvedWeather = Math.random() < rainProbability ? 'wet' : 'dry';
+      } else {
+        resolvedWeather = selectedWeather;
+      }
       setActualWeather(resolvedWeather);
       const isWet = resolvedWeather === 'wet';
       
