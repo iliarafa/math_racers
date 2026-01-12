@@ -838,7 +838,7 @@ export default function Game() {
             style={{
               width: '100vw',
               marginLeft: 'calc(50% - 50vw)',
-              marginTop: '-4px',
+              marginTop: '-12px',
             }}
             data-testid="button-choose-track"
             disabled={!selectedDriver}
