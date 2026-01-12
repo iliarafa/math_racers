@@ -800,7 +800,7 @@ export default function Game() {
             <h2 className="text-xl font-bold tracking-wide">CHOOSE LEVEL</h2>
           </div>
           
-          <div className="flex items-center justify-center gap-6 mb-8">
+          <div className="flex flex-col items-center gap-3 mb-8">
             {levelOptions.map((level) => (
               <motion.button
                 key={level.id}
@@ -810,13 +810,13 @@ export default function Game() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "flex flex-col items-center gap-2 p-3 rounded-xl transition-all",
+                  "flex items-center gap-4 p-3 rounded-xl transition-all w-full max-w-xs",
                   selectedDriver?.id === level.id ? "bg-secondary/50" : "hover:bg-secondary/30"
                 )}
                 data-testid={`level-${level.id}`}
               >
-                <img src={level.tire} alt={level.name} className="w-16 h-16 object-contain" />
-                <span className="font-bold text-xs tracking-wider">{level.name}</span>
+                <img src={level.tire} alt={level.name} className="w-14 h-14 object-contain" />
+                <span className="font-bold text-sm tracking-wider">{level.name}</span>
               </motion.button>
             ))}
           </div>
