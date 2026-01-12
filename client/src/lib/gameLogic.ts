@@ -26,7 +26,6 @@ export interface Circuit {
   name: string;
   type: string;
   description: string;
-  flag: string;
   mapUrl: string;
   paths: CircuitPaths;
   drsZones: number[];
@@ -113,7 +112,6 @@ export const CIRCUITS: Circuit[] = [
     name: "MONZA",
     type: "Multiplication",
     description: "The Temple of Speed",
-    flag: "🇮🇹",
     mapUrl: "",
     paths: {
       s1: "M 200 130 L 70 130 L 60 120 L 50 130 Q 30 130 30 90 Q 30 60 80 50 L 90 45",
@@ -127,7 +125,6 @@ export const CIRCUITS: Circuit[] = [
     name: "SPA",
     type: "Addition",
     description: "The Longest Lap",
-    flag: "🇧🇪",
     mapUrl: "",
     paths: {
       s1: "M 90 120 L 50 135 L 40 125 Q 60 110 80 100 L 200 30 L 220 30",
@@ -141,7 +138,6 @@ export const CIRCUITS: Circuit[] = [
     name: "MONACO",
     type: "Subtraction",
     description: "Street Circuit",
-    flag: "🇲🇨",
     mapUrl: "",
     paths: {
       s1: "M 40 125 L 80 120 L 90 105 Q 120 70 160 50 L 200 40",
@@ -155,7 +151,6 @@ export const CIRCUITS: Circuit[] = [
     name: "SUZUKA",
     type: "Division",
     description: "Figure-8 Track",
-    flag: "🇯🇵",
     mapUrl: "",
     paths: {
       s1: "M 250 125 L 180 125 Q 160 125 155 105 Q 150 85 180 75 Q 210 65 210 45 Q 210 25 180 25 L 140 25 L 120 35",
@@ -169,7 +164,6 @@ export const CIRCUITS: Circuit[] = [
     name: "SILVERSTONE",
     type: "Variables",
     description: "Home of F1",
-    flag: "🇬🇧",
     mapUrl: "",
     paths: {
       s1: "M 145 25 L 190 15 Q 210 15 215 35 L 200 70 L 180 100 Q 170 120 145 125 L 135 120 L 125 130 Q 110 145 90 145 L 70 145 Q 50 145 50 125 L 55 115 L 80 60 L 85 50 Q 95 35 75 35",

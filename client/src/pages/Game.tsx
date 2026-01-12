@@ -19,6 +19,19 @@ import chooseTrackBanner from "@/assets/choose_track.png";
 import weatherSun from "@/assets/weather_sun.png";
 import weatherRain from "@/assets/weather_rain.png";
 import weatherRandom from "@/assets/weather_random.png";
+import flagItaly from "@/assets/flag_italy.png";
+import flagBelgium from "@/assets/flag_belgium.png";
+import flagMonaco from "@/assets/flag_monaco.png";
+import flagJapan from "@/assets/flag_japan.png";
+import flagUK from "@/assets/flag_uk.png";
+
+const FLAG_IMAGES: { [circuitId: string]: string } = {
+  "monza": flagItaly,
+  "spa": flagBelgium,
+  "monaco": flagMonaco,
+  "suzuka": flagJapan,
+  "silverstone": flagUK,
+};
 
 // Custom checkered flag icon component
 const CheckeredFlag = ({ className }: { className?: string }) => (
@@ -245,7 +258,12 @@ const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void })
                   <div className="text-2xl font-bold" style={{ fontFamily: 'Formula1' }}>{circuit.name}</div>
                   <div className="text-sm text-muted-foreground mt-1">{circuit.type}</div>
                   <div className="flex items-center justify-center gap-2 mt-1">
-                    <span className="text-lg" data-testid={`flag-${circuit.id}`}>{circuit.flag}</span>
+                    <img 
+                      src={FLAG_IMAGES[circuit.id]} 
+                      alt={`${circuit.name} flag`} 
+                      className="h-4 w-6 object-cover rounded-sm"
+                      data-testid={`flag-${circuit.id}`}
+                    />
                     <span className="text-xs text-muted-foreground/70">{circuit.description}</span>
                   </div>
                 </motion.button>
