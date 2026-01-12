@@ -9,6 +9,14 @@ import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRac
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 
+// Import assets
+import helmetSolo from "@/assets/helmet_solo.png";
+import helmetVs from "@/assets/helmet_vs.png";
+import tireHard from "@/assets/tire_hard.png";
+import tireMedium from "@/assets/tire_medium.png";
+import tireSoft from "@/assets/tire_soft.png";
+import chooseTrackBanner from "@/assets/choose_track.png";
+
 // Custom checkered flag icon component
 const CheckeredFlag = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
@@ -741,78 +749,116 @@ export default function Game() {
 
   // Driver Selection Screen
   if (gameStatus === 'driver_select') {
+    const levelOptions = [
+      { id: 'rookie', name: 'ROOKIE', tire: tireHard, driver: DRIVERS.find(d => d.id === 'rookie') },
+      { id: 'pro', name: 'PROFESSIONAL', tire: tireMedium, driver: DRIVERS.find(d => d.id === 'pro') },
+      { id: 'champion', name: 'CHAMPION', tire: tireSoft, driver: DRIVERS.find(d => d.id === 'champion') },
+    ];
+
+
     return (
-      <GameLayout coins={state.coins} trackName="Select Mode">
-        <div className="flex-1 flex flex-col py-6 px-4">
-          {/* Solo / Multiplayer Toggle */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <button
+      <GameLayout coins={state.coins} trackName="" hideGarageButton>
+        <div className="flex-1 flex flex-col py-4 px-4">
+          
+          {/* CHOOSE MODE Section */}
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold tracking-wide">CHOOSE MODE</h2>
+          </div>
+          
+          <div className="flex items-center justify-center gap-12 mb-8">
+            <motion.button
               onClick={() => setRaceMode('solo')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className={cn(
-                "px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
-                raceMode === 'solo' ? "bg-red-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                "flex flex-col items-center gap-2 p-4 rounded-xl transition-all",
+                raceMode === 'solo' ? "bg-secondary/50" : "hover:bg-secondary/30"
               )}
               data-testid="button-solo-mode"
             >
-              <Play className="w-4 h-4" />
-              Solo
-            </button>
-            <button
+              <img src={helmetSolo} alt="Solo" className="w-20 h-20 object-contain" />
+              <span className="font-bold text-sm tracking-wider">SOLO</span>
+            </motion.button>
+            
+            <motion.button
               onClick={() => setRaceMode('multiplayer')}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               className={cn(
-                "px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2",
-                raceMode === 'multiplayer' ? "bg-[#15631a] text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                "flex flex-col items-center gap-2 p-4 rounded-xl transition-all",
+                raceMode === 'multiplayer' ? "bg-secondary/50" : "hover:bg-secondary/30"
               )}
               data-testid="button-multiplayer-mode"
             >
-              <CheckeredFlag className={cn("w-4 h-4", raceMode === 'multiplayer' ? "text-white" : "text-black")} />
-              1v1
-            </button>
+              <img src={helmetVs} alt="VS" className="w-20 h-20 object-contain" />
+              <span className="font-bold text-sm tracking-wider">VS</span>
+            </motion.button>
           </div>
 
-          {raceMode === 'solo' ? (
-            <>
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-1">Choose Level</h2>
-              </div>
-              
-              <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
-                {DRIVERS.map((driver) => (
-                  <motion.button
-                    key={driver.id}
-                    onClick={() => handleDriverSelect(driver)}
-                    whileHover={{ opacity: 0.7 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="py-3 transition-opacity text-center"
-                    data-testid={`driver-${driver.id}`}
-                  >
-                    <span className="font-bold text-lg">{driver.name}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex flex-col items-center justify-center gap-6">
-              <div className="text-center">
-                <CheckeredFlag className="w-16 h-16 text-black mx-auto mb-4" />
-                <h2 className="text-2xl font-bold mb-2">1v1 Race</h2>
-                <p className="text-muted-foreground">Race head-to-head against a friend!</p>
-              </div>
-              
-              <button
-                onClick={handleMultiplayerSelect}
-                className="h-14 px-8 text-white rounded-lg font-bold text-lg hover:bg-blue-500 transition-all bg-[#15631a]"
-                data-testid="button-enter-multiplayer"
+          {/* CHOOSE LEVEL Section */}
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold tracking-wide">CHOOSE LEVEL</h2>
+          </div>
+          
+          <div className="flex items-center justify-center gap-6 mb-8">
+            {levelOptions.map((level) => (
+              <motion.button
+                key={level.id}
+                onClick={() => {
+                  setSelectedDriver(level.driver || null);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={cn(
+                  "flex flex-col items-center gap-2 p-3 rounded-xl transition-all",
+                  selectedDriver?.id === level.id ? "bg-secondary/50" : "hover:bg-secondary/30"
+                )}
+                data-testid={`level-${level.id}`}
               >
-                Enter Multiplayer Lobby
-              </button>
-            </div>
+                <img src={level.tire} alt={level.name} className="w-16 h-16 object-contain" />
+                <span className="font-bold text-xs tracking-wider">{level.name}</span>
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* CHOOSE TRACK Banner */}
+          {raceMode === 'solo' && selectedDriver && (
+            <motion.button
+              onClick={() => handleDriverSelect(selectedDriver)}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full"
+              data-testid="button-choose-track"
+            >
+              <img src={chooseTrackBanner} alt="Choose Track" className="w-full h-auto" />
+            </motion.button>
+          )}
+
+          {/* VS Mode - Enter Lobby */}
+          {raceMode === 'multiplayer' && (
+            <motion.button
+              onClick={handleMultiplayerSelect}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-black text-white py-4 font-bold tracking-wider"
+              data-testid="button-enter-multiplayer"
+            >
+              ENTER LOBBY &gt;&gt;
+            </motion.button>
           )}
           
-          <div className="mt-6 text-center">
+          {/* << MENU Link */}
+          <div className="mt-4 text-center">
             <Link href="/">
-              <button className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-                ← Back to Menu
+              <button className="text-black hover:opacity-70 transition-opacity font-bold text-sm tracking-wider" data-testid="button-back-menu">
+                &lt;&lt; MENU
               </button>
             </Link>
           </div>
