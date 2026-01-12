@@ -12,6 +12,7 @@ import Gemini_Generated_Image_8kjyrj8kjyrj8kjy from "@assets/Gemini_Generated_Im
 import _1Asset_6_2x from "@assets/1Asset 6@2x.png";
 
 import wheel from "@assets/wheel.png";
+import raceButton from "@assets/race-button.png";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -44,7 +45,7 @@ export default function Welcome() {
         <div className="flex gap-8 w-full max-w-md justify-center items-center">
           <Link href="/game">
             <img 
-              src={wheel} 
+              src={raceButton} 
               alt="Race" 
               className="h-[4.9rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-start-race"
