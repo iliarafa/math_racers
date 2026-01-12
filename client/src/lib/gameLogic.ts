@@ -396,11 +396,19 @@ export function useGameState() {
   };
 }
 
-export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy'): Question {
+export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
   
   // Difficulty multipliers: easy = smaller numbers, hard = larger numbers
-  const range = difficulty === 'easy' ? { min: 2, max: 10 } : difficulty === 'medium' ? { min: 5, max: 15 } : { min: 10, max: 20 };
+  // Wet weather increases number ranges proportionally
+  let range: { min: number; max: number };
+  if (difficulty === 'easy') {
+    range = isWet ? { min: 2, max: 15 } : { min: 2, max: 10 };
+  } else if (difficulty === 'medium') {
+    range = isWet ? { min: 5, max: 25 } : { min: 5, max: 15 };
+  } else {
+    range = isWet ? { min: 10, max: 30 } : { min: 10, max: 20 };
+  }
   
   let num1: number, num2: number, display: string, answer: number;
   

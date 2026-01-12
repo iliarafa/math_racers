@@ -33,6 +33,34 @@ const CheckeredFlag = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// Weather icon components
+const SunIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+  </svg>
+);
+
+const RainCloudIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className}>
+    <path d="M19 14.5A3.5 3.5 0 0019 7.5h-1.26A6 6 0 006 9.5a6 6 0 00.5 2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+    <path d="M8 16v3M12 15v4M16 16v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const RandomDiceIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+    <circle cx="16" cy="8" r="1.5" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+    <circle cx="8" cy="16" r="1.5" fill="currentColor" />
+    <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+  </svg>
+);
+
+export type Weather = 'dry' | 'wet' | 'random';
+
 // Circuit Carousel Component
 const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
@@ -253,6 +281,8 @@ export default function Game() {
   const [raceMode, setRaceMode] = useState<'solo' | 'multiplayer'>('solo');
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
+  const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
+  const [actualWeather, setActualWeather] = useState<'dry' | 'wet'>('dry');
   
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
   const [isPracticeMode, setIsPracticeMode] = useState(false);
@@ -294,6 +324,13 @@ export default function Game() {
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
+      // Resolve random weather at countdown start to ensure it's set before racing
+      const resolvedWeather = selectedWeather === 'random' 
+        ? (Math.random() < 0.5 ? 'dry' : 'wet') 
+        : selectedWeather;
+      setActualWeather(resolvedWeather);
+      const isWet = resolvedWeather === 'wet';
+      
       let lightCount = 0;
       const interval = setInterval(() => {
         if (lightCount >= 5) {
@@ -301,7 +338,7 @@ export default function Game() {
           if (soundEnabledRef.current) {
             playBeep(1200, 200);
           }
-          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
+          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver.difficulty, isWet));
           questionStartTimeRef.current = Date.now();
           setGameStatus('racing');
           return;
@@ -315,7 +352,7 @@ export default function Game() {
 
       return () => clearInterval(interval);
     }
-  }, [gameStatus, selectedCircuit, selectedDriver]);
+  }, [gameStatus, selectedCircuit, selectedDriver, selectedWeather]);
 
 
   // Timer Logic - only runs during racing and not paused
@@ -385,6 +422,10 @@ export default function Game() {
   const handleCircuitSelect = (circuit: Circuit) => {
     initAudio();
     setSelectedCircuit(circuit);
+  };
+
+  const handleStartRace = () => {
+    if (!selectedCircuit) return;
     setGameStatus('countdown');
   };
 
@@ -443,8 +484,10 @@ export default function Game() {
         // Easy (small numbers): Fast < 2s, Slow > 4s
         // Medium: Fast < 3s, Slow > 5s
         // Hard (big numbers): Fast < 4s, Slow > 7s
-        const fastThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000;
-        const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
+        // Wet weather: tighten thresholds by 500ms
+        const wetPenalty = actualWeather === 'wet' ? 500 : 0;
+        const fastThreshold = (difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000) - wetPenalty;
+        const slowThreshold = (difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000) - wetPenalty;
         speed = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
       }
       
@@ -561,7 +604,7 @@ export default function Game() {
         setTimeout(() => {
           setFeedback('idle');
           setAnswer("");
-          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy'));
+          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy', actualWeather === 'wet'));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -677,7 +720,7 @@ export default function Game() {
           setTimeout(() => {
             setFeedback('idle');
             setAnswer("");
-            setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy'));
+            setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy', actualWeather === 'wet'));
             questionStartTimeRef.current = Date.now();
           }, 800);
         }
@@ -732,6 +775,8 @@ export default function Game() {
     setMistakeLog([]);
     setShowMistakeReview(false);
     setRaceMode('solo');
+    setSelectedWeather('dry');
+    setActualWeather('dry');
     resetStreak();
     penaltyTimeRef.current = 0;
     raceStartTimeRef.current = null;
@@ -894,13 +939,13 @@ export default function Game() {
   if (gameStatus === 'selecting') {
     return (
       <GameLayout coins={state.coins} trackName="Select Circuit">
-        <div className="flex-1 flex flex-col py-6 px-4">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-1">Choose Circuit</h2>
-            <p className="text-muted-foreground">Each track tests a different math skill</p>
+        <div className="flex-1 flex flex-col py-4 px-4 overflow-y-auto">
+          <div className="text-center mb-4">
+            <h2 className="text-xl font-bold mb-1" style={{ fontFamily: 'Formula1' }}>CHOOSE CIRCUIT</h2>
+            <p className="text-muted-foreground text-sm">Each track tests a different math skill</p>
           </div>
 
-          <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
             <button
               onClick={() => setIsPracticeMode(false)}
               className={cn(
@@ -925,7 +970,83 @@ export default function Game() {
 
           <CircuitCarousel onSelect={handleCircuitSelect} />
 
-          <div className="mt-6 text-center">
+          {/* Weather Selection */}
+          <div className="mt-4">
+            <div className="text-center mb-3">
+              <h3 className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>CHOOSE WEATHER</h3>
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedWeather('dry')}
+                className={cn(
+                  "flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all min-w-[80px]",
+                  selectedWeather === 'dry' 
+                    ? "border-yellow-500 bg-yellow-500/20" 
+                    : "border-border bg-card hover:bg-secondary/30"
+                )}
+                data-testid="button-weather-dry"
+              >
+                <SunIcon className="w-8 h-8 text-yellow-500" />
+                <span className="text-xs font-bold tracking-wider">DRY</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedWeather('wet')}
+                className={cn(
+                  "flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all min-w-[80px]",
+                  selectedWeather === 'wet' 
+                    ? "border-blue-500 bg-blue-500/20" 
+                    : "border-border bg-card hover:bg-secondary/30"
+                )}
+                data-testid="button-weather-wet"
+              >
+                <RainCloudIcon className="w-8 h-8 text-blue-500" />
+                <span className="text-xs font-bold tracking-wider">WET</span>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedWeather('random')}
+                className={cn(
+                  "flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all min-w-[80px]",
+                  selectedWeather === 'random' 
+                    ? "border-purple-500 bg-purple-500/20" 
+                    : "border-border bg-card hover:bg-secondary/30"
+                )}
+                data-testid="button-weather-random"
+              >
+                <RandomDiceIcon className="w-8 h-8 text-purple-500" />
+                <span className="text-xs font-bold tracking-wider">RANDOM</span>
+              </motion.button>
+            </div>
+          </div>
+
+          {/* Start Race Button */}
+          {selectedCircuit && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 flex justify-center"
+            >
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleStartRace}
+                className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all shadow-lg"
+                style={{ fontFamily: 'Formula1' }}
+                data-testid="button-start-race"
+              >
+                START RACE
+              </motion.button>
+            </motion.div>
+          )}
+
+          <div className="mt-4 text-center">
             <Link href="/">
               <button className="text-muted-foreground hover:text-foreground transition-colors text-sm">
                 ← Back to Menu
