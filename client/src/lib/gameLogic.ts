@@ -79,7 +79,7 @@ export const getRaceLength = (circuitId: string, simMode: boolean): number => {
 
 export const DRIVERS: Driver[] = [
   { id: "rookie", name: "Rookie", difficulty: "easy", label: "Rookie" },
-  { id: "pro", name: "Pro", difficulty: "medium", label: "Pro" },
+  { id: "pro", name: "PRO", difficulty: "medium", label: "PRO" },
   { id: "champion", name: "Champion", difficulty: "hard", label: "Champion" }
 ];
 
