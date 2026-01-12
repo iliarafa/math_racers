@@ -55,7 +55,7 @@ export default function Welcome() {
             <img 
               src={garageButtonImage} 
               alt="Garage" 
-              className="h-14 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-[4.9rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-garage"
             />
           </Link>
