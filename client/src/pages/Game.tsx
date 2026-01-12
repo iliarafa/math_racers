@@ -776,7 +776,7 @@ export default function Game() {
               )}
               data-testid="button-solo-mode"
             >
-              <img src={helmetSolo} alt="Solo" className="w-16 h-16 object-contain" />
+              <img src={helmetSolo} alt="Solo" className="w-12 h-12 object-contain" />
               <span className="font-bold text-sm tracking-wider">SOLO</span>
             </motion.button>
             
