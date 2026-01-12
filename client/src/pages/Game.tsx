@@ -828,11 +828,15 @@ export default function Game() {
         {/* CHOOSE TRACK Banner - Solo Mode (Full width, starts from left edge) */}
         {raceMode === 'solo' && (
           <motion.button
-            onClick={() => selectedDriver && handleDriverSelect(selectedDriver)}
+            onClick={() => {
+              if (selectedDriver) {
+                handleDriverSelect(selectedDriver);
+              }
+            }}
             whileHover={selectedDriver ? { scale: 1.01 } : {}}
             whileTap={selectedDriver ? { scale: 0.99 } : {}}
             className={cn(
-              "relative",
+              "relative block",
               !selectedDriver && "opacity-50 cursor-not-allowed"
             )}
             style={{
@@ -846,7 +850,7 @@ export default function Game() {
             <img 
               src={chooseTrackBanner} 
               alt="Choose Track" 
-              className="h-auto"
+              className="h-auto pointer-events-none"
               style={{ 
                 width: 'auto',
                 maxWidth: 'none',
