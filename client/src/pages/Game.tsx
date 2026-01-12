@@ -64,10 +64,10 @@ const RandomDiceIcon = ({ className }: { className?: string }) => (
 
 export type Weather = 'dry' | 'wet' | 'random';
 
-const WEATHER_OPTIONS: { id: Weather; name: string; icon: string }[] = [
-  { id: 'dry', name: 'DRY', icon: 'sun' },
-  { id: 'wet', name: 'WET', icon: 'rain' },
-  { id: 'random', name: 'RANDOM', icon: 'random' },
+const WEATHER_OPTIONS: { id: Weather; name: string; icon: string; description: string }[] = [
+  { id: 'dry', name: 'DRY', icon: 'sun', description: 'Standard racing conditions' },
+  { id: 'wet', name: 'WET', icon: 'rain', description: 'Harder numbers, tighter times' },
+  { id: 'random', name: 'RANDOM', icon: 'random', description: 'Based on real circuit weather' },
 ];
 
 // Historical rain probability for each circuit (based on real F1 data)
@@ -151,6 +151,7 @@ const WeatherCarousel = ({
                 >
                   <img src={getWeatherIcon(weather.icon)} alt={weather.name} className="w-12 h-12 object-contain" />
                   <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{weather.name}</div>
+                  <div className="text-xs text-muted-foreground text-center px-2" data-testid={`text-weather-description-${weather.id}`}>{weather.description}</div>
                 </motion.div>
               </div>
             ))}
