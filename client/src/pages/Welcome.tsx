@@ -46,7 +46,7 @@ export default function Welcome() {
             <img 
               src={wheel} 
               alt="Race" 
-              className="h-14 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-[4.9rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-start-race"
             />
           </Link>
