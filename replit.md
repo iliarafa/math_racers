@@ -59,12 +59,23 @@ shared/           # Shared types and schemas
 - Race is 20 questions; mistakes determine final grid position
 - 2025 F1 driver names used for leaderboard positions
 
+### Weather System
+
+Players can choose weather conditions before each race:
+- **Dry (☀️)**: Normal difficulty - default settings
+- **Wet (🌧️)**: Increased difficulty:
+  - Expanded number ranges (Easy: 2-15, Medium: 5-25, Hard: 10-30)
+  - Tighter speed thresholds (500ms stricter)
+- **Random (🎲)**: Program randomly picks Dry or Wet at countdown start
+
 ### Speed Thresholds
 
-**Standard Mode:**
+**Standard Mode (Dry):**
 - Easy: Fast < 2s, Slow > 4s
 - Medium: Fast < 3s, Slow > 5s  
 - Hard: Fast < 4s, Slow > 7s
+
+**Wet Weather:** All thresholds tightened by 500ms
 
 **Realism Mode (simMode toggle in Garage):**
 - First 5 questions are calibration phase - all green
