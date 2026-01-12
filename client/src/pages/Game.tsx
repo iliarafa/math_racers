@@ -776,7 +776,7 @@ export default function Game() {
               )}
               data-testid="button-solo-mode"
             >
-              <img src={helmetSolo} alt="Solo" className="w-20 h-20 object-contain" />
+              <img src={helmetSolo} alt="Solo" className="w-16 h-16 object-contain" />
               <span className="font-bold text-sm tracking-wider">SOLO</span>
             </motion.button>
             
@@ -790,7 +790,7 @@ export default function Game() {
               )}
               data-testid="button-multiplayer-mode"
             >
-              <img src={helmetVs} alt="VS" className="w-20 h-20 object-contain" />
+              <img src={helmetVs} alt="VS" className="w-16 h-16 object-contain" />
               <span className="font-bold text-sm tracking-wider">VS</span>
             </motion.button>
           </div>
