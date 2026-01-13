@@ -156,10 +156,10 @@ const WeatherCarousel = ({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "w-full py-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2",
+                    "w-full py-4 rounded-xl transition-all flex flex-col items-center gap-2",
                     selectedIndex === index 
-                      ? "border-primary bg-secondary/50" 
-                      : "border-border bg-card"
+                      ? "bg-secondary/50" 
+                      : "bg-transparent"
                   )}
                 >
                   <img src={getWeatherIcon(weather.icon)} alt={weather.name} className="w-12 h-12 object-contain" />
@@ -248,10 +248,10 @@ const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void })
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "w-full py-8 rounded-xl border-2 transition-all text-center",
+                    "w-full py-8 rounded-xl transition-all text-center",
                     selectedIndex === index 
-                      ? "border-primary bg-secondary/50" 
-                      : "border-border bg-card"
+                      ? "bg-secondary/50" 
+                      : "bg-transparent"
                   )}
                   data-testid={`circuit-${circuit.id}`}
                 >
