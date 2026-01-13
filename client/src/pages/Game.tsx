@@ -1057,8 +1057,7 @@ export default function Game() {
               alt="Choose Track" 
               className="h-auto pointer-events-none"
               style={{ 
-                width: 'auto',
-                maxWidth: 'none',
+                width: '100%',
                 height: '60px',
                 objectFit: 'cover',
                 objectPosition: 'left center'
