@@ -422,7 +422,7 @@ const playIncorrectSound = () => {
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime } = useGameState();
   const [, setLocation] = useLocation();
-  const [raceMode, setRaceMode] = useState<'solo' | 'multiplayer'>('solo');
+  const [raceMode, setRaceMode] = useState<'solo' | 'multiplayer' | null>(null);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
@@ -963,13 +963,13 @@ export default function Game() {
               onClick={() => setRaceMode('solo')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all pt-[13px] pb-[13px]"
+              className="group flex flex-col items-center gap-2 p-4 rounded-xl transition-all pt-[13px] pb-[13px]"
               data-testid="button-solo-mode"
             >
               <img src={helmetSolo} alt="Solo" className="w-12 h-12 object-contain" />
               <span className={cn(
                 "font-bold text-sm tracking-wider transition-colors",
-                raceMode === 'solo' ? "text-green-600" : ""
+                raceMode === 'solo' ? "text-green-600" : "group-hover:text-green-600"
               )}>SOLO</span>
             </motion.button>
             
@@ -977,13 +977,13 @@ export default function Game() {
               onClick={() => setRaceMode('multiplayer')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex flex-col items-center gap-0 p-4 rounded-xl transition-all -mb-0.5"
+              className="group flex flex-col items-center gap-0 p-4 rounded-xl transition-all -mb-0.5"
               data-testid="button-multiplayer-mode"
             >
               <img src={helmetVs} alt="VS" className="w-16 h-16 object-contain mt-1" />
               <span className={cn(
                 "font-bold text-sm tracking-wider transition-colors",
-                raceMode === 'multiplayer' ? "text-red-600" : ""
+                raceMode === 'multiplayer' ? "text-red-600" : "group-hover:text-red-600"
               )}>VS</span>
             </motion.button>
           </div>
