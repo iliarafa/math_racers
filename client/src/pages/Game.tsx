@@ -988,6 +988,9 @@ export default function Game() {
             </motion.button>
           </div>
 
+          {/* Spacer - distribute space evenly */}
+          <div className="flex-1" />
+
           {/* CHOOSE LEVEL Section */}
           <div className="text-center mb-4">
             <h2 className="text-xl font-bold tracking-wide">CHOOSE LEVEL</h2>
@@ -1014,7 +1017,7 @@ export default function Game() {
             ))}
           </div>
 
-          {/* Spacer */}
+          {/* Spacer - distribute space evenly */}
           <div className="flex-1" />
         </div>
         {/* CHOOSE TRACK Banner - Solo Mode (Full width, starts from left edge) */}
