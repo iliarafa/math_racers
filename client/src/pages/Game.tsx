@@ -997,24 +997,34 @@ export default function Game() {
           </div>
           
           <div className="flex flex-col items-center gap-2 mb-6">
-            {levelOptions.map((level) => (
-              <motion.button
-                key={level.id}
-                onClick={() => {
-                  setSelectedDriver(level.driver || null);
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "flex items-center gap-4 px-6 py-2 rounded-xl transition-all w-64",
-                  selectedDriver?.id === level.id ? "bg-secondary/50" : "hover:bg-secondary/30"
-                )}
-                data-testid={`level-${level.id}`}
-              >
-                <img src={level.tire} alt={level.name} className="w-12 h-12 object-contain" />
-                <span className="font-bold text-sm tracking-wider">{level.name}</span>
-              </motion.button>
-            ))}
+            {levelOptions.map((level) => {
+              const isSelected = selectedDriver?.id === level.id;
+              const colorClasses = {
+                rookie: { selected: "text-cyan-500", hover: "group-hover:text-cyan-500" },
+                pro: { selected: "text-amber-500", hover: "group-hover:text-amber-500" },
+                champion: { selected: "text-red-600", hover: "group-hover:text-red-600" },
+              };
+              const colors = colorClasses[level.id as keyof typeof colorClasses];
+              
+              return (
+                <motion.button
+                  key={level.id}
+                  onClick={() => {
+                    setSelectedDriver(level.driver || null);
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="group flex items-center gap-4 px-6 py-2 rounded-xl transition-all w-64"
+                  data-testid={`level-${level.id}`}
+                >
+                  <img src={level.tire} alt={level.name} className="w-12 h-12 object-contain" />
+                  <span className={cn(
+                    "font-bold text-sm tracking-wider transition-colors",
+                    isSelected ? colors.selected : colors.hover
+                  )}>{level.name}</span>
+                </motion.button>
+              );
+            })}
           </div>
 
           {/* Spacer - reduced space above track button */}
