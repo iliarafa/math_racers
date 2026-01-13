@@ -954,25 +954,55 @@ export default function Game() {
         <div className="flex-1 flex flex-col py-4 px-4">
           
           {/* CHOOSE MODE Section */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-4">
             <h2 className="text-xl font-bold tracking-wide">CHOOSE MODE</h2>
           </div>
           
-          <div className="flex items-center justify-center gap-12 mb-8">
-            <motion.button
-              onClick={() => setRaceMode('solo')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl transition-all",
-                raceMode === 'solo' ? "bg-secondary/50" : "hover:bg-secondary/30"
-              )}
-              data-testid="button-solo-mode"
-            >
-              <img src={helmetSolo} alt="Solo" className="w-12 h-12 object-contain" />
-              <span className="font-bold text-sm tracking-wider">SOLO</span>
-            </motion.button>
+          <div className="flex items-start justify-center gap-8 mb-6">
+            {/* Solo column with levels underneath */}
+            <div className="flex flex-col items-center">
+              <motion.button
+                onClick={() => setRaceMode('solo')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={cn(
+                  "flex flex-col items-center gap-2 p-4 rounded-xl transition-all",
+                  raceMode === 'solo' ? "bg-secondary/50" : "hover:bg-secondary/30"
+                )}
+                data-testid="button-solo-mode"
+              >
+                <img src={helmetSolo} alt="Solo" className="w-12 h-12 object-contain" />
+                <span className="font-bold text-sm tracking-wider">SOLO</span>
+              </motion.button>
+              
+              {/* CHOOSE LEVEL Section - directly under Solo */}
+              <div className="text-center mt-6 mb-4">
+                <h2 className="text-xl font-bold tracking-wide">CHOOSE LEVEL</h2>
+              </div>
+              
+              <div className="flex flex-col items-start gap-2">
+                {levelOptions.map((level) => (
+                  <motion.button
+                    key={level.id}
+                    onClick={() => {
+                      setSelectedDriver(level.driver || null);
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-2 rounded-xl transition-all",
+                      selectedDriver?.id === level.id ? "bg-secondary/50" : "hover:bg-secondary/30"
+                    )}
+                    data-testid={`level-${level.id}`}
+                  >
+                    <img src={level.tire} alt={level.name} className="w-12 h-12 object-contain" />
+                    <span className="font-bold text-sm tracking-wider">{level.name}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
             
+            {/* VS button */}
             <motion.button
               onClick={() => setRaceMode('multiplayer')}
               whileHover={{ scale: 1.05 }}
@@ -986,32 +1016,6 @@ export default function Game() {
               <img src={helmetVs} alt="VS" className="w-16 h-16 object-contain" />
               <span className="font-bold text-sm tracking-wider">VS</span>
             </motion.button>
-          </div>
-
-          {/* CHOOSE LEVEL Section */}
-          <div className="text-center mb-6">
-            <h2 className="text-xl font-bold tracking-wide">CHOOSE LEVEL</h2>
-          </div>
-          
-          <div className="flex flex-col items-center gap-3 mb-8">
-            {levelOptions.map((level) => (
-              <motion.button
-                key={level.id}
-                onClick={() => {
-                  setSelectedDriver(level.driver || null);
-                }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "flex items-center gap-4 p-3 rounded-xl transition-all w-full max-w-xs",
-                  selectedDriver?.id === level.id ? "bg-secondary/50" : "hover:bg-secondary/30"
-                )}
-                data-testid={`level-${level.id}`}
-              >
-                <img src={level.tire} alt={level.name} className="w-14 h-14 object-contain" />
-                <span className="font-bold text-sm tracking-wider">{level.name}</span>
-              </motion.button>
-            ))}
           </div>
 
           {/* Spacer */}
