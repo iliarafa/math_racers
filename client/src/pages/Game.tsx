@@ -963,25 +963,28 @@ export default function Game() {
               onClick={() => setRaceMode('solo')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all bg-secondary/50 pt-[13px] pb-[13px]"
+              className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all pt-[13px] pb-[13px]"
               data-testid="button-solo-mode"
             >
               <img src={helmetSolo} alt="Solo" className="w-12 h-12 object-contain" />
-              <span className="font-bold text-sm tracking-wider">SOLO</span>
+              <span className={cn(
+                "font-bold text-sm tracking-wider transition-colors",
+                raceMode === 'solo' ? "text-green-600" : ""
+              )}>SOLO</span>
             </motion.button>
             
             <motion.button
               onClick={() => setRaceMode('multiplayer')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={cn(
-                "flex flex-col items-center gap-0 p-4 rounded-xl transition-all -mb-0.5",
-                raceMode === 'multiplayer' ? "bg-secondary/50" : "hover:bg-secondary/30"
-              )}
+              className="flex flex-col items-center gap-0 p-4 rounded-xl transition-all -mb-0.5"
               data-testid="button-multiplayer-mode"
             >
               <img src={helmetVs} alt="VS" className="w-16 h-16 object-contain mt-1" />
-              <span className="font-bold text-sm tracking-wider">VS</span>
+              <span className={cn(
+                "font-bold text-sm tracking-wider transition-colors",
+                raceMode === 'multiplayer' ? "text-red-600" : ""
+              )}>VS</span>
             </motion.button>
           </div>
 
