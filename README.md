@@ -53,10 +53,6 @@ An interactive, gamified math practice web application designed for children. Pl
 - Disabled during calibration phase in realism mode
 
 ### Garage
-
-- **Pit Coins**: Earn virtual currency for correct answers
-- **Telemetry**: Career stats (laps completed, races won, best streak)
-- **Liveries & Tires**: Unlock and equip cosmetic items
 - **Realism Mode Toggle**: Switch between standard and calibration-based timing
 - **Strategy Guide**: Interactive math reference with multiplication grid, division facts, and more
 
