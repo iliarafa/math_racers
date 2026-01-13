@@ -978,12 +978,12 @@ export default function Game() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl transition-all",
+                "flex flex-col items-center gap-0 p-4 rounded-xl transition-all",
                 raceMode === 'multiplayer' ? "bg-secondary/50" : "hover:bg-secondary/30"
               )}
               data-testid="button-multiplayer-mode"
             >
-              <img src={helmetVs} alt="VS" className="w-16 h-16 object-contain" />
+              <img src={helmetVs} alt="VS" className="w-16 h-16 object-contain mt-2" />
               <span className="font-bold text-sm tracking-wider">VS</span>
             </motion.button>
           </div>
