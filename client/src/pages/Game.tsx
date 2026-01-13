@@ -1017,8 +1017,8 @@ export default function Game() {
             ))}
           </div>
 
-          {/* Spacer - distribute space evenly */}
-          <div className="flex-1" />
+          {/* Spacer - reduced space above track button */}
+          <div className="flex-[0.5]" />
         </div>
         {/* CHOOSE TRACK Banner - Solo Mode (Full width, starts from left edge) */}
         {raceMode === 'solo' && selectedDriver && (
