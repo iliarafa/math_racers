@@ -989,7 +989,7 @@ export default function Game() {
           </div>
 
           {/* Spacer - above level section */}
-          <div className="flex-[0.25]" />
+          <div className="flex-[0.19]" />
 
           {/* CHOOSE LEVEL Section */}
           <div className="text-center mb-4">
