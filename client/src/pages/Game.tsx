@@ -988,8 +988,8 @@ export default function Game() {
             </motion.button>
           </div>
 
-          {/* Spacer - distribute space evenly */}
-          <div className="flex-1" />
+          {/* Spacer - half space above level section */}
+          <div className="flex-[0.5]" />
 
           {/* CHOOSE LEVEL Section */}
           <div className="text-center mb-4">
