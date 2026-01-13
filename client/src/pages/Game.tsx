@@ -963,10 +963,7 @@ export default function Game() {
               onClick={() => setRaceMode('solo')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl transition-all",
-                raceMode === 'solo' ? "bg-secondary/50" : "hover:bg-secondary/30"
-              )}
+              className="flex flex-col items-center gap-2 p-4 rounded-xl transition-all bg-secondary/50 pt-[13px] pb-[13px]"
               data-testid="button-solo-mode"
             >
               <img src={helmetSolo} alt="Solo" className="w-12 h-12 object-contain" />
@@ -1017,7 +1014,6 @@ export default function Game() {
           {/* Spacer */}
           <div className="flex-1" />
         </div>
-
         {/* CHOOSE TRACK Banner - Solo Mode (Full width, starts from left edge) */}
         {raceMode === 'solo' && (
           <motion.button
@@ -1054,7 +1050,6 @@ export default function Game() {
             />
           </motion.button>
         )}
-
         <div className="px-4">
 
           {/* ENTER LOBBY Banner - VS Mode */}
