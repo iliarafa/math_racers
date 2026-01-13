@@ -52,12 +52,36 @@ shared/           # Shared types and schemas
   schema.ts       # Drizzle schema and Zod validation
 ```
 
+### Routes
+
+| Path | Description |
+|------|-------------|
+| `/` | Welcome screen |
+| `/game` | Race mode selection & gameplay |
+| `/garage` | Customization & settings |
+| `/strategy` | Strategy guide |
+| `/reaction` | Reaction time test |
+| `/multiplayer` | VS mode lobby |
+
 ### Game Logic
 
 - Math problems generated client-side based on difficulty track
-- Three tracks: Karting (addition 1-20), City Circuit (addition/subtraction 1-50), Grand Prix (all operations 1-100)
 - Race is 20 questions; mistakes determine final grid position
 - 2025 F1 driver names used for leaderboard positions
+- 11 mistakes = DNF (car crashes out, race ends early)
+
+### Difficulty Levels
+
+| Level | Operations | Range | Thresholds |
+|-------|-----------|-------|------------|
+| ROOKIE | Addition | 1-20 | Easy |
+| PRO | Add/Subtract | 1-50 | Medium |
+| CHAMPION | All (+, -, ×) | 1-100 | Hard |
+
+### Circuits
+
+Five tracks with circuit-specific rain probabilities (for Random weather):
+- Monza 🇮🇹 (20%), Monaco 🇲🇨 (25%), Suzuka 🇯🇵 (42%), Silverstone 🇬🇧 (50%), Spa 🇧🇪 (60%)
 
 ### Weather System
 
@@ -87,6 +111,28 @@ Players can choose weather conditions before each race:
 - Must answer under 3 seconds to retain purple (all difficulty levels)
 - Breaking purple requires 5 fresh correct answers to re-enter
 - Disabled during calibration phase in realism mode
+
+### Practice Mode
+
+- Toggle between RACE and PRACTICE on circuit selection
+- Practice mode doesn't save personal bests or affect career stats
+- Great for warm-up or learning new difficulty levels
+
+### Post-Race Analytics
+
+- Color-coded lap breakdown: Purple (fastest), Green (fast), Yellow (slow), Red (mistake)
+- Response times per question in milliseconds
+- Mistake review with your answer vs correct answer
+- Accuracy percentage and total time
+
+### Garage Features
+
+- **Pit Coins**: Virtual currency earned from races
+- **Liveries**: Unlock and equip car paint schemes
+- **Tires**: Cosmetic tire compounds (Hard/Medium/Soft)
+- **Team Color**: Custom color picker for personalization
+- **Realism Mode**: Toggle for personalized speed calibration
+- **Sound Toggle**: Enable/disable game audio
 
 ### Multiplayer System
 
