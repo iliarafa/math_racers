@@ -958,7 +958,7 @@ export default function Game() {
             <h2 className="text-xl font-bold tracking-wide">CHOOSE MODE</h2>
           </div>
           
-          <div className="flex items-start justify-center gap-16 mb-6">
+          <div className="flex items-end justify-center gap-16 mb-6">
             <motion.button
               onClick={() => setRaceMode('solo')}
               whileHover={{ scale: 1.05 }}
