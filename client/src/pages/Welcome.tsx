@@ -42,12 +42,12 @@ export default function Welcome() {
           />
         </div>
 
-        <div className="flex gap-8 w-full max-w-md justify-center items-center">
+        <div className="flex flex-col items-center gap-4 w-full max-w-md">
           <Link href="/game">
             <img 
               src={raceButton} 
               alt="Race" 
-              className="h-[7.35rem] w-auto cursor-pointer hover:opacity-80 transition-opacity -mt-1"
+              className="h-[7.35rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-start-race"
             />
           </Link>
