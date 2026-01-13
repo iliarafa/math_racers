@@ -992,7 +992,7 @@ export default function Game() {
           <div className="flex-[0.19]" />
 
           {/* CHOOSE LEVEL Section */}
-          <div className="text-center mb-4">
+          <div className="text-center mb-8">
             <h2 className="text-xl font-bold tracking-wide">CHOOSE LEVEL</h2>
           </div>
           
