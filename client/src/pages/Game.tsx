@@ -1021,7 +1021,7 @@ export default function Game() {
           <div className="flex-1" />
         </div>
         {/* CHOOSE TRACK Banner - Solo Mode (Full width, starts from left edge) */}
-        {raceMode === 'solo' && (
+        {raceMode === 'solo' && selectedDriver && (
           <motion.button
             onClick={() => {
               if (selectedDriver) {
@@ -1059,7 +1059,7 @@ export default function Game() {
         <div className="px-4">
 
           {/* ENTER LOBBY Banner - VS Mode */}
-          {raceMode === 'multiplayer' && (
+          {raceMode === 'multiplayer' && selectedDriver && (
             <motion.button
               onClick={handleMultiplayerSelect}
               whileHover={{ scale: 1.02 }}
