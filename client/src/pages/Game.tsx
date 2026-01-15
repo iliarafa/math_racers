@@ -24,6 +24,7 @@ import flagBelgium from "@/assets/flag_belgium.png";
 import flagMonaco from "@/assets/flag_monaco.png";
 import flagJapan from "@/assets/flag_japan.png";
 import flagUK from "@/assets/flag_uk.png";
+import trackLimitsFlag from "@/assets/track-limits-flag.png";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -453,6 +454,7 @@ export default function Game() {
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
   const [showPenalty, setShowPenalty] = useState(false);
+  const [showBlackWhiteFlag, setShowBlackWhiteFlag] = useState(false);
   const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
   const [mistakeLog, setMistakeLog] = useState<Array<{ question: string; yourAnswer: number; correctAnswer: number }>>([]);
   const [showMistakeReview, setShowMistakeReview] = useState(false);
@@ -799,7 +801,12 @@ export default function Game() {
           setPenaltyMessage({ text: 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
           penaltyTimeRef.current += 2000;
           setElapsedTime(prev => prev + 2000);
-        } else if (newMistakes <= 5) {
+        } else if (newMistakes === 3) {
+          setPenaltyMessage({ text: 'BLACK & WHITE FLAG - TRY AGAIN', color: 'yellow' });
+          setShowBlackWhiteFlag(true);
+          penaltyTimeRef.current += 2000;
+          setElapsedTime(prev => prev + 2000);
+        } else if (newMistakes <= 6) {
           setPenaltyMessage({ text: '+5 SEC PENALTY - TRY AGAIN', color: 'red' });
           penaltyTimeRef.current += 5000;
           setElapsedTime(prev => prev + 5000);
@@ -814,7 +821,7 @@ export default function Game() {
           return;
         }
 
-        setTimeout(() => setShowPenalty(false), 1500);
+        setTimeout(() => { setShowPenalty(false); setShowBlackWhiteFlag(false); }, 1500);
         
         // Clear answer but keep same question - don't reset questionStartTimeRef
         setTimeout(() => {
@@ -833,7 +840,12 @@ export default function Game() {
           setPenaltyMessage({ text: 'TRACK LIMITS WARNING', color: 'yellow' });
           penaltyTimeRef.current += 2000;
           setElapsedTime(prev => prev + 2000);
-        } else if (newMistakes <= 5) {
+        } else if (newMistakes === 3) {
+          setPenaltyMessage({ text: 'BLACK & WHITE FLAG', color: 'yellow' });
+          setShowBlackWhiteFlag(true);
+          penaltyTimeRef.current += 2000;
+          setElapsedTime(prev => prev + 2000);
+        } else if (newMistakes <= 6) {
           setPenaltyMessage({ text: '+5 SECOND PENALTY', color: 'red' });
           penaltyTimeRef.current += 5000;
           setElapsedTime(prev => prev + 5000);
@@ -848,7 +860,7 @@ export default function Game() {
           return;
         }
 
-        setTimeout(() => setShowPenalty(false), 1500);
+        setTimeout(() => { setShowPenalty(false); setShowBlackWhiteFlag(false); }, 1500);
 
         const newProgress = progress + 1;
         setProgress(newProgress);
@@ -1567,20 +1579,31 @@ export default function Game() {
         {/* Main content - compact header zone */}
         <div className="flex flex-col items-center px-4 pt-0">
           {/* Track Limits Warning */}
-          <div className="h-4 flex items-center justify-center">
+          <div className="h-12 flex items-center justify-center">
             <AnimatePresence>
               {showPenalty && (
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
+                  className="flex items-center gap-2"
                 >
+                  {showBlackWhiteFlag && (
+                    <img 
+                      src={trackLimitsFlag} 
+                      alt="Black and White Flag" 
+                      className="h-8 w-12 object-cover rounded"
+                    />
+                  )}
                   <motion.div
                     animate={{ opacity: [1, 0.3, 1] }}
                     transition={{ duration: 0.3, repeat: 3 }}
-                    className="bg-red-600 text-white px-3 py-0.5 rounded-lg font-bold text-xs"
+                    className={cn(
+                      "text-white px-3 py-0.5 rounded-lg font-bold text-xs",
+                      penaltyMessage.color === 'red' ? "bg-red-600" : "bg-yellow-600"
+                    )}
                   >
-                    TRACK LIMITS
+                    {penaltyMessage.text}
                   </motion.div>
                 </motion.div>
               )}
