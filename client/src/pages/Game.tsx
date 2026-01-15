@@ -1300,7 +1300,7 @@ export default function Game() {
   }
 
   if (gameStatus === 'finished') {
-    const { position, driverName } = getRaceResult();
+    const { position } = getRaceResult();
     const isWinner = position === 1;
     const previousBest = selectedCircuit ? state.personalBests[selectedCircuit.id] : null;
     const isNewBest = previousBest ? elapsedTime < previousBest : true;
@@ -1322,10 +1322,6 @@ export default function Game() {
             </div>
 
             <div className="py-6 border-y border-border space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Driver Match</span>
-                <span className="font-bold">{driverName}</span>
-              </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Circuit</span>
                 <span className="font-bold">{selectedCircuit?.name}</span>
