@@ -1077,7 +1077,7 @@ export default function Game() {
 
     const isLightTheme = raceMode === 'solo';
     const isMultiplayer = raceMode === 'multiplayer';
-    const bgColor = isLightTheme ? '#ffffff' : isMultiplayer ? '#000000' : '#2a0d0d';
+    const bgColor = isLightTheme ? '#ffffff' : isMultiplayer ? '#000000' : '#0c1a2e';
     
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: bgColor }}>
