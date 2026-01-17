@@ -1384,7 +1384,7 @@ export default function Game() {
             style={{ 
               fontFamily: 'Formula1',
               backgroundColor: isPracticeMode ? '#16a34a' : '#dc2626',
-              animation: 'pulse 2s infinite'
+              animation: isPracticeMode ? 'pulse-green 2s infinite' : 'pulse-red 2s infinite'
             }}
             data-testid="button-start-race"
           >
@@ -1401,9 +1401,13 @@ export default function Game() {
         </div>
 
         <style>{`
-          @keyframes pulse {
+          @keyframes pulse-red {
             0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
             50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0.3); }
+          }
+          @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(22, 163, 74, 0.3); }
           }
         `}</style>
       </div>
