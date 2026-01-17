@@ -199,7 +199,7 @@ const WeatherCarousel = ({
 };
 
 // Circuit Carousel Component
-const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void }) => {
+const CircuitCarousel = ({ onSelect, soundEnabled }: { onSelect: (circuit: Circuit) => void; soundEnabled: boolean }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     align: 'center',
@@ -208,16 +208,23 @@ const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void })
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [canScrollPrev, setCanScrollPrev] = useState(false);
   const [canScrollNext, setCanScrollNext] = useState(false);
+  const isFirstRender = useRef(true);
 
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
   const onSelectChange = useCallback(() => {
     if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
+    const newIndex = emblaApi.selectedScrollSnap();
+    setSelectedIndex(newIndex);
     setCanScrollPrev(emblaApi.canScrollPrev());
     setCanScrollNext(emblaApi.canScrollNext());
-  }, [emblaApi]);
+    onSelect(CIRCUITS[newIndex]);
+    if (!isFirstRender.current && soundEnabled) {
+      playCarouselClick();
+    }
+    isFirstRender.current = false;
+  }, [emblaApi, onSelect, soundEnabled]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -244,10 +251,8 @@ const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void })
                 key={circuit.id}
                 className="flex-[0_0_100%] min-w-0 px-4"
               >
-                <motion.button
-                  onClick={() => onSelect(circuit)}
+                <motion.div
                   whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                   className={cn(
                     "w-full py-8 rounded-xl transition-all text-center",
                     selectedIndex === index 
@@ -267,7 +272,7 @@ const CircuitCarousel = ({ onSelect }: { onSelect: (circuit: Circuit) => void })
                     />
                     <span className="text-xs text-muted-foreground/70">{circuit.description}</span>
                   </div>
-                </motion.button>
+                </motion.div>
               </div>
             ))}
           </div>
@@ -310,6 +315,22 @@ const getAudioContext = (): AudioContext => {
     audioContext.resume();
   }
   return audioContext;
+};
+
+const playCarouselClick = () => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.frequency.value = 600;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.08);
+  } catch (e) {}
 };
 
 const initAudio = () => {
@@ -1139,7 +1160,7 @@ export default function Game() {
             </button>
           </div>
 
-          <CircuitCarousel onSelect={handleCircuitSelect} />
+          <CircuitCarousel onSelect={handleCircuitSelect} soundEnabled={state.soundEnabled} />
 
           {/* Weather Selection */}
           <div className="mt-4">
