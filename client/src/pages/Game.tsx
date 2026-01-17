@@ -30,6 +30,7 @@ import trackSpa from "@/assets/track_spa.png";
 import trackMonaco from "@/assets/track_monaco.png";
 import trackSuzuka from "@/assets/track_suzuka.png";
 import trackSilverstone from "@/assets/track_silverstone.png";
+import circuitMonza from "@/assets/circuit_monza.png";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -45,6 +46,10 @@ const TRACK_IMAGES: { [circuitId: string]: string } = {
   "monaco": trackMonaco,
   "suzuka": trackSuzuka,
   "silverstone": trackSilverstone,
+};
+
+const CIRCUIT_MAP_IMAGES: { [circuitId: string]: string } = {
+  "monza": circuitMonza,
 };
 
 // Custom checkered flag icon component
@@ -1241,38 +1246,47 @@ export default function Game() {
               />
             </div>
 
-            {/* SVG Track Map */}
+            {/* Track Map */}
             <div className="flex-1 flex items-center justify-center py-6">
-              <svg 
-                viewBox="0 0 300 160" 
-                className="w-full h-40"
-                style={{ maxWidth: '280px' }}
-              >
-                <path
-                  d={displayCircuit.paths.s1}
-                  fill="none"
-                  stroke={state.teamColor || '#ffffff'}
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
+                <img 
+                  src={CIRCUIT_MAP_IMAGES[displayCircuit.id]} 
+                  alt={`${displayCircuit.name} circuit`}
+                  className="h-40 object-contain"
+                  style={{ maxWidth: '280px' }}
                 />
-                <path
-                  d={displayCircuit.paths.s2}
-                  fill="none"
-                  stroke={state.teamColor || '#ffffff'}
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d={displayCircuit.paths.s3}
-                  fill="none"
-                  stroke={state.teamColor || '#ffffff'}
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              ) : (
+                <svg 
+                  viewBox="0 0 300 160" 
+                  className="w-full h-40"
+                  style={{ maxWidth: '280px' }}
+                >
+                  <path
+                    d={displayCircuit.paths.s1}
+                    fill="none"
+                    stroke={state.teamColor || '#ffffff'}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d={displayCircuit.paths.s2}
+                    fill="none"
+                    stroke={state.teamColor || '#ffffff'}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d={displayCircuit.paths.s3}
+                    fill="none"
+                    stroke={state.teamColor || '#ffffff'}
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
             </div>
 
             {/* Info - Math Type */}
