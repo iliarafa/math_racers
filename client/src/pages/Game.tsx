@@ -477,7 +477,8 @@ const playIncorrectSound = () => {
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime } = useGameState();
   const [, setLocation] = useLocation();
-  const [raceMode, setRaceMode] = useState<'solo' | 'multiplayer' | null>(null);
+  const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer' | null>(null);
+  const [botProgress, setBotProgress] = useState(0);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
@@ -637,6 +638,7 @@ export default function Game() {
 
   const handleStartRace = () => {
     if (!selectedCircuit) return;
+    setBotProgress(0);
     setGameStatus('countdown');
   };
 
@@ -979,6 +981,7 @@ export default function Game() {
 
   const restartRace = () => {
     setProgress(0);
+    setBotProgress(0);
     setLapResults([]);
     setMistakes(0);
     setFinalMistakes(0);
@@ -1005,6 +1008,30 @@ export default function Game() {
     setInPurpleMode(false);
     setRealismThreshold(null);
   };
+
+  // Bot simulation during racing
+  useEffect(() => {
+    if (gameStatus !== 'racing' || raceMode !== 'bot' || isPaused) return;
+    
+    // Bot speed varies by difficulty - average time per question in ms
+    const botSpeed = selectedDriver?.difficulty === 'hard' ? 3500 : 
+                     selectedDriver?.difficulty === 'medium' ? 2800 : 2200;
+    
+    // Add some randomness (±30%)
+    const randomizedSpeed = botSpeed * (0.7 + Math.random() * 0.6);
+    
+    const interval = setInterval(() => {
+      setBotProgress(prev => {
+        if (prev >= raceLength) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, randomizedSpeed);
+    
+    return () => clearInterval(interval);
+  }, [gameStatus, raceMode, isPaused, selectedDriver, raceLength]);
 
   const handleMultiplayerSelect = () => {
     setSelectedDriver(null);
@@ -1056,7 +1083,7 @@ export default function Game() {
             <button
               onClick={() => setRaceMode('solo')}
               className={cn(
-                "px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all",
+                "px-4 py-3 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 raceMode === 'solo' 
                   ? "bg-white text-black" 
                   : "bg-transparent text-gray-400 hover:text-white"
@@ -1067,9 +1094,22 @@ export default function Game() {
               Time Trial
             </button>
             <button
+              onClick={() => setRaceMode('bot')}
+              className={cn(
+                "px-4 py-3 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
+                raceMode === 'bot' 
+                  ? "bg-white text-black" 
+                  : "bg-transparent text-gray-400 hover:text-white"
+              )}
+              style={{ fontFamily: 'Formula1' }}
+              data-testid="button-bot-mode"
+            >
+              Race Bot
+            </button>
+            <button
               onClick={() => setRaceMode('multiplayer')}
               className={cn(
-                "px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all",
+                "px-4 py-3 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 raceMode === 'multiplayer' 
                   ? "bg-white text-black" 
                   : "bg-transparent text-gray-400 hover:text-white"
@@ -1161,7 +1201,7 @@ export default function Game() {
               }}
               data-testid="button-confirm-strategy"
             >
-              {raceMode === 'multiplayer' ? 'Enter Lobby' : 'Confirm Strategy'}
+              {raceMode === 'multiplayer' ? 'Enter Lobby' : raceMode === 'bot' ? 'Race Bot' : 'Confirm Strategy'}
             </motion.button>
           )}
           <Link href="/">
@@ -1919,7 +1959,31 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        <div className="flex-1 flex flex-col justify-center px-4">
+        <div className="flex-1 flex flex-col justify-center px-4 gap-1">
+          {/* Bot Progress Bar (only in bot mode) */}
+          {raceMode === 'bot' && (
+            <div className="relative h-3 bg-muted/50 rounded-full overflow-hidden">
+              <motion.div
+                className="absolute inset-y-0 left-0 bg-red-500/70"
+                animate={{ width: `${(botProgress / raceLength) * 100}%` }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+              {/* Bot car indicator */}
+              <motion.div
+                className="absolute top-1/2 -translate-y-1/2 z-10"
+                animate={{ left: `${(botProgress / raceLength) * 100}%` }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ marginLeft: "-8px" }}
+              >
+                <div className="w-4 h-2.5 bg-red-600 rounded-sm flex items-center justify-center">
+                  <div className="w-2 h-1 bg-red-400 rounded-sm" />
+                </div>
+              </motion.div>
+              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-red-400 font-bold">BOT</span>
+            </div>
+          )}
+          
+          {/* Player Progress Bar */}
           <div className="relative h-5 bg-muted rounded-full overflow-hidden">
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
@@ -1962,6 +2026,9 @@ export default function Game() {
                 <div className="w-3 h-1.5 bg-primary rounded-sm" />
               </div>
             </motion.div>
+            {raceMode === 'bot' && (
+              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-muted-foreground font-bold">YOU</span>
+            )}
           </div>
           
           {/* Progress text */}
