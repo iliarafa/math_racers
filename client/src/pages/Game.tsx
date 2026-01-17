@@ -284,7 +284,7 @@ const CircuitCarousel = ({ onSelect, soundEnabled }: { onSelect: (circuit: Circu
                   <img 
                     src={TRACK_IMAGES[circuit.id]} 
                     alt={`${circuit.name} - ${circuit.type}`} 
-                    className="h-32 object-contain"
+                    className="h-44 object-contain"
                     data-testid={`track-image-${circuit.id}`}
                   />
                 </motion.div>
