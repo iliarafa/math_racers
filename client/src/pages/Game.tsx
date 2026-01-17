@@ -30,7 +30,10 @@ import trackSpa from "@/assets/track_spa.png";
 import trackMonaco from "@/assets/track_monaco.png";
 import trackSuzuka from "@/assets/track_suzuka.png";
 import trackSilverstone from "@/assets/track_silverstone.png";
-import circuitMonza from "@/assets/circuit_monza.png";
+import circuitMonzaRed from "@/assets/circuit_monza_red.png";
+import circuitMonzaBlack from "@/assets/circuit_monza_black.png";
+import circuitSuzukaRed from "@/assets/circuit_suzuka_red.png";
+import circuitSuzukaBlack from "@/assets/circuit_suzuka_black.png";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -48,8 +51,9 @@ const TRACK_IMAGES: { [circuitId: string]: string } = {
   "silverstone": trackSilverstone,
 };
 
-const CIRCUIT_MAP_IMAGES: { [circuitId: string]: string } = {
-  "monza": circuitMonza,
+const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } } = {
+  "monza": { red: circuitMonzaRed, black: circuitMonzaBlack },
+  "suzuka": { red: circuitSuzukaRed, black: circuitSuzukaBlack },
 };
 
 // Custom checkered flag icon component
@@ -1254,7 +1258,7 @@ export default function Game() {
             <div className="flex-1 flex items-center justify-center py-6">
               {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
                 <img 
-                  src={CIRCUIT_MAP_IMAGES[displayCircuit.id]} 
+                  src={isPracticeMode ? CIRCUIT_MAP_IMAGES[displayCircuit.id].black : CIRCUIT_MAP_IMAGES[displayCircuit.id].red} 
                   alt={`${displayCircuit.name} circuit`}
                   className="h-40 object-contain"
                   style={{ maxWidth: '280px' }}
