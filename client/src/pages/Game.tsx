@@ -25,6 +25,11 @@ import flagMonaco from "@/assets/flag_monaco.png";
 import flagJapan from "@/assets/flag_japan.png";
 import flagUK from "@/assets/flag_uk.png";
 import trackLimitsFlag from "@/assets/track-limits-flag.png";
+import trackMonza from "@/assets/track_monza.png";
+import trackSpa from "@/assets/track_spa.png";
+import trackMonaco from "@/assets/track_monaco.png";
+import trackSuzuka from "@/assets/track_suzuka.png";
+import trackSilverstone from "@/assets/track_silverstone.png";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -32,6 +37,14 @@ const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monaco": flagMonaco,
   "suzuka": flagJapan,
   "silverstone": flagUK,
+};
+
+const TRACK_IMAGES: { [circuitId: string]: string } = {
+  "monza": trackMonza,
+  "spa": trackSpa,
+  "monaco": trackMonaco,
+  "suzuka": trackSuzuka,
+  "silverstone": trackSilverstone,
 };
 
 // Custom checkered flag icon component
@@ -261,24 +274,19 @@ const CircuitCarousel = ({ onSelect, soundEnabled }: { onSelect: (circuit: Circu
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   className={cn(
-                    "w-full py-8 rounded-xl transition-all text-center",
+                    "w-full py-4 rounded-xl transition-all flex justify-center",
                     selectedIndex === index 
                       ? "bg-secondary/50" 
                       : "bg-transparent"
                   )}
                   data-testid={`circuit-${circuit.id}`}
                 >
-                  <div className="text-2xl font-bold" style={{ fontFamily: 'Formula1' }}>{circuit.name}</div>
-                  <div className="text-sm text-muted-foreground mt-1">{circuit.type}</div>
-                  <div className="flex items-center justify-center gap-2 mt-1">
-                    <img 
-                      src={FLAG_IMAGES[circuit.id]} 
-                      alt={`${circuit.name} flag`} 
-                      className="h-4 w-6 object-cover rounded-sm"
-                      data-testid={`flag-${circuit.id}`}
-                    />
-                    <span className="text-xs text-muted-foreground/70">{circuit.description}</span>
-                  </div>
+                  <img 
+                    src={TRACK_IMAGES[circuit.id]} 
+                    alt={`${circuit.name} - ${circuit.type}`} 
+                    className="h-24 object-contain"
+                    data-testid={`track-image-${circuit.id}`}
+                  />
                 </motion.div>
               </div>
             ))}
