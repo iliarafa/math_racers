@@ -1312,7 +1312,7 @@ export default function Game() {
                 )}
                 data-testid="weather-dry"
               >
-                <img src={weatherSun} alt="Dry" className="w-8 h-8" />
+                <img src={weatherSun} alt="Dry" className="w-8 h-8 invert" />
               </button>
               <button
                 onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
@@ -1324,7 +1324,7 @@ export default function Game() {
                 )}
                 data-testid="weather-wet"
               >
-                <img src={weatherRain} alt="Wet" className="w-8 h-8" />
+                <img src={weatherRain} alt="Wet" className="w-8 h-8 invert" />
               </button>
               <button
                 onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
@@ -1336,7 +1336,7 @@ export default function Game() {
                 )}
                 data-testid="weather-random"
               >
-                <img src={weatherRandom} alt="Random" className="w-8 h-8" />
+                <img src={weatherRandom} alt="Random" className="w-8 h-8 invert" />
               </button>
             </div>
           </motion.div>
