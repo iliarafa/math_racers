@@ -1013,157 +1013,174 @@ export default function Game() {
     setLocation('/multiplayer');
   };
 
-  // Driver Selection Screen
+  // Driver Selection Screen - Tyre Strategy Menu
   if (gameStatus === 'driver_select') {
-    const levelOptions = [
-      { id: 'rookie', name: 'ROOKIE', tire: tireHard, driver: DRIVERS.find(d => d.id === 'rookie') },
-      { id: 'pro', name: 'PROFESSIONAL', tire: tireMedium, driver: DRIVERS.find(d => d.id === 'pro') },
-      { id: 'champion', name: 'CHAMPION', tire: tireSoft, driver: DRIVERS.find(d => d.id === 'champion') },
+    const compoundOptions = [
+      { 
+        id: 'rookie', 
+        name: 'SOFT', 
+        subtitle: 'ROOKIE',
+        description: 'Maximum Grip / Forgiving',
+        tire: tireSoft, 
+        driver: DRIVERS.find(d => d.id === 'rookie'),
+        color: '#ff3b30',
+        bgGlow: 'rgba(255, 59, 48, 0.3)'
+      },
+      { 
+        id: 'pro', 
+        name: 'MEDIUM', 
+        subtitle: 'PROFESSIONAL',
+        description: 'Balanced Performance',
+        tire: tireMedium, 
+        driver: DRIVERS.find(d => d.id === 'pro'),
+        color: '#ffcc00',
+        bgGlow: 'rgba(255, 204, 0, 0.3)'
+      },
+      { 
+        id: 'champion', 
+        name: 'HARD', 
+        subtitle: 'CHAMPION',
+        description: 'Low Grip / Difficult',
+        tire: tireHard, 
+        driver: DRIVERS.find(d => d.id === 'champion'),
+        color: '#ffffff',
+        bgGlow: 'rgba(255, 255, 255, 0.2)'
+      },
     ];
 
-
     return (
-      <GameLayout coins={state.coins} trackName="" hideGarageButton>
-        <div className="flex-1 flex flex-col py-4 px-4">
-          
-          {/* CHOOSE MODE Section */}
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-bold tracking-wide">CHOOSE MODE</h2>
-          </div>
-          
-          <div className="flex items-end justify-center gap-16 mb-6">
-            <motion.button
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#121212' }}>
+        {/* Session Mode Toggle - Top */}
+        <div className="pt-8 pb-4 flex justify-center">
+          <div className="bg-[#2a2a2a] rounded-full p-1 flex">
+            <button
               onClick={() => setRaceMode('solo')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="group flex flex-col items-center gap-2 p-4 rounded-xl transition-all pt-[13px] pb-[13px]"
+              className={cn(
+                "px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all",
+                raceMode === 'solo' 
+                  ? "bg-white text-black" 
+                  : "bg-transparent text-gray-400 hover:text-white"
+              )}
+              style={{ fontFamily: 'Formula1' }}
               data-testid="button-solo-mode"
             >
-              <img src={helmetSolo} alt="Solo" className="w-12 h-12 object-contain" />
-              <span className={cn(
-                "font-bold text-sm tracking-wider transition-colors",
-                raceMode === 'solo' ? "text-green-600" : "group-hover:text-green-600"
-              )}>SOLO</span>
-            </motion.button>
-            
-            <motion.button
+              Time Trial
+            </button>
+            <button
               onClick={() => setRaceMode('multiplayer')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="group flex flex-col items-center gap-0 p-4 rounded-xl transition-all -mb-0.5"
+              className={cn(
+                "px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wider transition-all",
+                raceMode === 'multiplayer' 
+                  ? "bg-white text-black" 
+                  : "bg-transparent text-gray-400 hover:text-white"
+              )}
+              style={{ fontFamily: 'Formula1' }}
               data-testid="button-multiplayer-mode"
             >
-              <img src={helmetVs} alt="VS" className="w-16 h-16 object-contain mt-1" />
-              <span className={cn(
-                "font-bold text-sm tracking-wider transition-colors",
-                raceMode === 'multiplayer' ? "text-red-600" : "group-hover:text-red-600"
-              )}>VS</span>
-            </motion.button>
+              Head to Head
+            </button>
           </div>
-
-          {/* Spacer - above level section */}
-          <div className="flex-[0.19]" />
-
-          {/* CHOOSE LEVEL Section */}
-          <div className="text-center mb-8">
-            <h2 className="text-xl font-bold tracking-wide">CHOOSE LEVEL</h2>
-          </div>
-          
-          <div className="flex flex-col items-center gap-2 mb-6">
-            {levelOptions.map((level) => {
-              const isSelected = selectedDriver?.id === level.id;
-              const colorClasses = {
-                rookie: { selected: "text-cyan-500", hover: "group-hover:text-cyan-500" },
-                pro: { selected: "text-amber-500", hover: "group-hover:text-amber-500" },
-                champion: { selected: "text-red-600", hover: "group-hover:text-red-600" },
-              };
-              const colors = colorClasses[level.id as keyof typeof colorClasses];
-              
-              return (
-                <motion.button
-                  key={level.id}
-                  onClick={() => {
-                    setSelectedDriver(level.driver || null);
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group flex items-center gap-4 px-6 py-2 rounded-xl transition-all w-64"
-                  data-testid={`level-${level.id}`}
-                >
-                  <img src={level.tire} alt={level.name} className="w-12 h-12 object-contain" />
-                  <span className={cn(
-                    "font-bold text-sm tracking-wider transition-colors",
-                    isSelected ? colors.selected : colors.hover
-                  )}>{level.name}</span>
-                </motion.button>
-              );
-            })}
-          </div>
-
-          {/* Spacer - reduced space above track button */}
-          <div className="flex-[0.25]" />
         </div>
-        {/* CHOOSE TRACK Banner - Solo Mode (Full width, starts from left edge) */}
-        {raceMode === 'solo' && selectedDriver && (
-          <motion.button
-            onClick={() => {
-              if (selectedDriver) {
-                handleDriverSelect(selectedDriver);
-              }
-            }}
-            whileHover={selectedDriver ? { scale: 1.01 } : {}}
-            whileTap={selectedDriver ? { scale: 0.99 } : {}}
-            className={cn(
-              "relative block",
-              !selectedDriver && "opacity-50 cursor-not-allowed"
-            )}
-            style={{
-              width: '100vw',
-              marginLeft: 'calc(50% - 50vw)',
-              marginTop: '-12px',
-            }}
-            data-testid="button-choose-track"
-            disabled={!selectedDriver}
-          >
-            <img 
-              src={chooseTrackBanner} 
-              alt="Choose Track" 
-              className="h-auto pointer-events-none"
-              style={{ 
-                width: 'auto',
-                maxWidth: 'none',
-                height: '60px',
-                objectFit: 'cover',
-                objectPosition: 'left center'
-              }} 
-            />
-          </motion.button>
-        )}
-        <div className="px-4">
 
-          {/* ENTER LOBBY Banner - VS Mode */}
-          {raceMode === 'multiplayer' && selectedDriver && (
+        {/* Section Title */}
+        <div className="text-center py-4">
+          <h2 
+            className="text-xl font-bold text-white uppercase tracking-wider"
+            style={{ fontFamily: 'Formula1' }}
+          >
+            Select Compound
+          </h2>
+        </div>
+
+        {/* Compound Cards */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 pb-32">
+          {compoundOptions.map((compound) => {
+            const isSelected = selectedDriver?.id === compound.id;
+            
+            return (
+              <motion.button
+                key={compound.id}
+                onClick={() => setSelectedDriver(compound.driver || null)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full max-w-sm rounded-xl p-5 flex items-center gap-5 transition-all"
+                style={{ 
+                  backgroundColor: '#1e1e1e',
+                  border: `2px solid ${isSelected ? compound.color : 'transparent'}`,
+                  boxShadow: isSelected ? `0 0 20px ${compound.bgGlow}` : 'none'
+                }}
+                data-testid={`level-${compound.id}`}
+              >
+                <img 
+                  src={compound.tire} 
+                  alt={compound.name} 
+                  className="w-16 h-16 object-contain" 
+                />
+                <div className="flex flex-col items-start">
+                  <span 
+                    className="font-bold text-lg uppercase tracking-wider transition-colors"
+                    style={{ 
+                      fontFamily: 'Formula1',
+                      color: isSelected ? compound.color : '#888888'
+                    }}
+                  >
+                    {compound.name}
+                  </span>
+                  <span className="text-gray-500 text-xs uppercase tracking-wide">
+                    {compound.subtitle}
+                  </span>
+                  <span className="text-gray-600 text-xs mt-1">
+                    {compound.description}
+                  </span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* Confirm Strategy Button - Fixed Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#121212' }}>
+          {selectedDriver && (
             <motion.button
-              onClick={handleMultiplayerSelect}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full bg-black text-white py-4 font-bold tracking-wider"
-              data-testid="button-enter-multiplayer"
+              onClick={() => {
+                if (raceMode === 'multiplayer') {
+                  handleMultiplayerSelect();
+                } else {
+                  handleDriverSelect(selectedDriver);
+                }
+              }}
+              className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+              style={{ 
+                fontFamily: 'Formula1',
+                backgroundColor: '#dc2626',
+                animation: 'pulse-red 2s infinite'
+              }}
+              data-testid="button-confirm-strategy"
             >
-              ENTER LOBBY &gt;&gt;
+              {raceMode === 'multiplayer' ? 'Enter Lobby' : 'Confirm Strategy'}
             </motion.button>
           )}
-          
-          {/* << MENU Link */}
-          <div className="mt-4 text-center">
-            <Link href="/">
-              <button className="text-black hover:opacity-70 transition-opacity font-bold text-sm tracking-wider" data-testid="button-back-menu">
-                &lt;&lt; MENU
-              </button>
-            </Link>
-          </div>
+          <Link href="/">
+            <button 
+              className="text-gray-500 hover:text-white transition-colors text-sm uppercase tracking-wider"
+              data-testid="button-back-menu"
+            >
+              &lt;&lt; Menu
+            </button>
+          </Link>
         </div>
-      </GameLayout>
+
+        <style>{`
+          @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0.3); }
+          }
+        `}</style>
+      </div>
     );
   }
 
