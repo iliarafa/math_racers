@@ -1172,17 +1172,19 @@ export default function Game() {
     };
 
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#121212' }}>
+      <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: isPracticeMode ? '#ffffff' : '#121212' }}>
         {/* Race/Practice Pill Toggle - Top */}
         <div className="pt-6 pb-2 flex justify-center">
-          <div className="bg-[#2a2a2a] rounded-full p-1 flex gap-1">
+          <div className={cn("rounded-full p-1 flex gap-1", isPracticeMode ? "bg-gray-200" : "bg-[#2a2a2a]")}>
             <button
               onClick={() => setIsPracticeMode(false)}
               className={cn(
                 "px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wider transition-all",
                 !isPracticeMode 
                   ? "bg-red-600 text-white" 
-                  : "bg-transparent text-gray-400 hover:text-white"
+                  : isPracticeMode 
+                    ? "bg-transparent text-gray-600 hover:text-gray-900"
+                    : "bg-transparent text-gray-400 hover:text-white"
               )}
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-race-mode"
@@ -1195,7 +1197,9 @@ export default function Game() {
                 "px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wider transition-all",
                 isPracticeMode 
                   ? "bg-green-600 text-white" 
-                  : "bg-transparent text-gray-400 hover:text-white"
+                  : isPracticeMode 
+                    ? "bg-transparent text-gray-600 hover:text-gray-900"
+                    : "bg-transparent text-gray-400 hover:text-white"
               )}
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-practice-mode"
@@ -1212,7 +1216,7 @@ export default function Game() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToPrevCircuit}
-            className="p-3 text-white/60 hover:text-white transition-colors"
+            className={cn("p-3 transition-colors", isPracticeMode ? "text-gray-400 hover:text-gray-900" : "text-white/60 hover:text-white")}
             data-testid="circuit-prev"
           >
             <ChevronLeft className="w-12 h-12" />
@@ -1224,17 +1228,17 @@ export default function Game() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="w-[350px] rounded-[20px] p-6 flex flex-col"
+            className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300"
             style={{ 
-              backgroundColor: '#1e1e1e',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+              backgroundColor: isPracticeMode ? '#f0f0f0' : '#1e1e1e',
+              boxShadow: isPracticeMode ? '0 20px 60px rgba(0,0,0,0.15)' : '0 20px 60px rgba(0,0,0,0.5)'
             }}
             data-testid={`hero-card-${displayCircuit.id}`}
           >
             {/* Header - Circuit Name & Flag */}
             <div className="flex items-center justify-center gap-3 mb-4">
               <h2 
-                className="text-2xl font-bold text-white uppercase tracking-wider"
+                className={cn("text-2xl font-bold uppercase tracking-wider", isPracticeMode ? "text-gray-900" : "text-white")}
                 style={{ fontFamily: 'Formula1' }}
               >
                 {displayCircuit.name}
@@ -1291,9 +1295,9 @@ export default function Game() {
 
             {/* Info - Math Type */}
             <div className="text-center mb-4">
-              <div className="text-gray-400 text-sm uppercase tracking-wider mb-1">Math Type</div>
+              <div className={cn("text-sm uppercase tracking-wider mb-1", isPracticeMode ? "text-gray-500" : "text-gray-400")}>Math Type</div>
               <div 
-                className="text-white text-lg font-bold uppercase"
+                className={cn("text-lg font-bold uppercase", isPracticeMode ? "text-gray-900" : "text-white")}
                 style={{ fontFamily: 'Formula1' }}
               >
                 {displayCircuit.type}
@@ -1301,7 +1305,7 @@ export default function Game() {
             </div>
 
             {/* Weather Toggle */}
-            <div className="flex justify-center gap-4 pt-2 border-t border-gray-700">
+            <div className={cn("flex justify-center gap-4 pt-2 border-t", isPracticeMode ? "border-gray-300" : "border-gray-700")}>
               <button
                 onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                 className={cn(
@@ -1312,7 +1316,7 @@ export default function Game() {
                 )}
                 data-testid="weather-dry"
               >
-                <img src={weatherSun} alt="Dry" className="w-8 h-8 invert" />
+                <img src={weatherSun} alt="Dry" className={cn("w-8 h-8", !isPracticeMode && "invert")} />
               </button>
               <button
                 onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
@@ -1324,7 +1328,7 @@ export default function Game() {
                 )}
                 data-testid="weather-wet"
               >
-                <img src={weatherRain} alt="Wet" className="w-8 h-8 invert" />
+                <img src={weatherRain} alt="Wet" className={cn("w-8 h-8", !isPracticeMode && "invert")} />
               </button>
               <button
                 onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
@@ -1336,7 +1340,7 @@ export default function Game() {
                 )}
                 data-testid="weather-random"
               >
-                <img src={weatherRandom} alt="Random" className="w-8 h-8 invert" />
+                <img src={weatherRandom} alt="Random" className={cn("w-8 h-8", !isPracticeMode && "invert")} />
               </button>
             </div>
           </motion.div>
@@ -1346,7 +1350,7 @@ export default function Game() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToNextCircuit}
-            className="p-3 text-white/60 hover:text-white transition-colors"
+            className={cn("p-3 transition-colors", isPracticeMode ? "text-gray-400 hover:text-gray-900" : "text-white/60 hover:text-white")}
             data-testid="circuit-next"
           >
             <ChevronRight className="w-12 h-12" />
@@ -1361,7 +1365,9 @@ export default function Game() {
               onClick={() => { handleCircuitSelect(circuit); if (state.soundEnabled) playCarouselClick(); }}
               className={cn(
                 "w-2 h-2 rounded-full transition-all",
-                currentCircuitIndex === index ? "bg-white" : "bg-white/30"
+                currentCircuitIndex === index 
+                  ? (isPracticeMode ? "bg-gray-900" : "bg-white") 
+                  : (isPracticeMode ? "bg-gray-400" : "bg-white/30")
               )}
               data-testid={`circuit-dot-${circuit.id}`}
             />
@@ -1369,7 +1375,7 @@ export default function Game() {
         </div>
 
         {/* Start Engine Button - Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#121212' }}>
+        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: isPracticeMode ? '#ffffff' : '#121212' }}>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -1377,16 +1383,16 @@ export default function Game() {
             className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
             style={{ 
               fontFamily: 'Formula1',
-              backgroundColor: '#dc2626',
+              backgroundColor: isPracticeMode ? '#16a34a' : '#dc2626',
               animation: 'pulse 2s infinite'
             }}
             data-testid="button-start-race"
           >
-            Start Engine
+            {isPracticeMode ? 'Start Practice' : 'Start Engine'}
           </motion.button>
           <Link href="/">
             <button 
-              className="text-gray-500 hover:text-white transition-colors text-sm uppercase tracking-wider"
+              className={cn("transition-colors text-sm uppercase tracking-wider", isPracticeMode ? "text-gray-500 hover:text-gray-900" : "text-gray-500 hover:text-white")}
               data-testid="button-back-menu"
             >
               &lt;&lt; Menu
