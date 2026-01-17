@@ -1,0 +1,38 @@
+I need to completely redesign the "Circuit Selection" screen. The current white-background layout is too cluttered and doesn't match the new dark "Garage" aesthetic.
+
+Please refactor `style.css`, `index.html`, and `script.js` to create a new **"Race Setup"** view.
+
+### 1. VISUAL THEME (Dark Mode)
+* **Background:** Set the main view background to `#121212` (Dark Asphalt).
+* **Text:** White, uppercase, technical font (sans-serif).
+
+### 2. NEW LAYOUT: "THE HERO CARD"
+Instead of stacking multiple carousels vertically, create a single, central **"Track Card"** that dominates the screen.
+
+**The Container:**
+* Flexbox, centered vertically and horizontally.
+* Two large "Chevron" buttons (`<` and `>`) on the far left and right of the screen for navigation.
+
+**The Hero Card (Center):**
+* **Dimensions:** Approx 350px wide x 450px high.
+* **Style:** Dark Grey card (`#1e1e1e`), rounded corners (20px), subtle shadow.
+* **Content Layout (Top to Bottom):**
+    1.  **Header:** Circuit Name ("MONZA") and Flag Icon.
+    2.  **The Map:** Dynamically render the **SVG Track Map** (using the `paths` data) in the center of the card. It should be colored (use the Team Color or White).
+    3.  **Info:** The Math Type ("Multiplication") and Difficulty ("Hard").
+    4.  **Weather Toggle:** A small row of icons at the bottom of the card (Sun/Rain). Clicking them toggles the state.
+
+### 3. CONTROLS PLACEMENT
+* **Race vs Practice:** Place this as a "Pill Toggle" (Segmented Control) at the very top of the screen, floating above the card.
+* **Start Button:** A large, wide Red button **fixed at the bottom** of the screen (floating), labeled "START ENGINE".
+
+### 4. DYNAMIC PREVIEW
+* When the user clicks the Left/Right arrows, update the Central Card.
+* **Crucial:** The SVG map inside the card must update to show the shape of the selected track (Monza, Spa, etc.). This makes the selection feel "real."
+
+### 5. CSS STYLING
+* Use CSS Grid/Flex to ensure the layout works on mobile (stack vertically if needed, but keep the card central).
+* Make the "Start Engine" button pulse slightly (`animation: pulse 2s infinite`).
+
+**Summary:**
+Remove the separate "Weather Carousel". Embed weather selection into the main card. Make the Track Map the visual hero. Dark background.
