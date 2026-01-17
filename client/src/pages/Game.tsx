@@ -96,10 +96,12 @@ const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
 // Weather Carousel Component
 const WeatherCarousel = ({ 
   onSelect, 
-  selectedWeather 
+  selectedWeather,
+  soundEnabled
 }: { 
   onSelect: (weather: Weather) => void;
   selectedWeather: Weather;
+  soundEnabled: boolean;
 }) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
@@ -108,6 +110,7 @@ const WeatherCarousel = ({
     startIndex: WEATHER_OPTIONS.findIndex(w => w.id === selectedWeather)
   });
   const [selectedIndex, setSelectedIndex] = useState(WEATHER_OPTIONS.findIndex(w => w.id === selectedWeather));
+  const isFirstRender = useRef(true);
 
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
@@ -117,7 +120,11 @@ const WeatherCarousel = ({
     const index = emblaApi.selectedScrollSnap();
     setSelectedIndex(index);
     onSelect(WEATHER_OPTIONS[index].id);
-  }, [emblaApi, onSelect]);
+    if (!isFirstRender.current && soundEnabled) {
+      playCarouselClick();
+    }
+    isFirstRender.current = false;
+  }, [emblaApi, onSelect, soundEnabled]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -1167,7 +1174,7 @@ export default function Game() {
             <div className="text-center mb-3">
               <h3 className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>CHOOSE WEATHER</h3>
             </div>
-            <WeatherCarousel onSelect={setSelectedWeather} selectedWeather={selectedWeather} />
+            <WeatherCarousel onSelect={setSelectedWeather} selectedWeather={selectedWeather} soundEnabled={state.soundEnabled} />
           </div>
 
           {/* Start Race Button */}
