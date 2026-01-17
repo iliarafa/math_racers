@@ -1075,18 +1075,22 @@ export default function Game() {
       },
     ];
 
+    const isLightTheme = raceMode === 'solo';
+    
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#121212' }}>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: isLightTheme ? '#ffffff' : '#121212' }}>
         {/* Session Mode Toggle - Top */}
         <div className="pt-8 pb-4 flex justify-center">
-          <div className="bg-[#2a2a2a] rounded-full p-1 flex">
+          <div className={cn("rounded-full p-1 flex", isLightTheme ? "bg-gray-200" : "bg-[#2a2a2a]")}>
             <button
               onClick={() => setRaceMode('solo')}
               className={cn(
                 "px-4 py-3 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 raceMode === 'solo' 
-                  ? "bg-white text-black" 
-                  : "bg-transparent text-gray-400 hover:text-white"
+                  ? "bg-black text-white" 
+                  : isLightTheme 
+                    ? "bg-transparent text-gray-500 hover:text-black"
+                    : "bg-transparent text-gray-400 hover:text-white"
               )}
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-solo-mode"
@@ -1099,7 +1103,9 @@ export default function Game() {
                 "px-4 py-3 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 raceMode === 'bot' 
                   ? "bg-white text-black" 
-                  : "bg-transparent text-gray-400 hover:text-white"
+                  : isLightTheme 
+                    ? "bg-transparent text-gray-500 hover:text-black"
+                    : "bg-transparent text-gray-400 hover:text-white"
               )}
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-bot-mode"
@@ -1112,7 +1118,9 @@ export default function Game() {
                 "px-4 py-3 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 raceMode === 'multiplayer' 
                   ? "bg-white text-black" 
-                  : "bg-transparent text-gray-400 hover:text-white"
+                  : isLightTheme 
+                    ? "bg-transparent text-gray-500 hover:text-black"
+                    : "bg-transparent text-gray-400 hover:text-white"
               )}
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-multiplayer-mode"
@@ -1125,7 +1133,7 @@ export default function Game() {
         {/* Section Title */}
         <div className="text-center py-4">
           <h2 
-            className="text-xl font-bold text-white uppercase tracking-wider"
+            className={cn("text-xl font-bold uppercase tracking-wider", isLightTheme ? "text-black" : "text-white")}
             style={{ fontFamily: 'Formula1' }}
           >
             Select Compound
@@ -1136,6 +1144,7 @@ export default function Game() {
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 pb-32">
           {compoundOptions.map((compound) => {
             const isSelected = selectedDriver?.id === compound.id;
+            const displayColor = isLightTheme && compound.id === 'champion' ? '#333333' : compound.color;
             
             return (
               <motion.button
@@ -1145,8 +1154,8 @@ export default function Game() {
                 whileTap={{ scale: 0.98 }}
                 className="w-full max-w-sm rounded-xl p-5 flex items-center gap-5 transition-all"
                 style={{ 
-                  backgroundColor: '#1e1e1e',
-                  border: `2px solid ${isSelected ? compound.color : 'transparent'}`,
+                  backgroundColor: isLightTheme ? '#f5f5f5' : '#1e1e1e',
+                  border: `2px solid ${isSelected ? displayColor : 'transparent'}`,
                   boxShadow: isSelected ? `0 0 20px ${compound.bgGlow}` : 'none'
                 }}
                 data-testid={`level-${compound.id}`}
@@ -1161,15 +1170,15 @@ export default function Game() {
                     className="font-bold text-lg uppercase tracking-wider transition-colors"
                     style={{ 
                       fontFamily: 'Formula1',
-                      color: isSelected ? compound.color : '#888888'
+                      color: isSelected ? displayColor : (isLightTheme ? '#666666' : '#888888')
                     }}
                   >
                     {compound.name}
                   </span>
-                  <span className="text-gray-500 text-xs uppercase tracking-wide">
+                  <span className={cn("text-xs uppercase tracking-wide", isLightTheme ? "text-gray-600" : "text-gray-500")}>
                     {compound.subtitle}
                   </span>
-                  <span className="text-gray-600 text-xs mt-1">
+                  <span className={cn("text-xs mt-1", isLightTheme ? "text-gray-500" : "text-gray-600")}>
                     {compound.description}
                   </span>
                 </div>
@@ -1179,7 +1188,7 @@ export default function Game() {
         </div>
 
         {/* Confirm Strategy Button - Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#121212' }}>
+        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3" style={{ backgroundColor: isLightTheme ? '#ffffff' : '#121212' }}>
           {selectedDriver && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
@@ -1196,8 +1205,8 @@ export default function Game() {
               className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{ 
                 fontFamily: 'Formula1',
-                backgroundColor: '#dc2626',
-                animation: 'pulse-red 2s infinite'
+                backgroundColor: isLightTheme ? '#22c55e' : '#dc2626',
+                animation: isLightTheme ? 'pulse-green 2s infinite' : 'pulse-red 2s infinite'
               }}
               data-testid="button-confirm-strategy"
             >
@@ -1206,7 +1215,10 @@ export default function Game() {
           )}
           <Link href="/">
             <button 
-              className="text-gray-500 hover:text-white transition-colors text-sm uppercase tracking-wider"
+              className={cn(
+                "transition-colors text-sm uppercase tracking-wider",
+                isLightTheme ? "text-gray-400 hover:text-black" : "text-gray-500 hover:text-white"
+              )}
               data-testid="button-back-menu"
             >
               &lt;&lt; Menu
@@ -1218,6 +1230,10 @@ export default function Game() {
           @keyframes pulse-red {
             0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
             50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0.3); }
+          }
+          @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(34, 197, 94, 0.3); }
           }
         `}</style>
       </div>
