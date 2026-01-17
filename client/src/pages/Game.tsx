@@ -571,6 +571,13 @@ export default function Game() {
     }
   }, [selectedDriver, selectedCircuit, gameStatus]);
 
+  // Auto-select first circuit when entering selecting state
+  useEffect(() => {
+    if (gameStatus === 'selecting' && !selectedCircuit) {
+      setSelectedCircuit(CIRCUITS[0]);
+    }
+  }, [gameStatus, selectedCircuit]);
+
   // Keyboard input for desktop
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1142,78 +1149,244 @@ export default function Game() {
     );
   }
 
-  // Circuit Selection Screen
+  // Circuit Selection Screen - Dark Race Setup
   if (gameStatus === 'selecting') {
-    return (
-      <GameLayout coins={state.coins} trackName="Select Circuit">
-        <div className="flex-1 flex flex-col py-4 px-4 overflow-y-auto">
-          <div className="text-center mb-4">
-            <h2 className="text-xl font-bold mb-1" style={{ fontFamily: 'Formula1' }}>CHOOSE CIRCUIT</h2>
-            <p className="text-muted-foreground text-sm">Each track tests a different math skill</p>
-          </div>
+    const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
+    const displayCircuit = selectedCircuit || CIRCUITS[0];
+    
+    const goToPrevCircuit = () => {
+      const newIndex = currentCircuitIndex === 0 ? CIRCUITS.length - 1 : currentCircuitIndex - 1;
+      handleCircuitSelect(CIRCUITS[newIndex]);
+      if (state.soundEnabled) playCarouselClick();
+    };
+    
+    const goToNextCircuit = () => {
+      const newIndex = currentCircuitIndex === CIRCUITS.length - 1 ? 0 : currentCircuitIndex + 1;
+      handleCircuitSelect(CIRCUITS[newIndex]);
+      if (state.soundEnabled) playCarouselClick();
+    };
 
-          <div className="flex items-center justify-center gap-2 mb-3">
+    return (
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#121212' }}>
+        {/* Race/Practice Pill Toggle - Top */}
+        <div className="pt-6 pb-2 flex justify-center">
+          <div className="bg-[#2a2a2a] rounded-full p-1 flex gap-1">
             <button
               onClick={() => setIsPracticeMode(false)}
               className={cn(
-                "px-4 py-2 rounded-lg font-medium transition-all",
-                !isPracticeMode ? "bg-red-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                "px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wider transition-all",
+                !isPracticeMode 
+                  ? "bg-red-600 text-white" 
+                  : "bg-transparent text-gray-400 hover:text-white"
               )}
+              style={{ fontFamily: 'Formula1' }}
               data-testid="button-race-mode"
             >
-              RACE
+              Race
             </button>
             <button
               onClick={() => setIsPracticeMode(true)}
               className={cn(
-                "px-4 py-2 rounded-lg font-medium transition-all",
-                isPracticeMode ? "bg-green-600 text-white" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                "px-6 py-2 rounded-full font-bold text-sm uppercase tracking-wider transition-all",
+                isPracticeMode 
+                  ? "bg-green-600 text-white" 
+                  : "bg-transparent text-gray-400 hover:text-white"
               )}
+              style={{ fontFamily: 'Formula1' }}
               data-testid="button-practice-mode"
             >
-              PRACTICE
+              Practice
             </button>
           </div>
-
-          <CircuitCarousel onSelect={handleCircuitSelect} soundEnabled={state.soundEnabled} />
-
-          {/* Weather Selection */}
-          <div className="mt-4">
-            <div className="text-center mb-3">
-              <h3 className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>CHOOSE WEATHER</h3>
-            </div>
-            <WeatherCarousel onSelect={setSelectedWeather} selectedWeather={selectedWeather} soundEnabled={state.soundEnabled} />
-          </div>
-
-          {/* Start Race Button */}
-          {selectedCircuit && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 flex justify-center"
-            >
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleStartRace}
-                className="bg-red-600 hover:bg-red-500 text-white px-8 py-3 rounded-xl font-bold text-lg transition-all shadow-lg"
-                style={{ fontFamily: 'Formula1' }}
-                data-testid="button-start-race"
-              >
-                START RACE
-              </motion.button>
-            </motion.div>
-          )}
-
-          <div className="mt-4 text-center">
-            <Link href="/">
-              <button className="text-muted-foreground hover:text-foreground transition-colors text-sm">
-                ← Back to Menu
-              </button>
-            </Link>
-          </div>
         </div>
-      </GameLayout>
+
+        {/* Main Content - Hero Card with Side Chevrons */}
+        <div className="flex-1 flex items-center justify-center px-4 pb-24">
+          {/* Left Chevron */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={goToPrevCircuit}
+            className="p-3 text-white/60 hover:text-white transition-colors"
+            data-testid="circuit-prev"
+          >
+            <ChevronLeft className="w-12 h-12" />
+          </motion.button>
+
+          {/* Hero Card */}
+          <motion.div
+            key={displayCircuit.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="w-[350px] rounded-[20px] p-6 flex flex-col"
+            style={{ 
+              backgroundColor: '#1e1e1e',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)'
+            }}
+            data-testid={`hero-card-${displayCircuit.id}`}
+          >
+            {/* Header - Circuit Name & Flag */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <h2 
+                className="text-2xl font-bold text-white uppercase tracking-wider"
+                style={{ fontFamily: 'Formula1' }}
+              >
+                {displayCircuit.name}
+              </h2>
+              <img 
+                src={FLAG_IMAGES[displayCircuit.id]} 
+                alt={`${displayCircuit.name} flag`} 
+                className="h-5 w-7 object-cover rounded-sm"
+              />
+            </div>
+
+            {/* SVG Track Map */}
+            <div className="flex-1 flex items-center justify-center py-6">
+              <svg 
+                viewBox="0 0 300 160" 
+                className="w-full h-40"
+                style={{ maxWidth: '280px' }}
+              >
+                <path
+                  d={displayCircuit.paths.s1}
+                  fill="none"
+                  stroke={state.teamColor || '#ffffff'}
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d={displayCircuit.paths.s2}
+                  fill="none"
+                  stroke={state.teamColor || '#ffffff'}
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d={displayCircuit.paths.s3}
+                  fill="none"
+                  stroke={state.teamColor || '#ffffff'}
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+
+            {/* Info - Math Type */}
+            <div className="text-center mb-4">
+              <div className="text-gray-400 text-sm uppercase tracking-wider mb-1">Math Type</div>
+              <div 
+                className="text-white text-lg font-bold uppercase"
+                style={{ fontFamily: 'Formula1' }}
+              >
+                {displayCircuit.type}
+              </div>
+            </div>
+
+            {/* Weather Toggle */}
+            <div className="flex justify-center gap-4 pt-2 border-t border-gray-700">
+              <button
+                onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
+                className={cn(
+                  "p-3 rounded-lg transition-all",
+                  selectedWeather === 'dry' 
+                    ? "bg-yellow-500/20 ring-2 ring-yellow-500" 
+                    : "bg-transparent hover:bg-white/5"
+                )}
+                data-testid="weather-dry"
+              >
+                <img src={weatherSun} alt="Dry" className="w-8 h-8" />
+              </button>
+              <button
+                onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
+                className={cn(
+                  "p-3 rounded-lg transition-all",
+                  selectedWeather === 'wet' 
+                    ? "bg-blue-500/20 ring-2 ring-blue-500" 
+                    : "bg-transparent hover:bg-white/5"
+                )}
+                data-testid="weather-wet"
+              >
+                <img src={weatherRain} alt="Wet" className="w-8 h-8" />
+              </button>
+              <button
+                onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
+                className={cn(
+                  "p-3 rounded-lg transition-all",
+                  selectedWeather === 'random' 
+                    ? "bg-purple-500/20 ring-2 ring-purple-500" 
+                    : "bg-transparent hover:bg-white/5"
+                )}
+                data-testid="weather-random"
+              >
+                <img src={weatherRandom} alt="Random" className="w-8 h-8" />
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Right Chevron */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={goToNextCircuit}
+            className="p-3 text-white/60 hover:text-white transition-colors"
+            data-testid="circuit-next"
+          >
+            <ChevronRight className="w-12 h-12" />
+          </motion.button>
+        </div>
+
+        {/* Track Dots Indicator */}
+        <div className="fixed bottom-32 left-0 right-0 flex justify-center gap-2">
+          {CIRCUITS.map((circuit, index) => (
+            <button
+              key={circuit.id}
+              onClick={() => { handleCircuitSelect(circuit); if (state.soundEnabled) playCarouselClick(); }}
+              className={cn(
+                "w-2 h-2 rounded-full transition-all",
+                currentCircuitIndex === index ? "bg-white" : "bg-white/30"
+              )}
+              data-testid={`circuit-dot-${circuit.id}`}
+            />
+          ))}
+        </div>
+
+        {/* Start Engine Button - Fixed Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#121212' }}>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleStartRace}
+            className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+            style={{ 
+              fontFamily: 'Formula1',
+              backgroundColor: '#dc2626',
+              animation: 'pulse 2s infinite'
+            }}
+            data-testid="button-start-race"
+          >
+            Start Engine
+          </motion.button>
+          <Link href="/">
+            <button 
+              className="text-gray-500 hover:text-white transition-colors text-sm uppercase tracking-wider"
+              data-testid="button-back-menu"
+            >
+              &lt;&lt; Menu
+            </button>
+          </Link>
+        </div>
+
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0.3); }
+          }
+        `}</style>
+      </div>
     );
   }
 
