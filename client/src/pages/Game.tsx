@@ -34,6 +34,12 @@ import circuitMonzaRed from "@/assets/circuit_monza_red.png";
 import circuitMonzaBlack from "@/assets/circuit_monza_black.png";
 import circuitSuzukaRed from "@/assets/circuit_suzuka_red.png";
 import circuitSuzukaBlack from "@/assets/circuit_suzuka_black.png";
+import circuitMonacoRed from "@/assets/circuit_monaco_red.png";
+import circuitMonacoBlack from "@/assets/circuit_monaco_black.png";
+import circuitSilverstoneRed from "@/assets/circuit_silverstone_red.png";
+import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
+import circuitSpaRed from "@/assets/circuit_spa_red.png";
+import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -54,6 +60,9 @@ const TRACK_IMAGES: { [circuitId: string]: string } = {
 const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } } = {
   "monza": { red: circuitMonzaRed, black: circuitMonzaBlack },
   "suzuka": { red: circuitSuzukaRed, black: circuitSuzukaBlack },
+  "monaco": { red: circuitMonacoRed, black: circuitMonacoBlack },
+  "silverstone": { red: circuitSilverstoneRed, black: circuitSilverstoneBlack },
+  "spa": { red: circuitSpaRed, black: circuitSpaBlack },
 };
 
 // Custom checkered flag icon component
