@@ -1380,7 +1380,7 @@ export default function Game() {
               <button
                 onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                 className={cn(
-                  "p-3 rounded-lg transition-all",
+                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                   selectedWeather === 'dry' 
                     ? "bg-yellow-500/20 ring-2 ring-yellow-500" 
                     : "bg-transparent hover:bg-white/5"
@@ -1388,11 +1388,12 @@ export default function Game() {
                 data-testid="weather-dry"
               >
                 <img src={weatherSun} alt="Dry" className="w-8 h-8" />
+                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Standard</span>
               </button>
               <button
                 onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
                 className={cn(
-                  "p-3 rounded-lg transition-all",
+                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                   selectedWeather === 'wet' 
                     ? "bg-blue-500/20 ring-2 ring-blue-500" 
                     : "bg-transparent hover:bg-white/5"
@@ -1400,11 +1401,12 @@ export default function Game() {
                 data-testid="weather-wet"
               >
                 <img src={weatherRain} alt="Wet" className="w-8 h-8" />
+                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Harder</span>
               </button>
               <button
                 onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
                 className={cn(
-                  "p-3 rounded-lg transition-all",
+                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                   selectedWeather === 'random' 
                     ? "bg-purple-500/20 ring-2 ring-purple-500" 
                     : "bg-transparent hover:bg-white/5"
@@ -1412,6 +1414,7 @@ export default function Game() {
                 data-testid="weather-random"
               >
                 <img src={weatherRandom} alt="Random" className="w-8 h-8" />
+                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Surprise</span>
               </button>
             </div>
           </motion.div>
