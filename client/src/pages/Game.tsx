@@ -1076,9 +1076,11 @@ export default function Game() {
     ];
 
     const isLightTheme = raceMode === 'solo';
+    const isMultiplayer = raceMode === 'multiplayer';
+    const bgColor = isLightTheme ? '#ffffff' : isMultiplayer ? '#1a1212' : '#121212';
     
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: isLightTheme ? '#ffffff' : '#121212' }}>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: bgColor }}>
         {/* Session Mode Toggle - Top */}
         <div className="pt-8 pb-4 flex justify-center">
           <div className={cn("rounded-full p-1 flex", isLightTheme ? "bg-gray-200" : "bg-[#2a2a2a]")}>
@@ -1188,7 +1190,7 @@ export default function Game() {
         </div>
 
         {/* Confirm Strategy Button - Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3" style={{ backgroundColor: isLightTheme ? '#ffffff' : '#121212' }}>
+        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3" style={{ backgroundColor: bgColor }}>
           {selectedDriver && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
