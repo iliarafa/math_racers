@@ -1214,7 +1214,7 @@ export default function Game() {
               className={cn(
                 "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 !isPracticeMode && raceMode === 'bot'
-                  ? "bg-blue-600 text-white" 
+                  ? "bg-purple-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               )}
               style={{ fontFamily: 'Formula1' }}
@@ -1412,8 +1412,8 @@ export default function Game() {
             className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
             style={{ 
               fontFamily: 'Formula1',
-              backgroundColor: isPracticeMode ? '#16a34a' : raceMode === 'bot' ? '#2563eb' : '#dc2626',
-              animation: isPracticeMode ? 'pulse-green 2s infinite' : 'pulse-red 2s infinite'
+              backgroundColor: isPracticeMode ? '#16a34a' : raceMode === 'bot' ? '#9333ea' : '#dc2626',
+              animation: isPracticeMode ? 'pulse-green 2s infinite' : raceMode === 'bot' ? 'pulse-purple 2s infinite' : 'pulse-red 2s infinite'
             }}
             data-testid="button-start-race"
           >
@@ -1437,6 +1437,10 @@ export default function Game() {
           @keyframes pulse-green {
             0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
             50% { box-shadow: 0 0 20px 10px rgba(22, 163, 74, 0.3); }
+          }
+          @keyframes pulse-purple {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(147, 51, 234, 0.3); }
           }
         `}</style>
       </div>
