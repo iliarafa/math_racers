@@ -7,7 +7,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download } from "lucide-react";
 
 // Import assets
 import helmetSolo from "@/assets/helmet_solo.png";
@@ -629,6 +629,48 @@ export default function Game() {
     const seconds = Math.floor((ms % 60000) / 1000);
     const milliseconds = ms % 1000;
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+  };
+
+  const exportTelemetryCSV = () => {
+    const lines: string[] = [];
+    
+    // Header info
+    lines.push('F1 MATH RACER - TELEMETRY EXPORT');
+    lines.push(`Circuit,${selectedCircuit?.name || 'Unknown'}`);
+    lines.push(`Difficulty,${selectedDriver?.name || 'Unknown'}`);
+    lines.push(`Total Time,${formatTime(elapsedTime)}`);
+    lines.push(`Total Mistakes,${finalMistakes}`);
+    lines.push(`Accuracy,${Math.round(((raceLength - finalMistakes) / raceLength) * 100)}%`);
+    lines.push('');
+    
+    // Lap-by-lap analytics
+    lines.push('LAP ANALYTICS');
+    lines.push('Lap,Question,Your Answer,Correct Answer,Result,Speed,Response Time (ms),Sector Color');
+    lapResults.forEach((lap, index) => {
+      lines.push(`${index + 1},${lap.question},${lap.playerAnswer},${lap.correctAnswer},${lap.result},${lap.speed},${lap.responseTime},${lap.sectorColor}`);
+    });
+    lines.push('');
+    
+    // Mistake review
+    if (mistakeLog.length > 0) {
+      lines.push('MISTAKE REVIEW');
+      lines.push('Question,Your Answer,Correct Answer');
+      mistakeLog.forEach((mistake) => {
+        lines.push(`${mistake.question},${mistake.yourAnswer},${mistake.correctAnswer}`);
+      });
+    }
+    
+    // Create and download CSV
+    const csvContent = lines.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `telemetry_${selectedCircuit?.id || 'race'}_${Date.now()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleCircuitSelect = (circuit: Circuit) => {
@@ -1628,6 +1670,13 @@ export default function Game() {
                 data-testid="button-analytics"
               >
                 <BarChart3 className="w-4 h-4" /> Analytics
+              </button>
+              <button
+                onClick={exportTelemetryCSV}
+                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                data-testid="button-export-telemetry"
+              >
+                <Download className="w-4 h-4" /> Export Telemetry
               </button>
               <button onClick={restartRace} className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2" data-testid="button-race-again">
                 <RotateCcw className="w-4 h-4" /> Race Again
