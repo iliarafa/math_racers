@@ -6,6 +6,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 export interface Question {
   display: string;
   answer: number;
+  botTime: number; // Bot's response time in ms for this question
 }
 
 export interface Driver {
@@ -396,6 +397,45 @@ export function useGameState() {
   };
 }
 
+// Calculate bot's response time based on difficulty, operation type, and randomness
+function calculateBotTime(difficulty: Difficulty, operationType: string): number {
+  // Base times in milliseconds by difficulty
+  let baseTime: number;
+  if (difficulty === 'easy') {
+    baseTime = 2500; // 2.5 seconds base for easy
+  } else if (difficulty === 'medium') {
+    baseTime = 3000; // 3 seconds base for medium
+  } else {
+    baseTime = 3500; // 3.5 seconds base for hard
+  }
+  
+  // Operation type modifier - multiplication/division takes longer
+  let operationModifier = 1.0;
+  switch (operationType) {
+    case "Addition":
+      operationModifier = 0.85; // Fastest
+      break;
+    case "Subtraction":
+      operationModifier = 0.95;
+      break;
+    case "Multiplication":
+      operationModifier = 1.15;
+      break;
+    case "Division":
+      operationModifier = 1.20;
+      break;
+    case "Variables":
+      operationModifier = 1.25; // Slowest
+      break;
+  }
+  
+  // Apply modifier and add randomness (±25%)
+  const modifiedTime = baseTime * operationModifier;
+  const randomFactor = 0.75 + Math.random() * 0.5; // 0.75 to 1.25
+  
+  return Math.round(modifiedTime * randomFactor);
+}
+
 export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
   
@@ -468,5 +508,8 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
       answer = num1 + num2;
   }
   
-  return { display, answer };
+  // Calculate bot's time for this question
+  const botTime = calculateBotTime(difficulty, circuit.type);
+  
+  return { display, answer, botTime };
 }
