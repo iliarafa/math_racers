@@ -1359,7 +1359,7 @@ export default function Game() {
         {/* Main Content - Hero Card with Side Chevrons */}
         <div className="flex-1 flex items-start justify-center px-8 pb-24 pt-4">
           {selectedTab === 'multiplayer' ? (
-            /* Multiplayer Card */
+            /* Multiplayer Card - matching track card proportions */
             <div className="flex flex-col items-center">
               <motion.div
                 key="multiplayer-card"
@@ -1373,7 +1373,7 @@ export default function Game() {
                 }}
                 data-testid="hero-card-multiplayer"
               >
-                {/* Header */}
+                {/* Header - matching track card header */}
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <h2 
                     className="text-2xl font-bold uppercase tracking-wider text-gray-900"
@@ -1384,20 +1384,22 @@ export default function Game() {
                   <Globe className="w-6 h-6 text-blue-600" />
                 </div>
 
-                {/* VS Graphic */}
+                {/* VS Graphic - matching track map area exactly */}
                 <div className="flex-1 flex items-center justify-center py-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>P1</span>
-                    </div>
-                    <span className="text-3xl font-bold text-gray-400" style={{ fontFamily: 'Formula1' }}>VS</span>
-                    <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>P2</span>
+                  <div className="h-40 flex items-center justify-center" style={{ maxWidth: '280px' }}>
+                    <div className="flex items-center gap-6">
+                      <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
+                        <span className="text-3xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>P1</span>
+                      </div>
+                      <span className="text-4xl font-bold text-gray-400" style={{ fontFamily: 'Formula1' }}>VS</span>
+                      <div className="w-24 h-24 rounded-full bg-red-600 flex items-center justify-center shadow-lg">
+                        <span className="text-3xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>P2</span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Info */}
+                {/* Info - matching Math Type section */}
                 <div className="text-center mb-4">
                   <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Real-Time Racing</div>
                   <div 
@@ -1408,11 +1410,20 @@ export default function Game() {
                   </div>
                 </div>
 
-                {/* Description */}
-                <div className="text-center pt-2 border-t border-gray-300">
-                  <p className="text-xs text-gray-500 mt-3">
-                    Create or join a room to race against a friend in real-time
-                  </p>
+                {/* Bottom section - matching weather toggle section exactly */}
+                <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+                  <div className="p-3 rounded-lg flex flex-col items-center gap-1 bg-transparent">
+                    <img src={weatherSun} alt="Create" className="w-8 h-8 opacity-60" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Create</span>
+                  </div>
+                  <div className="p-3 rounded-lg flex flex-col items-center gap-1 bg-transparent">
+                    <img src={weatherRain} alt="Join" className="w-8 h-8 opacity-60" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Join</span>
+                  </div>
+                  <div className="p-3 rounded-lg flex flex-col items-center gap-1 bg-transparent">
+                    <img src={weatherRandom} alt="Race" className="w-8 h-8 opacity-60" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Race</span>
+                  </div>
                 </div>
               </motion.div>
             </div>
