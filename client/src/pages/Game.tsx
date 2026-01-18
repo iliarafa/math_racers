@@ -475,7 +475,7 @@ const playIncorrectSound = () => {
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime } = useGameState();
   const [, setLocation] = useLocation();
-  const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer' | null>(null);
+  const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
   const [botProgress, setBotProgress] = useState(0);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
@@ -523,21 +523,32 @@ export default function Game() {
     soundEnabledRef.current = state.soundEnabled;
   }, [state.soundEnabled]);
 
+  // Sync raceMode with selectedTab - race mode always uses bot, practice uses solo
+  useEffect(() => {
+    if (selectedTab === 'race' && !isPracticeMode) {
+      setRaceMode('bot');
+    } else if (selectedTab === 'practice' || isPracticeMode) {
+      setRaceMode('solo');
+    }
+  }, [selectedTab, isPracticeMode]);
+
   // Handle mode query parameter from navigation
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('mode');
     if (mode === 'practice') {
+      setSelectedTab('practice');
       setIsPracticeMode(true);
-      setRaceMode('solo');
+      // raceMode will be synced by the useEffect above
       setGameStatus('selecting');
       // Auto-select first driver for practice
       if (!selectedDriver) {
         setSelectedDriver(DRIVERS[0]);
       }
     } else if (mode === 'race') {
+      setSelectedTab('race');
       setIsPracticeMode(false);
-      setRaceMode('bot');
+      // raceMode will be synced by the useEffect above
       setGameStatus('selecting');
       // Auto-select first driver for race
       if (!selectedDriver) {
@@ -709,6 +720,12 @@ export default function Game() {
   const handleStartRace = () => {
     if (!selectedCircuit) return;
     setBotProgress(0);
+    // Ensure race mode has bot opponent (practice mode uses solo)
+    if (!isPracticeMode) {
+      setRaceMode('bot');
+    } else {
+      setRaceMode('solo');
+    }
     setGameStatus('countdown');
   };
 
@@ -1071,7 +1088,7 @@ export default function Game() {
     setQuestion(null);
     setMistakeLog([]);
     setShowMistakeReview(false);
-    setRaceMode('solo');
+    setRaceMode('bot'); // Race mode always uses bot opponent
     setSelectedWeather('dry');
     setActualWeather('dry');
     resetStreak();
