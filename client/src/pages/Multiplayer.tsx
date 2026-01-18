@@ -662,7 +662,7 @@ export default function Multiplayer() {
   // Lobby menu - Access Pass Card Design
   if (gameStatus === "lobby") {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f2f2f7' }}>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#1a1a1a' }}>
         {/* Race/Practice/Multiplayer Pill Toggle - Top */}
         <div className="pt-6 pb-2 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
@@ -904,7 +904,7 @@ export default function Multiplayer() {
     };
 
     return (
-      <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
+      <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#1a1a1a' }}>
         {/* Header */}
         <div className="pt-6 pb-2 flex justify-center">
           <div className="bg-black text-white px-4 py-2 rounded-full">
