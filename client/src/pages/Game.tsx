@@ -514,6 +514,7 @@ export default function Game() {
   const penaltyTimeRef = useRef(0);
   const raceStartTimeRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(state.soundEnabled);
+  const touchStartXRef = useRef<number | null>(null);
   
   useEffect(() => {
     soundEnabledRef.current = state.soundEnabled;
@@ -1260,6 +1261,23 @@ export default function Game() {
       if (state.soundEnabled) playCarouselClick();
     };
 
+    const handleTouchStart = (e: React.TouchEvent) => {
+      touchStartXRef.current = e.touches[0].clientX;
+    };
+    const handleTouchEnd = (e: React.TouchEvent) => {
+      if (touchStartXRef.current === null) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartXRef.current - touchEndX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+          goToNextCircuit();
+        } else {
+          goToPrevCircuit();
+        }
+      }
+      touchStartXRef.current = null;
+    };
+
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
         {/* Race/Practice/Multiplayer Pill Toggle - Top */}
@@ -1304,28 +1322,31 @@ export default function Game() {
 
         {/* Main Content - Hero Card with Side Chevrons */}
         <div className="flex-1 flex items-center justify-center px-4 pb-24">
-          {/* Left Chevron */}
+          {/* Left Chevron - hidden on mobile */}
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToPrevCircuit}
-            className="p-3 transition-colors text-gray-400 hover:text-gray-900"
+            className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900"
             data-testid="circuit-prev"
           >
             <ChevronLeft className="w-12 h-12" />
           </motion.button>
 
-          {/* Hero Card */}
+          {/* Hero Card - swipeable on mobile */}
           <motion.div
             key={displayCircuit.id}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300"
+            className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
             style={{ 
               backgroundColor: '#f0f0f0',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+              touchAction: 'pan-y'
             }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
             data-testid={`hero-card-${displayCircuit.id}`}
           >
             {/* Header - Circuit Name & Flag */}
@@ -1441,12 +1462,12 @@ export default function Game() {
             </div>
           </motion.div>
 
-          {/* Right Chevron */}
+          {/* Right Chevron - hidden on mobile */}
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToNextCircuit}
-            className="p-3 transition-colors text-gray-400 hover:text-gray-900"
+            className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900"
             data-testid="circuit-next"
           >
             <ChevronRight className="w-12 h-12" />
