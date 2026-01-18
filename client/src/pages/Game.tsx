@@ -745,124 +745,66 @@ export default function Game() {
         playCorrectSound();
       }
       
-      // Calculate speed category based on difficulty or realism mode
-      const difficulty = selectedDriver?.difficulty || 'easy';
+      // NEW GAME LOGIC:
+      // - First 5 questions are calibration (always GREEN)
+      // - Median time from first 5 becomes the reference time
+      // - After calibration:
+      //   - GREEN = faster than reference time
+      //   - YELLOW = slower than reference time
+      //   - PURPLE = faster than bot's time for that question
+      
+      const currentQuestionNumber = progress + 1; // 1-indexed
+      const isCalibrating = currentQuestionNumber <= 5;
+      
       let speed: 'fast' | 'normal' | 'slow';
-      
-      if (state.simMode) {
-        // Realism mode: first 5 questions are calibration (all green)
-        // Then use fastest of first 5 as the threshold
-        const currentQuestionNumber = progress + 1; // 1-indexed
-        
-        if (currentQuestionNumber <= 5) {
-          // Calibration phase - all correct answers are "fast" (green)
-          speed = 'fast';
-          
-          // After this answer is recorded, check if we need to set threshold
-          // We'll set it after the 5th question using lapResults + this responseTime
-          if (currentQuestionNumber === 5) {
-            // Get all response times from first 4 correct answers plus this one
-            const calibrationTimes = lapResults
-              .filter(lap => lap.result === 'correct')
-              .map(lap => lap.responseTime);
-            calibrationTimes.push(responseTime);
-            
-            // Find the fastest time as the threshold
-            if (calibrationTimes.length > 0) {
-              const fastest = Math.min(...calibrationTimes);
-              setRealismThreshold(fastest);
-            }
-          }
-        } else {
-          // Post-calibration: use personal threshold
-          // <= threshold = green (fast), > threshold = yellow (slow)
-          const threshold = realismThreshold || 3000; // fallback
-          speed = responseTime <= threshold ? 'fast' : 'slow';
-        }
-      } else {
-        // Standard mode thresholds
-        // Easy (small numbers): Fast < 2s, Slow > 4s
-        // Medium: Fast < 3s, Slow > 5s
-        // Hard (big numbers): Fast < 4s, Slow > 7s
-        // Wet weather: tighten thresholds by 500ms
-        const wetPenalty = actualWeather === 'wet' ? 500 : 0;
-        const fastThreshold = (difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000) - wetPenalty;
-        const slowThreshold = (difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000) - wetPenalty;
-        speed = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
-      }
-      
-      // Purple retention threshold: 3 seconds for all levels
-      const purpleThreshold = 3000;
-      const isPurpleFast = responseTime < purpleThreshold;
-      
-      // Purple mode logic:
-      // - 5th consecutive correct answer enters purple mode
-      // - Once in purple, must answer under purpleThreshold to stay purple
-      // - Any answer above threshold or incorrect breaks purple mode
-      // - In realism mode, purple is disabled during calibration (first 5 questions)
-      
-      // Determine sector color and purple mode state BEFORE updating state
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
-      let newPurpleMode = inPurpleMode;
-      const currentQuestionNumber = progress + 1;
-      const isCalibrating = state.simMode && currentQuestionNumber <= 5;
       
       if (isCalibrating) {
-        // During calibration: all correct answers are green, no purple mode
+        // Calibration phase: all correct answers are GREEN
+        speed = 'fast';
         sectorColor = 'green';
-        newPurpleMode = false;
-      } else if (inPurpleMode) {
-        // Already in purple mode - must be under purple threshold to maintain
-        if (isPurpleFast) {
-          sectorColor = 'purple';
-          // Stay in purple mode
-        } else {
-          // Too slow breaks purple mode
-          sectorColor = speed === 'slow' ? 'yellow' : 'green';
-          newPurpleMode = false;
+        
+        // After 5th question, calculate median time as reference
+        if (currentQuestionNumber === 5) {
+          // Get all response times from first 4 answers plus this one
+          const calibrationTimes = lapResults
+            .filter(lap => lap.result === 'correct')
+            .map(lap => lap.responseTime);
+          calibrationTimes.push(responseTime);
+          
+          // Calculate median
+          if (calibrationTimes.length > 0) {
+            const sorted = [...calibrationTimes].sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            const median = sorted.length % 2 !== 0 
+              ? sorted[mid] 
+              : (sorted[mid - 1] + sorted[mid]) / 2;
+            setRealismThreshold(median);
+          }
         }
       } else {
-        // Not in purple mode - check if we should enter
-        // Count consecutive correct answers AFTER losing purple
-        // Skip both the last purple lap AND the breaking lap
-        let consecutiveCorrect = 0;
-        let lastPurpleIndex = -1;
+        // Post-calibration: use reference time for green/yellow, bot time for purple
+        const referenceTime = realismThreshold || 3000; // fallback if somehow not set
+        const botTime = question.botTime;
         
-        // Find the last purple lap
-        for (let j = lapResults.length - 1; j >= 0; j--) {
-          if (lapResults[j].sectorColor === 'purple') {
-            lastPurpleIndex = j;
-            break;
-          }
-        }
-        
-        // Count consecutive correct AFTER the breaking lap
-        // If never had purple (lastPurpleIndex = -1), count from start
-        // If had purple, skip the purple lap AND the lap that broke it
-        const startIndex = lastPurpleIndex === -1 ? 0 : lastPurpleIndex + 2;
-        for (let j = startIndex; j < lapResults.length; j++) {
-          if (lapResults[j].result === 'correct') {
-            consecutiveCorrect++;
-          } else {
-            consecutiveCorrect = 0;
-          }
-        }
-        
-        // Include this answer (it's correct since we're in this branch)
-        consecutiveCorrect++;
-        
-        // Enter purple mode on 5th consecutive correct
-        if (consecutiveCorrect >= 5) {
-          newPurpleMode = true;
+        // Check if player beat the bot's time for this question
+        if (responseTime < botTime) {
+          // PURPLE - faster than bot
           sectorColor = 'purple';
-        } else if (speed === 'slow') {
-          sectorColor = 'yellow';
-        } else {
+          speed = 'fast';
+        } else if (responseTime <= referenceTime) {
+          // GREEN - faster than or equal to personal reference
           sectorColor = 'green';
+          speed = 'fast';
+        } else {
+          // YELLOW - slower than personal reference
+          sectorColor = 'yellow';
+          speed = 'slow';
         }
       }
       
-      // Update purple mode state
+      // Purple mode state tracks if currently in a purple streak (for UI effects)
+      const newPurpleMode = sectorColor === 'purple';
       setInPurpleMode(newPurpleMode);
       
       const isOvertakeActive = selectedCircuit.drsZones.includes(progress);
