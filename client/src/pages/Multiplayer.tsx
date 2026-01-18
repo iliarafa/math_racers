@@ -665,7 +665,7 @@ export default function Multiplayer() {
     return (
       <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* App Logo */}
-        <div className="pt-8 pb-4 flex justify-center shrink-0 bg-[#525252]">
+        <div className="pt-4 pb-2 flex justify-center shrink-0 bg-[#525252]">
           <Link href="/">
             <img 
               src={logoImage} 
