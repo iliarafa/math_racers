@@ -1157,7 +1157,6 @@ export default function Game() {
             className="h-8 object-contain"
           />
         </div>
-
         {/* Section Title */}
         <div className="text-center pt-4 pb-8">
           <h2 
@@ -1167,7 +1166,6 @@ export default function Game() {
             Select Compound
           </h2>
         </div>
-
         {/* Compound Cards */}
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 pb-24">
           {compoundOptions.map((compound) => {
@@ -1191,7 +1189,7 @@ export default function Game() {
                 <img 
                   src={compound.tire} 
                   alt={compound.name} 
-                  className="w-32 h-32 object-contain" 
+                  className="w-32 h-32 object-contain pl-[7px] pr-[7px]" 
                 />
                 <div className="flex flex-col items-start">
                   <span 
@@ -1214,7 +1212,6 @@ export default function Game() {
             );
           })}
         </div>
-
         {/* Confirm Strategy Button - Fixed Bottom */}
         <div className="fixed bottom-0 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
           {selectedDriver && (
@@ -1244,7 +1241,6 @@ export default function Game() {
             </button>
           </Link>
         </div>
-
         <style>{`
           @keyframes pulse-green {
             0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
