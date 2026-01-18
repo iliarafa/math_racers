@@ -181,7 +181,7 @@ const WeatherCarousel = ({
           <ChevronLeft className="w-5 h-5" />
         </button>
         
-        <div className="overflow-hidden flex-1" ref={emblaRef}>
+        <div className="overflow-hidden flex-1" ref={emblaRef} style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}>
           <div className="flex">
             {WEATHER_OPTIONS.map((weather, index) => (
               <div
@@ -279,7 +279,7 @@ const CircuitCarousel = ({ onSelect, soundEnabled }: { onSelect: (circuit: Circu
           <ChevronLeft className="w-6 h-6" />
         </button>
         
-        <div className="overflow-hidden flex-1" ref={emblaRef}>
+        <div className="overflow-hidden flex-1" ref={emblaRef} style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}>
           <div className="flex">
             {CIRCUITS.map((circuit, index) => (
               <div
