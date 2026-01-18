@@ -49,7 +49,7 @@ export function GameLayout({ children, coins, trackName, hideHeader = false, loc
               </Link>
             )}
             
-            <div className="flex items-center gap-1.5 md:gap-2 text-sm px-2 md:px-3 py-1.5 rounded-md bg-[#ffffff]" style={{ fontFamily: 'Formula1' }}>
+            <div className="flex items-center gap-1.5 md:gap-2 text-sm px-2 md:px-3 py-1.5 rounded-md text-[#ffffff] bg-[#000000]" style={{ fontFamily: 'Formula1' }}>
               <Trophy className="w-3 h-3" />
               <span>{coins}</span>
             </div>
