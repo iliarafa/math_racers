@@ -180,48 +180,37 @@ const WeatherCarousel = ({
   };
 
   return (
-    <div className="w-full max-w-sm mx-auto">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={scrollPrev}
-          className="hidden md:flex p-2 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
-          data-testid="weather-carousel-prev"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        
-        <div className="overflow-hidden flex-1 cursor-grab active:cursor-grabbing" ref={emblaRef} style={{ touchAction: 'none' }}>
-          <div className="flex">
-            {WEATHER_OPTIONS.map((weather, index) => (
-              <div
-                key={weather.id}
-                className="flex-[0_0_100%] min-w-0 px-4"
-              >
-                <div
-                  className={cn(
-                    "w-full py-4 rounded-xl transition-all flex flex-col items-center gap-2",
-                    selectedIndex === index 
-                      ? "bg-secondary/50" 
-                      : "bg-transparent"
-                  )}
-                >
-                  <img src={getWeatherIcon(weather.icon)} alt={weather.name} className="w-12 h-12 object-contain pointer-events-none" />
-                  <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{weather.name}</div>
-                  <div className="text-xs text-muted-foreground text-center px-2" data-testid={`text-weather-description-${weather.id}`}>{weather.description}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="w-full max-w-sm mx-auto relative">
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex">
+          {WEATHER_OPTIONS.map((weather) => (
+            <div
+              key={weather.id}
+              className="flex-[0_0_100%] min-w-0 flex flex-col items-center gap-2 py-2"
+            >
+              <img src={getWeatherIcon(weather.icon)} alt={weather.name} className="w-12 h-12 object-contain select-none" draggable={false} />
+              <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{weather.name}</div>
+              <div className="text-xs text-muted-foreground text-center px-2" data-testid={`text-weather-description-${weather.id}`}>{weather.description}</div>
+            </div>
+          ))}
         </div>
-
-        <button
-          onClick={scrollNext}
-          className="hidden md:flex p-2 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
-          data-testid="weather-carousel-next"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
       </div>
+
+      <button
+        onClick={scrollPrev}
+        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full p-2 rounded-full hover:bg-secondary transition-colors"
+        data-testid="weather-carousel-prev"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+
+      <button
+        onClick={scrollNext}
+        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-full p-2 rounded-full hover:bg-secondary transition-colors"
+        data-testid="weather-carousel-next"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
 
       <div className="flex justify-center gap-2 mt-3">
         {WEATHER_OPTIONS.map((_, index) => (
@@ -281,52 +270,41 @@ const CircuitCarousel = ({ onSelect, soundEnabled }: { onSelect: (circuit: Circu
   }, [scrollPrev, scrollNext]);
 
   return (
-    <div className="w-full max-w-lg mx-auto">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={scrollPrev}
-          className="hidden md:flex p-2 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
-          data-testid="carousel-prev"
-        >
-          <ChevronLeft className="w-6 h-6" />
-        </button>
-        
-        <div className="overflow-hidden flex-1 cursor-grab active:cursor-grabbing" ref={emblaRef} style={{ touchAction: 'none' }}>
-          <div className="flex">
-            {CIRCUITS.map((circuit, index) => (
-              <div
-                key={circuit.id}
-                className="flex-[0_0_100%] min-w-0 px-4"
-              >
-                <div
-                  className={cn(
-                    "w-full py-4 rounded-xl transition-all flex justify-center",
-                    selectedIndex === index 
-                      ? "bg-secondary/50" 
-                      : "bg-transparent"
-                  )}
-                  data-testid={`circuit-${circuit.id}`}
-                >
-                  <img 
-                    src={TRACK_IMAGES[circuit.id]} 
-                    alt={`${circuit.name} - ${circuit.type}`} 
-                    className="h-44 object-contain pointer-events-none"
-                    data-testid={`track-image-${circuit.id}`}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="w-full max-w-lg mx-auto relative">
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex">
+          {CIRCUITS.map((circuit, index) => (
+            <div
+              key={circuit.id}
+              className="flex-[0_0_100%] min-w-0 flex justify-center"
+            >
+              <img 
+                src={TRACK_IMAGES[circuit.id]} 
+                alt={`${circuit.name} - ${circuit.type}`} 
+                className="h-44 object-contain select-none"
+                draggable={false}
+                data-testid={`track-image-${circuit.id}`}
+              />
+            </div>
+          ))}
         </div>
-
-        <button
-          onClick={scrollNext}
-          className="hidden md:flex p-2 rounded-full hover:bg-secondary transition-colors flex-shrink-0"
-          data-testid="carousel-next"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
       </div>
+
+      <button
+        onClick={scrollPrev}
+        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full p-2 rounded-full hover:bg-secondary transition-colors"
+        data-testid="carousel-prev"
+      >
+        <ChevronLeft className="w-6 h-6" />
+      </button>
+
+      <button
+        onClick={scrollNext}
+        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-full p-2 rounded-full hover:bg-secondary transition-colors"
+        data-testid="carousel-next"
+      >
+        <ChevronRight className="w-6 h-6" />
+      </button>
 
       <div className="flex justify-center gap-2 mt-4">
         {CIRCUITS.map((_, index) => (
