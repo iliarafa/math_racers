@@ -37,6 +37,7 @@ import circuitSilverstoneRed from "@/assets/circuit_silverstone_red.png";
 import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
+import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -364,6 +365,16 @@ const initAudio = () => {
     oscillator.start();
     oscillator.stop(ctx.currentTime + 0.001);
     audioInitialized = true;
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+const playSimplyLovely = () => {
+  try {
+    const audio = new Audio(simplyLovelyAudio);
+    audio.volume = 0.7;
+    audio.play();
   } catch (e) {
     // Silent fail
   }
@@ -1013,6 +1024,9 @@ export default function Game() {
     if (mistakeCount === 0) {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
        incrementRacesWon();
+       if (selectedDriver?.difficulty === 'hard' && state.soundEnabled) {
+         playSimplyLovely();
+       }
     }
     // Update personal best time and record session lap time (only in race mode, not practice)
     if (!isPracticeMode && selectedCircuit) {
