@@ -35,7 +35,7 @@ export default function Garage() {
                 <ChevronLeft className="w-6 h-6 text-black" />
               </button>
             </Link>
-            <h1 className="text-lg font-bold tracking-widest uppercase text-[#000000cc]"> Dashboard</h1>
+            <h1 className="text-lg font-bold tracking-widest uppercase text-[#ffffffcc]"> Dashboard</h1>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
