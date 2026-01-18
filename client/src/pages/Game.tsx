@@ -1238,6 +1238,7 @@ export default function Game() {
           <Link href="/">
             <button 
               className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+              style={{ fontFamily: 'Formula1' }}
               data-testid="button-back"
             >
               &lt;&lt; Back
@@ -1549,6 +1550,7 @@ export default function Game() {
           <button 
             onClick={() => setGameStatus('driver')}
             className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
+            style={{ fontFamily: 'Formula1' }}
             data-testid="button-back"
           >
             &lt;&lt; Back
