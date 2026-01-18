@@ -1293,7 +1293,7 @@ export default function Game() {
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo */}
-        <div className="pt-6 flex justify-center">
+        <div className="pt-8 pb-4 flex justify-center">
           <img 
             src={logoImage} 
             alt="F1 Math Racer" 
@@ -1302,7 +1302,7 @@ export default function Game() {
         </div>
 
         {/* Race/Practice/Multiplayer Pill Toggle */}
-        <div className="pt-4 pb-2 flex justify-center">
+        <div className="pb-4 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
               onClick={() => { setIsPracticeMode(false); setRaceMode('bot'); }}
