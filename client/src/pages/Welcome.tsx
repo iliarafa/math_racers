@@ -30,7 +30,7 @@ export default function Welcome() {
           <img 
             src={taglineImage} 
             alt="No Risk. Full Math." 
-            className="w-auto max-w-[50%]"
+            className="w-auto max-w-[35%]"
             data-testid="img-tagline"
           />
         </div>
