@@ -1159,7 +1159,7 @@ export default function Game() {
         </div>
 
         {/* Section Title */}
-        <div className="text-center pb-4">
+        <div className="text-center pt-4 pb-8">
           <h2 
             className="text-xl font-bold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Formula1' }}
