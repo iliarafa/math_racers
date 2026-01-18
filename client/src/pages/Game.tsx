@@ -502,7 +502,7 @@ export default function Game() {
   const [inPurpleMode, setInPurpleMode] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
   const [realismThreshold, setRealismThreshold] = useState<number | null>(null);
-  const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('selecting');
+  const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -648,8 +648,7 @@ export default function Game() {
   const handleDriverSelect = (driver: Driver) => {
     initAudio();
     setSelectedDriver(driver);
-    setBotProgress(0);
-    setGameStatus('countdown');
+    setGameStatus('selecting');
   };
 
   const formatTime = (ms: number) => {
@@ -708,7 +707,8 @@ export default function Game() {
 
   const handleStartRace = () => {
     if (!selectedCircuit) return;
-    setGameStatus('driver_select');
+    setBotProgress(0);
+    setGameStatus('countdown');
   };
 
   const handleSubmit = (e?: React.FormEvent) => {
@@ -1060,7 +1060,7 @@ export default function Game() {
     setShowPenalty(false);
     setElapsedTime(0);
     setCountdownLight(0);
-    setGameStatus('selecting');
+    setGameStatus('driver_select');
     setSelectedDriver(null);
     setSelectedCircuit(null);
     setIsPracticeMode(false);
@@ -1108,7 +1108,7 @@ export default function Game() {
   const handleMultiplayerSelect = () => {
     setSelectedDriver(null);
     setSelectedCircuit(null);
-    setGameStatus('selecting');
+    setGameStatus('driver_select');
     setLocation('/multiplayer');
   };
 
@@ -1227,12 +1227,12 @@ export default function Game() {
               className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{ 
                 fontFamily: 'Formula1',
-                backgroundColor: isPracticeMode ? '#16a34a' : raceMode === 'bot' ? '#9333ea' : '#dc2626',
-                animation: isPracticeMode ? 'pulse-green 2s infinite' : raceMode === 'bot' ? 'pulse-purple 2s infinite' : 'pulse-red 2s infinite'
+                backgroundColor: '#22c55e',
+                animation: 'pulse-green 2s infinite'
               }}
               data-testid="button-confirm-strategy"
             >
-              {isPracticeMode ? 'Start Practice' : 'Start Engine'}
+              Select Track
             </motion.button>
           )}
           <Link href="/">
@@ -1249,14 +1249,6 @@ export default function Game() {
           @keyframes pulse-green {
             0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
             50% { box-shadow: 0 0 20px 10px rgba(34, 197, 94, 0.3); }
-          }
-          @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0.3); }
-          }
-          @keyframes pulse-purple {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(147, 51, 234, 0.3); }
           }
         `}</style>
       </div>
@@ -1547,12 +1539,12 @@ export default function Game() {
             className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
             style={{ 
               fontFamily: 'Formula1',
-              backgroundColor: '#22c55e',
-              animation: 'pulse-green 2s infinite'
+              backgroundColor: isPracticeMode ? '#16a34a' : raceMode === 'bot' ? '#9333ea' : '#dc2626',
+              animation: isPracticeMode ? 'pulse-green 2s infinite' : raceMode === 'bot' ? 'pulse-purple 2s infinite' : 'pulse-red 2s infinite'
             }}
             data-testid="button-start-race"
           >
-            Select Compound
+            {isPracticeMode ? 'Start Practice' : 'Start Engine'}
           </motion.button>
           <Link href="/">
             <button 
