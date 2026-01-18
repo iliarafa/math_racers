@@ -20,6 +20,7 @@ import flag_japan from "@/assets/flag_japan.png";
 import flag_monaco from "@/assets/flag_monaco.png";
 import flag_uk from "@/assets/flag_uk.png";
 import flag_belgium from "@/assets/flag_belgium.png";
+import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
 const CIRCUIT_MAP_IMAGES: Record<string, { black: string }> = {
   monza: { black: circuit_monza_black },
@@ -663,33 +664,15 @@ export default function Multiplayer() {
   if (gameStatus === "lobby") {
     return (
       <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
-        {/* Race/Practice/Multiplayer Pill Toggle - Top */}
-        <div className="pt-4 pb-2 flex justify-center shrink-0">
-          <div className="rounded-full p-1 flex gap-1 bg-gray-200">
-            <button
-              onClick={() => setLocation('/game?mode=race')}
-              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-race-mode"
-            >
-              Race
-            </button>
-            <button
-              onClick={() => setLocation('/game?mode=practice')}
-              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-practice-mode"
-            >
-              Practice
-            </button>
-            <button
-              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-black text-white"
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-multiplayer-mode"
-            >
-              Multiplayer
-            </button>
-          </div>
+        {/* App Logo */}
+        <div className="pt-8 pb-4 flex justify-center shrink-0">
+          <Link href="/">
+            <img 
+              src={logoImage} 
+              alt="F1 Math Racer" 
+              className="h-8 object-contain cursor-pointer hover:opacity-70 transition-opacity"
+            />
+          </Link>
         </div>
 
         {/* Centered Card Container */}
