@@ -1189,7 +1189,7 @@ export default function Game() {
                 <img 
                   src={compound.tire} 
                   alt={compound.name} 
-                  className="w-32 h-32 object-contain pl-[7px] pr-[7px]" 
+                  className="w-32 h-32 object-contain pl-[4px] pr-[4px]" 
                 />
                 <div className="flex flex-col items-start">
                   <span 
