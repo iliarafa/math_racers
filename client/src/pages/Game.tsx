@@ -522,6 +522,33 @@ export default function Game() {
     soundEnabledRef.current = state.soundEnabled;
   }, [state.soundEnabled]);
 
+  // Handle mode query parameter from navigation
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    if (mode === 'practice') {
+      setIsPracticeMode(true);
+      setRaceMode('solo');
+      setGameStatus('selecting');
+      // Auto-select first driver for practice
+      if (!selectedDriver) {
+        setSelectedDriver(DRIVERS[0]);
+      }
+    } else if (mode === 'race') {
+      setIsPracticeMode(false);
+      setRaceMode('bot');
+      setGameStatus('selecting');
+      // Auto-select first driver for race
+      if (!selectedDriver) {
+        setSelectedDriver(DRIVERS[0]);
+      }
+    }
+    // Clear the query param to avoid re-triggering
+    if (mode) {
+      window.history.replaceState({}, '', '/game');
+    }
+  }, []);
+
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {

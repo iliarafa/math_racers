@@ -598,7 +598,7 @@ export default function Multiplayer() {
         <div className="pt-6 pb-2 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
-              onClick={() => setLocation('/game')}
+              onClick={() => setLocation('/game?mode=race')}
               className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-race-mode"
@@ -606,7 +606,7 @@ export default function Multiplayer() {
               Race
             </button>
             <button
-              onClick={() => setLocation('/game')}
+              onClick={() => setLocation('/game?mode=practice')}
               className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-practice-mode"
@@ -630,7 +630,7 @@ export default function Multiplayer() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[400px] bg-white rounded-[24px] p-12"
+          className="w-[350px] bg-white rounded-[24px] p-8"
           style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
         >
           {/* Header Section */}
