@@ -1331,11 +1331,6 @@ export default function Game() {
           </div>
         </div>
 
-        {/* Swipe hint - mobile only */}
-        <div className="md:hidden text-center text-xs text-gray-400 uppercase tracking-widest pb-2">
-          Swipe to choose track
-        </div>
-
         {/* Main Content - Hero Card with Side Chevrons */}
         <div className="flex-1 flex items-center justify-center px-4 pb-24">
           {/* Left Chevron - hidden on mobile */}
@@ -1349,7 +1344,14 @@ export default function Game() {
             <ChevronLeft className="w-12 h-12" />
           </motion.button>
 
-          {/* Hero Card - swipeable on mobile */}
+          {/* Card wrapper with swipe hint */}
+          <div className="flex flex-col items-center">
+            {/* Swipe hint - mobile only */}
+            <div className="md:hidden text-center text-[10px] text-gray-400 uppercase tracking-widest pb-3">
+              Swipe to choose track
+            </div>
+
+            {/* Hero Card - swipeable on mobile */}
           <motion.div
             key={displayCircuit.id}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -1478,6 +1480,7 @@ export default function Game() {
               </button>
             </div>
           </motion.div>
+          </div>
 
           {/* Right Chevron - hidden on mobile */}
           <motion.button
