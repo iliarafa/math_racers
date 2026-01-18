@@ -4,7 +4,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Copy, Check, X, Timer, Delete, Pause, Home, Play } from "lucide-react";
+import { ArrowLeft, Copy, Check, X, Timer, Delete, Pause, Home, Play, Globe } from "lucide-react";
 import confetti from "canvas-confetti";
 
 // Custom checkered flag icon component
@@ -590,66 +590,98 @@ export default function Multiplayer() {
     setLocation("/");
   };
   
-  // Lobby menu
+  // Lobby menu - Access Pass Card Design
   if (gameStatus === "lobby") {
     return (
-      <GameLayout coins={state.coins} hideHeader>
-        <div className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
-          <button 
-            onClick={goBack}
-            className="absolute top-4 left-4 p-2 hover:bg-secondary rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          
-          <CheckeredFlag className="w-16 h-16 text-black" />
-          <h1 className="text-3xl font-bold">Multiplayer</h1>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#f2f2f7' }}>
+        <button 
+          onClick={goBack}
+          className="absolute top-4 left-4 p-2 hover:bg-white/50 rounded-full transition-colors"
+          data-testid="button-back"
+        >
+          <ArrowLeft className="w-6 h-6 text-black" />
+        </button>
+        
+        {/* Access Pass Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-[400px] bg-white rounded-[24px] p-12"
+          style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
+        >
+          {/* Header Section */}
+          <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-gray-200">
+            <Globe className="w-12 h-12 text-black mb-3" />
+            <h1 
+              className="text-2xl font-bold text-black uppercase tracking-wide"
+              style={{ fontFamily: 'Formula1' }}
+            >
+              Multiplayer Lobby
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">Connect to global server</p>
+          </div>
           
           {mode === "menu" && (
-            <div className="flex flex-col gap-4 w-full max-w-xs">
+            <div className="flex flex-col gap-4">
+              {/* Driver Name Input */}
               <input
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Enter your name"
-                className="h-14 px-4 rounded-lg bg-secondary text-center text-lg font-medium"
+                placeholder="Enter Driver ID..."
+                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-black placeholder:text-gray-400 transition-all border-2 border-transparent focus:border-[#ff2800] focus:bg-white outline-none"
+                style={{ backgroundColor: '#f5f5f5' }}
                 maxLength={20}
+                data-testid="input-driver-name"
               />
+              
+              {/* Host Session Button */}
               <button
                 onClick={() => setMode("create")}
-                className="h-14 bg-primary text-primary-foreground rounded-lg font-bold text-lg hover:opacity-90 transition-all"
+                className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-white transition-all hover:opacity-90"
+                style={{ backgroundColor: '#ff2800', fontFamily: 'Formula1' }}
+                data-testid="button-host-session"
               >
-                Create Room
+                Host Session
               </button>
+              
+              {/* Join Existing Button */}
               <button
                 onClick={() => setMode("join")}
-                className="h-14 bg-secondary text-secondary-foreground rounded-lg font-bold text-lg hover:opacity-90 transition-all"
+                className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-black border-2 border-black bg-white transition-all hover:bg-gray-100"
+                style={{ fontFamily: 'Formula1' }}
+                data-testid="button-join-existing"
               >
-                Join Room
+                Join Existing
               </button>
             </div>
           )}
           
           {mode === "create" && (
-            <div className="flex flex-col gap-4 w-full max-w-xs">
+            <div className="flex flex-col gap-4">
               <input
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Enter your name"
-                className="h-14 px-4 rounded-lg bg-secondary text-center text-lg font-medium"
+                placeholder="Enter Driver ID..."
+                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-black placeholder:text-gray-400 transition-all border-2 border-transparent focus:border-[#ff2800] focus:bg-white outline-none"
+                style={{ backgroundColor: '#f5f5f5' }}
                 maxLength={20}
+                data-testid="input-driver-name-create"
               />
-              {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+              {error && <p className="text-[#ff2800] text-center text-sm font-medium" data-testid="text-error">{error}</p>}
               <button
                 onClick={createRoom}
-                className="h-14 bg-primary text-primary-foreground rounded-lg font-bold text-lg hover:opacity-90 transition-all"
+                className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-white transition-all hover:opacity-90"
+                style={{ backgroundColor: '#ff2800', fontFamily: 'Formula1' }}
+                data-testid="button-create-room"
               >
                 Create Room
               </button>
               <button
                 onClick={() => { setMode("menu"); setError(""); }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider"
+                data-testid="button-back-create"
               >
                 Back
               </button>
@@ -657,40 +689,56 @@ export default function Multiplayer() {
           )}
           
           {mode === "join" && (
-            <div className="flex flex-col gap-4 w-full max-w-xs">
+            <div className="flex flex-col gap-4">
               <input
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Enter your name"
-                className="h-14 px-4 rounded-lg bg-secondary text-center text-lg font-medium"
+                placeholder="Enter Driver ID..."
+                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-black placeholder:text-gray-400 transition-all border-2 border-transparent focus:border-[#ff2800] focus:bg-white outline-none"
+                style={{ backgroundColor: '#f5f5f5' }}
                 maxLength={20}
+                data-testid="input-driver-name-join"
               />
               <input
                 type="text"
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                placeholder="Enter room code"
-                className="h-14 px-4 rounded-lg bg-secondary text-center text-2xl font-bold tracking-widest"
+                placeholder="Room Code"
+                className="h-14 px-4 rounded-xl text-center text-2xl font-bold tracking-widest text-black placeholder:text-gray-400 transition-all border-2 border-transparent focus:border-[#ff2800] focus:bg-white outline-none"
+                style={{ backgroundColor: '#f5f5f5' }}
                 maxLength={4}
+                data-testid="input-room-code"
               />
-              {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+              {error && <p className="text-[#ff2800] text-center text-sm font-medium" data-testid="text-error-join">{error}</p>}
               <button
                 onClick={joinRoom}
-                className="h-14 bg-primary text-primary-foreground rounded-lg font-bold text-lg hover:opacity-90 transition-all"
+                className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-white transition-all hover:opacity-90"
+                style={{ backgroundColor: '#ff2800', fontFamily: 'Formula1' }}
+                data-testid="button-join-room"
               >
                 Join Room
               </button>
               <button
                 onClick={() => { setMode("menu"); setError(""); }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider"
+                data-testid="button-back-join"
               >
                 Back
               </button>
             </div>
           )}
-        </div>
-      </GameLayout>
+          
+          {/* Server Status Footer */}
+          <div className="mt-8 pt-4 border-t border-gray-200 flex items-center justify-center gap-2" data-testid="status-server">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span className="text-xs text-gray-400 uppercase tracking-wider" data-testid="text-server-region">Online Region: Global</span>
+          </div>
+        </motion.div>
+      </div>
     );
   }
   
