@@ -1159,7 +1159,7 @@ export default function Game() {
         </div>
 
         {/* Compound Cards */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 pb-32">
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 pb-24">
           {compoundOptions.map((compound) => {
             const isSelected = selectedDriver?.id === compound.id;
             const displayColor = compound.id === 'champion' ? '#333333' : compound.color;
