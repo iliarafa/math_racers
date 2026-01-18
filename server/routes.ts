@@ -114,5 +114,30 @@ export async function registerRoutes(
     }
   });
 
+  // Update room (for track selection before race)
+  app.put("/api/rooms/:code/update", async (req, res) => {
+    try {
+      const { code } = req.params;
+      const { circuitId, driverId, weather, questions } = req.body;
+
+      const room = await storage.getRoomByCode(code.toUpperCase());
+      
+      if (!room) {
+        return res.status(404).json({ error: "Room not found" });
+      }
+
+      const updatedRoom = await storage.updateRoom(code.toUpperCase(), {
+        circuitId,
+        driverId,
+        questions,
+      });
+
+      res.json({ room: updatedRoom });
+    } catch (error) {
+      console.error("Error updating room:", error);
+      res.status(500).json({ error: "Failed to update room" });
+    }
+  });
+
   return httpServer;
 }

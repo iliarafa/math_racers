@@ -66,7 +66,7 @@ function handleMessage(ws: WebSocket, message: any) {
       handleJoinRoom(ws, message);
       break;
     case "start_countdown":
-      handleStartCountdown(message.roomCode);
+      handleStartCountdown(message.roomCode, message.circuitId, message.driverId, message.weather);
       break;
     case "progress_update":
       handleProgressUpdate(ws, message);
@@ -122,7 +122,7 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
   }
 }
 
-function handleStartCountdown(roomCode: string) {
+function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: string, weather?: string) {
   const room = rooms.get(roomCode);
   if (!room) return;
 
@@ -136,7 +136,13 @@ function handleStartCountdown(roomCode: string) {
   room.hostFinishTime = null;
   room.guestFinishTime = null;
 
-  broadcastToRoom(roomCode, { type: "countdown_start" });
+  // Broadcast countdown start with circuit info so guest can update their selection
+  broadcastToRoom(roomCode, { 
+    type: "countdown_start",
+    circuitId,
+    driverId,
+    weather
+  });
 
   let count = 5;
   const countdownInterval = setInterval(() => {

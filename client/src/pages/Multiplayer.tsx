@@ -4,7 +4,38 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Copy, Check, X, Timer, Delete, Pause, Home, Play, Globe } from "lucide-react";
+import { ArrowLeft, Copy, Check, X, Timer, Delete, Pause, Home, Play, Globe, ChevronLeft, ChevronRight } from "lucide-react";
+
+// Import assets for track selection
+import weatherSun from "@/assets/weather_sun.png";
+import weatherRain from "@/assets/weather_rain.png";
+import weatherRandom from "@/assets/weather_random.png";
+import circuit_monza_black from "@/assets/circuit_monza_black.png";
+import circuit_suzuka_black from "@/assets/circuit_suzuka_black.png";
+import circuit_monaco_black from "@/assets/circuit_monaco_black.png";
+import circuit_silverstone_black from "@/assets/circuit_silverstone_black.png";
+import circuit_spa_black from "@/assets/circuit_spa_black.png";
+import flag_italy from "@/assets/flag_italy.png";
+import flag_japan from "@/assets/flag_japan.png";
+import flag_monaco from "@/assets/flag_monaco.png";
+import flag_uk from "@/assets/flag_uk.png";
+import flag_belgium from "@/assets/flag_belgium.png";
+
+const CIRCUIT_MAP_IMAGES: Record<string, { black: string }> = {
+  monza: { black: circuit_monza_black },
+  suzuka: { black: circuit_suzuka_black },
+  monaco: { black: circuit_monaco_black },
+  silverstone: { black: circuit_silverstone_black },
+  spa: { black: circuit_spa_black },
+};
+
+const FLAG_IMAGES: Record<string, string> = {
+  monza: flag_italy,
+  suzuka: flag_japan,
+  monaco: flag_monaco,
+  silverstone: flag_uk,
+  spa: flag_belgium,
+};
 import confetti from "canvas-confetti";
 
 // Custom checkered flag icon component
@@ -57,7 +88,8 @@ const playKeypadClick = () => {
   }
 };
 
-type GameStatus = "lobby" | "waiting" | "countdown" | "racing" | "finished";
+type GameStatus = "lobby" | "waiting" | "track_select" | "countdown" | "racing" | "finished";
+type Weather = 'dry' | 'wet' | 'random';
 
 export default function Multiplayer() {
   const { state, addCoins } = useGameState();
@@ -78,8 +110,9 @@ export default function Multiplayer() {
   
   // Game state
   const [gameStatus, setGameStatus] = useState<GameStatus>("lobby");
-  const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(CIRCUITS[0]);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(DRIVERS[0]);
+  const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -154,6 +187,16 @@ export default function Multiplayer() {
         setRoomReady(false);
         break;
       case "countdown_start":
+        // Update circuit/driver for guest based on host selection
+        if (message.circuitId) {
+          setSelectedCircuit(CIRCUITS.find(c => c.id === message.circuitId) || CIRCUITS[0]);
+        }
+        if (message.driverId) {
+          setSelectedDriver(DRIVERS.find(d => d.id === message.driverId) || DRIVERS[0]);
+        }
+        if (message.weather) {
+          setSelectedWeather(message.weather);
+        }
         setGameStatus("countdown");
         setCountdownValue(5);
         break;
@@ -314,12 +357,38 @@ export default function Multiplayer() {
     }
   };
   
-  const startRace = () => {
-    if (wsRef.current && roomReady) {
+  const startRace = async () => {
+    if (!wsRef.current || !selectedCircuit || !selectedDriver) return;
+    
+    // Generate questions based on selected circuit
+    const newQuestions: Question[] = [];
+    for (let i = 0; i < raceLength; i++) {
+      newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
+    }
+    setQuestions(newQuestions);
+    
+    // Update room with selected circuit and questions, then start countdown
+    try {
+      await fetch(`/api/rooms/${roomCode}/update`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          circuitId: selectedCircuit.id,
+          driverId: selectedDriver.id,
+          weather: selectedWeather,
+          questions: newQuestions.map(q => ({ display: q.display, answer: q.answer }))
+        })
+      });
+      
       wsRef.current.send(JSON.stringify({
         type: "start_countdown",
-        roomCode
+        roomCode,
+        circuitId: selectedCircuit.id,
+        driverId: selectedDriver.id,
+        weather: selectedWeather
       }));
+    } catch (err) {
+      console.error("Failed to update room:", err);
     }
   };
   
@@ -794,14 +863,16 @@ export default function Multiplayer() {
               <p className="text-green-500 font-medium">Opponent connected!</p>
               {isHost && (
                 <button
-                  onClick={startRace}
-                  className="h-14 px-8 bg-green-600 text-white rounded-lg font-bold text-lg hover:bg-green-500 transition-all"
+                  onClick={() => setGameStatus("track_select")}
+                  className="h-14 px-8 bg-black text-white rounded-lg font-bold text-lg hover:bg-gray-800 transition-all"
+                  style={{ fontFamily: 'Formula1' }}
+                  data-testid="button-choose-track"
                 >
-                  Start Race
+                  Choose Track
                 </button>
               )}
               {!isHost && (
-                <p className="text-muted-foreground">Waiting for host to start...</p>
+                <p className="text-muted-foreground">Waiting for host to choose track...</p>
               )}
             </div>
           )}
@@ -814,6 +885,208 @@ export default function Multiplayer() {
           </button>
         </div>
       </GameLayout>
+    );
+  }
+  
+  // Track Selection (Host only)
+  if (gameStatus === "track_select") {
+    const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
+    const displayCircuit = selectedCircuit || CIRCUITS[0];
+    
+    const goToPrevCircuit = () => {
+      const newIndex = currentCircuitIndex === 0 ? CIRCUITS.length - 1 : currentCircuitIndex - 1;
+      setSelectedCircuit(CIRCUITS[newIndex]);
+    };
+    
+    const goToNextCircuit = () => {
+      const newIndex = currentCircuitIndex === CIRCUITS.length - 1 ? 0 : currentCircuitIndex + 1;
+      setSelectedCircuit(CIRCUITS[newIndex]);
+    };
+
+    return (
+      <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
+        {/* Header */}
+        <div className="pt-6 pb-2 flex justify-center">
+          <div className="bg-black text-white px-4 py-2 rounded-full">
+            <span className="font-bold text-xs uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>
+              Multiplayer - Choose Track
+            </span>
+          </div>
+        </div>
+
+        {/* Main Content - Hero Card with Side Chevrons */}
+        <div className="flex-1 flex items-center justify-center px-4 pb-24">
+          {/* Left Chevron */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={goToPrevCircuit}
+            className="p-3 transition-colors text-gray-400 hover:text-gray-900"
+            data-testid="circuit-prev"
+          >
+            <ChevronLeft className="w-12 h-12" />
+          </motion.button>
+
+          {/* Hero Card */}
+          <motion.div
+            key={displayCircuit.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300"
+            style={{ 
+              backgroundColor: '#f0f0f0',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+            }}
+            data-testid={`hero-card-${displayCircuit.id}`}
+          >
+            {/* Header - Circuit Name & Flag */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <h2 
+                className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+                style={{ fontFamily: 'Formula1' }}
+              >
+                {displayCircuit.name}
+              </h2>
+              <img 
+                src={FLAG_IMAGES[displayCircuit.id]} 
+                alt={`${displayCircuit.name} flag`} 
+                className="h-5 w-7 object-cover rounded-sm"
+              />
+            </div>
+
+            {/* Track Map */}
+            <div className="flex-1 flex items-center justify-center py-6">
+              {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
+                <img 
+                  src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black} 
+                  alt={`${displayCircuit.name} circuit`}
+                  className="h-40 object-contain"
+                  style={{ maxWidth: '280px' }}
+                />
+              ) : (
+                <div className="h-40 w-full bg-gray-200 rounded flex items-center justify-center text-gray-500">
+                  Track Map
+                </div>
+              )}
+            </div>
+
+            {/* Info - Math Type */}
+            <div className="text-center mb-4">
+              <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
+              <div 
+                className="text-lg font-bold uppercase text-gray-900"
+                style={{ fontFamily: 'Formula1' }}
+              >
+                {displayCircuit.type}
+              </div>
+            </div>
+
+            {/* Weather Toggle */}
+            <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+              <button
+                onClick={() => setSelectedWeather('dry')}
+                className={cn(
+                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                  selectedWeather === 'dry' 
+                    ? "bg-yellow-500/20 ring-2 ring-yellow-500" 
+                    : "bg-transparent hover:bg-white/5"
+                )}
+                data-testid="weather-dry"
+              >
+                <img src={weatherSun} alt="Dry" className="w-8 h-8" />
+                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Standard</span>
+              </button>
+              <button
+                onClick={() => setSelectedWeather('wet')}
+                className={cn(
+                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                  selectedWeather === 'wet' 
+                    ? "bg-blue-500/20 ring-2 ring-blue-500" 
+                    : "bg-transparent hover:bg-white/5"
+                )}
+                data-testid="weather-wet"
+              >
+                <img src={weatherRain} alt="Wet" className="w-8 h-8" />
+                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Harder</span>
+              </button>
+              <button
+                onClick={() => setSelectedWeather('random')}
+                className={cn(
+                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                  selectedWeather === 'random' 
+                    ? "bg-purple-500/20 ring-2 ring-purple-500" 
+                    : "bg-transparent hover:bg-white/5"
+                )}
+                data-testid="weather-random"
+              >
+                <img src={weatherRandom} alt="Random" className="w-8 h-8" />
+                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Surprise</span>
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Right Chevron */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={goToNextCircuit}
+            className="p-3 transition-colors text-gray-400 hover:text-gray-900"
+            data-testid="circuit-next"
+          >
+            <ChevronRight className="w-12 h-12" />
+          </motion.button>
+        </div>
+
+        {/* Track Dots Indicator */}
+        <div className="fixed bottom-32 left-0 right-0 flex justify-center gap-2">
+          {CIRCUITS.map((circuit, index) => (
+            <button
+              key={circuit.id}
+              onClick={() => setSelectedCircuit(circuit)}
+              className={cn(
+                "w-2 h-2 rounded-full transition-all",
+                currentCircuitIndex === index 
+                  ? "bg-gray-900" 
+                  : "bg-gray-400"
+              )}
+              data-testid={`circuit-dot-${circuit.id}`}
+            />
+          ))}
+        </div>
+
+        {/* Start Race Button - Fixed Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={startRace}
+            className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+            style={{ 
+              fontFamily: 'Formula1',
+              backgroundColor: '#000000',
+              animation: 'pulse-black 2s infinite'
+            }}
+            data-testid="button-start-race"
+          >
+            Start Race
+          </motion.button>
+          <button
+            onClick={() => setGameStatus("waiting")}
+            className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
+            data-testid="button-back-waiting"
+          >
+            &lt;&lt; Back
+          </button>
+        </div>
+
+        <style>{`
+          @keyframes pulse-black {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(0, 0, 0, 0.3); }
+          }
+        `}</style>
+      </div>
     );
   }
   
