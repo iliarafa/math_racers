@@ -502,7 +502,7 @@ export default function Game() {
   const [inPurpleMode, setInPurpleMode] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
   const [realismThreshold, setRealismThreshold] = useState<number | null>(null);
-  const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
+  const [gameStatus, setGameStatus] = useState<'mode_select' | 'selecting' | 'driver_select' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('mode_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -530,18 +530,10 @@ export default function Game() {
       setIsPracticeMode(true);
       setRaceMode('solo');
       setGameStatus('selecting');
-      // Auto-select first driver for practice
-      if (!selectedDriver) {
-        setSelectedDriver(DRIVERS[0]);
-      }
     } else if (mode === 'race') {
       setIsPracticeMode(false);
       setRaceMode('bot');
       setGameStatus('selecting');
-      // Auto-select first driver for race
-      if (!selectedDriver) {
-        setSelectedDriver(DRIVERS[0]);
-      }
     }
     // Clear the query param to avoid re-triggering
     if (mode) {
@@ -610,7 +602,9 @@ export default function Game() {
 
   // Guard: redirect to proper selection if missing driver/circuit
   useEffect(() => {
-    if (!selectedDriver && gameStatus !== 'driver_select') {
+    if (!selectedCircuit && gameStatus === 'driver_select') {
+      setGameStatus('selecting');
+    } else if (!selectedDriver && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
       setGameStatus('driver_select');
     } else if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
       setGameStatus('selecting');
@@ -648,7 +642,12 @@ export default function Game() {
   const handleDriverSelect = (driver: Driver) => {
     initAudio();
     setSelectedDriver(driver);
-    setGameStatus('selecting');
+  };
+
+  const handleStartRaceFromCompound = () => {
+    if (!selectedCircuit || !selectedDriver) return;
+    setBotProgress(0);
+    setGameStatus('countdown');
   };
 
   const formatTime = (ms: number) => {
@@ -1060,7 +1059,7 @@ export default function Game() {
     setShowPenalty(false);
     setElapsedTime(0);
     setCountdownLight(0);
-    setGameStatus('driver_select');
+    setGameStatus('mode_select');
     setSelectedDriver(null);
     setSelectedCircuit(null);
     setIsPracticeMode(false);
@@ -1108,9 +1107,140 @@ export default function Game() {
   const handleMultiplayerSelect = () => {
     setSelectedDriver(null);
     setSelectedCircuit(null);
-    setGameStatus('driver_select');
+    setGameStatus('mode_select');
     setLocation('/multiplayer');
   };
+
+  // Mode Selection Screen - Choose Race, Practice, or Multiplayer
+  if (gameStatus === 'mode_select') {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+        {/* App Logo */}
+        <div className="pt-8 pb-4 flex justify-center">
+          <img 
+            src={logoImage} 
+            alt="F1 Math Racer" 
+            className="h-8 object-contain"
+          />
+        </div>
+
+        {/* Section Title */}
+        <div className="text-center pt-4 pb-8">
+          <h2 
+            className="text-xl font-bold uppercase tracking-wider text-black"
+            style={{ fontFamily: 'Formula1' }}
+          >
+            Choose Mode
+          </h2>
+        </div>
+
+        {/* Mode Cards */}
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 pb-24">
+          {/* Race Mode */}
+          <motion.button
+            onClick={() => { setIsPracticeMode(false); setRaceMode('bot'); setGameStatus('selecting'); }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full max-w-sm rounded-xl p-6 flex items-center gap-5 transition-all"
+            style={{ 
+              backgroundColor: '#f5f5f5',
+              border: '2px solid transparent'
+            }}
+            data-testid="mode-race"
+          >
+            <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center">
+              <CheckeredFlag className="w-8 h-8 text-white" />
+            </div>
+            <div className="flex flex-col items-start">
+              <span 
+                className="font-bold text-lg uppercase tracking-wider text-red-600"
+                style={{ fontFamily: 'Formula1' }}
+              >
+                Race
+              </span>
+              <span className="text-xs text-gray-500">
+                Race against a bot opponent
+              </span>
+            </div>
+          </motion.button>
+
+          {/* Practice Mode */}
+          <motion.button
+            onClick={() => { setIsPracticeMode(true); setRaceMode('solo'); setGameStatus('selecting'); }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full max-w-sm rounded-xl p-6 flex items-center gap-5 transition-all"
+            style={{ 
+              backgroundColor: '#f5f5f5',
+              border: '2px solid transparent'
+            }}
+            data-testid="mode-practice"
+          >
+            <div className="w-16 h-16 rounded-full bg-green-600 flex items-center justify-center">
+              <Timer className="w-8 h-8 text-white" />
+            </div>
+            <div className="flex flex-col items-start">
+              <span 
+                className="font-bold text-lg uppercase tracking-wider text-green-600"
+                style={{ fontFamily: 'Formula1' }}
+              >
+                Practice
+              </span>
+              <span className="text-xs text-gray-500">
+                Practice without saving stats
+              </span>
+            </div>
+          </motion.button>
+
+          {/* Multiplayer Mode */}
+          <motion.button
+            onClick={() => setLocation('/multiplayer')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full max-w-sm rounded-xl p-6 flex items-center gap-5 transition-all"
+            style={{ 
+              backgroundColor: '#f5f5f5',
+              border: '2px solid transparent'
+            }}
+            data-testid="mode-multiplayer"
+          >
+            <div className="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-8 h-8 text-white">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+            <div className="flex flex-col items-start">
+              <span 
+                className="font-bold text-lg uppercase tracking-wider text-purple-600"
+                style={{ fontFamily: 'Formula1' }}
+              >
+                Multiplayer
+              </span>
+              <span className="text-xs text-gray-500">
+                Race against a friend online
+              </span>
+            </div>
+          </motion.button>
+        </div>
+
+        {/* Back Button - Fixed Bottom */}
+        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+          <Link href="/">
+            <button 
+              className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+              style={{ fontFamily: 'Formula1' }}
+              data-testid="button-back"
+            >
+              &lt;&lt; Back
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Driver Selection Screen - Tyre Strategy Menu
   if (gameStatus === 'driver_select') {
@@ -1215,7 +1345,7 @@ export default function Game() {
           })}
         </div>
 
-        {/* Confirm Strategy Button - Fixed Bottom */}
+        {/* Start Race Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
           {selectedDriver && (
             <motion.button
@@ -1223,33 +1353,43 @@ export default function Game() {
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => handleDriverSelect(selectedDriver)}
+              onClick={() => {
+                handleDriverSelect(selectedDriver);
+                handleStartRaceFromCompound();
+              }}
               className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{ 
                 fontFamily: 'Formula1',
-                backgroundColor: '#22c55e',
-                animation: 'pulse-green 2s infinite'
+                backgroundColor: isPracticeMode ? '#16a34a' : raceMode === 'bot' ? '#9333ea' : '#dc2626',
+                animation: isPracticeMode ? 'pulse-green 2s infinite' : raceMode === 'bot' ? 'pulse-purple 2s infinite' : 'pulse-red 2s infinite'
               }}
-              data-testid="button-confirm-strategy"
+              data-testid="button-start-race"
             >
-              Select Track
+              {isPracticeMode ? 'Start Practice' : 'Start Engine'}
             </motion.button>
           )}
-          <Link href="/">
-            <button 
-              className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-back"
-            >
-              &lt;&lt; Back
-            </button>
-          </Link>
+          <button 
+            onClick={() => setGameStatus('selecting')}
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+            style={{ fontFamily: 'Formula1' }}
+            data-testid="button-back"
+          >
+            &lt;&lt; Back
+          </button>
         </div>
 
         <style>{`
           @keyframes pulse-green {
             0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
             50% { box-shadow: 0 0 20px 10px rgba(34, 197, 94, 0.3); }
+          }
+          @keyframes pulse-purple {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(147, 51, 234, 0.3); }
+          }
+          @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0.3); }
           }
         `}</style>
       </div>
@@ -1311,44 +1451,14 @@ export default function Game() {
           />
         </div>
 
-        {/* Race/Practice/Multiplayer Pill Toggle */}
-        <div className="pb-4 flex justify-center">
-          <div className="rounded-full p-1 flex gap-1 bg-gray-200">
-            <button
-              onClick={() => { setIsPracticeMode(false); setRaceMode('bot'); }}
-              className={cn(
-                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
-                !isPracticeMode
-                  ? "bg-red-600 text-white" 
-                  : "bg-transparent text-gray-600 hover:text-gray-900"
-              )}
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-race-mode"
-            >
-              Race
-            </button>
-            <button
-              onClick={() => { setIsPracticeMode(true); setRaceMode('solo'); }}
-              className={cn(
-                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
-                isPracticeMode 
-                  ? "bg-green-600 text-white" 
-                  : "bg-transparent text-gray-600 hover:text-gray-900"
-              )}
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-practice-mode"
-            >
-              Practice
-            </button>
-            <button
-              onClick={() => setLocation('/multiplayer')}
-              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-multiplayer-mode"
-            >
-              Multiplayer
-            </button>
-          </div>
+        {/* Section Title */}
+        <div className="text-center pt-4 pb-4">
+          <h2 
+            className="text-xl font-bold uppercase tracking-wider text-black"
+            style={{ fontFamily: 'Formula1' }}
+          >
+            Select Track
+          </h2>
         </div>
 
         {/* Main Content - Hero Card with Side Chevrons */}
@@ -1531,24 +1641,24 @@ export default function Game() {
           ))}
         </div>
 
-        {/* Start Engine Button - Fixed Bottom */}
+        {/* Select Compound Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleStartRace}
+            onClick={() => setGameStatus('driver_select')}
             className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
             style={{ 
               fontFamily: 'Formula1',
               backgroundColor: isPracticeMode ? '#16a34a' : raceMode === 'bot' ? '#9333ea' : '#dc2626',
               animation: isPracticeMode ? 'pulse-green 2s infinite' : raceMode === 'bot' ? 'pulse-purple 2s infinite' : 'pulse-red 2s infinite'
             }}
-            data-testid="button-start-race"
+            data-testid="button-select-compound"
           >
-            {isPracticeMode ? 'Start Practice' : 'Start Engine'}
+            Select Compound
           </motion.button>
           <button 
-            onClick={() => setGameStatus('driver')}
+            onClick={() => setGameStatus('mode_select')}
             className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
             style={{ fontFamily: 'Formula1' }}
             data-testid="button-back"
