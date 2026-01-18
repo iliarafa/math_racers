@@ -515,6 +515,7 @@ export default function Game() {
   const raceStartTimeRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(state.soundEnabled);
   const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
   
   useEffect(() => {
     soundEnabledRef.current = state.soundEnabled;
@@ -1263,6 +1264,15 @@ export default function Game() {
 
     const handleTouchStart = (e: React.TouchEvent) => {
       touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    };
+    const handleTouchMove = (e: React.TouchEvent) => {
+      if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+      const diffX = Math.abs(e.touches[0].clientX - touchStartXRef.current);
+      const diffY = Math.abs(e.touches[0].clientY - touchStartYRef.current);
+      if (diffX > diffY && diffX > 10) {
+        e.preventDefault();
+      }
     };
     const handleTouchEnd = (e: React.TouchEvent) => {
       if (touchStartXRef.current === null) return;
@@ -1276,6 +1286,7 @@ export default function Game() {
         }
       }
       touchStartXRef.current = null;
+      touchStartYRef.current = null;
     };
 
     return (
@@ -1343,9 +1354,10 @@ export default function Game() {
             style={{ 
               backgroundColor: '#f0f0f0',
               boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-              touchAction: 'pan-y'
+              touchAction: 'none'
             }}
             onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             data-testid={`hero-card-${displayCircuit.id}`}
           >
