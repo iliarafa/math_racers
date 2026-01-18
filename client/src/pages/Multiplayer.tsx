@@ -88,7 +88,7 @@ const playKeypadClick = () => {
   }
 };
 
-type GameStatus = "lobby" | "waiting" | "track_select" | "countdown" | "racing" | "finished";
+type GameStatus = "lobby" | "waiting" | "track_select" | "compound_select" | "countdown" | "racing" | "finished";
 type Weather = 'dry' | 'wet' | 'random';
 
 export default function Multiplayer() {
@@ -111,7 +111,7 @@ export default function Multiplayer() {
   // Game state
   const [gameStatus, setGameStatus] = useState<GameStatus>("lobby");
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(CIRCUITS[0]);
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(DRIVERS[0]);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -255,16 +255,6 @@ export default function Multiplayer() {
     return () => clearInterval(interval);
   }, [gameStatus]);
   
-  // Generate questions when circuit is selected
-  useEffect(() => {
-    if (selectedCircuit && selectedDriver && isHost) {
-      const newQuestions: Question[] = [];
-      for (let i = 0; i < raceLength; i++) {
-        newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
-      }
-      setQuestions(newQuestions);
-    }
-  }, [selectedCircuit, selectedDriver, isHost, raceLength]);
   
   const createRoom = async () => {
     if (!playerName.trim()) {
@@ -272,18 +262,12 @@ export default function Multiplayer() {
       return;
     }
     
-    // Default circuit and driver for now
+    // Default circuit for initial room (will be updated when host confirms)
     const circuit = CIRCUITS[0];
-    const driver = DRIVERS[0];
     setSelectedCircuit(circuit);
-    setSelectedDriver(driver);
+    // Don't pre-select driver - host will choose in compound_select screen
     
     try {
-      const tempQuestions: Question[] = [];
-      for (let i = 0; i < getRaceLength(circuit.id, state.simMode); i++) {
-        tempQuestions.push(generateQuestion(circuit.id, driver.difficulty));
-      }
-      
       const response = await fetch("/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -291,8 +275,8 @@ export default function Multiplayer() {
           hostId: playerIdRef.current,
           hostName: playerName,
           circuitId: circuit.id,
-          driverId: driver.id,
-          questions: tempQuestions.map(q => ({ display: q.display, answer: q.answer }))
+          driverId: null,
+          questions: []
         })
       });
       
@@ -304,7 +288,6 @@ export default function Multiplayer() {
       
       const data = await response.json();
       setRoomCode(data.roomCode);
-      setQuestions(tempQuestions);
       setIsHost(true);
       isHostRef.current = true;
       setGameStatus("waiting");
@@ -344,10 +327,7 @@ export default function Multiplayer() {
       setRoomCode(joinCode.toUpperCase());
       setOpponentName(data.room.hostName);
       setSelectedCircuit(CIRCUITS.find(c => c.id === data.room.circuitId) || CIRCUITS[0]);
-      setSelectedDriver(DRIVERS.find(d => d.id === data.room.driverId) || DRIVERS[0]);
-      if (data.room.questions) {
-        setQuestions(data.room.questions.map((q: any) => ({ display: q.display, answer: q.answer })));
-      }
+      // Don't pre-set driver - it will be received via countdown_start message
       setIsHost(false);
       isHostRef.current = false;
       setGameStatus("waiting");
@@ -1055,26 +1035,171 @@ export default function Multiplayer() {
           ))}
         </div>
 
-        {/* Start Race Button - Fixed Bottom */}
+        {/* Select Compound Button - Fixed Bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-2 transition-colors duration-300" style={{ backgroundColor: '#1a1a1a' }}>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={startRace}
+            onClick={() => setGameStatus("compound_select")}
             className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-black"
             style={{ 
               fontFamily: 'Formula1',
-              backgroundColor: '#ffffff',
-              animation: 'pulse-white 2s infinite'
+              backgroundColor: '#22c55e',
+              animation: 'pulse-green 2s infinite'
             }}
-            data-testid="button-start-race"
+            data-testid="button-select-compound"
           >
-            Start Race
+            Select Compound
           </motion.button>
           <button
             onClick={() => setGameStatus("waiting")}
             className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
             data-testid="button-back-waiting"
+          >
+            &lt;&lt; Back
+          </button>
+        </div>
+
+        <style>{`
+          @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(34, 197, 94, 0.3); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+  
+  // Compound Selection (Host only - after track selection)
+  if (gameStatus === "compound_select") {
+    const compoundOptions = [
+      { 
+        id: 'rookie', 
+        name: 'SOFT', 
+        subtitle: 'ROOKIE',
+        description: 'Maximum Grip / Forgiving',
+        driver: DRIVERS.find(d => d.id === 'rookie'),
+        color: '#ff3b30',
+        bgGlow: 'rgba(255, 59, 48, 0.3)'
+      },
+      { 
+        id: 'pro', 
+        name: 'MEDIUM', 
+        subtitle: 'PROFESSIONAL',
+        description: 'Balanced Performance',
+        driver: DRIVERS.find(d => d.id === 'pro'),
+        color: '#ffcc00',
+        bgGlow: 'rgba(255, 204, 0, 0.3)'
+      },
+      { 
+        id: 'champion', 
+        name: 'HARD', 
+        subtitle: 'CHAMPION',
+        description: 'Low Grip / Difficult',
+        driver: DRIVERS.find(d => d.id === 'champion'),
+        color: '#ffffff',
+        bgGlow: 'rgba(255, 255, 255, 0.2)'
+      },
+    ];
+
+    return (
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#1a1a1a' }}>
+        {/* Header */}
+        <div className="pt-8 pb-4 flex justify-center">
+          <div className="bg-white text-black px-4 py-2 rounded-full">
+            <span className="font-bold text-xs uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>
+              Multiplayer - Tyre Strategy
+            </span>
+          </div>
+        </div>
+
+        {/* Title */}
+        <div className="pt-4 pb-8 text-center">
+          <h1 
+            className="text-xl font-bold uppercase tracking-wider text-white"
+            style={{ fontFamily: 'Formula1' }}
+          >
+            Choose Compound
+          </h1>
+        </div>
+
+        {/* Compound Options */}
+        <div className="flex-1 flex justify-center items-start gap-4 px-8 pb-32">
+          {compoundOptions.map((compound) => {
+            const isSelected = selectedDriver?.id === compound.id;
+            const displayColor = compound.color;
+            
+            return (
+              <motion.button
+                key={compound.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedDriver(compound.driver || null)}
+                className={cn(
+                  "flex flex-col items-center p-4 rounded-2xl transition-all w-24",
+                  isSelected 
+                    ? "border-2"
+                    : "border border-gray-700 opacity-60 hover:opacity-80"
+                )}
+                style={{
+                  borderColor: isSelected ? displayColor : undefined,
+                  boxShadow: isSelected ? `0 0 20px ${compound.bgGlow}` : undefined
+                }}
+                data-testid={`compound-${compound.id}`}
+              >
+                <div 
+                  className="w-16 h-16 rounded-full mb-3 border-4"
+                  style={{
+                    borderColor: displayColor,
+                    backgroundColor: isSelected ? `${displayColor}20` : 'transparent'
+                  }}
+                />
+                <div className="flex flex-col items-center gap-1">
+                  <span 
+                    className="text-base font-bold"
+                    style={{ 
+                      fontFamily: 'Formula1',
+                      color: isSelected ? displayColor : '#888888'
+                    }}
+                  >
+                    {compound.name}
+                  </span>
+                  <span className="text-xs uppercase tracking-wide text-gray-400">
+                    {compound.subtitle}
+                  </span>
+                  <span className="text-xs mt-1 text-gray-500">
+                    {compound.description}
+                  </span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* Start Race Button - Fixed Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#1a1a1a' }}>
+          {selectedDriver && (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={startRace}
+              className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-black"
+              style={{ 
+                fontFamily: 'Formula1',
+                backgroundColor: '#ffffff',
+                animation: 'pulse-white 2s infinite'
+              }}
+              data-testid="button-start-race"
+            >
+              Start Race
+            </motion.button>
+          )}
+          <button 
+            onClick={() => setGameStatus("track_select")}
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
+            data-testid="button-back-track"
           >
             &lt;&lt; Back
           </button>
