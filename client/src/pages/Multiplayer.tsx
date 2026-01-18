@@ -593,14 +593,38 @@ export default function Multiplayer() {
   // Lobby menu - Access Pass Card Design
   if (gameStatus === "lobby") {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#f2f2f7' }}>
-        <button 
-          onClick={goBack}
-          className="absolute top-4 left-4 p-2 hover:bg-white/50 rounded-full transition-colors"
-          data-testid="button-back"
-        >
-          <ArrowLeft className="w-6 h-6 text-black" />
-        </button>
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f2f2f7' }}>
+        {/* Race/Practice/Multiplayer Pill Toggle - Top */}
+        <div className="pt-6 pb-2 flex justify-center">
+          <div className="rounded-full p-1 flex gap-1 bg-gray-200">
+            <button
+              onClick={() => setLocation('/game')}
+              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
+              style={{ fontFamily: 'Formula1' }}
+              data-testid="button-race-mode"
+            >
+              Race
+            </button>
+            <button
+              onClick={() => setLocation('/game')}
+              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
+              style={{ fontFamily: 'Formula1' }}
+              data-testid="button-practice-mode"
+            >
+              Practice
+            </button>
+            <button
+              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-black text-white"
+              style={{ fontFamily: 'Formula1' }}
+              data-testid="button-multiplayer-mode"
+            >
+              Multiplayer
+            </button>
+          </div>
+        </div>
+
+        {/* Centered Card Container */}
+        <div className="flex-1 flex items-center justify-center p-4">
         
         {/* Access Pass Card */}
         <motion.div 
@@ -738,6 +762,7 @@ export default function Multiplayer() {
             <span className="text-xs text-gray-400 uppercase tracking-wider" data-testid="text-server-region">Online Region: Global</span>
           </div>
         </motion.div>
+        </div>
       </div>
     );
   }

@@ -1235,7 +1235,7 @@ export default function Game() {
 
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
-        {/* Race/1v1/Practice Pill Toggle - Top */}
+        {/* Race/Practice/Multiplayer Pill Toggle - Top */}
         <div className="pt-6 pb-2 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
@@ -1252,14 +1252,6 @@ export default function Game() {
               Race
             </button>
             <button
-              onClick={() => setLocation('/multiplayer')}
-              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-1v1-mode"
-            >
-              1v1
-            </button>
-            <button
               onClick={() => { setIsPracticeMode(true); setRaceMode('solo'); }}
               className={cn(
                 "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
@@ -1271,6 +1263,14 @@ export default function Game() {
               data-testid="button-practice-mode"
             >
               Practice
+            </button>
+            <button
+              onClick={() => setLocation('/multiplayer')}
+              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
+              style={{ fontFamily: 'Formula1' }}
+              data-testid="button-multiplayer-mode"
+            >
+              Multiplayer
             </button>
           </div>
         </div>
