@@ -1517,8 +1517,8 @@ export default function Game() {
   // Countdown screen with F1 starting lights
   if (gameStatus === 'countdown') {
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-        <div className="flex-1 flex flex-col items-center justify-center gap-12">
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+        <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden">
           
           {/* F1 Starting Lights */}
           <div className="flex gap-4">
@@ -1548,8 +1548,8 @@ export default function Game() {
   // GO state - lights out, green indicator
   if (gameStatus === 'go') {
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-        <div className="flex-1 flex flex-col items-center justify-center gap-8">
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 overflow-hidden">
           
           {/* Green GO indicator */}
           <motion.div
@@ -1586,8 +1586,8 @@ export default function Game() {
 
   if (gameStatus === 'crashed') {
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full py-12">
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full overflow-y-auto p-4">
           <div className="bg-card border border-red-500 rounded-xl p-8 w-full text-center space-y-8 shadow-sm">
             
             <div className="space-y-2">
@@ -1639,9 +1639,9 @@ export default function Game() {
     const isNewBest = previousBest ? elapsedTime < previousBest : true;
 
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full py-12">
-          <div className="bg-card border border-border rounded-xl p-8 w-full text-center space-y-8 shadow-sm">
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+        <div className="flex-1 flex flex-col items-center justify-start max-w-xl mx-auto w-full overflow-y-auto p-4">
+          <div className="bg-card border border-border rounded-xl p-6 w-full text-center space-y-6 shadow-sm">
 
             <div className="space-y-2">
                <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Race Result</div>
