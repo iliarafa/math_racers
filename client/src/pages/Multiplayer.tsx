@@ -662,9 +662,9 @@ export default function Multiplayer() {
   // Lobby menu - Access Pass Card Design
   if (gameStatus === "lobby") {
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* Race/Practice/Multiplayer Pill Toggle - Top */}
-        <div className="pt-6 pb-2 flex justify-center">
+        <div className="pt-4 pb-2 flex justify-center shrink-0">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
               onClick={() => setLocation('/game?mode=race')}
@@ -693,13 +693,13 @@ export default function Multiplayer() {
         </div>
 
         {/* Centered Card Container */}
-        <div className="flex-1 flex items-center justify-center p-4">
+        <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
         
         {/* Access Pass Card */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-[350px] bg-white rounded-[24px] p-8"
+          className="w-full max-w-[350px] bg-white rounded-[24px] p-6 sm:p-8"
           style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
         >
           {/* Header Section */}
@@ -904,9 +904,9 @@ export default function Multiplayer() {
     };
 
     return (
-      <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="h-screen flex flex-col overflow-hidden transition-colors duration-300" style={{ backgroundColor: '#1a1a1a' }}>
         {/* Header */}
-        <div className="pt-6 pb-2 flex justify-center">
+        <div className="pt-4 pb-2 flex justify-center shrink-0">
           <div className="bg-black text-white px-4 py-2 rounded-full">
             <span className="font-bold text-xs uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>
               Multiplayer - Choose Track
@@ -915,13 +915,13 @@ export default function Multiplayer() {
         </div>
 
         {/* Main Content - Hero Card with Side Chevrons */}
-        <div className="flex-1 flex items-center justify-center px-4 pb-24">
+        <div className="flex-1 flex items-center justify-center px-4 pb-28 overflow-hidden">
           {/* Left Chevron */}
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToPrevCircuit}
-            className="p-3 transition-colors text-gray-400 hover:text-gray-900"
+            className="p-3 transition-colors text-gray-400 hover:text-white"
             data-testid="circuit-prev"
           >
             <ChevronLeft className="w-12 h-12" />
@@ -1031,7 +1031,7 @@ export default function Multiplayer() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={goToNextCircuit}
-            className="p-3 transition-colors text-gray-400 hover:text-gray-900"
+            className="p-3 transition-colors text-gray-400 hover:text-white"
             data-testid="circuit-next"
           >
             <ChevronRight className="w-12 h-12" />
@@ -1039,7 +1039,7 @@ export default function Multiplayer() {
         </div>
 
         {/* Track Dots Indicator */}
-        <div className="fixed bottom-32 left-0 right-0 flex justify-center gap-2">
+        <div className="absolute bottom-28 left-0 right-0 flex justify-center gap-2">
           {CIRCUITS.map((circuit, index) => (
             <button
               key={circuit.id}
@@ -1047,8 +1047,8 @@ export default function Multiplayer() {
               className={cn(
                 "w-2 h-2 rounded-full transition-all",
                 currentCircuitIndex === index 
-                  ? "bg-gray-900" 
-                  : "bg-gray-400"
+                  ? "bg-white" 
+                  : "bg-gray-500"
               )}
               data-testid={`circuit-dot-${circuit.id}`}
             />
@@ -1056,16 +1056,16 @@ export default function Multiplayer() {
         </div>
 
         {/* Start Race Button - Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-2 transition-colors duration-300" style={{ backgroundColor: '#1a1a1a' }}>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={startRace}
-            className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+            className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-black"
             style={{ 
               fontFamily: 'Formula1',
-              backgroundColor: '#000000',
-              animation: 'pulse-black 2s infinite'
+              backgroundColor: '#ffffff',
+              animation: 'pulse-white 2s infinite'
             }}
             data-testid="button-start-race"
           >
@@ -1073,7 +1073,7 @@ export default function Multiplayer() {
           </motion.button>
           <button
             onClick={() => setGameStatus("waiting")}
-            className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
             data-testid="button-back-waiting"
           >
             &lt;&lt; Back
@@ -1081,9 +1081,9 @@ export default function Multiplayer() {
         </div>
 
         <style>{`
-          @keyframes pulse-black {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(0, 0, 0, 0.3); }
+          @keyframes pulse-white {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.3); }
           }
         `}</style>
       </div>
