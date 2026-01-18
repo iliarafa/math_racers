@@ -1342,7 +1342,7 @@ export default function Game() {
         </div>
 
         {/* Main Content - Hero Card with Side Chevrons */}
-        <div className="flex-1 flex items-center justify-center px-8 pb-24">
+        <div className="flex-1 flex items-start justify-center px-8 pb-24 pt-4">
           {/* Left Chevron - hidden on mobile */}
           <motion.button
             whileHover={{ scale: 1.1 }}
