@@ -21,7 +21,7 @@ export function GameLayout({ children, coins, trackName, hideHeader = false, loc
       darkBackground ? "bg-black" : "bg-background"
     )} style={{ fontFamily: 'Formula1, sans-serif' }}>
       {!hideHeader && (
-        <header className="border-b border-border py-3 px-3 md:py-4 md:px-6 flex justify-between items-center sticky top-0 z-50 bg-[#6e6e6e]">
+        <header className="border-b border-border py-3 px-3 md:py-4 md:px-6 flex justify-between items-center sticky top-0 z-50 bg-[#ffffff]">
           <div className="flex items-center gap-4 md:gap-6">
             <Link href="/">
               <img 
