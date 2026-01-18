@@ -1235,14 +1235,14 @@ export default function Game() {
 
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
-        {/* Race/Race Bot/Practice Pill Toggle - Top */}
+        {/* Race/Race Bot/1v1/Practice Pill Toggle - Top */}
         <div className="pt-6 pb-2 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
               onClick={() => { setIsPracticeMode(false); setRaceMode('solo'); }}
               className={cn(
-                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
-                !isPracticeMode && raceMode !== 'bot'
+                "px-3 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
+                !isPracticeMode && raceMode === 'solo'
                   ? "bg-red-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               )}
@@ -1254,7 +1254,7 @@ export default function Game() {
             <button
               onClick={() => { setIsPracticeMode(false); setRaceMode('bot'); }}
               className={cn(
-                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
+                "px-3 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 !isPracticeMode && raceMode === 'bot'
                   ? "bg-purple-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
@@ -1262,12 +1262,20 @@ export default function Game() {
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-bot-mode"
             >
-              Race Bot
+              Bot
+            </button>
+            <button
+              onClick={() => setLocation('/multiplayer')}
+              className="px-3 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
+              style={{ fontFamily: 'Formula1' }}
+              data-testid="button-1v1-mode"
+            >
+              1v1
             </button>
             <button
               onClick={() => { setIsPracticeMode(true); setRaceMode('solo'); }}
               className={cn(
-                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
+                "px-3 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 isPracticeMode 
                   ? "bg-green-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
