@@ -1331,6 +1331,11 @@ export default function Game() {
           </div>
         </div>
 
+        {/* Swipe hint - mobile only */}
+        <div className="md:hidden text-center text-xs text-gray-400 uppercase tracking-widest pb-2">
+          Swipe to choose track
+        </div>
+
         {/* Main Content - Hero Card with Side Chevrons */}
         <div className="flex-1 flex items-center justify-center px-4 pb-24">
           {/* Left Chevron - hidden on mobile */}
