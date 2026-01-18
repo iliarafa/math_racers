@@ -503,6 +503,7 @@ export default function Game() {
   const [inPurpleMode, setInPurpleMode] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
   const [realismThreshold, setRealismThreshold] = useState<number | null>(null);
+  const [calibrationTimes, setCalibrationTimes] = useState<number[]>([]); // Track ALL response times during first 5 questions
   const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
@@ -764,23 +765,19 @@ export default function Game() {
         speed = 'fast';
         sectorColor = 'green';
         
+        // Track this response time for median calculation
+        const newCalibrationTimes = [...calibrationTimes, responseTime];
+        setCalibrationTimes(newCalibrationTimes);
+        
         // After 5th question, calculate median time as reference
-        if (currentQuestionNumber === 5) {
-          // Get all response times from first 4 answers plus this one
-          const calibrationTimes = lapResults
-            .filter(lap => lap.result === 'correct')
-            .map(lap => lap.responseTime);
-          calibrationTimes.push(responseTime);
-          
-          // Calculate median
-          if (calibrationTimes.length > 0) {
-            const sorted = [...calibrationTimes].sort((a, b) => a - b);
-            const mid = Math.floor(sorted.length / 2);
-            const median = sorted.length % 2 !== 0 
-              ? sorted[mid] 
-              : (sorted[mid - 1] + sorted[mid]) / 2;
-            setRealismThreshold(median);
-          }
+        if (currentQuestionNumber === 5 && newCalibrationTimes.length > 0) {
+          // Calculate median from ALL response times (correct or incorrect)
+          const sorted = [...newCalibrationTimes].sort((a, b) => a - b);
+          const mid = Math.floor(sorted.length / 2);
+          const median = sorted.length % 2 !== 0 
+            ? sorted[mid] 
+            : (sorted[mid - 1] + sorted[mid]) / 2;
+          setRealismThreshold(median);
         }
       } else {
         // Post-calibration: use reference time for green/yellow, bot time for purple
@@ -839,6 +836,7 @@ export default function Game() {
           raceStartTimeRef.current = Date.now();
           setInPurpleMode(false);
           setRealismThreshold(null);
+          setCalibrationTimes([]);
         } else {
           finishRace(mistakes);
         }
@@ -861,6 +859,23 @@ export default function Game() {
       
       // Break purple mode on incorrect answer
       setInPurpleMode(false);
+      
+      // Track calibration time for incorrect answers too (for median calculation)
+      const currentQuestionNumber = progress + 1;
+      if (currentQuestionNumber <= 5) {
+        const newCalibrationTimes = [...calibrationTimes, responseTime];
+        setCalibrationTimes(newCalibrationTimes);
+        
+        // If this is the 5th question, calculate median now
+        if (currentQuestionNumber === 5 && newCalibrationTimes.length > 0) {
+          const sorted = [...newCalibrationTimes].sort((a, b) => a - b);
+          const mid = Math.floor(sorted.length / 2);
+          const median = sorted.length % 2 !== 0 
+            ? sorted[mid] 
+            : (sorted[mid - 1] + sorted[mid]) / 2;
+          setRealismThreshold(median);
+        }
+      }
 
       // Log the mistake for review
       setMistakeLog(prev => [...prev, {
@@ -1039,6 +1054,7 @@ export default function Game() {
     setPenaltyMessage({ text: '', color: 'red' });
     setInPurpleMode(false);
     setRealismThreshold(null);
+    setCalibrationTimes([]);
   };
 
   // Bot simulation during racing
