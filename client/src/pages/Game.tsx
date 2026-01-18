@@ -1149,8 +1149,17 @@ export default function Game() {
 
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+        {/* App Logo */}
+        <div className="pt-8 pb-4 flex justify-center">
+          <img 
+            src={logoImage} 
+            alt="F1 Math Racer" 
+            className="h-8 object-contain"
+          />
+        </div>
+
         {/* Section Title */}
-        <div className="text-center pt-12 pb-6">
+        <div className="text-center pb-4">
           <h2 
             className="text-xl font-bold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Formula1' }}
