@@ -7,7 +7,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe } from "lucide-react";
 
 // Import assets
 import tireHard from "@assets/IMG_0385_1768772937370.png";
@@ -484,6 +484,7 @@ export default function Game() {
   
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
   const [isPracticeMode, setIsPracticeMode] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer'>('race');
   const [isPaused, setIsPaused] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -1314,10 +1315,10 @@ export default function Game() {
         <div className="pb-4 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
-              onClick={() => { setIsPracticeMode(false); setRaceMode('bot'); }}
+              onClick={() => { setSelectedTab('race'); setIsPracticeMode(false); setRaceMode('bot'); }}
               className={cn(
                 "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
-                !isPracticeMode
+                selectedTab === 'race'
                   ? "bg-red-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               )}
@@ -1327,10 +1328,10 @@ export default function Game() {
               Race
             </button>
             <button
-              onClick={() => { setIsPracticeMode(true); setRaceMode('solo'); }}
+              onClick={() => { setSelectedTab('practice'); setIsPracticeMode(true); setRaceMode('solo'); }}
               className={cn(
                 "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
-                isPracticeMode 
+                selectedTab === 'practice' 
                   ? "bg-green-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               )}
@@ -1340,8 +1341,13 @@ export default function Game() {
               Practice
             </button>
             <button
-              onClick={() => setLocation('/multiplayer')}
-              className="px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all bg-transparent text-gray-600 hover:text-gray-900"
+              onClick={() => { setSelectedTab('multiplayer'); }}
+              className={cn(
+                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
+                selectedTab === 'multiplayer'
+                  ? "bg-blue-600 text-white" 
+                  : "bg-transparent text-gray-600 hover:text-gray-900"
+              )}
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-multiplayer-mode"
             >
@@ -1352,199 +1358,264 @@ export default function Game() {
 
         {/* Main Content - Hero Card with Side Chevrons */}
         <div className="flex-1 flex items-start justify-center px-8 pb-24 pt-4">
-          {/* Left Chevron - hidden on mobile */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={goToPrevCircuit}
-            className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900"
-            data-testid="circuit-prev"
-          >
-            <ChevronLeft className="w-12 h-12" />
-          </motion.button>
-
-          {/* Card wrapper with swipe hint */}
-          <div className="flex flex-col items-center">
-            {/* Swipe hint - mobile only */}
-            <div className="md:hidden text-center text-[10px] text-gray-400 uppercase tracking-widest pb-3">
-              Swipe to choose track
-            </div>
-
-            {/* Hero Card - swipeable on mobile */}
-          <motion.div
-            key={displayCircuit.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
-            style={{ 
-              backgroundColor: '#f0f0f0',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-              touchAction: 'none'
-            }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            data-testid={`hero-card-${displayCircuit.id}`}
-          >
-            {/* Header - Circuit Name & Flag */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <h2 
-                className="text-2xl font-bold uppercase tracking-wider text-gray-900"
-                style={{ fontFamily: 'Formula1' }}
+          {selectedTab === 'multiplayer' ? (
+            /* Multiplayer Card */
+            <div className="flex flex-col items-center">
+              <motion.div
+                key="multiplayer-card"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                style={{ 
+                  backgroundColor: '#f0f0f0',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                }}
+                data-testid="hero-card-multiplayer"
               >
-                {displayCircuit.name}
-              </h2>
-              <img 
-                src={FLAG_IMAGES[displayCircuit.id]} 
-                alt={`${displayCircuit.name} flag`} 
-                className="h-5 w-7 object-cover rounded-sm"
-              />
-            </div>
+                {/* Header */}
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <h2 
+                    className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+                    style={{ fontFamily: 'Formula1' }}
+                  >
+                    VS Mode
+                  </h2>
+                  <Globe className="w-6 h-6 text-blue-600" />
+                </div>
 
-            {/* Track Map */}
-            <div className="flex-1 flex items-center justify-center py-6">
-              {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
-                <img 
-                  src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black} 
-                  alt={`${displayCircuit.name} circuit`}
-                  className="h-40 object-contain"
-                  style={{ maxWidth: '280px' }}
-                />
-              ) : (
-                <svg 
-                  viewBox="0 0 300 160" 
-                  className="w-full h-40"
-                  style={{ maxWidth: '280px' }}
+                {/* VS Graphic */}
+                <div className="flex-1 flex items-center justify-center py-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>P1</span>
+                    </div>
+                    <span className="text-3xl font-bold text-gray-400" style={{ fontFamily: 'Formula1' }}>VS</span>
+                    <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>P2</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="text-center mb-4">
+                  <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Real-Time Racing</div>
+                  <div 
+                    className="text-lg font-bold uppercase text-gray-900"
+                    style={{ fontFamily: 'Formula1' }}
+                  >
+                    Head to Head
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="text-center pt-2 border-t border-gray-300">
+                  <p className="text-xs text-gray-500 mt-3">
+                    Create or join a room to race against a friend in real-time
+                  </p>
+                </div>
+              </motion.div>
+            </div>
+          ) : (
+            /* Track Selection Card */
+            <>
+              {/* Left Chevron - hidden on mobile */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={goToPrevCircuit}
+                className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900"
+                data-testid="circuit-prev"
+              >
+                <ChevronLeft className="w-12 h-12" />
+              </motion.button>
+
+              {/* Card wrapper with swipe hint */}
+              <div className="flex flex-col items-center">
+                {/* Swipe hint - mobile only */}
+                <div className="md:hidden text-center text-[10px] text-gray-400 uppercase tracking-widest pb-3">
+                  Swipe to choose track
+                </div>
+
+                {/* Hero Card - swipeable on mobile */}
+                <motion.div
+                  key={displayCircuit.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                  style={{ 
+                    backgroundColor: '#f0f0f0',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+                    touchAction: 'none'
+                  }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  data-testid={`hero-card-${displayCircuit.id}`}
                 >
-                  <path
-                    d={displayCircuit.paths.s1}
-                    fill="none"
-                    stroke={state.teamColor || '#ffffff'}
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d={displayCircuit.paths.s2}
-                    fill="none"
-                    stroke={state.teamColor || '#ffffff'}
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d={displayCircuit.paths.s3}
-                    fill="none"
-                    stroke={state.teamColor || '#ffffff'}
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </div>
+                  {/* Header - Circuit Name & Flag */}
+                  <div className="flex items-center justify-center gap-3 mb-4">
+                    <h2 
+                      className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+                      style={{ fontFamily: 'Formula1' }}
+                    >
+                      {displayCircuit.name}
+                    </h2>
+                    <img 
+                      src={FLAG_IMAGES[displayCircuit.id]} 
+                      alt={`${displayCircuit.name} flag`} 
+                      className="h-5 w-7 object-cover rounded-sm"
+                    />
+                  </div>
 
-            {/* Info - Math Type */}
-            <div className="text-center mb-4">
-              <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
-              <div 
-                className="text-lg font-bold uppercase text-gray-900"
-                style={{ fontFamily: 'Formula1' }}
-              >
-                {displayCircuit.type}
+                  {/* Track Map */}
+                  <div className="flex-1 flex items-center justify-center py-6">
+                    {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
+                      <img 
+                        src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black} 
+                        alt={`${displayCircuit.name} circuit`}
+                        className="h-40 object-contain"
+                        style={{ maxWidth: '280px' }}
+                      />
+                    ) : (
+                      <svg 
+                        viewBox="0 0 300 160" 
+                        className="w-full h-40"
+                        style={{ maxWidth: '280px' }}
+                      >
+                        <path
+                          d={displayCircuit.paths.s1}
+                          fill="none"
+                          stroke={state.teamColor || '#ffffff'}
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d={displayCircuit.paths.s2}
+                          fill="none"
+                          stroke={state.teamColor || '#ffffff'}
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d={displayCircuit.paths.s3}
+                          fill="none"
+                          stroke={state.teamColor || '#ffffff'}
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </div>
+
+                  {/* Info - Math Type */}
+                  <div className="text-center mb-4">
+                    <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
+                    <div 
+                      className="text-lg font-bold uppercase text-gray-900"
+                      style={{ fontFamily: 'Formula1' }}
+                    >
+                      {displayCircuit.type}
+                    </div>
+                  </div>
+
+                  {/* Weather Toggle */}
+                  <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+                    <button
+                      onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
+                      className={cn(
+                        "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                        selectedWeather === 'dry' 
+                          ? "bg-yellow-500/20 ring-2 ring-yellow-500" 
+                          : "bg-transparent hover:bg-white/5"
+                      )}
+                      data-testid="weather-dry"
+                    >
+                      <img src={weatherSun} alt="Dry" className="w-8 h-8" />
+                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Standard</span>
+                    </button>
+                    <button
+                      onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
+                      className={cn(
+                        "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                        selectedWeather === 'wet' 
+                          ? "bg-blue-500/20 ring-2 ring-blue-500" 
+                          : "bg-transparent hover:bg-white/5"
+                      )}
+                      data-testid="weather-wet"
+                    >
+                      <img src={weatherRain} alt="Wet" className="w-8 h-8" />
+                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Harder</span>
+                    </button>
+                    <button
+                      onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
+                      className={cn(
+                        "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                        selectedWeather === 'random' 
+                          ? "bg-purple-500/20 ring-2 ring-purple-500" 
+                          : "bg-transparent hover:bg-white/5"
+                      )}
+                      data-testid="weather-random"
+                    >
+                      <img src={weatherRandom} alt="Random" className="w-8 h-8" />
+                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Surprise</span>
+                    </button>
+                  </div>
+                </motion.div>
               </div>
-            </div>
 
-            {/* Weather Toggle */}
-            <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
-              <button
-                onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
-                className={cn(
-                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'dry' 
-                    ? "bg-yellow-500/20 ring-2 ring-yellow-500" 
-                    : "bg-transparent hover:bg-white/5"
-                )}
-                data-testid="weather-dry"
+              {/* Right Chevron - hidden on mobile */}
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={goToNextCircuit}
+                className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900"
+                data-testid="circuit-next"
               >
-                <img src={weatherSun} alt="Dry" className="w-8 h-8" />
-                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Standard</span>
-              </button>
+                <ChevronRight className="w-12 h-12" />
+              </motion.button>
+            </>
+          )}
+        </div>
+
+        {/* Track Dots Indicator - only show for track selection */}
+        {selectedTab !== 'multiplayer' && (
+          <div className="fixed bottom-32 left-0 right-0 flex justify-center gap-2">
+            {CIRCUITS.map((circuit, index) => (
               <button
-                onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
+                key={circuit.id}
+                onClick={() => { handleCircuitSelect(circuit); if (state.soundEnabled) playCarouselClick(); }}
                 className={cn(
-                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'wet' 
-                    ? "bg-blue-500/20 ring-2 ring-blue-500" 
-                    : "bg-transparent hover:bg-white/5"
+                  "w-2 h-2 rounded-full transition-all",
+                  currentCircuitIndex === index 
+                    ? "bg-gray-900" 
+                    : "bg-gray-400"
                 )}
-                data-testid="weather-wet"
-              >
-                <img src={weatherRain} alt="Wet" className="w-8 h-8" />
-                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Harder</span>
-              </button>
-              <button
-                onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
-                className={cn(
-                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'random' 
-                    ? "bg-purple-500/20 ring-2 ring-purple-500" 
-                    : "bg-transparent hover:bg-white/5"
-                )}
-                data-testid="weather-random"
-              >
-                <img src={weatherRandom} alt="Random" className="w-8 h-8" />
-                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Surprise</span>
-              </button>
-            </div>
-          </motion.div>
+                data-testid={`circuit-dot-${circuit.id}`}
+              />
+            ))}
           </div>
-
-          {/* Right Chevron - hidden on mobile */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={goToNextCircuit}
-            className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900"
-            data-testid="circuit-next"
-          >
-            <ChevronRight className="w-12 h-12" />
-          </motion.button>
-        </div>
-
-        {/* Track Dots Indicator */}
-        <div className="fixed bottom-32 left-0 right-0 flex justify-center gap-2">
-          {CIRCUITS.map((circuit, index) => (
-            <button
-              key={circuit.id}
-              onClick={() => { handleCircuitSelect(circuit); if (state.soundEnabled) playCarouselClick(); }}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all",
-                currentCircuitIndex === index 
-                  ? "bg-gray-900" 
-                  : "bg-gray-400"
-              )}
-              data-testid={`circuit-dot-${circuit.id}`}
-            />
-          ))}
-        </div>
+        )}
 
         {/* Start Engine Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleStartRace}
+            onClick={selectedTab === 'multiplayer' ? () => setLocation('/multiplayer') : handleStartRace}
             className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
             style={{ 
               fontFamily: 'Formula1',
-              backgroundColor: isPracticeMode ? '#16a34a' : raceMode === 'bot' ? '#9333ea' : '#dc2626',
-              animation: isPracticeMode ? 'pulse-green 2s infinite' : raceMode === 'bot' ? 'pulse-purple 2s infinite' : 'pulse-red 2s infinite'
+              backgroundColor: selectedTab === 'multiplayer' ? '#2563eb' : isPracticeMode ? '#16a34a' : '#9333ea',
+              animation: selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite' : isPracticeMode ? 'pulse-green 2s infinite' : 'pulse-purple 2s infinite'
             }}
             data-testid="button-start-race"
           >
-            {isPracticeMode ? 'Start Practice' : 'Start Engine'}
+            {selectedTab === 'multiplayer' ? 'Enter Lobby' : isPracticeMode ? 'Start Practice' : 'Start Engine'}
           </motion.button>
           <Link href="/">
             <button 
@@ -1568,6 +1639,10 @@ export default function Game() {
           @keyframes pulse-purple {
             0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); }
             50% { box-shadow: 0 0 20px 10px rgba(147, 51, 234, 0.3); }
+          }
+          @keyframes pulse-blue {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
+            50% { box-shadow: 0 0 20px 10px rgba(37, 99, 235, 0.3); }
           }
         `}</style>
       </div>
