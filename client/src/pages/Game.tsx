@@ -1188,13 +1188,11 @@ export default function Game() {
                 }}
                 data-testid={`level-${compound.id}`}
               >
-                <div className="w-24 h-24 overflow-hidden flex items-center justify-center">
-                  <img 
-                    src={compound.tire} 
-                    alt={compound.name} 
-                    className="w-40 h-40 object-contain scale-125" 
-                  />
-                </div>
+                <img 
+                  src={compound.tire} 
+                  alt={compound.name} 
+                  className="w-32 h-32 object-contain" 
+                />
                 <div className="flex flex-col items-start">
                   <span 
                     className="font-bold text-lg uppercase tracking-wider transition-colors"
