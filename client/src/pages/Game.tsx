@@ -1216,7 +1216,7 @@ export default function Game() {
         </div>
 
         {/* Confirm Strategy Button - Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
           {selectedDriver && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
@@ -1238,9 +1238,9 @@ export default function Game() {
           <Link href="/">
             <button 
               className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-              data-testid="button-back-menu"
+              data-testid="button-back"
             >
-              &lt;&lt; Menu
+              &lt;&lt; Back
             </button>
           </Link>
         </div>
@@ -1546,14 +1546,13 @@ export default function Game() {
           >
             {isPracticeMode ? 'Start Practice' : 'Start Engine'}
           </motion.button>
-          <Link href="/">
-            <button 
-              className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
-              data-testid="button-back-menu"
-            >
-              &lt;&lt; Menu
-            </button>
-          </Link>
+          <button 
+            onClick={() => setGameStatus('driver')}
+            className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
+            data-testid="button-back"
+          >
+            &lt;&lt; Back
+          </button>
         </div>
 
         <style>{`
