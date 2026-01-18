@@ -10,12 +10,9 @@ import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download } from "lucide-react";
 
 // Import assets
-import helmetSolo from "@/assets/helmet_solo.png";
-import helmetVs from "@/assets/helmet_vs.png";
 import tireHard from "@/assets/tire_hard2.png";
 import tireMedium from "@/assets/tire_medium2.png";
 import tireSoft from "@/assets/tire_soft2.png";
-import chooseTrackBanner from "@/assets/choose_track.png";
 import weatherSun from "@/assets/weather_sun.png";
 import weatherRain from "@/assets/weather_rain.png";
 import weatherRandom from "@/assets/weather_random.png";

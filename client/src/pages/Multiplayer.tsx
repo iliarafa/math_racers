@@ -4,7 +4,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Copy, Check, X, Timer, Delete, Pause, Home, Play, Globe, ChevronLeft, ChevronRight } from "lucide-react";
+import { Copy, Check, X, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Import assets for track selection
 import weatherSun from "@/assets/weather_sun.png";
@@ -168,7 +168,7 @@ export default function Multiplayer() {
     };
     
     ws.onclose = () => {
-      console.log("WebSocket disconnected");
+      // WebSocket disconnected
     };
     
     wsRef.current = ws;
@@ -177,7 +177,7 @@ export default function Multiplayer() {
   const handleWebSocketMessage = (message: any) => {
     switch (message.type) {
       case "joined":
-        console.log("Joined room:", message.roomCode);
+        // Successfully joined room
         break;
       case "room_ready":
         setRoomReady(true);

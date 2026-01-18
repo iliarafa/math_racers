@@ -4,14 +4,7 @@ import { useGameState } from "@/lib/gameLogic";
 import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import taglineImage from "@assets/1Asset_5@2x_1768002946873.png";
-import raceButtonImage from "@assets/1Asset_6@2x_1768068792225.png";
 import garageButtonImage from "@assets/1Asset_4@2x_1768068802390.png";
-
-import Gemini_Generated_Image_8kjyrj8kjyrj8kjy from "@assets/Gemini_Generated_Image_8kjyrj8kjyrj8kjy.png";
-
-import _1Asset_6_2x from "@assets/1Asset 6@2x.png";
-
-import wheel from "@assets/wheel.png";
 import raceButton from "@assets/race-button.png";
 
 export default function Welcome() {
