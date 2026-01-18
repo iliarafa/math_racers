@@ -666,11 +666,12 @@ export default function Multiplayer() {
       <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* App Logo */}
         <div className="pt-4 pb-2 flex justify-center shrink-0 bg-[#525252]">
-          <Link href="/">
+          <Link href="/" data-testid="link-home-logo">
             <img 
               src={logoImage} 
               alt="F1 Math Racer" 
               className="h-8 object-contain cursor-pointer hover:opacity-70 transition-opacity"
+              data-testid="img-app-logo"
             />
           </Link>
         </div>
