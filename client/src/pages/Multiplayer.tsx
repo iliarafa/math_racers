@@ -675,7 +675,7 @@ export default function Multiplayer() {
           </Link>
         </div>
         {/* Centered Card Container */}
-        <div className="flex-1 flex items-start justify-center pt-4 p-4 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
         
         {/* Access Pass Card */}
         <motion.div 
