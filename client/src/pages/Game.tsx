@@ -1188,13 +1188,11 @@ export default function Game() {
                 }}
                 data-testid={`level-${compound.id}`}
               >
-                <div className="w-24 h-24 overflow-hidden flex items-center justify-center">
-                  <img 
-                    src={compound.tire} 
-                    alt={compound.name} 
-                    className="w-40 h-40 object-contain scale-125" 
-                  />
-                </div>
+                <img 
+                  src={compound.tire} 
+                  alt={compound.name} 
+                  className="w-32 h-32 object-contain" 
+                />
                 <div className="flex flex-col items-start">
                   <span 
                     className="font-bold text-lg uppercase tracking-wider transition-colors"
@@ -1218,7 +1216,7 @@ export default function Game() {
         </div>
 
         {/* Confirm Strategy Button - Fixed Bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+        <div className="fixed bottom-0 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
           {selectedDriver && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
@@ -1240,10 +1238,9 @@ export default function Game() {
           <Link href="/">
             <button 
               className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-              style={{ fontFamily: 'Formula1' }}
-              data-testid="button-back"
+              data-testid="button-back-menu"
             >
-              &lt;&lt; Back
+              &lt;&lt; Menu
             </button>
           </Link>
         </div>
@@ -1549,14 +1546,14 @@ export default function Game() {
           >
             {isPracticeMode ? 'Start Practice' : 'Start Engine'}
           </motion.button>
-          <button 
-            onClick={() => setGameStatus('driver')}
-            className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
-            style={{ fontFamily: 'Formula1' }}
-            data-testid="button-back"
-          >
-            &lt;&lt; Back
-          </button>
+          <Link href="/">
+            <button 
+              className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
+              data-testid="button-back-menu"
+            >
+              &lt;&lt; Menu
+            </button>
+          </Link>
         </div>
 
         <style>{`
