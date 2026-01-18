@@ -38,6 +38,7 @@ import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
+import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -1291,8 +1292,17 @@ export default function Game() {
 
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
-        {/* Race/Practice/Multiplayer Pill Toggle - Top */}
-        <div className="pt-6 pb-2 flex justify-center">
+        {/* App Logo */}
+        <div className="pt-6 flex justify-center">
+          <img 
+            src={logoImage} 
+            alt="F1 Math Racer" 
+            className="h-8 object-contain"
+          />
+        </div>
+
+        {/* Race/Practice/Multiplayer Pill Toggle */}
+        <div className="pt-4 pb-2 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
               onClick={() => { setIsPracticeMode(false); setRaceMode('bot'); }}
