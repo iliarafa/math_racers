@@ -1522,7 +1522,7 @@ export default function Game() {
         </div>
 
         {/* Start Engine Button - Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
+        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
