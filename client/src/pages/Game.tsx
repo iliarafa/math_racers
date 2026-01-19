@@ -1585,8 +1585,8 @@ export default function Game() {
             className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
             style={{ 
               fontFamily: 'Formula1',
-              backgroundColor: selectedTab === 'multiplayer' ? '#2563eb' : isPracticeMode ? '#16a34a' : '#9333ea',
-              animation: selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite' : isPracticeMode ? 'pulse-green 2s infinite' : 'pulse-purple 2s infinite'
+              backgroundColor: selectedTab === 'multiplayer' ? '#2563eb' : isPracticeMode ? '#16a34a' : '#dc2626',
+              animation: selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite' : isPracticeMode ? 'pulse-green 2s infinite' : 'pulse-red 2s infinite'
             }}
             data-testid="button-start-race"
           >
