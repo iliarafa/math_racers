@@ -1285,7 +1285,6 @@ export default function Game() {
             />
           </Link>
         </div>
-
         {/* Race/Practice/Multiplayer Pill Toggle */}
         <div className="pb-4 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
@@ -1330,18 +1329,17 @@ export default function Game() {
             </button>
           </div>
         </div>
-
         {/* Main Content - Hero Card with Side Chevrons */}
         <div className="flex-1 flex items-start justify-center px-8 pb-24 pt-4">
           {selectedTab === 'multiplayer' ? (
             /* Multiplayer Card */
-            <div className="flex flex-col items-center">
+            (<div className="flex flex-col items-center">
               <motion.div
                 key="multiplayer-card"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none pt-[0px] pb-[0px] mt-[50px] mb-[50px]"
                 style={{ 
                   backgroundColor: '#f0f0f0',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
@@ -1390,10 +1388,10 @@ export default function Game() {
                   </p>
                 </div>
               </motion.div>
-            </div>
+            </div>)
           ) : (
             /* Track Selection Card */
-            <>
+            (<>
               {/* Left Chevron - hidden on mobile */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -1404,7 +1402,6 @@ export default function Game() {
               >
                 <ChevronLeft className="w-12 h-12" />
               </motion.button>
-
               {/* Card wrapper with swipe hint */}
               <div className="flex flex-col items-center">
                 {/* Swipe hint - mobile only */}
@@ -1542,7 +1539,6 @@ export default function Game() {
                   </div>
                 </motion.div>
               </div>
-
               {/* Right Chevron - hidden on mobile */}
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -1553,10 +1549,9 @@ export default function Game() {
               >
                 <ChevronRight className="w-12 h-12" />
               </motion.button>
-            </>
+            </>)
           )}
         </div>
-
         {/* Track Dots Indicator - only show for track selection */}
         {selectedTab !== 'multiplayer' && (
           <div className="fixed bottom-32 left-0 right-0 flex justify-center gap-2">
@@ -1575,7 +1570,6 @@ export default function Game() {
             ))}
           </div>
         )}
-
         {/* Start Engine Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
           <motion.button
@@ -1601,7 +1595,6 @@ export default function Game() {
             </button>
           </Link>
         </div>
-
         <style>{`
           @keyframes pulse-red {
             0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
