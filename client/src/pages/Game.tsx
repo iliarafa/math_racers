@@ -1823,7 +1823,7 @@ export default function Game() {
             <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
               <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Mistake Review</h2>
+                  <h2 className="text-2xl font-bold uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>Mistake Review</h2>
                   <button
                     onClick={() => setShowMistakeReview(false)}
                     className="p-2 hover:bg-secondary rounded-full transition-colors"
@@ -1837,19 +1837,19 @@ export default function Game() {
                   {mistakeLog.map((mistake, index) => (
                     <div key={index} className="bg-secondary/30 border border-border rounded-lg p-4">
                       <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white" style={{ fontFamily: 'Formula1' }}>
                           {index + 1}
                         </div>
                         <div className="flex-1 space-y-2">
-                          <div className="text-lg font-bold">{mistake.question}</div>
+                          <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{mistake.question}</div>
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <span className="text-muted-foreground">Your Answer:</span>
-                              <span className="ml-2 font-bold text-red-500">{mistake.yourAnswer}</span>
+                              <span className="text-muted-foreground uppercase tracking-wide">Your Answer:</span>
+                              <span className="ml-2 font-bold text-red-500" style={{ fontFamily: 'Formula1' }}>{mistake.yourAnswer}</span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground">Correct Answer:</span>
-                              <span className="ml-2 font-bold text-green-500">{mistake.correctAnswer}</span>
+                              <span className="text-muted-foreground uppercase tracking-wide">Correct Answer:</span>
+                              <span className="ml-2 font-bold text-green-500" style={{ fontFamily: 'Formula1' }}>{mistake.correctAnswer}</span>
                             </div>
                           </div>
                         </div>
@@ -1860,7 +1860,8 @@ export default function Game() {
 
                 <button
                   onClick={() => setShowMistakeReview(false)}
-                  className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all"
+                  className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
+                  style={{ fontFamily: 'Formula1' }}
                   data-testid="button-close-review-bottom"
                 >
                   Close Review
@@ -1874,7 +1875,7 @@ export default function Game() {
             <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
               <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold">Race Analytics</h2>
+                  <h2 className="text-2xl font-bold uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>Race Analytics</h2>
                   <button
                     onClick={() => setShowAnalytics(false)}
                     className="p-2 hover:bg-secondary rounded-full transition-colors"
@@ -1887,28 +1888,28 @@ export default function Game() {
                 {/* Summary Stats */}
                 <div className="grid grid-cols-4 gap-3 mb-6">
                   <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold text-purple-400">
+                    <div className="text-2xl font-bold text-purple-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'purple').length}
                     </div>
-                    <div className="text-xs text-muted-foreground">Purple</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Purple</div>
                   </div>
                   <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold text-green-400">
+                    <div className="text-2xl font-bold text-green-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'green').length}
                     </div>
-                    <div className="text-xs text-muted-foreground">Green</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Green</div>
                   </div>
                   <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold text-yellow-400">
+                    <div className="text-2xl font-bold text-yellow-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'yellow').length}
                     </div>
-                    <div className="text-xs text-muted-foreground">Yellow</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Yellow</div>
                   </div>
                   <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3 text-center">
-                    <div className="text-2xl font-bold text-red-400">
+                    <div className="text-2xl font-bold text-red-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'red').length}
                     </div>
-                    <div className="text-xs text-muted-foreground">Red</div>
+                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Red</div>
                   </div>
                 </div>
 
@@ -1920,27 +1921,27 @@ export default function Game() {
                       className="flex items-center gap-3 bg-secondary/30 border border-border rounded-lg p-3"
                     >
                       <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
+                        "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white",
                         lap.sectorColor === 'purple' && "bg-purple-600",
                         lap.sectorColor === 'green' && "bg-green-600",
                         lap.sectorColor === 'yellow' && "bg-yellow-600",
                         lap.sectorColor === 'red' && "bg-red-600"
-                      )}>
+                      )} style={{ fontFamily: 'Formula1' }}>
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <div className="font-mono font-bold">{lap.question}</div>
+                        <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{lap.question}</div>
                       </div>
                       <div className="text-right flex items-center gap-3">
                         <span className="text-xs text-muted-foreground font-mono">
                           {(lap.responseTime / 1000).toFixed(3)}s
                         </span>
                         {lap.result === 'correct' ? (
-                          <span className="text-green-500 font-bold">{lap.playerAnswer}</span>
+                          <span className="text-green-500 font-bold" style={{ fontFamily: 'Formula1' }}>{lap.playerAnswer}</span>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <span className="text-red-500 line-through">{lap.playerAnswer}</span>
-                            <span className="text-green-500 font-bold">{lap.correctAnswer}</span>
+                            <span className="text-red-500 line-through" style={{ fontFamily: 'Formula1' }}>{lap.playerAnswer}</span>
+                            <span className="text-green-500 font-bold" style={{ fontFamily: 'Formula1' }}>{lap.correctAnswer}</span>
                           </div>
                         )}
                       </div>
@@ -1950,7 +1951,8 @@ export default function Game() {
 
                 <button
                   onClick={() => setShowAnalytics(false)}
-                  className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all"
+                  className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
+                  style={{ fontFamily: 'Formula1' }}
                   data-testid="button-close-analytics-bottom"
                 >
                   Close Analytics
