@@ -1339,7 +1339,7 @@ export default function Game() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none pt-[0px] pb-[0px] mt-[50px] mb-[50px]"
+                className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
                 style={{ 
                   backgroundColor: '#f0f0f0',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
