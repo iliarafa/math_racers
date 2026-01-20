@@ -24,7 +24,7 @@ export default function Welcome() {
           <img 
             src={heroImage} 
             alt="Math Racers" 
-            className="w-auto max-w-[114%]"
+            className="w-auto max-w-[65%]"
             data-testid="img-hero"
           />
           <img 
