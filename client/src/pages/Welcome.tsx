@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import heroImage from "@assets/IMG_0303_1767485122191.jpeg";
+import heroImage from "@assets/haas_1768869383652.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import taglineImage from "@assets/1Asset_5@2x_1768002946873.png";
 import garageButtonImage from "@assets/1Asset_4@2x_1768068802390.png";
