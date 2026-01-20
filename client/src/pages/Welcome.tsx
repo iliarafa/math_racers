@@ -35,12 +35,12 @@ export default function Welcome() {
           />
         </div>
 
-        <div className="flex flex-row items-center justify-center gap-4 w-full max-w-md">
+        <div className="flex flex-col items-center gap-4 w-full max-w-md">
           <Link href="/game">
             <img 
               src={raceButton} 
               alt="Race" 
-              className="h-[5rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-[7.35rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-start-race"
             />
           </Link>
@@ -49,7 +49,7 @@ export default function Welcome() {
             <img 
               src={garageButtonImage} 
               alt="Garage" 
-              className="h-[5rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-[4.9rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               data-testid="button-garage"
             />
           </Link>
