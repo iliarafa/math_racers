@@ -19,7 +19,13 @@ export function GameLayout({ children, coins, trackName, hideHeader = false, loc
       "text-foreground flex flex-col",
       lockViewport ? "h-screen overflow-hidden" : "min-h-screen",
       darkBackground ? "bg-black" : "bg-background"
-    )} style={{ fontFamily: 'Formula1, sans-serif' }}>
+    )} style={{ 
+      fontFamily: 'Formula1, sans-serif',
+      paddingTop: 'env(safe-area-inset-top)',
+      paddingBottom: 'env(safe-area-inset-bottom)',
+      paddingLeft: 'env(safe-area-inset-left)',
+      paddingRight: 'env(safe-area-inset-right)'
+    }}>
       {!hideHeader && (
         <header className="border-b border-border py-3 px-3 md:py-4 md:px-6 flex justify-between items-center sticky top-0 z-50 bg-[#ffffff]">
           <div className="flex items-center gap-4 md:gap-6">
