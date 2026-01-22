@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export type Operation = '+' | '-' | 'x' | '÷' | 'var';
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard';
 
 export interface Question {
   display: string;
@@ -79,9 +79,10 @@ export const getRaceLength = (circuitId: string, simMode: boolean): number => {
 };
 
 export const DRIVERS: Driver[] = [
-  { id: "rookie", name: "Rookie", difficulty: "easy", label: "Rookie" },
-  { id: "pro", name: "PRO", difficulty: "medium", label: "PRO" },
-  { id: "champion", name: "Champion", difficulty: "hard", label: "Champion" }
+  { id: "karting", name: "Karting", difficulty: "beginner", label: "Karting" },
+  { id: "f3", name: "F3", difficulty: "easy", label: "Formula 3" },
+  { id: "f2", name: "F2", difficulty: "medium", label: "Formula 2" },
+  { id: "f1", name: "F1", difficulty: "hard", label: "Formula 1" }
 ];
 
 export const DRIVERS_2025 = [
@@ -401,12 +402,14 @@ export function useGameState() {
 function calculateBotTime(difficulty: Difficulty, operationType: string): number {
   // Base times in milliseconds by difficulty
   let baseTime: number;
-  if (difficulty === 'easy') {
-    baseTime = 2500; // 2.5 seconds base for easy
+  if (difficulty === 'beginner') {
+    baseTime = 2000; // 2 seconds base for beginner (Karting)
+  } else if (difficulty === 'easy') {
+    baseTime = 2500; // 2.5 seconds base for easy (F3)
   } else if (difficulty === 'medium') {
-    baseTime = 3000; // 3 seconds base for medium
+    baseTime = 3000; // 3 seconds base for medium (F2)
   } else {
-    baseTime = 3500; // 3.5 seconds base for hard
+    baseTime = 3500; // 3.5 seconds base for hard (F1)
   }
   
   // Operation type modifier - multiplication/division takes longer
@@ -436,80 +439,145 @@ function calculateBotTime(difficulty: Difficulty, operationType: string): number
   return Math.round(modifiedTime * randomFactor);
 }
 
+// Operation-specific ranges by difficulty
+// Karting (beginner): Ages 6-8, basic math
+// F3 (easy): Ages 8-10
+// F2 (medium): Ages 10-12
+// F1 (hard): Ages 12+
+interface OperationRanges {
+  addition: { min: number; max: number };
+  subtraction: { min: number; max: number };
+  multiplication: { min: number; max: number };
+  division: { min: number; max: number };
+  variables: { min: number; max: number };
+}
+
+function getOperationRanges(difficulty: Difficulty, isWet: boolean): OperationRanges {
+  // Wet weather adds ~30-40% to ranges
+  const wetMultiplier = isWet ? 1.35 : 1;
+
+  if (difficulty === 'beginner') {
+    // Karting: Ages 6-8
+    return {
+      addition: { min: 1, max: Math.round(10 * wetMultiplier) },
+      subtraction: { min: 1, max: Math.round(10 * wetMultiplier) },
+      multiplication: { min: 1, max: Math.round(5 * wetMultiplier) },
+      division: { min: 1, max: Math.round(5 * wetMultiplier) },
+      variables: { min: 1, max: Math.round(5 * wetMultiplier) },
+    };
+  } else if (difficulty === 'easy') {
+    // F3: Ages 8-10
+    return {
+      addition: { min: 10, max: Math.round(50 * wetMultiplier) },
+      subtraction: { min: 10, max: Math.round(50 * wetMultiplier) },
+      multiplication: { min: 2, max: Math.round(10 * wetMultiplier) },
+      division: { min: 2, max: Math.round(10 * wetMultiplier) },
+      variables: { min: 2, max: Math.round(12 * wetMultiplier) },
+    };
+  } else if (difficulty === 'medium') {
+    // F2: Ages 10-12
+    return {
+      addition: { min: 20, max: Math.round(100 * wetMultiplier) },
+      subtraction: { min: 20, max: Math.round(100 * wetMultiplier) },
+      multiplication: { min: 3, max: Math.round(12 * wetMultiplier) },
+      division: { min: 3, max: Math.round(12 * wetMultiplier) },
+      variables: { min: 3, max: Math.round(15 * wetMultiplier) },
+    };
+  } else {
+    // F1: Ages 12+
+    return {
+      addition: { min: 50, max: Math.round(200 * wetMultiplier) },
+      subtraction: { min: 50, max: Math.round(200 * wetMultiplier) },
+      multiplication: { min: 5, max: Math.round(15 * wetMultiplier) },
+      division: { min: 5, max: Math.round(15 * wetMultiplier) },
+      variables: { min: 5, max: Math.round(20 * wetMultiplier) },
+    };
+  }
+}
+
 export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
-  
-  // Difficulty multipliers: easy = smaller numbers, hard = larger numbers
-  // Wet weather increases number ranges proportionally
-  let range: { min: number; max: number };
-  if (difficulty === 'easy') {
-    range = isWet ? { min: 2, max: 15 } : { min: 2, max: 10 };
-  } else if (difficulty === 'medium') {
-    range = isWet ? { min: 5, max: 25 } : { min: 5, max: 15 };
-  } else {
-    range = isWet ? { min: 10, max: 30 } : { min: 10, max: 20 };
-  }
-  
+  const ranges = getOperationRanges(difficulty, isWet);
+
   let num1: number, num2: number, display: string, answer: number;
-  
+
   switch (circuit.type) {
-    case "Multiplication":
-      num1 = Math.floor(Math.random() * (range.max - range.min)) + range.min;
-      num2 = Math.floor(Math.random() * (range.max - range.min)) + range.min;
+    case "Multiplication": {
+      const range = ranges.multiplication;
+      num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      num2 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
       display = `${num1} × ${num2}`;
       answer = num1 * num2;
       break;
-      
-    case "Addition":
-      num1 = Math.floor(Math.random() * (range.max * 3)) + range.min;
-      num2 = Math.floor(Math.random() * (range.max * 3)) + range.min;
+    }
+
+    case "Addition": {
+      const range = ranges.addition;
+      num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      num2 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
       display = `${num1} + ${num2}`;
       answer = num1 + num2;
       break;
-      
-    case "Subtraction":
-      num1 = Math.floor(Math.random() * (range.max * 3)) + range.max;
-      num2 = Math.floor(Math.random() * (num1 - 5)) + 1;
+    }
+
+    case "Subtraction": {
+      const range = ranges.subtraction;
+      // Ensure num1 > num2 for positive results
+      num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      num2 = Math.floor(Math.random() * (num1 - 1)) + 1;
       display = `${num1} − ${num2}`;
       answer = num1 - num2;
       break;
-      
-    case "Division":
-      answer = Math.floor(Math.random() * range.max) + 2;
-      num2 = Math.floor(Math.random() * range.max) + 2;
+    }
+
+    case "Division": {
+      const range = ranges.division;
+      // Generate clean division (no remainders)
+      answer = Math.floor(Math.random() * (range.max - 1)) + 2;
+      num2 = Math.floor(Math.random() * (range.max - 1)) + 2;
       num1 = answer * num2;
       display = `${num1} ÷ ${num2}`;
       break;
-      
-    case "Variables":
-      const varType = Math.floor(Math.random() * 3);
+    }
+
+    case "Variables": {
+      const range = ranges.variables;
+      // For Karting, only use simple x + a = b format
+      const varType = difficulty === 'beginner' ? 0 : Math.floor(Math.random() * 3);
+
       if (varType === 0) {
-        answer = Math.floor(Math.random() * range.max) + 2;
-        const a = Math.floor(Math.random() * range.max) + 2;
+        // x + a = b
+        answer = Math.floor(Math.random() * (range.max - 1)) + 1;
+        const a = Math.floor(Math.random() * (range.max - 1)) + 1;
         const b = answer + a;
         display = `x + ${a} = ${b}, x = ?`;
       } else if (varType === 1) {
-        answer = Math.floor(Math.random() * range.max) + 2;
-        const b = Math.floor(Math.random() * range.max) + 2;
+        // a − x = b
+        answer = Math.floor(Math.random() * (range.max - 1)) + 1;
+        const b = Math.floor(Math.random() * (range.max - 1)) + 1;
         const a = b + answer;
         display = `${a} − x = ${b}, x = ?`;
       } else {
-        answer = Math.floor(Math.random() * range.max) + 2;
+        // ax = b
+        answer = Math.floor(Math.random() * (range.max - 1)) + 2;
         const a = Math.floor(Math.random() * 5) + 2;
         const b = a * answer;
         display = `${a}x = ${b}, x = ?`;
       }
       break;
-      
-    default:
-      num1 = Math.floor(Math.random() * range.max) + 1;
-      num2 = Math.floor(Math.random() * range.max) + 1;
+    }
+
+    default: {
+      const range = ranges.addition;
+      num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      num2 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
       display = `${num1} + ${num2}`;
       answer = num1 + num2;
+    }
   }
-  
+
   // Calculate bot's time for this question
   const botTime = calculateBotTime(difficulty, circuit.type);
-  
+
   return { display, answer, botTime };
 }

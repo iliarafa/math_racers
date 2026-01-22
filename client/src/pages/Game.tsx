@@ -1062,8 +1062,11 @@ export default function Game() {
     if (gameStatus !== 'racing' || raceMode !== 'bot' || isPaused) return;
     
     // Bot speed varies by difficulty - average time per question in ms
-    const botSpeed = selectedDriver?.difficulty === 'hard' ? 3500 : 
-                     selectedDriver?.difficulty === 'medium' ? 2800 : 2200;
+    // Higher = slower bot = more time for player
+    // Karting (beginner) = slowest bot to give young kids more time
+    const botSpeed = selectedDriver?.difficulty === 'beginner' ? 4000 :
+                     selectedDriver?.difficulty === 'easy' ? 3000 :
+                     selectedDriver?.difficulty === 'medium' ? 2500 : 2000; // hard (F1)
     
     // Add some randomness (±30%)
     const randomizedSpeed = botSpeed * (0.7 + Math.random() * 0.6);
@@ -1088,39 +1091,13 @@ export default function Game() {
     setLocation('/multiplayer');
   };
 
-  // Driver Selection Screen - Tyre Strategy Menu
+  // Driver Selection Screen - Racing Series Menu
   if (gameStatus === 'driver_select') {
-    const compoundOptions = [
-      { 
-        id: 'rookie', 
-        name: 'SOFT', 
-        subtitle: 'ROOKIE',
-        description: 'Maximum Grip / Forgiving',
-        tire: tireSoft, 
-        driver: DRIVERS.find(d => d.id === 'rookie'),
-        color: '#ff3b30',
-        bgGlow: 'rgba(255, 59, 48, 0.3)'
-      },
-      { 
-        id: 'pro', 
-        name: 'MEDIUM', 
-        subtitle: 'PROFESSIONAL',
-        description: 'Balanced Performance',
-        tire: tireMedium, 
-        driver: DRIVERS.find(d => d.id === 'pro'),
-        color: '#ffcc00',
-        bgGlow: 'rgba(255, 204, 0, 0.3)'
-      },
-      { 
-        id: 'champion', 
-        name: 'HARD', 
-        subtitle: 'CHAMPION',
-        description: 'Low Grip / Difficult',
-        tire: tireHard, 
-        driver: DRIVERS.find(d => d.id === 'champion'),
-        color: '#ffffff',
-        bgGlow: 'rgba(255, 255, 255, 0.2)'
-      },
+    const seriesOptions = [
+      { id: 'f1', name: 'F1', description: 'Champion', driver: DRIVERS.find(d => d.id === 'f1') },
+      { id: 'f2', name: 'F2', description: 'Pro', driver: DRIVERS.find(d => d.id === 'f2') },
+      { id: 'f3', name: 'F3', description: 'Rookie', driver: DRIVERS.find(d => d.id === 'f3') },
+      { id: 'karting', name: 'KARTING', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting') },
     ];
 
     return (
@@ -1135,60 +1112,55 @@ export default function Game() {
             />
           </Link>
         </div>
-        {/* Section Title */}
-        <div className="text-center pt-4 pb-8">
+        {/* Series Selection */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8 pb-32" style={{ marginTop: '-2rem' }}>
+          {/* Section Title */}
           <h2
-            className="text-xl font-bold uppercase tracking-wider text-black"
+            className="text-xl font-bold uppercase tracking-wider text-black mb-8"
             style={{ fontFamily: 'Formula1' }}
           >
-            Select Compound
+            Select Series
           </h2>
-        </div>
-        {/* Compound Cards */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 pb-24">
-          {compoundOptions.map((compound) => {
-            const isSelected = selectedDriver?.id === compound.id;
-            const displayColor = compound.id === 'champion' ? '#333333' : compound.color;
-            
+          <div className="flex flex-col items-center gap-6">
+          {seriesOptions.map((series) => {
+            const isSelected = selectedDriver?.id === series.id;
+
             return (
               <motion.button
-                key={compound.id}
-                onClick={() => setSelectedDriver(compound.driver || null)}
-                whileHover={{ scale: 1.02 }}
+                key={series.id}
+                onClick={() => setSelectedDriver(series.driver || null)}
                 whileTap={{ scale: 0.98 }}
-                className="w-full max-w-sm rounded-xl p-5 flex items-center gap-5 transition-all"
-                style={{ 
-                  backgroundColor: '#f5f5f5',
-                  border: `2px solid ${isSelected ? displayColor : 'transparent'}`,
-                  boxShadow: isSelected ? `0 0 20px ${compound.bgGlow}` : 'none'
-                }}
-                data-testid={`level-${compound.id}`}
+                className="w-full max-w-xs py-3 text-center"
+                data-testid={`level-${series.id}`}
               >
-                <img 
-                  src={compound.tire} 
-                  alt={compound.name} 
-                  className="w-32 h-32 object-contain pl-[4px] pr-[4px]" 
-                />
-                <div className="flex flex-col items-start">
-                  <span 
-                    className="font-bold text-lg uppercase tracking-wider transition-colors"
-                    style={{ 
-                      fontFamily: 'Formula1',
-                      color: isSelected ? displayColor : '#666666'
-                    }}
-                  >
-                    {compound.name}
-                  </span>
-                  <span className="text-xs uppercase tracking-wide text-gray-600">
-                    {compound.subtitle}
-                  </span>
-                  <span className="text-xs mt-1 text-gray-500">
-                    {compound.description}
-                  </span>
-                </div>
+                <span
+                  className="block"
+                  style={{
+                    fontFamily: 'Formula1',
+                    fontSize: isSelected ? '2rem' : '1.5rem',
+                    fontWeight: 'bold',
+                    color: '#000000',
+                    opacity: isSelected ? 1 : 0.4,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {series.name}
+                </span>
+                <span
+                  className="block mt-1 uppercase tracking-widest"
+                  style={{
+                    fontSize: '0.65rem',
+                    color: '#000000',
+                    opacity: isSelected ? 0.6 : 0.3,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  {series.description}
+                </span>
               </motion.button>
             );
           })}
+          </div>
         </div>
         {/* Confirm Strategy Button - Fixed Bottom */}
         <div className="fixed bottom-0 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>

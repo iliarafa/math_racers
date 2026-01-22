@@ -8,7 +8,7 @@ driver_select → selecting → countdown → racing → finished | crashed
 
 | State | Description |
 |-------|-------------|
-| `driver_select` | Player chooses difficulty (tire compound) |
+| `driver_select` | Player chooses difficulty (racing series) |
 | `selecting` | Player chooses circuit, weather, and mode (Race/Practice/Multiplayer) |
 | `countdown` | 5-light F1 start sequence |
 | `racing` | Active gameplay - answering math questions |
@@ -17,13 +17,68 @@ driver_select → selecting → countdown → racing → finished | crashed
 
 ---
 
-## Difficulty System (Tire Compounds)
+## Difficulty System (Racing Series)
 
-| Compound | ID | Difficulty | Number Range (Dry) | Number Range (Wet) |
-|----------|-----|------------|-------------------|-------------------|
-| Soft | `rookie` | Easy | 2-10 | 2-15 |
-| Medium | `pro` | Medium | 5-15 | 5-25 |
-| Hard | `champion` | Hard | 10-20 | 10-30 |
+| Series | ID | Difficulty | Target Age | Description |
+|--------|-----|------------|------------|-------------|
+| Karting | `karting` | Beginner | Ages 6-8 | Learning basics |
+| F3 | `f3` | Easy | Ages 8-10 | Building skills |
+| F2 | `f2` | Medium | Ages 10-12 | Intermediate |
+| F1 | `f1` | Hard | Ages 12+ | The pinnacle |
+
+---
+
+## Operation-Specific Number Ranges
+
+### Addition (Spa)
+
+| Series | Dry Range | Wet Range (~35% increase) |
+|--------|-----------|---------------------------|
+| Karting | 1-10 | 1-13 |
+| F3 | 10-50 | 10-67 |
+| F2 | 20-100 | 20-135 |
+| F1 | 50-200 | 50-270 |
+
+### Subtraction (Monaco)
+
+| Series | Dry Range | Wet Range |
+|--------|-----------|-----------|
+| Karting | 1-10 | 1-13 |
+| F3 | 10-50 | 10-67 |
+| F2 | 20-100 | 20-135 |
+| F1 | 50-200 | 50-270 |
+
+### Multiplication (Monza)
+
+| Series | Dry Range | Wet Range |
+|--------|-----------|-----------|
+| Karting | 1-5 | 1-6 |
+| F3 | 2-10 | 2-13 |
+| F2 | 3-12 | 3-16 |
+| F1 | 5-15 | 5-20 |
+
+### Division (Suzuka)
+
+| Series | Dry Range | Wet Range |
+|--------|-----------|-----------|
+| Karting | 1-5 | 1-6 |
+| F3 | 2-10 | 2-13 |
+| F2 | 3-12 | 3-16 |
+| F1 | 5-15 | 5-20 |
+
+### Variables (Silverstone)
+
+| Series | Dry Range | Wet Range | Variable Types |
+|--------|-----------|-----------|----------------|
+| Karting | 1-5 | 1-6 | Only `x + a = b` |
+| F3 | 2-12 | 2-16 | All types |
+| F2 | 3-15 | 3-20 | All types |
+| F1 | 5-20 | 5-27 | All types |
+
+**Variable equation types:**
+- `x + a = b, x = ?`
+- `a − x = b, x = ?`
+- `ax = b, x = ?`
 
 ---
 
@@ -36,16 +91,6 @@ driver_select → selecting → countdown → racing → finished | crashed
 | Monaco | `monaco` | Subtraction | 0, 5 | 78 |
 | Suzuka | `suzuka` | Division | 0, 7 | 53 |
 | Silverstone | `silverstone` | Variables | 3, 7 | 52 |
-
-### Question Generation Examples
-
-| Operation | Example |
-|-----------|---------|
-| Multiplication | `7 × 8 = ?` |
-| Addition | `34 + 27 = ?` |
-| Subtraction | `45 − 18 = ?` |
-| Division | `72 ÷ 8 = ?` |
-| Variables | `x + 5 = 12, x = ?` or `3x = 15, x = ?` |
 
 ---
 
@@ -95,17 +140,25 @@ driver_select → selecting → countdown → racing → finished | crashed
 
 ## Bot Opponent
 
-### Base Speed by Difficulty
-| Difficulty | Base Time | Range (±30%) |
-|------------|-----------|--------------|
-| Easy | 2,200ms | 1,540-2,860ms |
-| Medium | 2,800ms | 1,960-3,640ms |
-| Hard | 3,500ms | 2,450-4,550ms |
+### Race Progress Speed (time per lap advance)
 
-### Bot Time Calculation (per question)
-```
-baseTime × operationModifier × randomFactor(0.75-1.25)
-```
+| Series | Base Time | Range (±30%) | Notes |
+|--------|-----------|--------------|-------|
+| Karting | 4,000ms | 2,800-5,200ms | Slowest - gives kids more time |
+| F3 | 3,000ms | 2,100-3,900ms | |
+| F2 | 2,500ms | 1,750-3,250ms | |
+| F1 | 2,000ms | 1,400-2,600ms | Fastest - most challenging |
+
+### Bot Response Time (per question, for sector colors)
+
+Base time calculated as: `baseTime × operationModifier × randomFactor(0.75-1.25)`
+
+| Series | Base Time |
+|--------|-----------|
+| Karting | 2,000ms |
+| F3 | 2,500ms |
+| F2 | 3,000ms |
+| F1 | 3,500ms |
 
 | Operation | Modifier |
 |-----------|----------|
@@ -122,7 +175,7 @@ baseTime × operationModifier × randomFactor(0.75-1.25)
 | Weather | Effect |
 |---------|--------|
 | Dry | Standard number ranges |
-| Wet | Increased number ranges (~50% harder) |
+| Wet | Increased number ranges (~35% harder) |
 | Random | Uses circuit-specific rain probability |
 
 ### Circuit Rain Probabilities
@@ -145,15 +198,16 @@ baseTime × operationModifier × randomFactor(0.75-1.25)
 | Correct answer in DRS zone | 20 coins |
 
 ### Career Points
-| Difficulty | Points | In DRS Zone |
-|------------|--------|-------------|
-| Easy | 1 | 2 |
-| Medium | 2 | 4 |
-| Hard | 3 | 6 |
+| Series | Points | In DRS Zone |
+|--------|--------|-------------|
+| Karting | 1 | 2 |
+| F3 | 1 | 2 |
+| F2 | 2 | 4 |
+| F1 | 3 | 6 |
 
 ### Special Rewards
 - **Perfect race (0 mistakes):** Confetti animation + races won counter
-- **Perfect race on Hard:** Plays "Simply Lovely" audio
+- **Perfect race on F1:** Plays "Simply Lovely" audio
 
 ---
 
