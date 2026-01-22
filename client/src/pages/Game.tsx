@@ -1126,18 +1126,18 @@ export default function Game() {
     return (
       <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo */}
-        <div className="pt-8 pb-4 flex justify-center">
+        <div className="pb-4 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
           <Link href="/">
-            <img 
-              src={logoImage} 
-              alt="F1 Math Racer" 
+            <img
+              src={logoImage}
+              alt="F1 Math Racer"
               className="h-8 object-contain cursor-pointer hover:opacity-70 transition-opacity"
             />
           </Link>
         </div>
         {/* Section Title */}
         <div className="text-center pt-4 pb-8">
-          <h2 
+          <h2
             className="text-xl font-bold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Formula1' }}
           >
@@ -1276,11 +1276,11 @@ export default function Game() {
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo */}
-        <div className="pt-8 pb-4 flex justify-center">
+        <div className="pb-4 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
           <Link href="/">
-            <img 
-              src={logoImage} 
-              alt="F1 Math Racer" 
+            <img
+              src={logoImage}
+              alt="F1 Math Racer"
               className="h-8 object-contain cursor-pointer hover:opacity-70 transition-opacity"
             />
           </Link>
