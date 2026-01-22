@@ -1554,7 +1554,7 @@ export default function Game() {
         </div>
         {/* Track Dots Indicator - only show for track selection */}
         {selectedTab !== 'multiplayer' && (
-          <div className="fixed bottom-32 left-0 right-0 flex justify-center gap-2">
+          <div className="fixed bottom-40 left-0 right-0 flex justify-center gap-2">
             {CIRCUITS.map((circuit, index) => (
               <button
                 key={circuit.id}
