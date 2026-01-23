@@ -205,7 +205,7 @@ export default function Garage() {
                     ) : (
                       <VolumeX className="w-5 h-5 text-white/50" />
                     )}
-                    <span className="text-sm text-white/80">Beeps</span>
+                    <span className="text-sm text-white/80">Sound</span>
                   </div>
                   <button
                     onClick={toggleSound}
@@ -226,7 +226,7 @@ export default function Garage() {
                     <Gauge className="w-5 h-5 text-white/50" />
                     <div>
                       <span className="text-sm text-white/80">Realism Mode</span>
-                      <p className="text-[10px] text-white/40">Full race distance</p>
+                      <p className="text-[10px] text-white/40">Full race distance & damage</p>
                     </div>
                   </div>
                   <button

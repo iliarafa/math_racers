@@ -1151,7 +1151,7 @@ export default function Game() {
             return (
               <motion.button
                 key={series.id}
-                onClick={() => setSelectedDriver(series.driver || null)}
+                onClick={() => { setSelectedDriver(series.driver || null); if (state.soundEnabled) playCarouselClick(); }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full max-w-xs py-3 text-center"
                 data-testid={`level-${series.id}`}
@@ -1193,7 +1193,7 @@ export default function Game() {
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => handleDriverSelect(selectedDriver)}
+              onClick={() => { if (state.soundEnabled) playCarouselClick(); handleDriverSelect(selectedDriver); }}
               className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{ 
                 fontFamily: 'Formula1',
@@ -1206,7 +1206,8 @@ export default function Game() {
             </motion.button>
           )}
           <Link href="/">
-            <button 
+            <button
+              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
               className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
               data-testid="button-back-menu"
             >
@@ -1284,7 +1285,7 @@ export default function Game() {
         <div className="pb-4 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
-              onClick={() => { setSelectedTab('race'); setIsPracticeMode(false); setRaceMode('bot'); }}
+              onClick={() => { setSelectedTab('race'); setIsPracticeMode(false); setRaceMode('bot'); if (state.soundEnabled) playCarouselClick(); }}
               className={cn(
                 "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 selectedTab === 'race'
@@ -1297,7 +1298,7 @@ export default function Game() {
               Race
             </button>
             <button
-              onClick={() => { setSelectedTab('practice'); setIsPracticeMode(true); setRaceMode('solo'); }}
+              onClick={() => { setSelectedTab('practice'); setIsPracticeMode(true); setRaceMode('solo'); if (state.soundEnabled) playCarouselClick(); }}
               className={cn(
                 "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 selectedTab === 'practice' 
@@ -1310,7 +1311,7 @@ export default function Game() {
               Practice
             </button>
             <button
-              onClick={() => { setSelectedTab('multiplayer'); }}
+              onClick={() => { setSelectedTab('multiplayer'); if (state.soundEnabled) playCarouselClick(); }}
               className={cn(
                 "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
                 selectedTab === 'multiplayer'
@@ -1570,7 +1571,7 @@ export default function Game() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={selectedTab === 'multiplayer' ? () => setLocation('/multiplayer') : handleStartRace}
+            onClick={() => { if (state.soundEnabled) playCarouselClick(); selectedTab === 'multiplayer' ? setLocation('/multiplayer') : handleStartRace(); }}
             className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
             style={{ 
               fontFamily: 'Formula1',
@@ -1582,7 +1583,8 @@ export default function Game() {
             {selectedTab === 'multiplayer' ? 'Enter Lobby' : isPracticeMode ? 'Start Practice' : 'Start Engine'}
           </motion.button>
           <Link href="/">
-            <button 
+            <button
+              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
               className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
               data-testid="button-back-menu"
             >

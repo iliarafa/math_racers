@@ -5,6 +5,34 @@ import heroImage from "@assets/haas_1768869383652.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageButtonImage from "@assets/1Asset_4@2x_1768068802390.png";
 
+let audioContext: AudioContext | null = null;
+
+const getAudioContext = (): AudioContext => {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+  return audioContext;
+};
+
+const playClickSound = () => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.frequency.value = 600;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.08);
+  } catch (e) {}
+};
+
 export default function Welcome() {
   const { state } = useGameState();
 
@@ -19,13 +47,6 @@ export default function Welcome() {
             className="w-auto max-w-[80%]"
             data-testid="img-logo"
           />
-          <p
-            className="text-black text-xl md:text-2xl tracking-wider uppercase mt-2"
-            style={{ fontFamily: 'Formula1' }}
-            data-testid="img-tagline"
-          >
-            NO RISK. FULL MATH.
-          </p>
           <img
             src={heroImage}
             alt="Math Racers"
@@ -37,6 +58,7 @@ export default function Welcome() {
         <div className="flex flex-col items-center gap-8 w-full max-w-md">
           <Link href="/game">
             <button
+              onClick={() => { if (state.soundEnabled) playClickSound(); }}
               className="px-16 py-4 bg-red-600 text-white text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-red-700 transition-colors"
               style={{ fontFamily: 'Formula1' }}
               data-testid="button-start-race"
@@ -46,10 +68,11 @@ export default function Welcome() {
           </Link>
 
           <Link href="/garage">
-            <img 
-              src={garageButtonImage} 
-              alt="Garage" 
+            <img
+              src={garageButtonImage}
+              alt="Garage"
               className="h-[4.9rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => { if (state.soundEnabled) playClickSound(); }}
               data-testid="button-garage"
             />
           </Link>
