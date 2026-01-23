@@ -11,6 +11,16 @@ export default function Garage() {
   const [showFullLog, setShowFullLog] = useState(false);
   const lapHistory = getLapHistory(20);
 
+  const getSeriesLabel = (series?: string): string => {
+    switch (series) {
+      case 'karting': return 'KART';
+      case 'f3': return 'F3';
+      case 'f2': return 'F2';
+      case 'f1': return 'F1';
+      default: return '';
+    }
+  };
+
   const formatTime = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
@@ -71,6 +81,7 @@ export default function Garage() {
                           <span className="text-white/80 text-sm">{lap.trackName}</span>
                         </div>
                         <span className="text-white font-mono text-sm" style={{ color: index === 0 ? state.teamColor : undefined }}>
+                          {lap.series && <span className="text-white/50 mr-2">{getSeriesLabel(lap.series)} |</span>}
                           {formatTime(lap.time)}
                         </span>
                       </div>

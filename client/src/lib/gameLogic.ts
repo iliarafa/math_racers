@@ -39,6 +39,7 @@ export interface LapEntry {
   time: number;
   trackName: string;
   timestamp: number;
+  series?: string;  // 'karting' | 'f3' | 'f2' | 'f1' - optional for backwards compatibility
 }
 
 export interface GameState {
@@ -353,16 +354,17 @@ export function useGameState() {
     }
   };
 
-  const recordLapTime = (time: number, trackName?: string) => {
+  const recordLapTime = (time: number, trackName?: string, series?: string) => {
     const newTimes = [...sessionLapTimes, time].sort((a, b) => a - b).slice(0, 10);
     setSessionLapTimes(newTimes);
     saveSessionLapTimes(newTimes);
-    
+
     if (trackName) {
       const newLapEntry: LapEntry = {
         time,
         trackName,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        series
       };
       setState(prev => ({
         ...prev,

@@ -20,7 +20,7 @@ export default function Welcome() {
             data-testid="img-logo"
           />
           <p
-            className="text-white text-xl md:text-2xl tracking-wider uppercase mt-2"
+            className="text-black text-xl md:text-2xl tracking-wider uppercase mt-2"
             style={{ fontFamily: 'Formula1' }}
             data-testid="img-tagline"
           >

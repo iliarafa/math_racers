@@ -1014,7 +1014,7 @@ export default function Game() {
     // Update personal best time and record session lap time (only in race mode, not practice)
     if (!isPracticeMode && selectedCircuit) {
       updatePersonalBest(selectedCircuit.id, elapsedTime);
-      recordLapTime(elapsedTime, selectedCircuit.name);
+      recordLapTime(elapsedTime, selectedCircuit.name, selectedDriver?.id);
     }
   };
 
