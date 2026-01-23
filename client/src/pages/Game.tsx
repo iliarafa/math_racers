@@ -1616,7 +1616,7 @@ export default function Game() {
   if (gameStatus === 'countdown') {
     return (
       <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
-        <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden pb-16">
           
           {/* F1 Starting Lights */}
           <div className="flex gap-4">
@@ -1629,7 +1629,7 @@ export default function Game() {
                   scale: countdownLight >= light ? 1 : 0.95
                 }}
                 className={cn(
-                  "w-16 h-16 md:w-20 md:h-20 rounded-full border-4 transition-colors duration-200",
+                  "w-12 h-12 md:w-16 md:h-16 rounded-full border-4 transition-colors duration-200",
                   countdownLight >= light 
                     ? "bg-red-600 border-red-700 shadow-[0_0_30px_rgba(220,38,38,0.6)]" 
                     : "bg-neutral-200 border-neutral-300"
@@ -1647,7 +1647,7 @@ export default function Game() {
   if (gameStatus === 'go') {
     return (
       <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center justify-center gap-8 overflow-hidden pb-16">
           
           {/* Green GO indicator */}
           <motion.div
@@ -1658,7 +1658,7 @@ export default function Game() {
             {[1, 2, 3, 4, 5].map((light) => (
               <div
                 key={light}
-                className="w-16 h-16 md:w-20 md:h-20 rounded-full border-4 bg-green-500 border-green-600 shadow-[0_0_30px_rgba(34,197,94,0.6)]"
+                className="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 bg-green-500 border-green-600 shadow-[0_0_30px_rgba(34,197,94,0.6)]"
               />
             ))}
           </motion.div>
