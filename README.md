@@ -70,6 +70,14 @@ A random factor of ±25% is applied to make the bot feel more natural.
 - Base: 3500ms × 0.85 (addition) × 1.3 (1 carry) = ~3867ms
 - With random factor: 2900-4834ms
 
+**Bot Progress Bar Visual Feedback:**
+The bot's progress bar shows colored segments reflecting problem complexity:
+- **Purple**: Bot found it easy (fast solve, < 85% of base time)
+- **Green**: Normal difficulty (85-115% of base time)
+- **Yellow**: Bot struggled (slow solve, > 115% of base time)
+
+This mirrors the player's feedback system and shows that the bot also "thinks harder" on complex problems.
+
 ### Speed Feedback System
 
 **Standard Mode:**

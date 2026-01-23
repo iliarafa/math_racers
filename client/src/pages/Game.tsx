@@ -477,6 +477,10 @@ export default function Game() {
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
   const [botProgress, setBotProgress] = useState(0);
+  const [botLapResults, setBotLapResults] = useState<Array<{
+    sectorColor: 'purple' | 'green' | 'yellow';
+    botTime: number;
+  }>>([]);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
@@ -721,6 +725,7 @@ export default function Game() {
   const handleStartRace = () => {
     if (!selectedCircuit) return;
     setBotProgress(0);
+    setBotLapResults([]);
     // Ensure race mode has bot opponent (practice mode uses solo)
     if (!isPracticeMode) {
       setRaceMode('bot');
@@ -1030,6 +1035,7 @@ export default function Game() {
     setProgress(0);
     setBotProgress(0);
     setLapResults([]);
+    setBotLapResults([]);
     setMistakes(0);
     setFinalMistakes(0);
     setShowPenalty(false);
@@ -1057,32 +1063,40 @@ export default function Game() {
     setCalibrationTimes([]);
   };
 
-  // Bot simulation during racing
+  // Bot simulation during racing - uses setTimeout for per-lap timing
   useEffect(() => {
     if (gameStatus !== 'racing' || raceMode !== 'bot' || isPaused) return;
-    
-    // Bot speed varies by difficulty - average time per question in ms
+    if (botProgress >= raceLength) return;
+
+    // Bot speed varies by difficulty - base time per question in ms
     // Higher = slower bot = more time for player
     // Karting (beginner) = slowest bot to give young kids more time
-    const botSpeed = selectedDriver?.difficulty === 'beginner' ? 4000 :
-                     selectedDriver?.difficulty === 'easy' ? 3000 :
-                     selectedDriver?.difficulty === 'medium' ? 2500 : 2000; // hard (F1)
-    
-    // Add some randomness (±30%)
-    const randomizedSpeed = botSpeed * (0.7 + Math.random() * 0.6);
-    
-    const interval = setInterval(() => {
-      setBotProgress(prev => {
-        if (prev >= raceLength) {
-          clearInterval(interval);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, randomizedSpeed);
-    
-    return () => clearInterval(interval);
-  }, [gameStatus, raceMode, isPaused, selectedDriver, raceLength]);
+    const baseSpeed = selectedDriver?.difficulty === 'beginner' ? 4000 :
+                      selectedDriver?.difficulty === 'easy' ? 3000 :
+                      selectedDriver?.difficulty === 'medium' ? 2500 : 2000; // hard (F1)
+
+    // Add randomness (±30%) - this represents problem complexity variation
+    const randomFactor = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
+    const lapTime = baseSpeed * randomFactor;
+
+    // Determine sector color based on how fast/slow this lap was
+    // Purple = bot found it easy (fast), Yellow = bot struggled (slow), Green = normal
+    let sectorColor: 'purple' | 'green' | 'yellow';
+    if (randomFactor < 0.85) {
+      sectorColor = 'purple'; // Fast - simple problem
+    } else if (randomFactor > 1.15) {
+      sectorColor = 'yellow'; // Slow - complex problem
+    } else {
+      sectorColor = 'green'; // Normal
+    }
+
+    const timeout = setTimeout(() => {
+      setBotProgress(prev => prev + 1);
+      setBotLapResults(prev => [...prev, { sectorColor, botTime: lapTime }]);
+    }, lapTime);
+
+    return () => clearTimeout(timeout);
+  }, [gameStatus, raceMode, isPaused, selectedDriver, raceLength, botProgress]);
 
   const handleMultiplayerSelect = () => {
     setSelectedDriver(null);
@@ -2077,11 +2091,30 @@ export default function Game() {
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
             <div className="relative h-3 bg-muted/50 rounded-full overflow-hidden">
-              <motion.div
-                className="absolute inset-y-0 left-0 bg-red-500/70"
-                animate={{ width: `${(botProgress / raceLength) * 100}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
+              {/* Segmented progress bar showing bot's lap colors */}
+              <div className="absolute inset-0 flex">
+                {Array.from({ length: raceLength }).map((_, i) => {
+                  const isCompleted = i < botProgress;
+                  const lapData = botLapResults[i];
+
+                  let segmentColor = "bg-transparent";
+                  if (isCompleted && lapData) {
+                    segmentColor = lapData.sectorColor === 'purple' ? "bg-purple-500/70" :
+                                   lapData.sectorColor === 'green' ? "bg-green-500/70" :
+                                   "bg-yellow-500/70";
+                  }
+
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
+                        segmentColor
+                      )}
+                    />
+                  );
+                })}
+              </div>
               {/* Bot car indicator */}
               <motion.div
                 className="absolute top-1/2 -translate-y-1/2 z-10"
