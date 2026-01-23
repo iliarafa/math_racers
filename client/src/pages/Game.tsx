@@ -1139,7 +1139,7 @@ export default function Game() {
         <div className="flex-1 flex flex-col items-center justify-center px-8 pb-32" style={{ marginTop: '-2rem' }}>
           {/* Section Title */}
           <h2
-            className="text-xl font-bold uppercase tracking-wider text-black mb-8"
+            className="text-3xl font-bold uppercase tracking-wider text-black mb-8"
             style={{ fontFamily: 'Formula1' }}
           >
             Select Series
@@ -1160,7 +1160,7 @@ export default function Game() {
                   className="block"
                   style={{
                     fontFamily: 'Formula1',
-                    fontSize: isSelected ? '2rem' : '1.5rem',
+                    fontSize: '1.5rem',
                     fontWeight: 'bold',
                     color: '#000000',
                     opacity: isSelected ? 1 : 0.4,
