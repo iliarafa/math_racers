@@ -36,7 +36,7 @@ export default function Garage() {
 
   return (
     <GameLayout coins={state.coins} hideGarageButton lockViewport>
-      <div className="flex-1 overflow-y-auto p-4 md:p-5 bg-[#363636]">
+      <div className="flex-1 overflow-y-auto p-4 md:p-5 bg-white">
         <div className="max-w-2xl mx-auto">
           
           <div className="flex items-center gap-3 mb-5">
@@ -45,7 +45,7 @@ export default function Garage() {
                 <ChevronLeft className="w-6 h-6 text-black" />
               </button>
             </Link>
-            <h1 className="text-lg font-bold tracking-widest uppercase text-[#ffffffcc]"> Dashboard</h1>
+            <h1 className="text-lg font-bold tracking-widest uppercase text-black"> Dashboard</h1>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -105,19 +105,19 @@ export default function Garage() {
               <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
               <div className="flex justify-between items-end">
                 <div className="text-center flex-1" data-testid="stat-laps">
-                  <div className="text-3xl md:text-4xl font-mono font-bold text-white">
+                  <div className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>
                     {state.totalLaps}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Total Laps</div>
                 </div>
                 <div className="text-center flex-1" data-testid="stat-points">
-                  <div className="text-3xl md:text-4xl font-mono font-bold text-white">
+                  <div className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>
                     {state.careerPoints}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Career Pts</div>
                 </div>
                 <div className="text-center flex-1" data-testid="stat-wins">
-                  <div className="text-3xl md:text-4xl font-mono font-bold text-white">
+                  <div className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>
                     {state.racesWon}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
