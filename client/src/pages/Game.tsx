@@ -2096,7 +2096,7 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        <div className="flex-1 flex flex-col justify-center px-4 gap-1">
+        <div className="flex flex-col justify-center px-4 gap-1">
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
             <div className="relative h-3 bg-muted/50 rounded-full overflow-hidden">
@@ -2195,7 +2195,7 @@ export default function Game() {
         </div>
 
         {/* Large Keypad */}
-        <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0 pb-16 sm:pb-4">
+        <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0 pb-4">
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
