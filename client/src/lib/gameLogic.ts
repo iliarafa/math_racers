@@ -114,19 +114,6 @@ export const DRIVERS_2025 = [
 
 export const CIRCUITS: Circuit[] = [
   {
-    id: "monza",
-    name: "MONZA",
-    type: "Multiplication",
-    description: "The Temple of Speed",
-    mapUrl: "",
-    paths: {
-      s1: "M 200 130 L 70 130 L 60 120 L 50 130 Q 30 130 30 90 Q 30 60 80 50 L 90 45",
-      s2: "M 90 45 L 100 50 L 120 45 Q 140 20 150 45 L 160 85 L 170 95 L 180 85",
-      s3: "M 180 85 L 250 85 Q 290 85 290 110 Q 290 130 250 130 L 200 130"
-    },
-    drsZones: [2, 8]
-  },
-  {
     id: "spa",
     name: "SPA",
     type: "Addition",
@@ -151,6 +138,19 @@ export const CIRCUITS: Circuit[] = [
       s3: "M 140 105 L 110 100 L 90 105 L 70 105 Q 40 105 40 120 L 40 125"
     },
     drsZones: [0, 5]
+  },
+  {
+    id: "monza",
+    name: "MONZA",
+    type: "Multiplication",
+    description: "The Temple of Speed",
+    mapUrl: "",
+    paths: {
+      s1: "M 200 130 L 70 130 L 60 120 L 50 130 Q 30 130 30 90 Q 30 60 80 50 L 90 45",
+      s2: "M 90 45 L 100 50 L 120 45 Q 140 20 150 45 L 160 85 L 170 95 L 180 85",
+      s3: "M 180 85 L 250 85 Q 290 85 290 110 Q 290 130 250 130 L 200 130"
+    },
+    drsZones: [2, 8]
   },
   {
     id: "suzuka",

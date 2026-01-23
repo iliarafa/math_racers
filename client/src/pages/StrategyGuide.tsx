@@ -8,10 +8,10 @@ import { cn } from "@/lib/utils";
 type TabType = "multiplication" | "division" | "addition" | "subtraction" | "variables";
 
 const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
-  { id: "multiplication", label: "The Grid", icon: <Grid3X3 className="w-4 h-4" /> },
-  { id: "division", label: "Pit Stops", icon: <Divide className="w-4 h-4" /> },
   { id: "addition", label: "Overtakes", icon: <Plus className="w-4 h-4" /> },
   { id: "subtraction", label: "Gaps", icon: <Minus className="w-4 h-4" /> },
+  { id: "multiplication", label: "The Grid", icon: <Grid3X3 className="w-4 h-4" /> },
+  { id: "division", label: "Pit Stops", icon: <Divide className="w-4 h-4" /> },
   { id: "variables", label: "X-Factor", icon: <Variable className="w-4 h-4" /> },
 ];
 
@@ -261,7 +261,7 @@ function VariablesContent() {
 
 export default function StrategyGuide() {
   const { state } = useGameState();
-  const [activeTab, setActiveTab] = useState<TabType>("multiplication");
+  const [activeTab, setActiveTab] = useState<TabType>("addition");
 
   const renderContent = () => {
     switch (activeTab) {
