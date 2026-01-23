@@ -506,8 +506,6 @@ export default function Game() {
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
-  const [realismThreshold, setRealismThreshold] = useState<number | null>(null);
-  const [calibrationTimes, setCalibrationTimes] = useState<number[]>([]); // Track ALL response times during first 5 questions
   // Track the best time for each sector and who holds it (F1-style competitive timing)
   const [sectorBestTimes, setSectorBestTimes] = useState<Array<{
     bestTime: number;
@@ -528,10 +526,16 @@ export default function Game() {
   const soundEnabledRef = useRef(state.soundEnabled);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
-  
+  const sectorBestTimesRef = useRef(sectorBestTimes);
+
   useEffect(() => {
     soundEnabledRef.current = state.soundEnabled;
   }, [state.soundEnabled]);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    sectorBestTimesRef.current = sectorBestTimes;
+  }, [sectorBestTimes]);
 
   // Sync raceMode with selectedTab - race mode always uses bot, practice uses solo
   useEffect(() => {
@@ -757,74 +761,49 @@ export default function Game() {
         playCorrectSound();
       }
       
-      // NEW GAME LOGIC:
-      // - First 5 questions are calibration (always GREEN)
-      // - Median time from first 5 becomes the reference time
-      // - After calibration:
-      //   - GREEN = faster than reference time
-      //   - YELLOW = slower than reference time
-      //   - PURPLE = faster than bot's time for that question
-      
-      const currentQuestionNumber = progress + 1; // 1-indexed
-      const isCalibrating = currentQuestionNumber <= 5;
-      
+      // F1-style competitive sector timing from lap 1:
+      // - PURPLE = fastest time for this sector (only one driver)
+      // - GREEN = correct answer, within 1.5x of best time
+      // - YELLOW = correct answer, slower than 1.5x best time
+
       let speed: 'fast' | 'normal' | 'slow';
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
-      
-      if (isCalibrating) {
-        // Calibration phase: all correct answers are GREEN
+
+      const sectorIndex = progress; // Current sector index (0-based)
+      const currentBest = sectorBestTimes[sectorIndex];
+
+      // Check if player has the overall fastest time for this sector
+      if (!currentBest || responseTime < currentBest.bestTime) {
+        // Player has new best time for this sector - gets purple
+        sectorColor = 'purple';
         speed = 'fast';
-        sectorColor = 'green';
-        
-        // Track this response time for median calculation
-        const newCalibrationTimes = [...calibrationTimes, responseTime];
-        setCalibrationTimes(newCalibrationTimes);
-        
-        // After 5th question, calculate median time as reference
-        if (currentQuestionNumber === 5 && newCalibrationTimes.length > 0) {
-          // Calculate median from ALL response times (correct or incorrect)
-          const sorted = [...newCalibrationTimes].sort((a, b) => a - b);
-          const mid = Math.floor(sorted.length / 2);
-          const median = sorted.length % 2 !== 0 
-            ? sorted[mid] 
-            : (sorted[mid - 1] + sorted[mid]) / 2;
-          setRealismThreshold(median);
-        }
-      } else {
-        // Post-calibration: F1-style competitive sector timing
-        const referenceTime = realismThreshold || 3000; // fallback if somehow not set
-        const sectorIndex = progress; // Current sector index (0-based)
-        const currentBest = sectorBestTimes[sectorIndex];
 
-        // Check if player has the overall fastest time for this sector
-        if (!currentBest || responseTime < currentBest.bestTime) {
-          // Player has new best time for this sector - gets purple
-          sectorColor = 'purple';
-          speed = 'fast';
-
-          // If bot previously had purple on this sector, demote to green
-          if (currentBest?.holder === 'bot') {
-            setBotLapResults(prev => {
-              const updated = [...prev];
-              if (updated[sectorIndex]?.sectorColor === 'purple') {
-                updated[sectorIndex] = { ...updated[sectorIndex], sectorColor: 'green' };
-              }
-              return updated;
-            });
-          }
-
-          // Update the sector best times
-          setSectorBestTimes(times => {
-            const newTimes = [...times];
-            newTimes[sectorIndex] = { bestTime: responseTime, holder: 'player' };
-            return newTimes;
+        // If bot previously had purple on this sector, demote to green
+        if (currentBest?.holder === 'bot') {
+          setBotLapResults(prev => {
+            const updated = [...prev];
+            if (updated[sectorIndex]?.sectorColor === 'purple') {
+              updated[sectorIndex] = { ...updated[sectorIndex], sectorColor: 'green' };
+            }
+            return updated;
           });
-        } else if (responseTime <= referenceTime) {
-          // GREEN - faster than or equal to personal reference, but not overall fastest
+        }
+
+        // Update the sector best times
+        setSectorBestTimes(times => {
+          const newTimes = [...times];
+          newTimes[sectorIndex] = { bestTime: responseTime, holder: 'player' };
+          return newTimes;
+        });
+      } else {
+        // Player didn't beat the best - check if within threshold
+        const threshold = currentBest.bestTime * 1.5;
+        if (responseTime <= threshold) {
+          // GREEN - within 1.5x of best time
           sectorColor = 'green';
           speed = 'fast';
         } else {
-          // YELLOW - slower than personal reference
+          // YELLOW - slower than 1.5x best time
           sectorColor = 'yellow';
           speed = 'slow';
         }
@@ -868,8 +847,6 @@ export default function Game() {
           penaltyTimeRef.current = 0;
           raceStartTimeRef.current = Date.now();
           setInPurpleMode(false);
-          setRealismThreshold(null);
-          setCalibrationTimes([]);
         } else {
           finishRace(mistakes);
         }
@@ -892,23 +869,6 @@ export default function Game() {
       
       // Break purple mode on incorrect answer
       setInPurpleMode(false);
-      
-      // Track calibration time for incorrect answers too (for median calculation)
-      const currentQuestionNumber = progress + 1;
-      if (currentQuestionNumber <= 5) {
-        const newCalibrationTimes = [...calibrationTimes, responseTime];
-        setCalibrationTimes(newCalibrationTimes);
-        
-        // If this is the 5th question, calculate median now
-        if (currentQuestionNumber === 5 && newCalibrationTimes.length > 0) {
-          const sorted = [...newCalibrationTimes].sort((a, b) => a - b);
-          const mid = Math.floor(sorted.length / 2);
-          const median = sorted.length % 2 !== 0 
-            ? sorted[mid] 
-            : (sorted[mid - 1] + sorted[mid]) / 2;
-          setRealismThreshold(median);
-        }
-      }
 
       // Log the mistake for review
       setMistakeLog(prev => [...prev, {
@@ -1088,8 +1048,6 @@ export default function Game() {
     raceStartTimeRef.current = null;
     setPenaltyMessage({ text: '', color: 'red' });
     setInPurpleMode(false);
-    setRealismThreshold(null);
-    setCalibrationTimes([]);
   };
 
   // Bot simulation during racing - uses setTimeout for per-lap timing
@@ -1111,8 +1069,8 @@ export default function Game() {
     const timeout = setTimeout(() => {
       const sectorIndex = botProgress; // Current sector index (0-based)
 
-      // Get the current best time for this sector
-      const currentBest = sectorBestTimes[sectorIndex];
+      // Get the current best time for this sector (use ref to avoid stale closure)
+      const currentBest = sectorBestTimesRef.current[sectorIndex];
 
       let sectorColor: 'purple' | 'green' | 'yellow';
 
@@ -1147,7 +1105,7 @@ export default function Game() {
     }, lapTime);
 
     return () => clearTimeout(timeout);
-  }, [gameStatus, raceMode, isPaused, selectedDriver, raceLength, botProgress, sectorBestTimes]);
+  }, [gameStatus, raceMode, isPaused, selectedDriver, raceLength, botProgress]);
 
   const handleMultiplayerSelect = () => {
     setSelectedDriver(null);
