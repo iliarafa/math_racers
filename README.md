@@ -26,11 +26,49 @@ An interactive, gamified math practice web application designed for children. Pl
 - **SUZUKA** - Division (Figure-8 Track)
 - **SILVERSTONE** - Variables (Home of F1)
 
-### Difficulty Levels
+### Difficulty Levels (Racing Series)
 
-- **Rookie** - Numbers 2-10
-- **Pro** - Numbers 5-15
-- **Champion** - Numbers 10-20
+- **Karting** (Beginner) - Ages 6-8, basic single-digit math
+- **F3** (Easy) - Ages 8-10, two-digit operations
+- **F2** (Medium) - Ages 10-12, larger numbers
+- **F1** (Hard) - Ages 12+, challenging calculations
+
+### Bot Opponent AI
+
+The bot opponent's response time adapts dynamically based on three factors:
+
+**1. Difficulty Level Base Times:**
+- Karting: 2500ms base
+- F3: 3000ms base
+- F2: 3500ms base
+- F1: 4000ms base
+
+**2. Operation Type Modifier:**
+- Addition: 0.85x (fastest)
+- Subtraction: 0.95x
+- Multiplication: 1.15x
+- Division: 1.20x
+- Variables: 1.25x (slowest)
+
+**3. Problem Complexity Modifier:**
+- **Addition/Subtraction**: Analyzes carries/borrows
+  - No carries: 1.0x
+  - 1 carry: 1.3x
+  - 2 carries: 1.6x
+  - 3+ carries: 2.0x
+- **Multiplication**: Based on operand digit count
+  - Single digit: 1.0x
+  - Two digits: 1.5x
+- **Division**: Based on dividend size
+  - 1 digit: 1.0x
+  - 2 digits: 1.25x
+  - 3 digits: 1.5x
+
+A random factor of ±25% is applied to make the bot feel more natural.
+
+**Example**: Addition 45 + 38 (1 carry) on Medium difficulty:
+- Base: 3500ms × 0.85 (addition) × 1.3 (1 carry) = ~3867ms
+- With random factor: 2900-4834ms
 
 ### Speed Feedback System
 

@@ -7,6 +7,9 @@ export interface Question {
   display: string;
   answer: number;
   botTime: number; // Bot's response time in ms for this question
+  num1?: number;      // First operand (for complexity calculation)
+  num2?: number;      // Second operand (for complexity calculation)
+  operation?: string; // Operation type
 }
 
 export interface Driver {
@@ -398,20 +401,78 @@ export function useGameState() {
   };
 }
 
-// Calculate bot's response time based on difficulty, operation type, and randomness
-function calculateBotTime(difficulty: Difficulty, operationType: string): number {
-  // Base times in milliseconds by difficulty
+// Count carries/borrows for addition or subtraction
+function countCarries(num1: number, num2: number, operation: string): number {
+  let carry = 0;
+  let carryCount = 0;
+  const str1 = Math.abs(num1).toString();
+  const str2 = Math.abs(num2).toString();
+  const len = Math.max(str1.length, str2.length);
+
+  for (let i = 0; i < len; i++) {
+    const d1 = parseInt(str1[str1.length - 1 - i] || '0');
+    const d2 = parseInt(str2[str2.length - 1 - i] || '0');
+
+    if (operation === 'Addition') {
+      const sum = d1 + d2 + carry;
+      if (sum >= 10) carryCount++;
+      carry = sum >= 10 ? 1 : 0;
+    } else {
+      // Subtraction (borrow)
+      const diff = d1 - d2 - carry;
+      if (diff < 0) carryCount++;
+      carry = diff < 0 ? 1 : 0;
+    }
+  }
+  return carryCount;
+}
+
+// Calculate complexity multiplier based on the actual numbers involved
+function calculateComplexity(num1: number, num2: number, operation: string): number {
+  if (operation === 'Addition' || operation === 'Subtraction') {
+    // Count carries/borrows
+    const carries = countCarries(num1, num2, operation);
+    // No carries: 1.0x, 1 carry: 1.3x, 2 carries: 1.6x, 3+ carries: 2.0x
+    return 1.0 + Math.min(carries, 3) * 0.3 + (carries > 3 ? 0.1 : 0);
+  }
+
+  if (operation === 'Multiplication') {
+    // Based on digit count of the larger operand
+    const digits = Math.max(num1.toString().length, num2.toString().length);
+    // 1 digit: 1.0x, 2 digits: 1.5x
+    return digits === 1 ? 1.0 : 1.5;
+  }
+
+  if (operation === 'Division') {
+    // Based on dividend size
+    const digits = num1.toString().length;
+    // 1 digit: 1.0x, 2 digits: 1.25x, 3 digits: 1.5x
+    return 1.0 + (digits - 1) * 0.25;
+  }
+
+  // Variables - use base time (complexity handled by operation modifier)
+  return 1.0;
+}
+
+// Calculate bot's response time based on difficulty, operation type, complexity, and randomness
+function calculateBotTime(
+  difficulty: Difficulty,
+  operationType: string,
+  num1?: number,
+  num2?: number
+): number {
+  // Base times in milliseconds by difficulty (slightly increased)
   let baseTime: number;
   if (difficulty === 'beginner') {
-    baseTime = 2000; // 2 seconds base for beginner (Karting)
+    baseTime = 2500; // 2.5 seconds base for beginner (Karting)
   } else if (difficulty === 'easy') {
-    baseTime = 2500; // 2.5 seconds base for easy (F3)
+    baseTime = 3000; // 3 seconds base for easy (F3)
   } else if (difficulty === 'medium') {
-    baseTime = 3000; // 3 seconds base for medium (F2)
+    baseTime = 3500; // 3.5 seconds base for medium (F2)
   } else {
-    baseTime = 3500; // 3.5 seconds base for hard (F1)
+    baseTime = 4000; // 4 seconds base for hard (F1)
   }
-  
+
   // Operation type modifier - multiplication/division takes longer
   let operationModifier = 1.0;
   switch (operationType) {
@@ -431,11 +492,16 @@ function calculateBotTime(difficulty: Difficulty, operationType: string): number
       operationModifier = 1.25; // Slowest
       break;
   }
-  
-  // Apply modifier and add randomness (±25%)
-  const modifiedTime = baseTime * operationModifier;
+
+  // Complexity modifier based on actual numbers
+  const complexityModifier = (num1 !== undefined && num2 !== undefined)
+    ? calculateComplexity(num1, num2, operationType)
+    : 1.0;
+
+  // Apply modifiers and add randomness (±25%)
+  const modifiedTime = baseTime * operationModifier * complexityModifier;
   const randomFactor = 0.75 + Math.random() * 0.5; // 0.75 to 1.25
-  
+
   return Math.round(modifiedTime * randomFactor);
 }
 
@@ -499,7 +565,7 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
   const ranges = getOperationRanges(difficulty, isWet);
 
-  let num1: number, num2: number, display: string, answer: number;
+  let num1: number = 0, num2: number = 0, display: string, answer: number;
 
   switch (circuit.type) {
     case "Multiplication": {
@@ -548,21 +614,21 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
       if (varType === 0) {
         // x + a = b
         answer = Math.floor(Math.random() * (range.max - 1)) + 1;
-        const a = Math.floor(Math.random() * (range.max - 1)) + 1;
-        const b = answer + a;
-        display = `x + ${a} = ${b}, x = ?`;
+        num2 = Math.floor(Math.random() * (range.max - 1)) + 1;
+        num1 = answer + num2;
+        display = `x + ${num2} = ${num1}, x = ?`;
       } else if (varType === 1) {
         // a − x = b
         answer = Math.floor(Math.random() * (range.max - 1)) + 1;
-        const b = Math.floor(Math.random() * (range.max - 1)) + 1;
-        const a = b + answer;
-        display = `${a} − x = ${b}, x = ?`;
+        num2 = Math.floor(Math.random() * (range.max - 1)) + 1;
+        num1 = num2 + answer;
+        display = `${num1} − x = ${num2}, x = ?`;
       } else {
         // ax = b
         answer = Math.floor(Math.random() * (range.max - 1)) + 2;
-        const a = Math.floor(Math.random() * 5) + 2;
-        const b = a * answer;
-        display = `${a}x = ${b}, x = ?`;
+        num2 = Math.floor(Math.random() * 5) + 2;
+        num1 = num2 * answer;
+        display = `${num2}x = ${num1}, x = ?`;
       }
       break;
     }
@@ -576,8 +642,8 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
     }
   }
 
-  // Calculate bot's time for this question
-  const botTime = calculateBotTime(difficulty, circuit.type);
+  // Calculate bot's time for this question with complexity consideration
+  const botTime = calculateBotTime(difficulty, circuit.type, num1, num2);
 
-  return { display, answer, botTime };
+  return { display, answer, botTime, num1, num2, operation: circuit.type };
 }
