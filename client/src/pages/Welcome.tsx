@@ -3,9 +3,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import heroImage from "@assets/haas_1768869383652.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
-import taglineImage from "@assets/1Asset_5@2x_1768002946873.png";
 import garageButtonImage from "@assets/1Asset_4@2x_1768068802390.png";
-import raceButton from "@assets/race-button.png";
 
 export default function Welcome() {
   const { state } = useGameState();
@@ -21,28 +19,30 @@ export default function Welcome() {
             className="w-auto max-w-[80%]"
             data-testid="img-logo"
           />
-          <img 
-            src={heroImage} 
-            alt="Math Racers" 
+          <p
+            className="text-white text-xl md:text-2xl tracking-wider uppercase mt-2"
+            style={{ fontFamily: 'Formula1' }}
+            data-testid="img-tagline"
+          >
+            NO RISK. FULL MATH.
+          </p>
+          <img
+            src={heroImage}
+            alt="Math Racers"
             className="w-auto max-w-[85%]"
             data-testid="img-hero"
           />
-          <img 
-            src={taglineImage} 
-            alt="No Risk. Full Math." 
-            className="w-auto max-w-[50%]"
-            data-testid="img-tagline"
-          />
         </div>
 
-        <div className="flex flex-col items-center gap-4 w-full max-w-md">
+        <div className="flex flex-col items-center gap-8 w-full max-w-md">
           <Link href="/game">
-            <img 
-              src={raceButton} 
-              alt="Race" 
-              className="h-[7.35rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            <button
+              className="px-16 py-4 bg-red-600 text-white text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-red-700 transition-colors"
+              style={{ fontFamily: 'Formula1' }}
               data-testid="button-start-race"
-            />
+            >
+              RACE
+            </button>
           </Link>
 
           <Link href="/garage">
