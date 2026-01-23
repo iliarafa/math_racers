@@ -70,13 +70,23 @@ A random factor of ±25% is applied to make the bot feel more natural.
 - Base: 3500ms × 0.85 (addition) × 1.3 (1 carry) = ~3867ms
 - With random factor: 2900-4834ms
 
-**Bot Progress Bar Visual Feedback:**
-The bot's progress bar shows colored segments reflecting problem complexity:
-- **Purple**: Bot found it easy (fast solve, < 85% of base time)
-- **Green**: Normal difficulty (85-115% of base time)
-- **Yellow**: Bot struggled (slow solve, > 115% of base time)
+### F1-Style Competitive Sector Timing
 
-This mirrors the player's feedback system and shows that the bot also "thinks harder" on complex problems.
+Both player and bot compete for the fastest time on each sector (question). The sector colors follow real F1 timing rules:
+
+- **Purple**: Overall fastest time for that sector (only ONE driver can hold purple per sector)
+- **Green**: Good time or personal improvement, but not the overall fastest
+- **Yellow**: Slower than baseline/reference time
+- **Red**: Incorrect answer (player only)
+
+**How it works:**
+1. When a driver finishes a sector first, they provisionally get purple (fastest so far)
+2. When the other driver finishes the same sector:
+   - If faster → they take purple, previous holder drops to green
+   - If slower → previous holder keeps purple, new driver gets green/yellow
+3. Progress bars update live to reflect these changes
+
+This creates authentic F1 tension where you can watch your purple sectors turn green if the bot beats your time, or celebrate taking purple away from the bot with a fast answer.
 
 ### Speed Feedback System
 
@@ -92,11 +102,11 @@ This mirrors the player's feedback system and shows that the bot also "thinks ha
 - Wrong answers keep the same question until correct with time penalties
 - Crash at 11 mistakes
 
-### Purple Streak Mode
-- Activate after 5 consecutive correct answers
-- Must answer under 3 seconds to maintain purple status
-- Breaking streak requires 5 fresh correct answers to re-enter
-- Disabled during calibration phase in realism mode
+### Purple Mode
+- Purple sectors indicate you have the overall fastest time for that question
+- Earning purple on a sector means you beat the bot's time (or set the first benchmark)
+- If the bot later beats your time on that sector, your purple turns to green
+- Purple mode UI effects activate when you're currently holding purple sectors
 
 ### Garage
 - **Realism Mode Toggle**: Switch between standard and calibration-based timing
