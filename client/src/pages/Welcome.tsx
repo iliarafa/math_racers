@@ -3,7 +3,6 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import heroImage from "@assets/haas_1768869383652.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
-import garageButtonImage from "@assets/1Asset_4@2x_1768068802390.png";
 
 let audioContext: AudioContext | null = null;
 
@@ -68,13 +67,14 @@ export default function Welcome() {
           </Link>
 
           <Link href="/garage">
-            <img
-              src={garageButtonImage}
-              alt="Garage"
-              className="h-[4.9rem] w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            <button
               onClick={() => { if (state.soundEnabled) playClickSound(); }}
+              className="px-10 py-4 bg-black text-white text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-gray-800 transition-colors"
+              style={{ fontFamily: 'Formula1' }}
               data-testid="button-garage"
-            />
+            >
+              GARAGE
+            </button>
           </Link>
         </div>
 
