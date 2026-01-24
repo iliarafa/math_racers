@@ -1142,15 +1142,15 @@ export default function Game() {
           </Link>
         </div>
         {/* Series Selection */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8 pb-32" style={{ marginTop: '-2rem' }}>
+        <div className="flex flex-col items-center px-8">
           {/* Section Title */}
           <h2
-            className="text-3xl font-bold uppercase tracking-wider text-black mb-8"
+            className="text-3xl font-bold uppercase tracking-wider text-black mt-16 mb-16"
             style={{ fontFamily: 'Formula1' }}
           >
             Select Series
           </h2>
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-3">
           {seriesOptions.map((series) => {
             const isSelected = selectedDriver?.id === series.id;
 
