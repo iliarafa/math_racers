@@ -1126,7 +1126,7 @@ export default function Game() {
       { id: 'f1', name: 'F1', description: 'Champion', driver: DRIVERS.find(d => d.id === 'f1') },
       { id: 'f2', name: 'F2', description: 'Pro', driver: DRIVERS.find(d => d.id === 'f2') },
       { id: 'f3', name: 'F3', description: 'Rookie', driver: DRIVERS.find(d => d.id === 'f3') },
-      { id: 'karting', name: 'KARTING', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting') },
+      { id: 'karting', name: 'KART', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting') },
     ];
 
     return (
