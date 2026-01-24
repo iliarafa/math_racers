@@ -770,7 +770,7 @@ export default function Game() {
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
 
       const sectorIndex = progress; // Current sector index (0-based)
-      const currentBest = sectorBestTimes[sectorIndex];
+      const currentBest = sectorBestTimesRef.current[sectorIndex];
 
       // Check if player has the overall fastest time for this sector
       if (!currentBest || responseTime < currentBest.bestTime) {
@@ -789,10 +789,13 @@ export default function Game() {
           });
         }
 
-        // Update the sector best times
+        // Update the sector best times - sync ref immediately to avoid race condition
+        const newBestTime = { bestTime: responseTime, holder: 'player' as const };
+        sectorBestTimesRef.current = [...sectorBestTimesRef.current];
+        sectorBestTimesRef.current[sectorIndex] = newBestTime;
         setSectorBestTimes(times => {
           const newTimes = [...times];
-          newTimes[sectorIndex] = { bestTime: responseTime, holder: 'player' };
+          newTimes[sectorIndex] = newBestTime;
           return newTimes;
         });
       } else {
@@ -1089,10 +1092,13 @@ export default function Game() {
           });
         }
 
-        // Update the sector best times
+        // Update the sector best times - sync ref immediately to avoid race condition
+        const newBestTime = { bestTime: lapTime, holder: 'bot' as const };
+        sectorBestTimesRef.current = [...sectorBestTimesRef.current];
+        sectorBestTimesRef.current[sectorIndex] = newBestTime;
         setSectorBestTimes(times => {
           const newTimes = [...times];
-          newTimes[sectorIndex] = { bestTime: lapTime, holder: 'bot' };
+          newTimes[sectorIndex] = newBestTime;
           return newTimes;
         });
       } else {
