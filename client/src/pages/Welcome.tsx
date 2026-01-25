@@ -49,7 +49,7 @@ export default function Welcome() {
           <img
             src={heroImage}
             alt="Math Racers"
-            className="w-auto max-w-[85%]"
+            className="w-auto max-w-[85%] -scale-x-100"
             data-testid="img-hero"
           />
         </div>
