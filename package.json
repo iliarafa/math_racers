@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "dev:client": "vite dev --port 5000",
-    "dev": "NODE_ENV=development tsx server/index.ts",
+    "dev": "PORT=3000 NODE_ENV=development tsx server/index.ts",
+    "dev:open": "PORT=3000 NODE_ENV=development tsx server/index.ts & sleep 2 && open http://localhost:3000",
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
