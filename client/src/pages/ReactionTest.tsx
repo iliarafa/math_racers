@@ -66,6 +66,23 @@ export default function ReactionTest() {
     return () => clearAllTimeouts();
   }, []);
 
+  // Spacebar support for desktop
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        e.preventDefault(); // Prevent page scroll
+        if (gameState === 'jumpstart' || gameState === 'result') {
+          resetGame();
+        } else {
+          handleLaunch();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState]);
+
   const startSequence = () => {
     setGameState('sequence');
     setReactionTime(null);
