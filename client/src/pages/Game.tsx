@@ -2552,8 +2552,8 @@ export default function Game() {
               </div>
             </div>
 
-            {/* Status Messages - below buttons */}
-            <div className="flex gap-2">
+            {/* Status Messages - below buttons (fixed height to prevent button shift) */}
+            <div className="flex gap-2 h-8 items-center">
               <AnimatePresence>
                 {showBoostMessage && (
                   <motion.div
