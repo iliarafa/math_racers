@@ -12,7 +12,12 @@ const regulations = [
   {
     title: "OVERTAKE",
     color: "#22c741",
-    description: "Every circuit features two DRS zones where you can gain an advantage. When you answer correctly in these zones, you earn double coins (20 instead of 10) and double career points."
+    description: "Build up Boost Charges by answering correctly. Every 3 correct answers in a row earns 1 charge (maximum 3). When you're behind the bot, press OVERTAKE to freeze the opponent for 3 seconds, giving you time to catch up!"
+  },
+  {
+    title: "ACTIVE AERO",
+    color: "#3b82f6",
+    description: "Earn Aero Charges passively by answering questions. Every 5 correct answers earns 1 charge (maximum 2). Press AERO to activate low-drag mode: your next correct answer advances you 2 sectors instead of 1. But be careful - a wrong answer while AERO is active doubles your time penalty!"
   },
   {
     title: "SECTORS",

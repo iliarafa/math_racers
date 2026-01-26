@@ -454,19 +454,100 @@ const playIncorrectSound = () => {
     const ctx = getAudioContext();
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
-    
+
     oscillator.type = 'sawtooth';
     oscillator.frequency.setValueAtTime(200, ctx.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3);
-    
+
     gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-    
+
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+const playBoostChargedSound = () => {
+  try {
+    const ctx = getAudioContext();
+    // Play two quick ascending tones for "power up" effect
+    [0, 0.1].forEach((delay, i) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.value = i === 0 ? 880 : 1320; // A5, E6
+      gainNode.gain.setValueAtTime(0.25, ctx.currentTime + delay);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + delay + 0.15);
+      oscillator.start(ctx.currentTime + delay);
+      oscillator.stop(ctx.currentTime + delay + 0.15);
+    });
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+const playOvertakeActivatedSound = () => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(440, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.2);
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+const playAeroChargedSound = () => {
+  try {
+    const ctx = getAudioContext();
+    // Whoosh-like ascending sweep
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(300, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.2);
+    gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.25);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+const playAeroActivatedSound = () => {
+  try {
+    const ctx = getAudioContext();
+    // Wind/whoosh effect using noise-like oscillator
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(200, ctx.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.15);
+    oscillator.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.3);
+    gainNode.gain.setValueAtTime(0.25, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.35);
   } catch (e) {
     // Silent fail
   }
@@ -521,6 +602,17 @@ export default function Game() {
   const [mistakeLog, setMistakeLog] = useState<Array<{ question: string; yourAnswer: number; correctAnswer: number }>>([]);
   const [showMistakeReview, setShowMistakeReview] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  // Boost/Overtake system state
+  const [boostCharges, setBoostCharges] = useState(0);      // 0-3 charges
+  const [boostStreak, setBoostStreak] = useState(0);        // Streak counter for earning charges
+  const [botFrozen, setBotFrozen] = useState(false);        // Bot freeze state
+  const [showBoostMessage, setShowBoostMessage] = useState<string | null>(null);
+  const botFreezeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Aero system state
+  const [aeroCharges, setAeroCharges] = useState(0);        // 0-2 charges
+  const [aeroStreak, setAeroStreak] = useState(0);          // 5 correct answers = 1 charge
+  const [aeroActive, setAeroActive] = useState(false);      // Next answer uses aero
+  const [showAeroMessage, setShowAeroMessage] = useState<string | null>(null);
   const penaltyTimeRef = useRef(0);
   const raceStartTimeRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(state.soundEnabled);
@@ -536,6 +628,17 @@ export default function Game() {
   useEffect(() => {
     sectorBestTimesRef.current = sectorBestTimes;
   }, [sectorBestTimes]);
+
+  // Cleanup freeze timer on unmount or game end
+  useEffect(() => {
+    if (gameStatus === 'finished' || gameStatus === 'crashed') {
+      if (botFreezeTimerRef.current) {
+        clearTimeout(botFreezeTimerRef.current);
+        botFreezeTimerRef.current = null;
+      }
+      setBotFrozen(false);
+    }
+  }, [gameStatus]);
 
   // Sync raceMode with selectedTab - race mode always uses bot, practice uses solo
   useEffect(() => {
@@ -835,17 +938,54 @@ export default function Game() {
       // Purple mode state tracks if currently in a purple streak (for UI effects)
       const newPurpleMode = sectorColor === 'purple';
       setInPurpleMode(newPurpleMode);
-      
-      const isOvertakeActive = selectedCircuit.drsZones.includes(progress);
-      const baseCoins = isOvertakeActive ? 20 : 10;
-      addCoins(baseCoins);
+
+      // Standard coins (no more DRS zones)
+      addCoins(10);
       incrementStreak();
       incrementLaps();
       const difficultyPoints = selectedDriver?.difficulty === 'hard' ? 3 : selectedDriver?.difficulty === 'medium' ? 2 : 1;
-      const totalPoints = isOvertakeActive ? difficultyPoints * 2 : difficultyPoints;
-      addCareerPoints(totalPoints);
+      addCareerPoints(difficultyPoints);
 
-      const newProgress = progress + 1;
+      // Boost charge earning: 3 correct answers in a row = 1 charge (max 3)
+      // Only in bot race mode, not practice
+      if (raceMode === 'bot' && !isPracticeMode) {
+        const newBoostStreak = boostStreak + 1;
+        setBoostStreak(newBoostStreak);
+        if (newBoostStreak >= 3 && boostCharges < 3) {
+          setBoostCharges(prev => prev + 1);
+          setBoostStreak(0);
+          setShowBoostMessage('CHARGE EARNED!');
+          setTimeout(() => setShowBoostMessage(null), 1500);
+          if (soundEnabledRef.current) {
+            playBoostChargedSound();
+          }
+        }
+
+        // Aero charge earning: 5 correct answers (total, not consecutive) = 1 charge (max 2)
+        const newAeroStreak = aeroStreak + 1;
+        setAeroStreak(newAeroStreak);
+        if (newAeroStreak >= 5 && aeroCharges < 2) {
+          setAeroCharges(prev => prev + 1);
+          setAeroStreak(0);
+          setShowAeroMessage('AERO CHARGED!');
+          setTimeout(() => setShowAeroMessage(null), 1500);
+          if (soundEnabledRef.current) {
+            playAeroChargedSound();
+          }
+        }
+      }
+
+      // Calculate progress - double if aero was active
+      const progressGain = aeroActive ? 2 : 1;
+      const newProgress = Math.min(progress + progressGain, raceLength); // Cap at race length
+
+      // Deactivate aero after use (success)
+      if (aeroActive) {
+        setAeroActive(false);
+        setShowAeroMessage('AERO BOOST! +2 SECTORS');
+        setTimeout(() => setShowAeroMessage(null), 1500);
+      }
+
       setProgress(newProgress);
       setLapResults(prev => [...prev, { 
         result: 'correct', 
@@ -889,7 +1029,18 @@ export default function Game() {
         playIncorrectSound();
       }
       resetStreak();
-      
+
+      // Reset boost streak on incorrect answer
+      setBoostStreak(0);
+
+      // Check if aero was active - double penalty!
+      const wasAeroActive = aeroActive;
+      if (wasAeroActive) {
+        setAeroActive(false);
+        setShowAeroMessage('AERO FAILED! DOUBLE PENALTY');
+        setTimeout(() => setShowAeroMessage(null), 2000);
+      }
+
       // Break purple mode on incorrect answer
       setInPurpleMode(false);
 
@@ -899,6 +1050,9 @@ export default function Game() {
         yourAnswer: val,
         correctAnswer: question.answer
       }]);
+
+      // Penalty multiplier: 2x if aero was active
+      const penaltyMultiplier = wasAeroActive ? 2 : 1;
 
       if (isPracticeMode) {
         // Practice mode: show mistake but no penalties or crash
@@ -915,28 +1069,33 @@ export default function Game() {
         // Apply penalty but don't advance question
         setShowPenalty(true);
         
-        // Apply time penalties same as standard mode
+        // Apply time penalties same as standard mode (doubled if aero was active)
         if (newMistakes === 1) {
-          setPenaltyMessage({ text: 'TRACK LIMITS - TRY AGAIN', color: 'yellow' });
-          penaltyTimeRef.current += 2000;
-          setElapsedTime(prev => prev + 2000);
+          const penalty = 2000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? 'TRACK LIMITS - AERO FAIL!' : 'TRACK LIMITS - TRY AGAIN', color: 'yellow' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 2) {
-          setPenaltyMessage({ text: 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
-          penaltyTimeRef.current += 2000;
-          setElapsedTime(prev => prev + 2000);
+          const penalty = 2000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? 'WARNING - AERO FAIL!' : 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 3) {
-          setPenaltyMessage({ text: 'BLACK & WHITE FLAG - TRY AGAIN', color: 'yellow' });
+          const penalty = 2000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? 'B&W FLAG - AERO FAIL!' : 'BLACK & WHITE FLAG - TRY AGAIN', color: 'yellow' });
           setShowBlackWhiteFlag(true);
-          penaltyTimeRef.current += 2000;
-          setElapsedTime(prev => prev + 2000);
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes <= 6) {
-          setPenaltyMessage({ text: '+5 SEC PENALTY - TRY AGAIN', color: 'red' });
-          penaltyTimeRef.current += 5000;
-          setElapsedTime(prev => prev + 5000);
+          const penalty = 5000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? `+${penalty/1000} SEC - AERO FAIL!` : '+5 SEC PENALTY - TRY AGAIN', color: 'red' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes <= 10) {
-          setPenaltyMessage({ text: '+10 SEC PENALTY - TRY AGAIN', color: 'red' });
-          penaltyTimeRef.current += 10000;
-          setElapsedTime(prev => prev + 10000);
+          const penalty = 10000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? `+${penalty/1000} SEC - AERO FAIL!` : '+10 SEC PENALTY - TRY AGAIN', color: 'red' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes >= 11) {
           setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
           setFinalMistakes(newMistakes);
@@ -952,30 +1111,35 @@ export default function Game() {
           setAnswer("");
         }, 600);
       } else {
-        // Standard race mode: apply penalties and advance
+        // Standard race mode: apply penalties and advance (doubled if aero was active)
         setShowPenalty(true);
 
         if (newMistakes === 1) {
-          setPenaltyMessage({ text: 'TRACK LIMITS', color: 'yellow' });
-          penaltyTimeRef.current += 2000;
-          setElapsedTime(prev => prev + 2000);
+          const penalty = 2000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? 'TRACK LIMITS - AERO FAIL!' : 'TRACK LIMITS', color: 'yellow' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 2) {
-          setPenaltyMessage({ text: 'TRACK LIMITS WARNING', color: 'yellow' });
-          penaltyTimeRef.current += 2000;
-          setElapsedTime(prev => prev + 2000);
+          const penalty = 2000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? 'WARNING - AERO FAIL!' : 'TRACK LIMITS WARNING', color: 'yellow' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 3) {
-          setPenaltyMessage({ text: 'BLACK & WHITE FLAG', color: 'yellow' });
+          const penalty = 2000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? 'B&W FLAG - AERO FAIL!' : 'BLACK & WHITE FLAG', color: 'yellow' });
           setShowBlackWhiteFlag(true);
-          penaltyTimeRef.current += 2000;
-          setElapsedTime(prev => prev + 2000);
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes <= 6) {
-          setPenaltyMessage({ text: '+5 SECOND PENALTY', color: 'red' });
-          penaltyTimeRef.current += 5000;
-          setElapsedTime(prev => prev + 5000);
+          const penalty = 5000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? `+${penalty/1000} SEC - AERO FAIL!` : '+5 SECOND PENALTY', color: 'red' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes <= 10) {
-          setPenaltyMessage({ text: '+10 SECOND PENALTY', color: 'red' });
-          penaltyTimeRef.current += 10000;
-          setElapsedTime(prev => prev + 10000);
+          const penalty = 10000 * penaltyMultiplier;
+          setPenaltyMessage({ text: wasAeroActive ? `+${penalty/1000} SEC - AERO FAIL!` : '+10 SECOND PENALTY', color: 'red' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes >= 11) {
           setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
           setFinalMistakes(newMistakes);
@@ -1071,11 +1235,71 @@ export default function Game() {
     raceStartTimeRef.current = null;
     setPenaltyMessage({ text: '', color: 'red' });
     setInPurpleMode(false);
+    // Reset boost state
+    setBoostCharges(0);
+    setBoostStreak(0);
+    setBotFrozen(false);
+    setShowBoostMessage(null);
+    if (botFreezeTimerRef.current) {
+      clearTimeout(botFreezeTimerRef.current);
+      botFreezeTimerRef.current = null;
+    }
+    // Reset aero state
+    setAeroCharges(0);
+    setAeroStreak(0);
+    setAeroActive(false);
+    setShowAeroMessage(null);
+  };
+
+  // Handle OVERTAKE button activation
+  const handleOvertake = () => {
+    // Can only activate if: has charges, behind bot, bot not already frozen, racing
+    if (boostCharges <= 0 || progress >= botProgress || botFrozen || gameStatus !== 'racing' || isPaused) {
+      return;
+    }
+
+    // Consume 1 charge
+    setBoostCharges(prev => prev - 1);
+    setBotFrozen(true);
+    setShowBoostMessage('BOT FROZEN! GO GO GO!');
+    if (soundEnabledRef.current) {
+      playOvertakeActivatedSound();
+    }
+
+    // Freeze lasts 3 seconds
+    botFreezeTimerRef.current = setTimeout(() => {
+      setBotFrozen(false);
+      setShowBoostMessage(null);
+      botFreezeTimerRef.current = null;
+    }, 3000);
+  };
+
+  // Handle AERO button activation
+  const handleAero = () => {
+    // Can only activate if: has charges, not already active, racing
+    if (aeroCharges <= 0 || aeroActive || gameStatus !== 'racing' || isPaused) {
+      return;
+    }
+
+    // Consume 1 charge and activate aero mode
+    setAeroCharges(prev => prev - 1);
+    setAeroActive(true);
+    setShowAeroMessage('AERO ACTIVE! RISK/REWARD');
+    if (soundEnabledRef.current) {
+      playAeroActivatedSound();
+    }
+
+    // Message clears after 2 seconds (aero stays active until next answer)
+    setTimeout(() => {
+      if (aeroActive) {
+        setShowAeroMessage(null);
+      }
+    }, 2000);
   };
 
   // Bot simulation during racing - uses setTimeout for per-lap timing
   useEffect(() => {
-    if (gameStatus !== 'racing' || raceMode !== 'bot' || isPaused) return;
+    if (gameStatus !== 'racing' || raceMode !== 'bot' || isPaused || botFrozen) return;
     if (botProgress >= raceLength) return;
 
     // Bot speed varies by difficulty - base time per question in ms
@@ -1131,7 +1355,7 @@ export default function Game() {
     }, lapTime);
 
     return () => clearTimeout(timeout);
-  }, [gameStatus, raceMode, isPaused, selectedDriver, raceLength, botProgress]);
+  }, [gameStatus, raceMode, isPaused, botFrozen, selectedDriver, raceLength, botProgress]);
 
   const handleMultiplayerSelect = () => {
     setSelectedDriver(null);
@@ -2224,6 +2448,152 @@ export default function Game() {
             <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
           </div>
         </div>
+
+        {/* Boost/Overtake & Aero UI - only in bot race mode */}
+        {raceMode === 'bot' && !isPracticeMode && (
+          <div className="flex flex-col items-center gap-2 px-4 py-2">
+            {/* Status Messages */}
+            <div className="flex gap-2">
+              <AnimatePresence>
+                {showBoostMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className={cn(
+                      "text-sm font-bold px-3 py-1 rounded-full",
+                      botFrozen ? "bg-green-500 text-white" : "bg-yellow-500 text-black"
+                    )}
+                  >
+                    {showBoostMessage}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <AnimatePresence>
+                {showAeroMessage && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className={cn(
+                      "text-sm font-bold px-3 py-1 rounded-full",
+                      showAeroMessage.includes('BOOST') ? "bg-blue-500 text-white" :
+                      showAeroMessage.includes('FAIL') ? "bg-red-500 text-white" :
+                      showAeroMessage.includes('ACTIVE') ? "bg-blue-400 text-white" :
+                      "bg-cyan-500 text-black"
+                    )}
+                  >
+                    {showAeroMessage}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Two rows of controls */}
+            <div className="flex flex-col gap-2">
+              {/* Overtake Row */}
+              <div className="flex items-center gap-3">
+                {/* Boost Charges (lightning bolts) */}
+                <div className="flex items-center gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <svg
+                      key={i}
+                      className={cn(
+                        "w-4 h-4 transition-all",
+                        i < boostCharges ? "text-yellow-400" : "text-gray-400/30"
+                      )}
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                    </svg>
+                  ))}
+                </div>
+
+                {/* OVERTAKE Button */}
+                <button
+                  onClick={handleOvertake}
+                  disabled={boostCharges <= 0 || progress >= botProgress || botFrozen || isPaused}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all",
+                    boostCharges > 0 && progress < botProgress && !botFrozen && !isPaused
+                      ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400 active:scale-95"
+                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  )}
+                  style={{ fontFamily: 'Formula1' }}
+                  data-testid="button-overtake"
+                >
+                  OVERTAKE
+                </button>
+
+                {/* Overtake Streak Progress Dots */}
+                <div className="flex items-center gap-0.5">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full transition-all",
+                        i < boostStreak ? "bg-yellow-400" : "bg-gray-400/30"
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Aero Row */}
+              <div className="flex items-center gap-3">
+                {/* Aero Charges (wing icons) */}
+                <div className="flex items-center gap-1">
+                  {[0, 1].map((i) => (
+                    <svg
+                      key={i}
+                      className={cn(
+                        "w-4 h-4 transition-all",
+                        i < aeroCharges ? "text-blue-400" : "text-gray-400/30"
+                      )}
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      {/* Wing/aero icon */}
+                      <path d="M2 12c0-3 2-6 6-6h8c4 0 6 3 6 6s-2 6-6 6h-8c-4 0-6-3-6-6zm6-3c-2 0-3 1.5-3 3s1 3 3 3h8c2 0 3-1.5 3-3s-1-3-3-3H8z" />
+                    </svg>
+                  ))}
+                </div>
+
+                {/* AERO Button */}
+                <button
+                  onClick={handleAero}
+                  disabled={aeroCharges <= 0 || aeroActive || isPaused}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all min-w-[88px]",
+                    aeroActive
+                      ? "bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.7)] animate-pulse"
+                      : aeroCharges > 0 && !isPaused
+                        ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:bg-blue-400 active:scale-95"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  )}
+                  style={{ fontFamily: 'Formula1' }}
+                  data-testid="button-aero"
+                >
+                  {aeroActive ? 'ACTIVE' : 'AERO'}
+                </button>
+
+                {/* Aero Streak Progress Dots (5 for next charge) */}
+                <div className="flex items-center gap-0.5">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full transition-all",
+                        i < aeroStreak ? "bg-blue-400" : "bg-gray-400/30"
+                      )}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Large Keypad */}
         <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">

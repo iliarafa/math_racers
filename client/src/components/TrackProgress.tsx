@@ -9,8 +9,6 @@ interface TrackProgressProps {
 }
 
 export function TrackProgress({ circuit, progress, total, showPenalty = false }: TrackProgressProps) {
-  const isOvertakeActive = circuit.drsZones.includes(progress);
-
   return (
     <div className="w-full max-w-lg mx-auto" data-testid="track-progress">
       <div
@@ -28,13 +26,6 @@ export function TrackProgress({ circuit, progress, total, showPenalty = false }:
       <div className="flex justify-between items-center text-sm text-muted-foreground mt-4 px-1">
         <span>Lap {progress} / {total}</span>
         <div id="dashboard-container" style={{ display: 'flex', gap: '15px', justifyContent: 'center', alignItems: 'center' }}>
-          <div
-            id="overtake-indicator"
-            data-testid="overtake-indicator"
-            className={`overtake-box ${isOvertakeActive ? 'overtake-active' : ''}`}
-          >
-            {isOvertakeActive ? 'OVERTAKE' : 'OT'}
-          </div>
           {showPenalty && (
             <div
               id="penalty-light"
