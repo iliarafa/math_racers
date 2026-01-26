@@ -11,6 +11,7 @@ import Garage from "@/pages/Garage";
 import StrategyGuide from "@/pages/StrategyGuide";
 import ReactionTest from "@/pages/ReactionTest";
 import Multiplayer from "@/pages/Multiplayer";
+import Regulations from "@/pages/Regulations";
 
 function Router() {
   return (
@@ -21,6 +22,7 @@ function Router() {
       <Route path="/strategy" component={StrategyGuide} />
       <Route path="/reaction" component={ReactionTest} />
       <Route path="/multiplayer" component={Multiplayer} />
+      <Route path="/regulations" component={Regulations} />
       <Route component={NotFound} />
     </Switch>
   );

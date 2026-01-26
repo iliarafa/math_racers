@@ -7,7 +7,6 @@ import { ChevronLeft, ChevronDown, TrendingUp, Volume2, VolumeX, Flag, Gauge, Cl
 
 export default function Garage() {
   const { state, toggleSound, toggleSimMode, resetAllData, getLapHistory } = useGameState();
-  const [showRegulations, setShowRegulations] = useState(false);
   const [showFullLog, setShowFullLog] = useState(false);
   const lapHistory = getLapHistory(20);
 
@@ -151,57 +150,15 @@ export default function Garage() {
               </div>
             </Link>
 
-            <div 
-              className="sm:col-span-2 bg-black border border-[#333] rounded-2xl shadow-lg overflow-hidden"
-              data-testid="card-regulations"
-            >
-              <button
-                onClick={() => setShowRegulations(!showRegulations)}
-                className="w-full p-4 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors bg-black"
+            <Link href="/regulations" className="col-span-1">
+              <div
+                className="h-full bg-black border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
+                data-testid="button-regulations"
               >
-                <div className="flex items-center gap-3">
-                  <Flag className="w-5 h-5 text-white" />
-                  <span className="text-xs uppercase tracking-widest text-white">Race Regulations</span>
-                </div>
-                <ChevronDown className={cn(
-                  "w-5 h-5 text-white transition-transform",
-                  showRegulations && "rotate-180"
-                )} />
-              </button>
-              
-              {showRegulations && (
-                <div className="px-4 pb-4 space-y-4 pt-2">
-                  <div>
-                    <h3 className="font-bold mb-1 text-[13px] text-[#d4640f]">RACE</h3>
-                    <p className="text-white text-[13px]">20 sectors to finish. Each correct answer advances one sector.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-bold mb-1 text-[13px] text-[#22c741]">OVERTAKE</h3>
-                    <p className="text-white text-[13px]">Each circuit has 2 DRS zones. Correct answers in zones earn 20 coins (double) and double career points.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-bold mb-1 text-[13px] text-[#a855f7]">SECTORS</h3>
-                    <p className="text-white text-[13px]">Performance feedback: Purple = beat bot, Green = fast, Yellow = slow, Red = wrong answer.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-bold mb-1 text-[13px] text-[#ff0000]">TRACK LIMITS</h3>
-                    <p className="text-white text-[13px]">Mistakes 1-3: +2s each. Mistakes 4-6: +5s. Mistakes 7-10: +10s. 11 mistakes = crash (DNF).</p>
-                  </div>
-                  <div>
-                    <h3 className="font-bold mb-1 text-[13px] text-[#3b82f6]">WEATHER</h3>
-                    <p className="text-white text-[13px]">Dry: standard difficulty. Wet: harder numbers. Random: circuit-specific rain chance.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-bold mb-1 text-[13px] text-[#eab308]">PRACTICE</h3>
-                    <p className="text-white text-[13px]">No penalties, unlimited questions. Wrong answers show "Try Again" and repeat.</p>
-                  </div>
-                  <div>
-                    <h3 className="font-bold mb-1 text-[13px] text-[#2ec9ba]">REALISM MODE</h3>
-                    <p className="text-white text-[13px]">Full Grand Prix distance. Must answer correctly to advance. Realistic lap counts per circuit.</p>
-                  </div>
-                </div>
-              )}
-            </div>
+                <Flag className="w-8 h-8 text-white" />
+                <span className="text-xs uppercase tracking-widest text-white/70">Race Regulations</span>
+              </div>
+            </Link>
 
             <div 
               className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
