@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import heroImage from "@assets/hero_car.png";
+import heroImage from "@assets/redd_red.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
 let audioContext: AudioContext | null = null;
