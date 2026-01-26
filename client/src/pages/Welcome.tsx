@@ -50,6 +50,7 @@ export default function Welcome() {
             src={heroImage}
             alt="Math Racers"
             className="w-auto max-w-[85%]"
+            style={{ filter: 'saturate(0.8) brightness(0.92)' }}
             data-testid="img-hero"
           />
         </div>
