@@ -713,17 +713,37 @@ export default function Game() {
       });
     }
     
-    // Create and download CSV
+    // Create shareable content
     const csvContent = lines.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `telemetry_${selectedCircuit?.id || 'race'}_${Date.now()}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+
+    // Use Web Share API if available (works on iOS)
+    if (navigator.share) {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const file = new File([blob], `telemetry_${selectedCircuit?.id || 'race'}_${Date.now()}.csv`, { type: 'text/csv' });
+
+      navigator.share({
+        title: 'F1 Math Racer - Race Telemetry',
+        text: `Race Results: ${selectedCircuit?.name || 'Race'} - ${formatTime(elapsedTime)} - ${Math.round(((raceLength - finalMistakes) / raceLength) * 100)}% accuracy`,
+        files: [file]
+      }).catch(() => {
+        // If file sharing fails, try without file
+        navigator.share({
+          title: 'F1 Math Racer - Race Telemetry',
+          text: `Race Results: ${selectedCircuit?.name || 'Race'}\nTime: ${formatTime(elapsedTime)}\nAccuracy: ${Math.round(((raceLength - finalMistakes) / raceLength) * 100)}%\nMistakes: ${finalMistakes}`
+        }).catch(() => {});
+      });
+    } else {
+      // Fallback: download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `telemetry_${selectedCircuit?.id || 'race'}_${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
   };
 
   const handleCircuitSelect = (circuit: Circuit) => {
