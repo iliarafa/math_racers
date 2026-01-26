@@ -461,7 +461,8 @@ function calculateBotTime(
   difficulty: Difficulty,
   operationType: string,
   num1?: number,
-  num2?: number
+  num2?: number,
+  isWet: boolean = false
 ): number {
   // Base times in milliseconds by difficulty (slightly increased)
   let baseTime: number;
@@ -473,6 +474,12 @@ function calculateBotTime(
     baseTime = 3500; // 3.5 seconds base for medium (F2)
   } else {
     baseTime = 4000; // 4 seconds base for hard (F1)
+  }
+
+  // Wet mode adds half the gap to next difficulty level (250ms)
+  // This makes wet = level + 0.5 for bot timing
+  if (isWet) {
+    baseTime += 250;
   }
 
   // Operation type modifier - multiplication/division takes longer
@@ -520,47 +527,83 @@ interface OperationRanges {
   variables: { min: number; max: number };
 }
 
-function getOperationRanges(difficulty: Difficulty, isWet: boolean): OperationRanges {
-  // Wet weather adds ~30-40% to ranges
-  const wetMultiplier = isWet ? 1.35 : 1;
-
-  if (difficulty === 'beginner') {
+// Base operation ranges for each difficulty level
+const BASE_RANGES: Record<Difficulty, OperationRanges> = {
+  beginner: {
     // Karting: Ages 6-8
-    return {
-      addition: { min: 1, max: Math.round(10 * wetMultiplier) },
-      subtraction: { min: 1, max: Math.round(10 * wetMultiplier) },
-      multiplication: { min: 1, max: Math.round(5 * wetMultiplier) },
-      division: { min: 1, max: Math.round(5 * wetMultiplier) },
-      variables: { min: 1, max: Math.round(5 * wetMultiplier) },
-    };
-  } else if (difficulty === 'easy') {
+    addition: { min: 1, max: 10 },
+    subtraction: { min: 1, max: 10 },
+    multiplication: { min: 1, max: 5 },
+    division: { min: 1, max: 5 },
+    variables: { min: 1, max: 5 },
+  },
+  easy: {
     // F3: Ages 8-10
-    return {
-      addition: { min: 10, max: Math.round(50 * wetMultiplier) },
-      subtraction: { min: 10, max: Math.round(50 * wetMultiplier) },
-      multiplication: { min: 2, max: Math.round(10 * wetMultiplier) },
-      division: { min: 2, max: Math.round(10 * wetMultiplier) },
-      variables: { min: 2, max: Math.round(12 * wetMultiplier) },
-    };
-  } else if (difficulty === 'medium') {
+    addition: { min: 10, max: 50 },
+    subtraction: { min: 10, max: 50 },
+    multiplication: { min: 2, max: 10 },
+    division: { min: 2, max: 10 },
+    variables: { min: 2, max: 12 },
+  },
+  medium: {
     // F2: Ages 10-12
-    return {
-      addition: { min: 20, max: Math.round(100 * wetMultiplier) },
-      subtraction: { min: 20, max: Math.round(100 * wetMultiplier) },
-      multiplication: { min: 3, max: Math.round(12 * wetMultiplier) },
-      division: { min: 3, max: Math.round(12 * wetMultiplier) },
-      variables: { min: 3, max: Math.round(15 * wetMultiplier) },
-    };
-  } else {
+    addition: { min: 20, max: 100 },
+    subtraction: { min: 20, max: 100 },
+    multiplication: { min: 3, max: 12 },
+    division: { min: 3, max: 12 },
+    variables: { min: 3, max: 15 },
+  },
+  hard: {
     // F1: Ages 12+
-    return {
-      addition: { min: 50, max: Math.round(200 * wetMultiplier) },
-      subtraction: { min: 50, max: Math.round(200 * wetMultiplier) },
-      multiplication: { min: 5, max: Math.round(15 * wetMultiplier) },
-      division: { min: 5, max: Math.round(15 * wetMultiplier) },
-      variables: { min: 5, max: Math.round(20 * wetMultiplier) },
-    };
+    addition: { min: 50, max: 200 },
+    subtraction: { min: 50, max: 200 },
+    multiplication: { min: 5, max: 15 },
+    division: { min: 5, max: 15 },
+    variables: { min: 5, max: 20 },
+  },
+};
+
+// Get the next difficulty level for wet interpolation
+function getNextDifficulty(difficulty: Difficulty): Difficulty {
+  switch (difficulty) {
+    case 'beginner': return 'easy';
+    case 'easy': return 'medium';
+    case 'medium': return 'hard';
+    case 'hard': return 'hard'; // Cap at hard
   }
+}
+
+// Interpolate between two range values
+function interpolateRange(
+  current: { min: number; max: number },
+  next: { min: number; max: number },
+  factor: number
+): { min: number; max: number } {
+  return {
+    min: Math.round(current.min + (next.min - current.min) * factor),
+    max: Math.round(current.max + (next.max - current.max) * factor),
+  };
+}
+
+function getOperationRanges(difficulty: Difficulty, isWet: boolean): OperationRanges {
+  const baseRanges = BASE_RANGES[difficulty];
+
+  if (!isWet) {
+    return baseRanges;
+  }
+
+  // Wet mode: interpolate halfway (0.5) to the next difficulty level
+  const nextDifficulty = getNextDifficulty(difficulty);
+  const nextRanges = BASE_RANGES[nextDifficulty];
+  const factor = 0.5;
+
+  return {
+    addition: interpolateRange(baseRanges.addition, nextRanges.addition, factor),
+    subtraction: interpolateRange(baseRanges.subtraction, nextRanges.subtraction, factor),
+    multiplication: interpolateRange(baseRanges.multiplication, nextRanges.multiplication, factor),
+    division: interpolateRange(baseRanges.division, nextRanges.division, factor),
+    variables: interpolateRange(baseRanges.variables, nextRanges.variables, factor),
+  };
 }
 
 export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false): Question {
@@ -645,7 +688,7 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
   }
 
   // Calculate bot's time for this question with complexity consideration
-  const botTime = calculateBotTime(difficulty, circuit.type, num1, num2);
+  const botTime = calculateBotTime(difficulty, circuit.type, num1, num2, isWet);
 
   return { display, answer, botTime, num1, num2, operation: circuit.type };
 }
