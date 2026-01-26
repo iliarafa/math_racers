@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import heroImage from "@assets/haas_1768869383652.png";
+import heroImage from "@assets/hero_car.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
 let audioContext: AudioContext | null = null;
@@ -49,7 +49,7 @@ export default function Welcome() {
           <img
             src={heroImage}
             alt="Math Racers"
-            className="w-auto max-w-[85%] -scale-x-100"
+            className="w-auto max-w-[85%]"
             data-testid="img-hero"
           />
         </div>
