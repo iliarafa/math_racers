@@ -173,19 +173,31 @@ export default function Garage() {
                 <div className="px-4 pb-4 space-y-4 pt-2">
                   <div>
                     <h3 className="font-bold mb-1 text-[13px] text-[#d4640f]">RACE</h3>
-                    <p className="text-white text-[13px]">Answer 20 questions to finish.</p>
+                    <p className="text-white text-[13px]">20 sectors to finish. Each correct answer advances one sector.</p>
                   </div>
                   <div>
                     <h3 className="font-bold mb-1 text-[13px] text-[#22c741]">OVERTAKE</h3>
-                    <p className="text-white text-[13px]">Solve correctly in detection points to engage Active Aero, reduce drag and fly. Only available in Realism Mode.</p>
+                    <p className="text-white text-[13px]">Each circuit has 2 DRS zones. Correct answers in zones earn 20 coins (double) and double career points.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-1 text-[13px] text-[#a855f7]">SECTORS</h3>
+                    <p className="text-white text-[13px]">Performance feedback: Purple = beat bot, Green = fast, Yellow = slow, Red = wrong answer.</p>
                   </div>
                   <div>
                     <h3 className="font-bold mb-1 text-[13px] text-[#ff0000]">TRACK LIMITS</h3>
-                    <p className="text-white text-[13px]">Wrong answers make you spin and lose time. Four warnings trigger a 5" penalty.</p>
+                    <p className="text-white text-[13px]">Mistakes 1-3: +2s each. Mistakes 4-6: +5s. Mistakes 7-10: +10s. 11 mistakes = crash (DNF).</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-1 text-[13px] text-[#3b82f6]">WEATHER</h3>
+                    <p className="text-white text-[13px]">Dry: standard difficulty. Wet: harder numbers. Random: circuit-specific rain chance.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-1 text-[13px] text-[#eab308]">PRACTICE</h3>
+                    <p className="text-white text-[13px]">No penalties, unlimited questions. Wrong answers show "Try Again" and repeat.</p>
                   </div>
                   <div>
                     <h3 className="font-bold mb-1 text-[13px] text-[#2ec9ba]">REALISM MODE</h3>
-                    <p className="text-white text-[13px]">Race the full Grand Prix distance with realistic lap counts for each circuit.</p>
+                    <p className="text-white text-[13px]">Full Grand Prix distance. Must answer correctly to advance. Realistic lap counts per circuit.</p>
                   </div>
                 </div>
               )}
