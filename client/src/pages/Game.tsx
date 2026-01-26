@@ -2453,7 +2453,7 @@ export default function Game() {
         {raceMode === 'bot' && !isPracticeMode && (
           <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4">
             {/* Two rows of controls - grid for alignment */}
-            <div className="grid grid-cols-[52px_100px_44px] gap-x-3 gap-y-2 items-center">
+            <div className="grid grid-cols-[60px_140px_52px] gap-x-4 gap-y-3 items-center">
               {/* Row 1: Overtake */}
               {/* Boost Charges (lightning bolts) - right aligned */}
               <div className="flex items-center justify-end gap-1">
@@ -2461,7 +2461,7 @@ export default function Game() {
                   <svg
                     key={i}
                     className={cn(
-                      "w-4 h-4 transition-all",
+                      "w-5 h-5 transition-all",
                       i < boostCharges ? "text-yellow-400" : "text-gray-400/30"
                     )}
                     viewBox="0 0 24 24"
@@ -2477,7 +2477,7 @@ export default function Game() {
                 onClick={handleOvertake}
                 disabled={boostCharges <= 0 || progress >= botProgress || botFrozen || isPaused}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all w-full",
+                  "px-4 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all w-full",
                   boostCharges > 0 && progress < botProgress && !botFrozen && !isPaused
                     ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400 active:scale-95"
                     : "bg-gray-600 text-gray-400 cursor-not-allowed"
@@ -2489,12 +2489,12 @@ export default function Game() {
               </button>
 
               {/* Overtake Streak Progress Dots - left aligned */}
-              <div className="flex items-center justify-start gap-1">
+              <div className="flex items-center justify-start gap-1.5">
                 {[0, 1, 2].map((i) => (
                   <div
                     key={i}
                     className={cn(
-                      "w-2 h-2 rounded-full transition-all",
+                      "w-2.5 h-2.5 rounded-full transition-all",
                       i < boostStreak ? "bg-yellow-400" : "bg-gray-400/30"
                     )}
                   />
@@ -2503,12 +2503,12 @@ export default function Game() {
 
               {/* Row 2: Aero */}
               {/* Aero Charges (wing icons) - right aligned */}
-              <div className="flex items-center justify-end gap-1">
+              <div className="flex items-center justify-end gap-1.5">
                 {[0, 1].map((i) => (
                   <svg
                     key={i}
                     className={cn(
-                      "w-5 h-5 transition-all",
+                      "w-6 h-6 transition-all",
                       i < aeroCharges ? "text-blue-400" : "text-gray-400/30"
                     )}
                     viewBox="0 0 24 24"
@@ -2525,7 +2525,7 @@ export default function Game() {
                 onClick={handleAero}
                 disabled={aeroCharges <= 0 || aeroActive || isPaused}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all w-full",
+                  "px-4 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all w-full",
                   aeroActive
                     ? "bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.7)] animate-pulse"
                     : aeroCharges > 0 && !isPaused
@@ -2539,12 +2539,12 @@ export default function Game() {
               </button>
 
               {/* Aero Streak Progress Dots - left aligned */}
-              <div className="flex items-center justify-start gap-0.5">
+              <div className="flex items-center justify-start gap-1">
                 {[0, 1, 2, 3, 4].map((i) => (
                   <div
                     key={i}
                     className={cn(
-                      "w-1.5 h-1.5 rounded-full transition-all",
+                      "w-2 h-2 rounded-full transition-all",
                       i < aeroStreak ? "bg-blue-400" : "bg-gray-400/30"
                     )}
                   />
