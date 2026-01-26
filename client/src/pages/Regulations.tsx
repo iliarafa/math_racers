@@ -22,7 +22,7 @@ const regulations = [
   {
     title: "SECTORS",
     color: "#a855f7",
-    description: "After each answer, your sector time is color-coded to show your performance. Purple means you were faster than the bot. Green means you answered quickly. Yellow indicates a slower response. Red appears when you give a wrong answer."
+    description: "After each answer, your sector time is color-coded to show your performance. Purple means you set the fastest time for that sector (beating both your previous best and the bot). Green means you answered quickly (within 1.5x of the best time). Yellow indicates a slower response. Red appears when you give a wrong answer."
   },
   {
     title: "TRACK LIMITS",
