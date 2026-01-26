@@ -2452,7 +2452,107 @@ export default function Game() {
         {/* Boost/Overtake & Aero UI - only in bot race mode */}
         {raceMode === 'bot' && !isPracticeMode && (
           <div className="flex flex-col items-center gap-2 px-4 py-2">
-            {/* Status Messages */}
+            {/* Two rows of controls - grid for alignment */}
+            <div className="grid grid-cols-[52px_100px_44px] gap-x-3 gap-y-2 items-center">
+              {/* Row 1: Overtake */}
+              {/* Boost Charges (lightning bolts) - right aligned */}
+              <div className="flex items-center justify-end gap-1">
+                {[0, 1, 2].map((i) => (
+                  <svg
+                    key={i}
+                    className={cn(
+                      "w-4 h-4 transition-all",
+                      i < boostCharges ? "text-yellow-400" : "text-gray-400/30"
+                    )}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                ))}
+              </div>
+
+              {/* OVERTAKE Button - centered */}
+              <button
+                onClick={handleOvertake}
+                disabled={boostCharges <= 0 || progress >= botProgress || botFrozen || isPaused}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all w-full",
+                  boostCharges > 0 && progress < botProgress && !botFrozen && !isPaused
+                    ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400 active:scale-95"
+                    : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                )}
+                style={{ fontFamily: 'Formula1' }}
+                data-testid="button-overtake"
+              >
+                OVERTAKE
+              </button>
+
+              {/* Overtake Streak Progress Dots - left aligned */}
+              <div className="flex items-center justify-start gap-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all",
+                      i < boostStreak ? "bg-yellow-400" : "bg-gray-400/30"
+                    )}
+                  />
+                ))}
+              </div>
+
+              {/* Row 2: Aero */}
+              {/* Aero Charges (wing icons) - right aligned */}
+              <div className="flex items-center justify-end gap-1">
+                {[0, 1].map((i) => (
+                  <svg
+                    key={i}
+                    className={cn(
+                      "w-5 h-5 transition-all",
+                      i < aeroCharges ? "text-blue-400" : "text-gray-400/30"
+                    )}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    {/* Wing/aero icon */}
+                    <path d="M2 12c0-3 2-6 6-6h8c4 0 6 3 6 6s-2 6-6 6h-8c-4 0-6-3-6-6zm6-3c-2 0-3 1.5-3 3s1 3 3 3h8c2 0 3-1.5 3-3s-1-3-3-3H8z" />
+                  </svg>
+                ))}
+              </div>
+
+              {/* AERO Button - centered */}
+              <button
+                onClick={handleAero}
+                disabled={aeroCharges <= 0 || aeroActive || isPaused}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all w-full",
+                  aeroActive
+                    ? "bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.7)] animate-pulse"
+                    : aeroCharges > 0 && !isPaused
+                      ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:bg-blue-400 active:scale-95"
+                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                )}
+                style={{ fontFamily: 'Formula1' }}
+                data-testid="button-aero"
+              >
+                {aeroActive ? 'ACTIVE!' : 'ACT AERO'}
+              </button>
+
+              {/* Aero Streak Progress Dots - left aligned */}
+              <div className="flex items-center justify-start gap-0.5">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "w-1.5 h-1.5 rounded-full transition-all",
+                      i < aeroStreak ? "bg-blue-400" : "bg-gray-400/30"
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Status Messages - below buttons */}
             <div className="flex gap-2">
               <AnimatePresence>
                 {showBoostMessage && (
@@ -2487,110 +2587,6 @@ export default function Game() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-
-            {/* Two rows of controls */}
-            <div className="flex flex-col gap-2">
-              {/* Overtake Row */}
-              <div className="flex items-center gap-3">
-                {/* Boost Charges (lightning bolts) */}
-                <div className="flex items-center gap-1">
-                  {[0, 1, 2].map((i) => (
-                    <svg
-                      key={i}
-                      className={cn(
-                        "w-4 h-4 transition-all",
-                        i < boostCharges ? "text-yellow-400" : "text-gray-400/30"
-                      )}
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                    </svg>
-                  ))}
-                </div>
-
-                {/* OVERTAKE Button */}
-                <button
-                  onClick={handleOvertake}
-                  disabled={boostCharges <= 0 || progress >= botProgress || botFrozen || isPaused}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all",
-                    boostCharges > 0 && progress < botProgress && !botFrozen && !isPaused
-                      ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400 active:scale-95"
-                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  )}
-                  style={{ fontFamily: 'Formula1' }}
-                  data-testid="button-overtake"
-                >
-                  OVERTAKE
-                </button>
-
-                {/* Overtake Streak Progress Dots */}
-                <div className="flex items-center gap-0.5">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full transition-all",
-                        i < boostStreak ? "bg-yellow-400" : "bg-gray-400/30"
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Aero Row */}
-              <div className="flex items-center gap-3">
-                {/* Aero Charges (wing icons) */}
-                <div className="flex items-center gap-1">
-                  {[0, 1].map((i) => (
-                    <svg
-                      key={i}
-                      className={cn(
-                        "w-4 h-4 transition-all",
-                        i < aeroCharges ? "text-blue-400" : "text-gray-400/30"
-                      )}
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                    >
-                      {/* Wing/aero icon */}
-                      <path d="M2 12c0-3 2-6 6-6h8c4 0 6 3 6 6s-2 6-6 6h-8c-4 0-6-3-6-6zm6-3c-2 0-3 1.5-3 3s1 3 3 3h8c2 0 3-1.5 3-3s-1-3-3-3H8z" />
-                    </svg>
-                  ))}
-                </div>
-
-                {/* AERO Button */}
-                <button
-                  onClick={handleAero}
-                  disabled={aeroCharges <= 0 || aeroActive || isPaused}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg font-bold text-xs uppercase tracking-wider transition-all min-w-[88px]",
-                    aeroActive
-                      ? "bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.7)] animate-pulse"
-                      : aeroCharges > 0 && !isPaused
-                        ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:bg-blue-400 active:scale-95"
-                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                  )}
-                  style={{ fontFamily: 'Formula1' }}
-                  data-testid="button-aero"
-                >
-                  {aeroActive ? 'ACTIVE' : 'AERO'}
-                </button>
-
-                {/* Aero Streak Progress Dots (5 for next charge) */}
-                <div className="flex items-center gap-0.5">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "w-1.5 h-1.5 rounded-full transition-all",
-                        i < aeroStreak ? "bg-blue-400" : "bg-gray-400/30"
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         )}
