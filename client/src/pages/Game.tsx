@@ -2451,7 +2451,7 @@ export default function Game() {
 
         {/* Boost/Overtake & Aero UI - only in bot race mode */}
         {raceMode === 'bot' && !isPracticeMode && (
-          <div className="flex flex-col items-center gap-2 px-4 py-2">
+          <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4">
             {/* Two rows of controls - grid for alignment */}
             <div className="grid grid-cols-[52px_100px_44px] gap-x-3 gap-y-2 items-center">
               {/* Row 1: Overtake */}
