@@ -7,7 +7,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
 // Import assets
 import tireHard from "@assets/IMG_0385_1768772937370.png";
@@ -1802,13 +1802,6 @@ export default function Game() {
               >
                 <BarChart3 className="w-4 h-4" /> Analytics
               </button>
-              <button
-                onClick={exportTelemetryCSV}
-                className="w-full bg-cyan-600 hover:bg-cyan-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
-                data-testid="button-export-telemetry"
-              >
-                <Download className="w-4 h-4" /> Export Telemetry
-              </button>
               <button onClick={restartRace} className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2" data-testid="button-race-again">
                 <RotateCcw className="w-4 h-4" /> Race Again
               </button>
@@ -1952,14 +1945,24 @@ export default function Game() {
                   ))}
                 </div>
 
-                <button
-                  onClick={() => setShowAnalytics(false)}
-                  className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
-                  style={{ fontFamily: 'Formula1' }}
-                  data-testid="button-close-analytics-bottom"
-                >
-                  Close Analytics
-                </button>
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={exportTelemetryCSV}
+                    className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2 uppercase tracking-wider"
+                    style={{ fontFamily: 'Formula1' }}
+                    data-testid="button-share-analytics"
+                  >
+                    <Share2 className="w-4 h-4" /> Share
+                  </button>
+                  <button
+                    onClick={() => setShowAnalytics(false)}
+                    className="flex-1 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
+                    style={{ fontFamily: 'Formula1' }}
+                    data-testid="button-close-analytics-bottom"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           )}
