@@ -40,10 +40,11 @@ Each circuit is themed after a famous F1 track:
 
 **OVERTAKE System (Energy Bar)**
 - Energy meter charges by answering questions correctly (faster = more charge)
-- Activates only when within 2 sectors of the bot
-- Freezes opponent for 5 seconds at full charge while energy drains
-- Can deactivate early to save energy
-- Wrong answer while active depletes all energy
+- Activates only when behind opponent and within 2 sectors
+- While active: **2x progress** per correct answer + **harder questions** (next difficulty level)
+- Energy drains over time (100% energy = 5 second max duration)
+- Can **manually deactivate** early to preserve remaining energy for later use
+- Wrong answer while active **depletes ALL energy** and ends boost immediately
 
 **ACTIVE AERO System (DRS Zones)**
 - Appears at specific race points (2 zones in standard, 5 in Realism Mode)

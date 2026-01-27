@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, type Difficulty } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, X, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight } from "lucide-react";
+import { Copy, Check, X, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight, Zap, Wind } from "lucide-react";
 
 // Import assets for track selection
 import weatherSun from "@/assets/weather_sun.png";
@@ -92,6 +92,7 @@ const playKeypadClick = () => {
 type GameStatus = "lobby" | "waiting" | "track_select" | "countdown" | "racing" | "finished";
 type Weather = 'dry' | 'wet' | 'random';
 
+
 export default function Multiplayer() {
   const { state, addCoins } = useGameState();
   const [, setLocation] = useLocation();
@@ -139,7 +140,19 @@ export default function Multiplayer() {
     hostMistakes: number;
     guestMistakes: number;
   } | null>(null);
-  
+
+  // Power-ups state
+  const [powerUpsEnabled, setPowerUpsEnabled] = useState(false);
+  const [overtakeEnergy, setOvertakeEnergy] = useState(0);
+  const [overtakeActive, setOvertakeActive] = useState(false);
+  const [overtakeEndTime, setOvertakeEndTime] = useState<number | null>(null);
+  const [overtakeStartEnergy, setOvertakeStartEnergy] = useState(0);
+  const [aeroZones, setAeroZones] = useState<number[]>([]);
+  const [aeroUsedZones, setAeroUsedZones] = useState<Set<number>>(new Set());
+  const [aeroActive, setAeroActive] = useState(false);
+  const [opponentEnergy, setOpponentEnergy] = useState(0);
+  const [overtakeQuestion, setOvertakeQuestion] = useState<Question | null>(null);
+
   const wsRef = useRef<WebSocket | null>(null);
   const playerIdRef = useRef<string>(Math.random().toString(36).substring(7));
   const raceStartTimeRef = useRef<number | null>(null);
@@ -182,6 +195,9 @@ export default function Multiplayer() {
         break;
       case "room_ready":
         setRoomReady(true);
+        if (message.powerUpsEnabled !== undefined) {
+          setPowerUpsEnabled(message.powerUpsEnabled);
+        }
         break;
       case "player_disconnected":
         setError("Opponent disconnected");
@@ -197,6 +213,13 @@ export default function Multiplayer() {
         }
         if (message.weather) {
           setSelectedWeather(message.weather);
+        }
+        // Sync power-ups settings
+        if (message.powerUpsEnabled !== undefined) {
+          setPowerUpsEnabled(message.powerUpsEnabled);
+        }
+        if (message.aeroZones) {
+          setAeroZones(message.aeroZones);
         }
         setGameStatus("countdown");
         setCountdownValue(5);
@@ -218,6 +241,15 @@ export default function Multiplayer() {
         setOpponentProgress(0);
         setOpponentMistakes(0);
         setCurrentQuestionIndex(0);
+        // Reset power-ups state
+        setOvertakeEnergy(0);
+        setOvertakeActive(false);
+        setOvertakeEndTime(null);
+        setOvertakeStartEnergy(0);
+        setOvertakeQuestion(null);
+        setAeroUsedZones(new Set());
+        setAeroActive(false);
+        setOpponentEnergy(0);
         break;
       case "opponent_progress":
         // Use ref to avoid stale closure issue
@@ -240,6 +272,45 @@ export default function Multiplayer() {
           addCoins(100);
         }
         break;
+      // Power-ups events
+      case "power_ups_toggled":
+        setPowerUpsEnabled(message.enabled);
+        break;
+      case "energy_sync":
+        if (isHostRef.current) {
+          setOvertakeEnergy(message.hostEnergy);
+          setOpponentEnergy(message.guestEnergy);
+        } else {
+          setOvertakeEnergy(message.guestEnergy);
+          setOpponentEnergy(message.hostEnergy);
+        }
+        break;
+      case "overtake_activated":
+        setOvertakeActive(true);
+        setOvertakeStartEnergy(message.energy);
+        setOvertakeEndTime(Date.now() + message.duration);
+        break;
+      case "opponent_overtake_activated":
+        // Opponent activated overtake - no effect on us, just informational
+        break;
+      case "overtake_ended":
+        // Only handle if it's for this player
+        if (message.player === (isHostRef.current ? "host" : "guest")) {
+          setOvertakeActive(false);
+          setOvertakeEndTime(null);
+          setOvertakeStartEnergy(0);
+          setOvertakeQuestion(null);
+          setOvertakeEnergy(message.remainingEnergy || 0);
+        }
+        break;
+      case "aero_activated":
+        setAeroActive(true);
+        setAeroUsedZones(prev => {
+          const newSet = new Set(Array.from(prev));
+          newSet.add(message.zone);
+          return newSet;
+        });
+        break;
     }
   };
   
@@ -255,6 +326,53 @@ export default function Multiplayer() {
     }
     return () => clearInterval(interval);
   }, [gameStatus]);
+
+  // OVERTAKE energy drain effect - drains energy over time while active
+  useEffect(() => {
+    if (!overtakeActive || !overtakeEndTime || overtakeStartEnergy <= 0) return;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const remaining = Math.max(0, overtakeEndTime - now);
+      const totalDuration = Math.round((overtakeStartEnergy / 100) * 5000);
+      const remainingEnergy = Math.round((remaining / totalDuration) * overtakeStartEnergy);
+
+      setOvertakeEnergy(remainingEnergy);
+
+      // Auto-deactivate when energy depletes
+      if (remaining <= 0) {
+        clearInterval(interval);
+        setOvertakeActive(false);
+        setOvertakeEndTime(null);
+        setOvertakeStartEnergy(0);
+        setOvertakeEnergy(0);
+        setOvertakeQuestion(null);
+        // Notify server of timeout deactivation
+        if (wsRef.current) {
+          wsRef.current.send(JSON.stringify({
+            type: "deactivate_overtake",
+            roomCode,
+            reason: "timeout",
+            remainingEnergy: 0
+          }));
+        }
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [overtakeActive, overtakeEndTime, overtakeStartEnergy, roomCode]);
+
+  // Generate harder question when OVERTAKE becomes active
+  useEffect(() => {
+    if (overtakeActive && selectedCircuit && selectedDriver) {
+      // Generate a harder question for the current position
+      const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
+      const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty);
+      setOvertakeQuestion(harderQ);
+    } else {
+      setOvertakeQuestion(null);
+    }
+  }, [overtakeActive, selectedCircuit, selectedDriver]);
   
   // Generate questions when circuit is selected
   useEffect(() => {
@@ -360,14 +478,18 @@ export default function Multiplayer() {
   
   const startRace = async () => {
     if (!wsRef.current || !selectedCircuit || !selectedDriver) return;
-    
+
     // Generate questions based on selected circuit
     const newQuestions: Question[] = [];
     for (let i = 0; i < raceLength; i++) {
       newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
     }
     setQuestions(newQuestions);
-    
+
+    // Generate AERO zones if power-ups enabled
+    const zones = powerUpsEnabled ? getAeroZones(raceLength, false) : [];
+    setAeroZones(zones);
+
     // Update room with selected circuit and questions, then start countdown
     try {
       await fetch(`/api/rooms/${roomCode}/update`, {
@@ -377,16 +499,18 @@ export default function Multiplayer() {
           circuitId: selectedCircuit.id,
           driverId: selectedDriver.id,
           weather: selectedWeather,
-          questions: newQuestions.map(q => ({ display: q.display, answer: q.answer }))
+          questions: newQuestions.map(q => ({ display: q.display, answer: q.answer })),
+          powerUpsEnabled
         })
       });
-      
+
       wsRef.current.send(JSON.stringify({
         type: "start_countdown",
         roomCode,
         circuitId: selectedCircuit.id,
         driverId: selectedDriver.id,
-        weather: selectedWeather
+        weather: selectedWeather,
+        powerUpsEnabled
       }));
     } catch (err) {
       console.error("Failed to update room:", err);
@@ -398,16 +522,89 @@ export default function Multiplayer() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  const togglePowerUps = () => {
+    if (!wsRef.current || !isHost) return;
+    const newValue = !powerUpsEnabled;
+    setPowerUpsEnabled(newValue);
+    wsRef.current.send(JSON.stringify({
+      type: "toggle_power_ups",
+      roomCode,
+      enabled: newValue
+    }));
+  };
+
+  const activateOvertake = () => {
+    if (!wsRef.current || !powerUpsEnabled) return;
+
+    // If already active, deactivate manually (preserves remaining energy)
+    if (overtakeActive) {
+      wsRef.current.send(JSON.stringify({
+        type: "deactivate_overtake",
+        roomCode,
+        reason: "manual",
+        remainingEnergy: overtakeEnergy
+      }));
+      setOvertakeActive(false);
+      setOvertakeEndTime(null);
+      setOvertakeStartEnergy(0);
+      setOvertakeQuestion(null);
+      // Energy is preserved - don't reset it
+      return;
+    }
+
+    // Activate - need energy and within range
+    if (overtakeEnergy <= 0) return;
+
+    // Check if within range of opponent (behind and within 2 sectors)
+    const behindOrEqual = progress <= opponentProgress;
+    const withinRange = Math.abs(opponentProgress - progress) <= 2;
+    if (!behindOrEqual || !withinRange) return;
+
+    wsRef.current.send(JSON.stringify({
+      type: "activate_overtake",
+      roomCode
+    }));
+  };
+
+  const activateAero = () => {
+    if (!wsRef.current || !powerUpsEnabled || aeroActive) return;
+
+    const currentZone = getCurrentAeroZone(progress, aeroZones);
+    if (currentZone === undefined || aeroUsedZones.has(currentZone)) return;
+
+    wsRef.current.send(JSON.stringify({
+      type: "activate_aero",
+      roomCode,
+      zone: currentZone
+    }));
+  };
+
+  // Check if AERO is available at current position
+  const isAeroAvailable = powerUpsEnabled &&
+    !aeroActive &&
+    getCurrentAeroZone(progress, aeroZones) !== undefined &&
+    !aeroUsedZones.has(getCurrentAeroZone(progress, aeroZones) || -1);
+
+  // Check if OVERTAKE can be activated
+  const canActivateOvertake = powerUpsEnabled &&
+    overtakeEnergy > 0 &&
+    !overtakeActive &&
+    progress <= opponentProgress &&
+    Math.abs(opponentProgress - progress) <= 2;
   
   const handleSubmit = () => {
     if (feedback !== "idle" || gameStatus !== "racing") return;
-    
+
     const val = parseInt(answer);
     if (isNaN(val)) return;
-    
-    const currentQuestion = questions[currentQuestionIndex];
+
+    // Use harder overtake question when active, otherwise use regular question
+    const currentQuestion = overtakeActive && overtakeQuestion
+      ? overtakeQuestion
+      : questions[currentQuestionIndex];
     if (!currentQuestion) return;
-    
+
     // Calculate response time
     const responseTime = Date.now() - questionStartTimeRef.current;
     const difficulty = selectedDriver?.difficulty || 'easy';
@@ -512,20 +709,47 @@ export default function Multiplayer() {
       
       setInPurpleMode(newPurpleMode);
       setLapResults(prev => [...prev, { result: 'correct', speed, sectorColor, responseTime }]);
-      
-      const newProgress = progress + 1;
+
+      // Harvest energy if power-ups enabled and NOT using overtake
+      if (powerUpsEnabled && !overtakeActive) {
+        const circuit = selectedCircuit || CIRCUITS[0];
+        const energyGain = calculateEnergyHarvest(responseTime, difficulty as Difficulty, circuit.type);
+        const newEnergy = Math.min(100, overtakeEnergy + energyGain);
+        setOvertakeEnergy(newEnergy);
+
+        // Send energy update to server
+        if (wsRef.current) {
+          wsRef.current.send(JSON.stringify({
+            type: "energy_update",
+            roomCode,
+            energy: newEnergy
+          }));
+        }
+      }
+
+      // Calculate progress increment (2x if AERO active OR OVERTAKE active)
+      const hasBonus = aeroActive || overtakeActive;
+      const progressIncrement = hasBonus ? 2 : 1;
+      const newProgress = Math.min(progress + progressIncrement, raceLength);
       setProgress(newProgress);
-      
+
+      // Reset AERO active state after using
+      if (aeroActive) {
+        setAeroActive(false);
+      }
+
       // Send progress update
       if (wsRef.current) {
         wsRef.current.send(JSON.stringify({
           type: "progress_update",
           roomCode,
           progress: newProgress,
-          mistakes
+          mistakes,
+          aeroBonus: aeroActive,
+          overtakeBonus: overtakeActive
         }));
       }
-      
+
       if (newProgress >= raceLength) {
         // Race finished
         const finishTime = Date.now() - (raceStartTimeRef.current || 0);
@@ -544,15 +768,41 @@ export default function Multiplayer() {
           setAnswer("");
           setCurrentQuestionIndex(prev => prev + 1);
           questionStartTimeRef.current = Date.now();
+          // Generate new harder question if overtake still active
+          if (overtakeActive && selectedCircuit && selectedDriver) {
+            const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
+            const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty);
+            setOvertakeQuestion(harderQ);
+          }
         }, 400);
       }
     } else {
       setFeedback("incorrect");
       const newMistakes = mistakes + 1;
       setMistakes(newMistakes);
-      
+
       // Break purple mode on incorrect answer
       setInPurpleMode(false);
+
+      // Reset AERO active state on wrong answer
+      if (aeroActive) {
+        setAeroActive(false);
+      }
+
+      // Deactivate overtake on wrong answer - depletes ALL energy
+      if (overtakeActive && wsRef.current) {
+        wsRef.current.send(JSON.stringify({
+          type: "deactivate_overtake",
+          roomCode,
+          reason: "wrong_answer",
+          remainingEnergy: 0
+        }));
+        setOvertakeActive(false);
+        setOvertakeEndTime(null);
+        setOvertakeStartEnergy(0);
+        setOvertakeEnergy(0);
+        setOvertakeQuestion(null);
+      }
       
       if (state.simMode) {
         // Realism mode: must answer correctly before continuing
@@ -657,6 +907,17 @@ export default function Multiplayer() {
     setLapResults([]);
     setInPurpleMode(false);
     setRealismThreshold(null);
+    // Reset power-ups state
+    setPowerUpsEnabled(false);
+    setOvertakeEnergy(0);
+    setOvertakeActive(false);
+    setOvertakeEndTime(null);
+    setOvertakeStartEnergy(0);
+    setOvertakeQuestion(null);
+    setAeroZones([]);
+    setAeroUsedZones(new Set());
+    setAeroActive(false);
+    setOpponentEnergy(0);
     setLocation("/");
   };
   
@@ -844,6 +1105,46 @@ export default function Multiplayer() {
           {roomReady && (
             <div className="text-center space-y-4">
               <p className="text-green-500 font-medium">Opponent connected!</p>
+
+              {/* Power-ups Toggle */}
+              <div className="bg-secondary rounded-xl p-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Zap className={cn("w-5 h-5", powerUpsEnabled ? "text-yellow-500" : "text-muted-foreground")} />
+                    <span className="font-medium">Power-Ups</span>
+                  </div>
+                  {isHost ? (
+                    <button
+                      onClick={togglePowerUps}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                        powerUpsEnabled ? "bg-yellow-500" : "bg-muted"
+                      )}
+                      data-testid="toggle-power-ups"
+                    >
+                      <span
+                        className={cn(
+                          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                          powerUpsEnabled ? "translate-x-6" : "translate-x-1"
+                        )}
+                      />
+                    </button>
+                  ) : (
+                    <span className={cn(
+                      "text-sm font-medium px-2 py-1 rounded",
+                      powerUpsEnabled ? "bg-yellow-500/20 text-yellow-500" : "bg-muted text-muted-foreground"
+                    )}>
+                      {powerUpsEnabled ? "ON" : "OFF"}
+                    </span>
+                  )}
+                </div>
+                {powerUpsEnabled && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    OVERTAKE for 2x boost with harder Qs, AERO for 2x boost
+                  </p>
+                )}
+              </div>
+
               {isHost && (
                 <button
                   onClick={() => setGameStatus("track_select")}
@@ -1104,7 +1405,10 @@ export default function Multiplayer() {
   
   // Racing
   if (gameStatus === "racing") {
-    const currentQuestion = questions[currentQuestionIndex];
+    // Use harder overtake question when active, otherwise use regular question
+    const currentQuestion = overtakeActive && overtakeQuestion
+      ? overtakeQuestion
+      : questions[currentQuestionIndex];
     
     return (
       <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
@@ -1197,6 +1501,45 @@ export default function Multiplayer() {
                 />
               </div>
             </div>
+
+            {/* Power-ups buttons */}
+            {powerUpsEnabled && (
+              <div className="flex gap-2 mt-2">
+                {/* OVERTAKE button - can activate when conditions met, or tap to deactivate while active */}
+                <button
+                  onClick={activateOvertake}
+                  disabled={!overtakeActive && !canActivateOvertake}
+                  className={cn(
+                    "flex-1 h-10 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2",
+                    overtakeActive
+                      ? "bg-yellow-500 text-black animate-pulse"
+                      : canActivateOvertake
+                        ? "bg-yellow-500 text-black hover:bg-yellow-400"
+                        : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <Zap className="w-4 h-4" />
+                  {overtakeActive ? `2X BOOST ${overtakeEnergy}%` : `OVERTAKE ${overtakeEnergy}%`}
+                </button>
+
+                {/* AERO button */}
+                <button
+                  onClick={activateAero}
+                  disabled={!isAeroAvailable}
+                  className={cn(
+                    "flex-1 h-10 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2",
+                    aeroActive
+                      ? "bg-cyan-500 text-white"
+                      : isAeroAvailable
+                        ? "bg-cyan-500 text-white hover:bg-cyan-400"
+                        : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <Wind className="w-4 h-4" />
+                  {aeroActive ? "AERO ON" : "AERO"}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Keypad */}
@@ -1207,7 +1550,7 @@ export default function Multiplayer() {
                   key={num}
                   type="button"
                   onClick={() => { if (feedback === "idle") { playKeypadClick(); setAnswer(prev => prev + num.toString()); } }}
-                  className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
+                  className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80"
                 >
                   {num}
                 </button>
@@ -1222,7 +1565,7 @@ export default function Multiplayer() {
               <button
                 type="button"
                 onClick={() => { if (feedback === "idle") { playKeypadClick(); setAnswer(prev => prev + "0"); } }}
-                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95"
+                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80"
               >
                 0
               </button>
@@ -1241,11 +1584,29 @@ export default function Multiplayer() {
               </button>
             </div>
           </div>
+
+          {/* OVERTAKE active overlay indicator */}
+          <AnimatePresence>
+            {overtakeActive && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="absolute top-16 left-4 right-4 bg-yellow-500/90 rounded-lg px-4 py-2 flex items-center justify-center gap-2 z-40"
+              >
+                <Zap className="w-5 h-5 text-black" />
+                <span className="font-bold text-black text-sm uppercase tracking-wider">
+                  2X BOOST ACTIVE - Harder Questions!
+                </span>
+                <span className="font-mono text-black font-bold">{overtakeEnergy}%</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </GameLayout>
     );
   }
-  
+
   // Finished
   if (gameStatus === "finished" && raceResult) {
     const isWinner = raceResult.winnerId === playerIdRef.current;

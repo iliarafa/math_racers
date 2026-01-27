@@ -110,9 +110,11 @@ script/build.ts          # Custom build script
 
 **OVERTAKE (Energy Bar)**
 - Charges by answering correctly (faster = more energy)
-- Activates when within 2 sectors of opponent
-- Full charge freezes opponent for 5 seconds
-- Wrong answer depletes all energy
+- Activates when behind opponent and within 2 sectors
+- While active: **2x progress** per correct answer + **harder questions**
+- Energy drains over time (100% = 5 seconds max)
+- Manual deactivation preserves remaining energy
+- Wrong answer depletes ALL energy immediately
 
 **ACTIVE AERO (DRS Zones)**
 - Normal mode: 2 zones (at 25% and 65%)
@@ -154,14 +156,14 @@ script/build.ts          # Custom build script
 - `PUT /api/rooms/:code/update` - Update settings before race
 
 ### WebSocket Events
-**Client → Server:** `join_room`, `start_countdown`, `progress_update`, `race_finished`, `mistake_update`
-**Server → Client:** `joined`, `room_ready`, `countdown_start`, `countdown`, `race_start`, `opponent_progress`, `player_finished`, `race_complete`, `player_disconnected`
+**Client → Server:** `join_room`, `start_countdown`, `progress_update`, `race_finished`, `mistake_update`, `toggle_power_ups`, `energy_update`, `activate_overtake`, `deactivate_overtake`, `activate_aero`
+**Server → Client:** `joined`, `room_ready`, `countdown_start`, `countdown`, `race_start`, `opponent_progress`, `player_finished`, `race_complete`, `player_disconnected`, `power_ups_toggled`, `energy_sync`, `overtake_activated`, `opponent_overtake_activated`, `overtake_ended`, `aero_activated`
 
 ### Multiplayer Flow
 1. Host creates room via `POST /api/rooms` → gets 4-digit code
 2. Guest joins via `POST /api/rooms/:code/join`
 3. Both connect WebSocket and exchange events
-4. Server validates sequential progress (can only increment by 1)
+4. Server validates sequential progress (can increment by 1, or 2 with AERO/OVERTAKE bonus)
 5. Winner: Fewer mistakes > faster time
 
 ## Environment Variables
