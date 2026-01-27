@@ -1022,11 +1022,7 @@ export default function Game() {
         setTimeout(() => {
           setFeedback('idle');
           setAnswer("");
-          // Use harder difficulty when AERO is active
-          const nextDifficulty = aeroActive
-            ? getHarderDifficulty(selectedDriver?.difficulty || 'easy')
-            : selectedDriver?.difficulty || 'easy';
-          setQuestion(generateQuestion(selectedCircuit.id, nextDifficulty, actualWeather === 'wet'));
+          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy', actualWeather === 'wet'));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1334,6 +1330,12 @@ export default function Game() {
     if (soundEnabledRef.current) {
       playAeroActivatedSound();
     }
+
+    // Immediately generate a harder question so user answers it while AERO is active
+    const nextDifficulty = getHarderDifficulty(selectedDriver?.difficulty || 'easy');
+    setQuestion(generateQuestion(selectedCircuit?.id || 'spa', nextDifficulty, actualWeather === 'wet'));
+    questionStartTimeRef.current = Date.now();
+    setAnswer(""); // Clear any partial answer
   };
 
   // Update AERO availability based on progress and zones
