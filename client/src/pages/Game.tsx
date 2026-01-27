@@ -568,6 +568,9 @@ export default function Game() {
   const [actualWeather, setActualWeather] = useState<'dry' | 'wet'>('dry');
   
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
+  // Scale boost thresholds proportionally with race length for consistent activations
+  const boostThreshold = Math.round(3 * (raceLength / RACE_LENGTH));
+  const aeroThreshold = Math.round(5 * (raceLength / RACE_LENGTH));
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer'>('race');
   const [isPaused, setIsPaused] = useState(false);
@@ -951,7 +954,7 @@ export default function Game() {
       if (raceMode === 'bot' && !isPracticeMode) {
         const newBoostStreak = boostStreak + 1;
         setBoostStreak(newBoostStreak);
-        if (newBoostStreak >= 3 && boostCharges < 3) {
+        if (newBoostStreak >= boostThreshold && boostCharges < 3) {
           setBoostCharges(prev => prev + 1);
           setBoostStreak(0);
           if (soundEnabledRef.current) {
@@ -962,7 +965,7 @@ export default function Game() {
         // Aero charge earning: 5 correct answers (total, not consecutive) = 1 charge (max 2)
         const newAeroStreak = aeroStreak + 1;
         setAeroStreak(newAeroStreak);
-        if (newAeroStreak >= 5 && aeroCharges < 2) {
+        if (newAeroStreak >= aeroThreshold && aeroCharges < 2) {
           setAeroCharges(prev => prev + 1);
           setAeroStreak(0);
           if (soundEnabledRef.current) {
