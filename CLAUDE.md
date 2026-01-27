@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-F1 Math Racer: Grand Prix - A gamified math practice web application for children (ages 6+) with F1 racing theme. Features single-player racing, real-time WebSocket multiplayer (1v1 with 4-digit room codes), bot opponents with adaptive difficulty, and a garage cosmetic system.
+F1 Math Racer: Grand Prix - A gamified math practice web application for children (ages 6+) with F1 racing theme. Features single-player racing against AI bots, real-time WebSocket multiplayer (1v1 with 4-digit room codes), strategic power-up systems (OVERTAKE & ACTIVE AERO), vehicle customization garage, and educational resources.
 
 ## Commands
 
@@ -12,6 +12,7 @@ F1 Math Racer: Grand Prix - A gamified math practice web application for childre
 # Development
 npm run dev              # Start backend server (port 5000)
 npm run dev:client       # Start Vite dev server (frontend only)
+npm run dev:open         # Backend + auto open browser
 npm run check            # TypeScript type checking
 
 # Production
@@ -25,53 +26,143 @@ npm run db:push          # Sync Drizzle ORM schema to PostgreSQL
 ## Architecture
 
 ### Stack
-- **Frontend:** React 18 + TypeScript + Vite + Wouter (routing) + Tailwind CSS v4 + Shadcn/ui
+- **Frontend:** React 19 + TypeScript + Vite + Wouter (routing) + Tailwind CSS v4 + Shadcn/ui (57 components)
 - **Backend:** Node.js + Express + WebSocket (ws) + Drizzle ORM + PostgreSQL
 - **Mobile:** iOS via Capacitor
+- **Animation:** Framer Motion, canvas-confetti
 
 ### Directory Structure
 ```
 client/src/
-├── pages/           # Route components (Welcome, Game, Garage, Multiplayer, etc.)
-├── components/ui/   # Shadcn/ui components
-├── lib/gameLogic.ts # Core game engine (question generation, bot timing, sectors)
-└── hooks/           # Custom hooks (use-mobile, use-toast)
+├── pages/               # Route components
+│   ├── Welcome.tsx      # Home/landing page
+│   ├── Game.tsx         # Main single-player racing (~2700 lines)
+│   ├── Multiplayer.tsx  # 1v1 multiplayer racing
+│   ├── Garage.tsx       # Vehicle customization + shop
+│   ├── StrategyGuide.tsx # Math reference guide
+│   ├── ReactionTest.tsx # Reaction time mini-game
+│   └── Regulations.tsx  # Game rules
+├── components/
+│   ├── ui/              # 57 Shadcn/ui components
+│   ├── layout/          # GameLayout wrapper
+│   └── TrackProgress.tsx
+├── lib/
+│   ├── gameLogic.ts     # Core game engine (~770 lines)
+│   ├── queryClient.ts   # React Query config
+│   └── utils.ts
+├── hooks/
+│   ├── use-mobile.tsx   # Mobile detection
+│   └── use-toast.ts     # Toast notifications
+└── assets/              # Images, Formula1 fonts
 
 server/
-├── index.ts         # Express entry point
-├── routes.ts        # REST API (room management)
-├── websocket.ts     # Real-time multiplayer handler
-└── storage.ts       # Abstract data layer (memory or DB)
+├── index.ts             # Express entry point
+├── routes.ts            # REST API (room management)
+├── websocket.ts         # Real-time multiplayer (~300 lines)
+├── storage.ts           # Abstract data layer (DB/memory fallback)
+├── db.ts                # Database connection
+└── vite.ts              # Vite dev server integration
 
 shared/
-└── schema.ts        # Drizzle ORM tables + Zod schemas
+└── schema.ts            # Drizzle ORM tables + Zod schemas
+
+ios/                     # Capacitor iOS project
+script/build.ts          # Custom build script
 ```
 
 ### Path Aliases
 - `@/*` → `client/src/*`
 - `@shared/*` → `shared/*`
+- `@assets/*` → `attached_assets/*`
 
 ### State Management
 - **Single-player:** localStorage via `useGameState()` hook
+- **Session data:** sessionStorage for lap times (cross-component)
 - **Server state:** React Query (available but minimally used)
 - **Multiplayer:** PostgreSQL for room persistence, WebSocket for real-time sync
 
 ### Key Files
-- `/client/src/lib/gameLogic.ts` - All math question generation, bot timing algorithms, difficulty curves, sector color calculation
-- `/client/src/pages/Game.tsx` - Main race gameplay
-- `/server/websocket.ts` - Multiplayer game state machine and event handlers
+- `/client/src/lib/gameLogic.ts` - Question generation, bot timing, difficulty curves, sector colors
+- `/client/src/pages/Game.tsx` - Main race gameplay with power-ups
+- `/client/src/pages/Multiplayer.tsx` - 1v1 multiplayer implementation
+- `/client/src/pages/Garage.tsx` - Shop and customization system
+- `/server/websocket.ts` - Multiplayer game state machine
 - `/shared/schema.ts` - Database schema and TypeScript interfaces
+
+## Game Mechanics
+
+### Circuits (Math Operations)
+| Circuit | Operation | Theme |
+|---------|-----------|-------|
+| SPA | Addition | Longest Lap |
+| Monaco | Subtraction | Street Circuit |
+| Monza | Multiplication | Temple of Speed |
+| Suzuka | Division | Figure-8 Track |
+| Silverstone | Variables/Algebra | Home of F1 |
+
+### Difficulty Levels
+- **Karting** (ages 6-8): Numbers 1-10
+- **F3** (ages 8-10): Numbers 10-50
+- **F2** (ages 10-12): Numbers 20-100
+- **F1** (ages 12+): Numbers 50-200
+
+### Power-Up Systems
+
+**OVERTAKE (Energy Bar)**
+- Charges by answering correctly (faster = more energy)
+- Activates when within 2 sectors of opponent
+- Full charge freezes opponent for 5 seconds
+- Wrong answer depletes all energy
+
+**ACTIVE AERO (DRS Zones)**
+- Normal mode: 2 zones (at 25% and 65%)
+- Sim mode: 5 zones (at 15%, 30%, 50%, 70%, 85%)
+- Grants 2x sector boost
+- Slightly harder question when active
+
+### Bot AI Timing
+- Base times: Karting 2500ms → F1 4000ms
+- Operation modifiers: Addition 0.85x (fastest) → Variables 1.25x (slowest)
+- Complexity analysis: carry/borrow counting, digit analysis
+- Randomness: ±25% variation
+- Wet weather: +250ms base + harder numbers
+
+### Race Configuration
+- Standard: 20 questions per race
+- Simulation mode: Circuit-specific lap counts (44-78 laps)
+- 2025 F1 driver roster for grid positions
+
+## Database Schema
+
+```typescript
+// multiplayerRooms table
+- roomCode: varchar(4) unique  // 4-digit room code
+- hostId, hostName, guestId, guestName
+- circuitId, driverId, weather
+- status: "waiting" | "countdown" | "racing" | "finished"
+- questions: jsonb array
+- hostProgress, guestProgress, hostMistakes, guestMistakes
+- hostFinishTime, guestFinishTime, winnerId
+```
+
+## API & WebSocket
+
+### REST Endpoints
+- `POST /api/rooms` - Create room (returns 4-digit code)
+- `POST /api/rooms/:code/join` - Join room
+- `GET /api/rooms/:code` - Get room details
+- `PUT /api/rooms/:code/update` - Update settings before race
+
+### WebSocket Events
+**Client → Server:** `join_room`, `start_countdown`, `progress_update`, `race_finished`, `mistake_update`
+**Server → Client:** `joined`, `room_ready`, `countdown_start`, `countdown`, `race_start`, `opponent_progress`, `player_finished`, `race_complete`, `player_disconnected`
 
 ### Multiplayer Flow
 1. Host creates room via `POST /api/rooms` → gets 4-digit code
 2. Guest joins via `POST /api/rooms/:code/join`
-3. Both connect WebSocket and exchange: `join_room`, `start_countdown`, `progress_update`, `race_finished`
-4. Server validates sequential progress and determines winner
-
-### Build System
-- Client: Vite bundles to `/dist/public`
-- Server: ESBuild bundles to `/dist/index.cjs`
-- Custom build script: `script/build.ts`
+3. Both connect WebSocket and exchange events
+4. Server validates sequential progress (can only increment by 1)
+5. Winner: Fewer mistakes > faster time
 
 ## Environment Variables
 
@@ -79,9 +170,13 @@ shared/
 - `PORT` - Server port (default: 5000)
 - `NODE_ENV` - "development" or "production"
 
-## Game Logic Notes
+## Build System
+- Client: Vite bundles to `/dist/public`
+- Server: ESBuild bundles to `/dist/index.cjs`
+- Custom build script: `script/build.ts`
 
-- All question generation happens client-side in `gameLogic.ts`
-- Bot timing varies by: difficulty level, operation type, problem complexity, ±25% randomness
-- Difficulty levels: Karting → F3 → F2 → F1 (increasing complexity)
-- Sector colors (purple/green/yellow) calculated based on relative answer times
+## Mobile (Capacitor)
+- App ID: `live.mathracer.app`
+- App Name: `Math Racer`
+- iOS: ContentInset 'never'
+- Web directory: `dist/public`
