@@ -32,48 +32,48 @@ driver_select → selecting → countdown → racing → finished | crashed
 
 ### Addition (Spa)
 
-| Series | Dry Range | Wet Range (~35% increase) |
-|--------|-----------|---------------------------|
-| Karting | 1-10 | 1-13 |
-| F3 | 10-50 | 10-67 |
-| F2 | 20-100 | 20-135 |
-| F1 | 50-200 | 50-270 |
+| Series | Dry Range | Wet Range (1.5x - halfway to next level) |
+|--------|-----------|------------------------------------------|
+| Karting | 1-10 | 6-30 |
+| F3 | 10-50 | 15-75 |
+| F2 | 20-100 | 35-150 |
+| F1 | 50-200 | 50-200 (capped at max) |
 
 ### Subtraction (Monaco)
 
-| Series | Dry Range | Wet Range |
-|--------|-----------|-----------|
-| Karting | 1-10 | 1-13 |
-| F3 | 10-50 | 10-67 |
-| F2 | 20-100 | 20-135 |
-| F1 | 50-200 | 50-270 |
+| Series | Dry Range | Wet Range (1.5x) |
+|--------|-----------|------------------|
+| Karting | 1-10 | 6-30 |
+| F3 | 10-50 | 15-75 |
+| F2 | 20-100 | 35-150 |
+| F1 | 50-200 | 50-200 (capped) |
 
 ### Multiplication (Monza)
 
-| Series | Dry Range | Wet Range |
-|--------|-----------|-----------|
-| Karting | 1-5 | 1-6 |
-| F3 | 2-10 | 2-13 |
-| F2 | 3-12 | 3-16 |
-| F1 | 5-15 | 5-20 |
+| Series | Dry Range | Wet Range (1.5x) |
+|--------|-----------|------------------|
+| Karting | 1-5 | 2-8 |
+| F3 | 2-10 | 3-11 |
+| F2 | 3-12 | 4-14 |
+| F1 | 5-15 | 5-15 (capped) |
 
 ### Division (Suzuka)
 
-| Series | Dry Range | Wet Range |
-|--------|-----------|-----------|
-| Karting | 1-5 | 1-6 |
-| F3 | 2-10 | 2-13 |
-| F2 | 3-12 | 3-16 |
-| F1 | 5-15 | 5-20 |
+| Series | Dry Range | Wet Range (1.5x) |
+|--------|-----------|------------------|
+| Karting | 1-5 | 2-8 |
+| F3 | 2-10 | 3-11 |
+| F2 | 3-12 | 4-14 |
+| F1 | 5-15 | 5-15 (capped) |
 
 ### Variables (Silverstone)
 
-| Series | Dry Range | Wet Range | Variable Types |
-|--------|-----------|-----------|----------------|
-| Karting | 1-5 | 1-6 | Only `x + a = b` |
-| F3 | 2-12 | 2-16 | All types |
-| F2 | 3-15 | 3-20 | All types |
-| F1 | 5-20 | 5-27 | All types |
+| Series | Dry Range | Wet Range (1.5x) | Variable Types |
+|--------|-----------|------------------|----------------|
+| Karting | 1-5 | 2-9 | Only `x + a = b` |
+| F3 | 2-12 | 3-14 | All types |
+| F2 | 3-15 | 4-18 | All types |
+| F1 | 5-20 | 5-20 (capped) | All types |
 
 **Variable equation types:**
 - `x + a = b, x = ?`
@@ -174,9 +174,21 @@ Base time calculated as: `baseTime × operationModifier × randomFactor(0.75-1.2
 
 | Weather | Effect |
 |---------|--------|
-| Dry | Standard number ranges |
-| Wet | Increased number ranges (~35% harder) |
+| Dry | Standard number ranges (1.0x) |
+| Wet | 1.5x harder (0.5 interpolation toward next difficulty level) |
 | Random | Uses circuit-specific rain probability |
+
+### Difficulty Boost Stacking
+
+Difficulty boosts interpolate toward the next difficulty level and stack:
+
+| Condition | Boost Factor | Effect |
+|-----------|--------------|--------|
+| Dry | 0.0 | Base difficulty |
+| Wet | 0.5 | 1.5x harder (halfway to next level) |
+| OVERTAKE active | 0.5 | 1.5x harder |
+| AERO active | Next level | Full next difficulty (via `getHarderDifficulty`) |
+| Wet + OVERTAKE | 1.0 (capped) | 2x harder (full next difficulty level) |
 
 ### Circuit Rain Probabilities
 | Circuit | Rain Chance |

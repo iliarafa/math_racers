@@ -579,24 +579,25 @@ function interpolateRange(
   };
 }
 
-function getOperationRanges(difficulty: Difficulty, isWet: boolean): OperationRanges {
+function getOperationRanges(difficulty: Difficulty, isWet: boolean, boostFactor: number = 0): OperationRanges {
   const baseRanges = BASE_RANGES[difficulty];
+  const nextDifficulty = getNextDifficulty(difficulty);
+  const nextRanges = BASE_RANGES[nextDifficulty];
 
-  if (!isWet) {
+  // Calculate combined factor: wet adds 0.5, boost adds its value (e.g., 0.5 for OVERTAKE)
+  const wetFactor = isWet ? 0.5 : 0;
+  const totalFactor = Math.min(wetFactor + boostFactor, 1.0); // Cap at 1.0 (next difficulty level)
+
+  if (totalFactor === 0) {
     return baseRanges;
   }
 
-  // Wet mode: interpolate halfway (0.5) to the next difficulty level
-  const nextDifficulty = getNextDifficulty(difficulty);
-  const nextRanges = BASE_RANGES[nextDifficulty];
-  const factor = 0.5;
-
   return {
-    addition: interpolateRange(baseRanges.addition, nextRanges.addition, factor),
-    subtraction: interpolateRange(baseRanges.subtraction, nextRanges.subtraction, factor),
-    multiplication: interpolateRange(baseRanges.multiplication, nextRanges.multiplication, factor),
-    division: interpolateRange(baseRanges.division, nextRanges.division, factor),
-    variables: interpolateRange(baseRanges.variables, nextRanges.variables, factor),
+    addition: interpolateRange(baseRanges.addition, nextRanges.addition, totalFactor),
+    subtraction: interpolateRange(baseRanges.subtraction, nextRanges.subtraction, totalFactor),
+    multiplication: interpolateRange(baseRanges.multiplication, nextRanges.multiplication, totalFactor),
+    division: interpolateRange(baseRanges.division, nextRanges.division, totalFactor),
+    variables: interpolateRange(baseRanges.variables, nextRanges.variables, totalFactor),
   };
 }
 
@@ -676,16 +677,20 @@ export function getCurrentAeroZone(progress: number, zones: number[], zoneWindow
   return zones.find(zone => progress >= zone && progress < zone + zoneWindow);
 }
 
-// Get a harder difficulty level for AERO mode questions
+// Get a harder difficulty level for AERO mode questions (bumps to next level)
 export function getHarderDifficulty(current: Difficulty): Difficulty {
   const levels: Difficulty[] = ['beginner', 'easy', 'medium', 'hard'];
   const idx = levels.indexOf(current);
   return levels[Math.min(idx + 1, levels.length - 1)];
 }
 
-export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false): Question {
+// Generate a math question based on circuit, difficulty, and optional modifiers
+// - isWet: adds 0.5 boost factor (1.5x harder)
+// - boostFactor: additional difficulty boost (0-1), e.g., 0.5 for OVERTAKE (1.5x harder)
+// - Factors stack: wet (0.5) + OVERTAKE (0.5) = 1.0 (next difficulty level), capped at 1.0
+export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false, boostFactor: number = 0): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
-  const ranges = getOperationRanges(difficulty, isWet);
+  const ranges = getOperationRanges(difficulty, isWet, boostFactor);
 
   let num1: number = 0, num2: number = 0, display: string, answer: number;
 

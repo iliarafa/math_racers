@@ -41,7 +41,8 @@ Each circuit is themed after a famous F1 track:
 **OVERTAKE System (Energy Bar)**
 - Energy meter charges by answering questions correctly (faster = more charge)
 - Activates only when behind opponent and within 2 sectors
-- While active: **2x progress** per correct answer + **harder questions** (next difficulty level)
+- While active: **2x progress** per correct answer + **1.5x harder questions** (halfway to next difficulty)
+- Difficulty stacks with weather: dry + OVERTAKE = 1.5x, wet + OVERTAKE = 2x (next difficulty level)
 - Energy drains over time (100% energy = 5 second max duration)
 - Can **manually deactivate** early to preserve remaining energy for later use
 - Wrong answer while active **depletes ALL energy** and ends boost immediately
@@ -49,7 +50,7 @@ Each circuit is themed after a famous F1 track:
 **ACTIVE AERO System (DRS Zones)**
 - Appears at specific race points (2 zones in standard, 5 in Realism Mode)
 - Grants 2x sector boost (advance 2 sectors on correct answer)
-- Slightly harder question while AERO is active
+- Harder question while AERO is active (bumps to next difficulty level)
 - Each zone usable once per race
 
 ### Bot Opponent AI
@@ -98,8 +99,8 @@ Mistakes result in escalating time penalties:
 ### Weather System
 
 Dynamic weather affects problem difficulty:
-- **Dry**: Standard difficulty
-- **Wet**: Increased difficulty with harder numbers
+- **Dry**: Standard difficulty (1.0x)
+- **Wet**: 1.5x harder questions (halfway to next difficulty level)
 - **Random**: Circuit-specific rain probability
 
 ### Speed Feedback System

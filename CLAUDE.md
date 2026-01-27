@@ -111,7 +111,8 @@ script/build.ts          # Custom build script
 **OVERTAKE (Energy Bar)**
 - Charges by answering correctly (faster = more energy)
 - Activates when behind opponent and within 2 sectors
-- While active: **2x progress** per correct answer + **harder questions**
+- While active: **2x progress** per correct answer + **1.5x harder questions** (0.5 boost factor)
+- Stacks with wet weather: dry+OVERTAKE = 1.5x, wet+OVERTAKE = 2x (next difficulty level)
 - Energy drains over time (100% = 5 seconds max)
 - Manual deactivation preserves remaining energy
 - Wrong answer depletes ALL energy immediately
@@ -120,7 +121,7 @@ script/build.ts          # Custom build script
 - Normal mode: 2 zones (at 25% and 65%)
 - Sim mode: 5 zones (at 15%, 30%, 50%, 70%, 85%)
 - Grants 2x sector boost
-- Slightly harder question when active
+- Harder question when active (bumps to next difficulty level via `getHarderDifficulty`)
 
 ### Bot AI Timing
 - Base times: Karting 2500ms → F1 4000ms

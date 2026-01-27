@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, getHarderDifficulty, calculateEnergyHarvest } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, getHarderDifficulty, calculateEnergyHarvest, Difficulty } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -563,6 +563,7 @@ export default function Game() {
     botTime: number;
   }>>([]);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  const currentDifficultyRef = useRef<Difficulty>('easy');
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
   const [actualWeather, setActualWeather] = useState<'dry' | 'wet'>('dry');
@@ -631,6 +632,13 @@ export default function Game() {
   useEffect(() => {
     sectorBestTimesRef.current = sectorBestTimes;
   }, [sectorBestTimes]);
+
+  // Keep difficulty ref in sync with selected driver
+  useEffect(() => {
+    if (selectedDriver?.difficulty) {
+      currentDifficultyRef.current = selectedDriver.difficulty;
+    }
+  }, [selectedDriver]);
 
   // Cleanup OVERTAKE timer on unmount or game end
   useEffect(() => {
@@ -963,7 +971,7 @@ export default function Game() {
       if (raceMode === 'bot' && !isPracticeMode && !overtakeActive) {
         const energyGain = calculateEnergyHarvest(
           responseTime,
-          selectedDriver?.difficulty || 'easy',
+          currentDifficultyRef.current,
           question.operation || 'Addition'
         );
         setOvertakeEnergy(prev => Math.min(prev + energyGain, 100));
@@ -1019,10 +1027,14 @@ export default function Game() {
           finishRace(mistakes);
         }
       } else {
+        // Capture overtakeActive state before setTimeout to use correct difficulty
+        const wasOvertakeActive = overtakeActive;
         setTimeout(() => {
           setFeedback('idle');
           setAnswer("");
-          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy', actualWeather === 'wet'));
+          // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
+          const boostFactor = wasOvertakeActive ? 0.5 : 0;
+          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet', boostFactor));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1180,7 +1192,7 @@ export default function Game() {
           setTimeout(() => {
             setFeedback('idle');
             setAnswer("");
-            setQuestion(generateQuestion(selectedCircuit.id, selectedDriver?.difficulty || 'easy', actualWeather === 'wet'));
+            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet'));
             questionStartTimeRef.current = Date.now();
           }, 800);
         }
@@ -1332,7 +1344,7 @@ export default function Game() {
     }
 
     // Immediately generate a harder question so user answers it while AERO is active
-    const nextDifficulty = getHarderDifficulty(selectedDriver?.difficulty || 'easy');
+    const nextDifficulty = getHarderDifficulty(currentDifficultyRef.current);
     setQuestion(generateQuestion(selectedCircuit?.id || 'spa', nextDifficulty, actualWeather === 'wet'));
     questionStartTimeRef.current = Date.now();
     setAnswer(""); // Clear any partial answer
