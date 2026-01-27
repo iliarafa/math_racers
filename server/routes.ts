@@ -118,19 +118,21 @@ export async function registerRoutes(
   app.put("/api/rooms/:code/update", async (req, res) => {
     try {
       const { code } = req.params;
-      const { circuitId, driverId, weather, questions } = req.body;
+      const { circuitId, driverId, weather, questions, powerUpsEnabled } = req.body;
 
       const room = await storage.getRoomByCode(code.toUpperCase());
-      
+
       if (!room) {
         return res.status(404).json({ error: "Room not found" });
       }
 
-      const updatedRoom = await storage.updateRoom(code.toUpperCase(), {
-        circuitId,
-        driverId,
-        questions,
-      });
+      const updates: any = {};
+      if (circuitId !== undefined) updates.circuitId = circuitId;
+      if (driverId !== undefined) updates.driverId = driverId;
+      if (questions !== undefined) updates.questions = questions;
+      if (powerUpsEnabled !== undefined) updates.powerUpsEnabled = powerUpsEnabled;
+
+      const updatedRoom = await storage.updateRoom(code.toUpperCase(), updates);
 
       res.json({ room: updatedRoom });
     } catch (error) {

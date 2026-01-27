@@ -57,6 +57,7 @@ export class MemoryStorage implements IStorage {
       hostFinishTime: null,
       guestFinishTime: null,
       winnerId: null,
+      powerUpsEnabled: false,
       createdAt: new Date(),
     };
     this.rooms.set(room.roomCode, newRoom);

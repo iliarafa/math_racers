@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -36,6 +36,7 @@ export const multiplayerRooms = pgTable("multiplayer_rooms", {
   hostFinishTime: integer("host_finish_time"),
   guestFinishTime: integer("guest_finish_time"),
   winnerId: varchar("winner_id"),
+  powerUpsEnabled: boolean("power_ups_enabled").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
