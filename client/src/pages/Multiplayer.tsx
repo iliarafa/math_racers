@@ -991,6 +991,17 @@ export default function Multiplayer() {
               >
                 Join Existing
               </button>
+
+              {/* Back to Home */}
+              <Link href="/">
+                <button
+                  className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider w-full mt-2"
+                  style={{ fontFamily: 'Formula1' }}
+                  data-testid="button-back-home"
+                >
+                  Back
+                </button>
+              </Link>
             </div>
           )}
           
@@ -1018,6 +1029,7 @@ export default function Multiplayer() {
               <button
                 onClick={() => { setMode("menu"); setError(""); }}
                 className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider"
+                style={{ fontFamily: 'Formula1' }}
                 data-testid="button-back-create"
               >
                 Back
@@ -1059,6 +1071,7 @@ export default function Multiplayer() {
               <button
                 onClick={() => { setMode("menu"); setError(""); }}
                 className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider"
+                style={{ fontFamily: 'Formula1' }}
                 data-testid="button-back-join"
               >
                 Back
@@ -1101,49 +1114,49 @@ export default function Multiplayer() {
           </div>
           
           <p className="text-muted-foreground">Share this code with your opponent</p>
-          
+
+          {/* Power-ups Toggle - always visible for host to configure */}
+          <div className="bg-secondary rounded-xl p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Zap className={cn("w-5 h-5", powerUpsEnabled ? "text-yellow-500" : "text-muted-foreground")} />
+                <span className="font-medium">Power-Ups</span>
+              </div>
+              {isHost ? (
+                <button
+                  onClick={togglePowerUps}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                    powerUpsEnabled ? "bg-yellow-500" : "bg-muted"
+                  )}
+                  data-testid="toggle-power-ups"
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                      powerUpsEnabled ? "translate-x-6" : "translate-x-1"
+                    )}
+                  />
+                </button>
+              ) : (
+                <span className={cn(
+                  "text-sm font-medium px-2 py-1 rounded",
+                  powerUpsEnabled ? "bg-yellow-500/20 text-yellow-500" : "bg-muted text-muted-foreground"
+                )}>
+                  {powerUpsEnabled ? "ON" : "OFF"}
+                </span>
+              )}
+            </div>
+            {powerUpsEnabled && (
+              <p className="text-xs text-muted-foreground mt-2">
+                OVERTAKE for 2x boost with harder Qs, AERO for 2x boost
+              </p>
+            )}
+          </div>
+
           {roomReady && (
             <div className="text-center space-y-4">
               <p className="text-green-500 font-medium">Opponent connected!</p>
-
-              {/* Power-ups Toggle */}
-              <div className="bg-secondary rounded-xl p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <Zap className={cn("w-5 h-5", powerUpsEnabled ? "text-yellow-500" : "text-muted-foreground")} />
-                    <span className="font-medium">Power-Ups</span>
-                  </div>
-                  {isHost ? (
-                    <button
-                      onClick={togglePowerUps}
-                      className={cn(
-                        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                        powerUpsEnabled ? "bg-yellow-500" : "bg-muted"
-                      )}
-                      data-testid="toggle-power-ups"
-                    >
-                      <span
-                        className={cn(
-                          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                          powerUpsEnabled ? "translate-x-6" : "translate-x-1"
-                        )}
-                      />
-                    </button>
-                  ) : (
-                    <span className={cn(
-                      "text-sm font-medium px-2 py-1 rounded",
-                      powerUpsEnabled ? "bg-yellow-500/20 text-yellow-500" : "bg-muted text-muted-foreground"
-                    )}>
-                      {powerUpsEnabled ? "ON" : "OFF"}
-                    </span>
-                  )}
-                </div>
-                {powerUpsEnabled && (
-                  <p className="text-xs text-muted-foreground mt-2">
-                    OVERTAKE for 2x boost with harder Qs, AERO for 2x boost
-                  </p>
-                )}
-              </div>
 
               {isHost && (
                 <button
