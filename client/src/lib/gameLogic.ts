@@ -743,19 +743,19 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
         answer = Math.floor(Math.random() * (range.max - 1)) + 1;
         num2 = Math.floor(Math.random() * (range.max - 1)) + 1;
         num1 = answer + num2;
-        display = `x + ${num2} = ${num1}, x = ?`;
+        display = `x + ${num2} = ${num1}`;
       } else if (varType === 1) {
         // a − x = b
         answer = Math.floor(Math.random() * (range.max - 1)) + 1;
         num2 = Math.floor(Math.random() * (range.max - 1)) + 1;
         num1 = num2 + answer;
-        display = `${num1} − x = ${num2}, x = ?`;
+        display = `${num1} − x = ${num2}`;
       } else {
         // ax = b
         answer = Math.floor(Math.random() * (range.max - 1)) + 2;
         num2 = Math.floor(Math.random() * 5) + 2;
         num1 = num2 * answer;
-        display = `${num2}x = ${num1}, x = ?`;
+        display = `${num2}x = ${num1}`;
       }
       break;
     }

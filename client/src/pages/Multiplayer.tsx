@@ -1450,7 +1450,7 @@ export default function Multiplayer() {
                 feedback === "incorrect" && "text-red-600"
               )}
             >
-              {answer || "0"}
+              {answer || "X="}
             </div>
 
             <div className="h-4 flex items-center justify-center">

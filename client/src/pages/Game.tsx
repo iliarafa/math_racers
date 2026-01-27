@@ -2418,7 +2418,7 @@ export default function Game() {
             )}
             data-testid="display-answer"
           >
-            {answer || "0"}
+            {answer || "X="}
           </div>
 
           {/* Minimal Feedback */}
