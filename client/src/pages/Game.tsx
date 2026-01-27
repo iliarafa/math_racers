@@ -2609,11 +2609,16 @@ export default function Game() {
                 {aeroActive ? 'ACTIVE!' : 'ACT AERO'}
               </button>
 
-              {/* Energy harvest indicator - shows last gain */}
+              {/* AERO active indicator */}
               <div className="flex items-center justify-start">
-                <span className="text-[10px] text-blue-400 font-medium">
-                  {aeroActive ? 'DRAINING' : 'ERS'}
-                </span>
+                <div
+                  className={cn(
+                    "w-10 h-3 rounded-full transition-all duration-300",
+                    aeroActive
+                      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
+                      : "bg-gray-600"
+                  )}
+                />
               </div>
             </div>
 
