@@ -600,6 +600,59 @@ function getOperationRanges(difficulty: Difficulty, isWet: boolean): OperationRa
   };
 }
 
+// Expected solve times in milliseconds by difficulty and operation type
+// Used for AERO energy harvesting calculation
+const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
+  beginner: {
+    Addition: 4000,
+    Subtraction: 4500,
+    Multiplication: 5000,
+    Division: 5500,
+    Variables: 6000,
+  },
+  easy: {
+    Addition: 5000,
+    Subtraction: 5500,
+    Multiplication: 6000,
+    Division: 6500,
+    Variables: 7000,
+  },
+  medium: {
+    Addition: 6000,
+    Subtraction: 6500,
+    Multiplication: 7000,
+    Division: 7500,
+    Variables: 8000,
+  },
+  hard: {
+    Addition: 7000,
+    Subtraction: 7500,
+    Multiplication: 8000,
+    Division: 8500,
+    Variables: 9000,
+  },
+};
+
+// Get expected time for a question based on difficulty and operation type
+export function getExpectedTime(difficulty: Difficulty, operationType: string): number {
+  return EXPECTED_TIMES[difficulty]?.[operationType] ?? 6000;
+}
+
+// Calculate AERO energy harvested based on answer speed
+// Returns energy percentage (0-30) based on how fast the answer was
+export function calculateEnergyHarvest(
+  responseTime: number,
+  difficulty: Difficulty,
+  operationType: string
+): number {
+  const expectedTime = getExpectedTime(difficulty, operationType);
+  // harvestRate = expectedTime / actualTime, capped at 2.0
+  const harvestRate = Math.min(expectedTime / responseTime, 2.0);
+  // Base gain is 15% per question, multiplied by harvest rate
+  const baseGain = 15;
+  return Math.round(baseGain * harvestRate);
+}
+
 export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
   const ranges = getOperationRanges(difficulty, isWet);

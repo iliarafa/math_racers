@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, calculateEnergyHarvest } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -568,9 +568,6 @@ export default function Game() {
   const [actualWeather, setActualWeather] = useState<'dry' | 'wet'>('dry');
   
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
-  // Scale boost thresholds proportionally with race length for consistent activations
-  const boostThreshold = Math.round(3 * (raceLength / RACE_LENGTH));
-  const aeroThreshold = Math.round(5 * (raceLength / RACE_LENGTH));
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer'>('race');
   const [isPaused, setIsPaused] = useState(false);
@@ -605,17 +602,20 @@ export default function Game() {
   const [mistakeLog, setMistakeLog] = useState<Array<{ question: string; yourAnswer: number; correctAnswer: number }>>([]);
   const [showMistakeReview, setShowMistakeReview] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  // Boost/Overtake system state
-  const [boostCharges, setBoostCharges] = useState(0);      // 0-3 charges
-  const [boostStreak, setBoostStreak] = useState(0);        // Streak counter for earning charges
+  // OVERTAKE system state (DRS-inspired)
+  const [warmupCount, setWarmupCount] = useState(0);        // 0-3, first 3 correct answers before earning starts
+  const [overtakeStreak, setOvertakeStreak] = useState(0);  // 0-3, consecutive correct after warmup
+  const [hasOvertakeCharge, setHasOvertakeCharge] = useState(false); // Single charge (max 1)
   const [botFrozen, setBotFrozen] = useState(false);        // Bot freeze state
   const [showBoostMessage, setShowBoostMessage] = useState<string | null>(null);
   const botFreezeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  // Aero system state
-  const [aeroCharges, setAeroCharges] = useState(0);        // 0-2 charges
-  const [aeroStreak, setAeroStreak] = useState(0);          // 5 correct answers = 1 charge
-  const [aeroActive, setAeroActive] = useState(false);      // Next answer uses aero
+  // AERO system state (ERS-inspired energy meter)
+  const [aeroEnergy, setAeroEnergy] = useState(0);          // 0-100% energy meter
+  const [aeroActive, setAeroActive] = useState(false);      // Is AERO currently active and draining
+  const [aeroStartTime, setAeroStartTime] = useState<number | null>(null); // When AERO was activated
+  const [aeroStartEnergy, setAeroStartEnergy] = useState(0); // Energy when AERO was activated
   const [showAeroMessage, setShowAeroMessage] = useState<string | null>(null);
+  const aeroTimerRef = useRef<NodeJS.Timeout | null>(null);
   const penaltyTimeRef = useRef(0);
   const raceStartTimeRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(state.soundEnabled);
@@ -949,29 +949,33 @@ export default function Game() {
       const difficultyPoints = selectedDriver?.difficulty === 'hard' ? 3 : selectedDriver?.difficulty === 'medium' ? 2 : 1;
       addCareerPoints(difficultyPoints);
 
-      // Boost charge earning: 3 correct answers in a row = 1 charge (max 3)
+      // OVERTAKE charge earning: Warmup (first 3 correct) + then 3 consecutive = 1 charge (max 1)
       // Only in bot race mode, not practice
       if (raceMode === 'bot' && !isPracticeMode) {
-        const newBoostStreak = boostStreak + 1;
-        setBoostStreak(newBoostStreak);
-        if (newBoostStreak >= boostThreshold && boostCharges < 3) {
-          setBoostCharges(prev => prev + 1);
-          setBoostStreak(0);
-          if (soundEnabledRef.current) {
-            playBoostChargedSound();
+        if (warmupCount < 3) {
+          // Still in warmup phase
+          const newWarmupCount = warmupCount + 1;
+          setWarmupCount(newWarmupCount);
+        } else {
+          // Warmup complete, track streak for overtake charge
+          const newOvertakeStreak = overtakeStreak + 1;
+          setOvertakeStreak(newOvertakeStreak);
+          if (newOvertakeStreak >= 3 && !hasOvertakeCharge) {
+            setHasOvertakeCharge(true);
+            setOvertakeStreak(0);
+            if (soundEnabledRef.current) {
+              playBoostChargedSound();
+            }
           }
         }
 
-        // Aero charge earning: 5 correct answers (total, not consecutive) = 1 charge (max 2)
-        const newAeroStreak = aeroStreak + 1;
-        setAeroStreak(newAeroStreak);
-        if (newAeroStreak >= aeroThreshold && aeroCharges < 2) {
-          setAeroCharges(prev => prev + 1);
-          setAeroStreak(0);
-          if (soundEnabledRef.current) {
-            playAeroChargedSound();
-          }
-        }
+        // AERO energy harvesting: speed-based, faster answers harvest more energy
+        const energyGain = calculateEnergyHarvest(
+          responseTime,
+          selectedDriver?.difficulty || 'easy',
+          question.operation || 'Addition'
+        );
+        setAeroEnergy(prev => Math.min(prev + energyGain, 100));
       }
 
       // Calculate progress - double if aero was active
@@ -1040,13 +1044,20 @@ export default function Game() {
       }
       resetStreak();
 
-      // Reset boost streak on incorrect answer
-      setBoostStreak(0);
+      // Reset overtake streak on incorrect answer (warmup count persists)
+      setOvertakeStreak(0);
 
-      // Check if aero was active - double penalty!
+      // Check if aero was active - immediately deactivate and waste all energy!
       const wasAeroActive = aeroActive;
       if (wasAeroActive) {
         setAeroActive(false);
+        setAeroEnergy(0); // Energy wasted on wrong answer
+        setAeroStartTime(null);
+        setAeroStartEnergy(0);
+        if (aeroTimerRef.current) {
+          clearTimeout(aeroTimerRef.current);
+          aeroTimerRef.current = null;
+        }
       }
 
       // Break purple mode on incorrect answer
@@ -1243,31 +1254,39 @@ export default function Game() {
     raceStartTimeRef.current = null;
     setPenaltyMessage({ text: '', color: 'red' });
     setInPurpleMode(false);
-    // Reset boost state
-    setBoostCharges(0);
-    setBoostStreak(0);
+    // Reset OVERTAKE state
+    setWarmupCount(0);
+    setOvertakeStreak(0);
+    setHasOvertakeCharge(false);
     setBotFrozen(false);
     setShowBoostMessage(null);
     if (botFreezeTimerRef.current) {
       clearTimeout(botFreezeTimerRef.current);
       botFreezeTimerRef.current = null;
     }
-    // Reset aero state
-    setAeroCharges(0);
-    setAeroStreak(0);
+    // Reset AERO state
+    setAeroEnergy(0);
     setAeroActive(false);
+    setAeroStartTime(null);
+    setAeroStartEnergy(0);
     setShowAeroMessage(null);
+    if (aeroTimerRef.current) {
+      clearTimeout(aeroTimerRef.current);
+      aeroTimerRef.current = null;
+    }
   };
 
-  // Handle OVERTAKE button activation
+  // Handle OVERTAKE button activation (DRS-inspired)
   const handleOvertake = () => {
-    // Can only activate if: has charges, behind bot, bot not already frozen, racing
-    if (boostCharges <= 0 || progress >= botProgress || botFrozen || gameStatus !== 'racing' || isPaused) {
+    // Can only activate if: has charge, within 2 questions of bot AND behind, bot not already frozen, racing
+    const behindBot = botProgress > progress;
+    const withinDrsRange = behindBot && (botProgress - progress) <= 2;
+    if (!hasOvertakeCharge || !withinDrsRange || botFrozen || gameStatus !== 'racing' || isPaused) {
       return;
     }
 
-    // Consume 1 charge
-    setBoostCharges(prev => prev - 1);
+    // Consume the charge
+    setHasOvertakeCharge(false);
     setBotFrozen(true);
     if (soundEnabledRef.current) {
       playOvertakeActivatedSound();
@@ -1280,20 +1299,59 @@ export default function Game() {
     }, 3000);
   };
 
-  // Handle AERO button activation
+  // Handle AERO button activation (ERS-inspired energy meter)
   const handleAero = () => {
-    // Can only activate if: has charges, not already active, racing
-    if (aeroCharges <= 0 || aeroActive || gameStatus !== 'racing' || isPaused) {
+    // Can only activate if: has any energy, not already active, racing
+    if (aeroEnergy <= 0 || aeroActive || gameStatus !== 'racing' || isPaused) {
       return;
     }
 
-    // Consume 1 charge and activate aero mode
-    setAeroCharges(prev => prev - 1);
+    // Activate AERO mode - starts draining energy
     setAeroActive(true);
+    setAeroStartTime(Date.now());
+    setAeroStartEnergy(aeroEnergy);
     if (soundEnabledRef.current) {
       playAeroActivatedSound();
     }
+
+    // Calculate duration based on current energy (5 seconds at 100%)
+    const durationMs = (aeroEnergy / 100) * 5000;
+
+    // Set timer to end AERO when energy depletes
+    aeroTimerRef.current = setTimeout(() => {
+      setAeroActive(false);
+      setAeroEnergy(0);
+      setAeroStartTime(null);
+      setAeroStartEnergy(0);
+      aeroTimerRef.current = null;
+    }, durationMs);
   };
+
+  // Real-time AERO energy drain animation
+  useEffect(() => {
+    if (!aeroActive || aeroStartTime === null || isPaused) return;
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - aeroStartTime;
+      const drainPerMs = aeroStartEnergy / ((aeroStartEnergy / 100) * 5000); // 20% per second at 100%
+      const drained = elapsed * drainPerMs;
+      const remaining = Math.max(0, aeroStartEnergy - drained);
+      setAeroEnergy(Math.round(remaining));
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [aeroActive, aeroStartTime, aeroStartEnergy, isPaused]);
+
+  // Cleanup AERO timer on unmount or game end
+  useEffect(() => {
+    if (gameStatus === 'finished' || gameStatus === 'crashed') {
+      if (aeroTimerRef.current) {
+        clearTimeout(aeroTimerRef.current);
+        aeroTimerRef.current = null;
+      }
+      setAeroActive(false);
+    }
+  }, [gameStatus]);
 
   // Bot simulation during racing - uses setTimeout for per-lap timing
   useEffect(() => {
@@ -2451,32 +2509,42 @@ export default function Game() {
         {raceMode === 'bot' && !isPracticeMode && (
           <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4">
             {/* Two rows of controls - grid for alignment */}
-            <div className="grid grid-cols-[60px_140px_52px] gap-x-4 gap-y-3 items-center">
+            <div className="grid grid-cols-[80px_140px_52px] gap-x-3 gap-y-3 items-center">
               {/* Row 1: Overtake */}
-              {/* Boost Charges (lightning bolts) - right aligned */}
-              <div className="flex items-center justify-end gap-1">
-                {[0, 1, 2].map((i) => (
-                  <svg
-                    key={i}
-                    className={cn(
-                      "w-5 h-5 transition-all",
-                      i < boostCharges ? "text-yellow-400" : "text-gray-400/30"
-                    )}
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-                  </svg>
-                ))}
+              {/* Single charge indicator + warmup/streak dots - right aligned */}
+              <div className="flex items-center justify-end gap-2">
+                {/* Single lightning bolt charge */}
+                <svg
+                  className={cn(
+                    "w-5 h-5 transition-all",
+                    hasOvertakeCharge ? "text-yellow-400" : "text-gray-400/30"
+                  )}
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                </svg>
+                {/* Warmup dots (gray → green as they fill) */}
+                <div className="flex gap-0.5">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={`warmup-${i}`}
+                      className={cn(
+                        "w-2 h-2 rounded-full transition-all",
+                        i < warmupCount ? "bg-green-400" : "bg-gray-400/30"
+                      )}
+                    />
+                  ))}
+                </div>
               </div>
 
               {/* OVERTAKE Button - centered */}
               <button
                 onClick={handleOvertake}
-                disabled={boostCharges <= 0 || progress >= botProgress || botFrozen || isPaused}
+                disabled={!hasOvertakeCharge || !(botProgress > progress && (botProgress - progress) <= 2) || botFrozen || isPaused}
                 className={cn(
                   "px-4 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all w-full",
-                  boostCharges > 0 && progress < botProgress && !botFrozen && !isPaused
+                  hasOvertakeCharge && botProgress > progress && (botProgress - progress) <= 2 && !botFrozen && !isPaused
                     ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400 active:scale-95"
                     : "bg-gray-600 text-gray-400 cursor-not-allowed"
                 )}
@@ -2486,47 +2554,52 @@ export default function Game() {
                 OVERTAKE
               </button>
 
-              {/* Overtake Streak Progress Dots - left aligned */}
+              {/* Overtake Streak Progress Dots (only show after warmup) - left aligned */}
               <div className="flex items-center justify-start gap-1.5">
                 {[0, 1, 2].map((i) => (
                   <div
                     key={i}
                     className={cn(
                       "w-2.5 h-2.5 rounded-full transition-all",
-                      i < boostStreak ? "bg-yellow-400" : "bg-gray-400/30"
+                      warmupCount >= 3 && i < overtakeStreak ? "bg-yellow-400" : "bg-gray-400/30"
                     )}
                   />
                 ))}
               </div>
 
               {/* Row 2: Aero */}
-              {/* Aero Charges (wing icons) - right aligned */}
-              <div className="flex items-center justify-end gap-1.5">
-                {[0, 1].map((i) => (
-                  <svg
-                    key={i}
+              {/* Energy bar - right aligned */}
+              <div className="flex items-center justify-end">
+                <div className="w-16 h-4 bg-gray-700 rounded-full overflow-hidden relative">
+                  <motion.div
                     className={cn(
-                      "w-6 h-6 transition-all",
-                      i < aeroCharges ? "text-blue-400" : "text-gray-400/30"
+                      "h-full rounded-full transition-all",
+                      aeroActive ? "bg-blue-400" : "bg-blue-500"
                     )}
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                  >
-                    {/* Wing/aero icon */}
-                    <path d="M2 12c0-3 2-6 6-6h8c4 0 6 3 6 6s-2 6-6 6h-8c-4 0-6-3-6-6zm6-3c-2 0-3 1.5-3 3s1 3 3 3h8c2 0 3-1.5 3-3s-1-3-3-3H8z" />
-                  </svg>
-                ))}
+                    animate={{
+                      width: `${aeroEnergy}%`,
+                      opacity: aeroActive ? [1, 0.7, 1] : 1
+                    }}
+                    transition={{
+                      width: { duration: 0.1 },
+                      opacity: aeroActive ? { repeat: Infinity, duration: 0.5 } : { duration: 0 }
+                    }}
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
+                    {aeroEnergy}%
+                  </span>
+                </div>
               </div>
 
               {/* AERO Button - centered */}
               <button
                 onClick={handleAero}
-                disabled={aeroCharges <= 0 || aeroActive || isPaused}
+                disabled={aeroEnergy <= 0 || aeroActive || isPaused}
                 className={cn(
                   "px-4 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all w-full",
                   aeroActive
                     ? "bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.7)] animate-pulse"
-                    : aeroCharges > 0 && !isPaused
+                    : aeroEnergy > 0 && !isPaused
                       ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:bg-blue-400 active:scale-95"
                       : "bg-gray-600 text-gray-400 cursor-not-allowed"
                 )}
@@ -2536,17 +2609,11 @@ export default function Game() {
                 {aeroActive ? 'ACTIVE!' : 'ACT AERO'}
               </button>
 
-              {/* Aero Streak Progress Dots - left aligned */}
-              <div className="flex items-center justify-start gap-1">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "w-2 h-2 rounded-full transition-all",
-                      i < aeroStreak ? "bg-blue-400" : "bg-gray-400/30"
-                    )}
-                  />
-                ))}
+              {/* Energy harvest indicator - shows last gain */}
+              <div className="flex items-center justify-start">
+                <span className="text-[10px] text-blue-400 font-medium">
+                  {aeroActive ? 'DRAINING' : 'ERS'}
+                </span>
               </div>
             </div>
 
