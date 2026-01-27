@@ -954,8 +954,6 @@ export default function Game() {
         if (newBoostStreak >= 3 && boostCharges < 3) {
           setBoostCharges(prev => prev + 1);
           setBoostStreak(0);
-          setShowBoostMessage('CHARGE EARNED!');
-          setTimeout(() => setShowBoostMessage(null), 1500);
           if (soundEnabledRef.current) {
             playBoostChargedSound();
           }
@@ -967,8 +965,6 @@ export default function Game() {
         if (newAeroStreak >= 5 && aeroCharges < 2) {
           setAeroCharges(prev => prev + 1);
           setAeroStreak(0);
-          setShowAeroMessage('AERO CHARGED!');
-          setTimeout(() => setShowAeroMessage(null), 1500);
           if (soundEnabledRef.current) {
             playAeroChargedSound();
           }
@@ -982,8 +978,6 @@ export default function Game() {
       // Deactivate aero after use (success)
       if (aeroActive) {
         setAeroActive(false);
-        setShowAeroMessage('AERO BOOST! +2 SECTORS');
-        setTimeout(() => setShowAeroMessage(null), 1500);
       }
 
       setProgress(newProgress);
@@ -1037,8 +1031,6 @@ export default function Game() {
       const wasAeroActive = aeroActive;
       if (wasAeroActive) {
         setAeroActive(false);
-        setShowAeroMessage('AERO FAILED! DOUBLE PENALTY');
-        setTimeout(() => setShowAeroMessage(null), 2000);
       }
 
       // Break purple mode on incorrect answer
@@ -1261,7 +1253,6 @@ export default function Game() {
     // Consume 1 charge
     setBoostCharges(prev => prev - 1);
     setBotFrozen(true);
-    setShowBoostMessage('BOT FROZEN! GO GO GO!');
     if (soundEnabledRef.current) {
       playOvertakeActivatedSound();
     }
@@ -1269,7 +1260,6 @@ export default function Game() {
     // Freeze lasts 3 seconds
     botFreezeTimerRef.current = setTimeout(() => {
       setBotFrozen(false);
-      setShowBoostMessage(null);
       botFreezeTimerRef.current = null;
     }, 3000);
   };
@@ -1284,17 +1274,9 @@ export default function Game() {
     // Consume 1 charge and activate aero mode
     setAeroCharges(prev => prev - 1);
     setAeroActive(true);
-    setShowAeroMessage('AERO ACTIVE! RISK/REWARD');
     if (soundEnabledRef.current) {
       playAeroActivatedSound();
     }
-
-    // Message clears after 2 seconds (aero stays active until next answer)
-    setTimeout(() => {
-      if (aeroActive) {
-        setShowAeroMessage(null);
-      }
-    }, 2000);
   };
 
   // Bot simulation during racing - uses setTimeout for per-lap timing
