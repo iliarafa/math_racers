@@ -10,14 +10,14 @@ const regulations = [
     description: "Each race consists of 20 sectors. Answer a math question correctly to advance through each sector and reach the finish line."
   },
   {
-    title: "OVERTAKE (DRS)",
+    title: "OVERTAKE",
     color: "#22c741",
-    description: "Complete a 3-answer warmup phase at the start of each race. After warmup, every 3 consecutive correct answers earns 1 OVERTAKE charge (maximum 1). You can only activate OVERTAKE when within 2 sectors of the bot - just like real DRS zones! Press OVERTAKE to freeze the opponent for 3 seconds."
+    description: "Build up your energy meter by answering questions correctly - faster answers charge more energy! You can only activate OVERTAKE when within 2 sectors of the bot. Press OVERTAKE to freeze your opponent while your energy drains over 5 seconds (at full charge). You can deactivate early by pressing again. Warning: a wrong answer while OVERTAKE is active immediately depletes all energy!"
   },
   {
-    title: "ACTIVE AERO (ERS)",
+    title: "ACTIVE AERO",
     color: "#3b82f6",
-    description: "Harvest energy by answering questions quickly - faster answers charge your energy meter more! Press AERO anytime you have energy to activate 2x sector boost mode. Energy drains over 5 seconds at full charge (proportionally less at lower energy). While active, correct answers advance 2 sectors. Warning: a wrong answer while AERO is active immediately depletes all energy!"
+    description: "AERO zones appear at specific points during the race (2 zones in normal mode, 5 in realism mode). When you enter a zone, press AERO to activate 2x sector boost - your next correct answer advances 2 sectors instead of 1! The question will be slightly harder while AERO is active. Each zone can only be used once, so time your activation wisely."
   },
   {
     title: "SECTORS",

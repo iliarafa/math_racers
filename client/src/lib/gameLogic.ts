@@ -653,6 +653,36 @@ export function calculateEnergyHarvest(
   return Math.round(baseGain * harvestRate);
 }
 
+// Get AERO zones based on race length and sim mode
+// Normal mode: 2 zones (at 25% and 65%)
+// Realism mode: 5 zones evenly distributed (at 15%, 30%, 50%, 70%, 85%)
+export function getAeroZones(raceLength: number, simMode: boolean): number[] {
+  if (simMode) {
+    // 5 zones evenly distributed
+    return [0.15, 0.30, 0.50, 0.70, 0.85].map(p => Math.floor(raceLength * p));
+  }
+  // Normal: 2 zones
+  return [0.25, 0.65].map(p => Math.floor(raceLength * p));
+}
+
+// Check if current progress is within an AERO zone
+// Each zone lasts for 3 questions
+export function isInAeroZone(progress: number, zones: number[], zoneWindow: number = 3): boolean {
+  return zones.some(zone => progress >= zone && progress < zone + zoneWindow);
+}
+
+// Get the current zone start position (if in a zone)
+export function getCurrentAeroZone(progress: number, zones: number[], zoneWindow: number = 3): number | undefined {
+  return zones.find(zone => progress >= zone && progress < zone + zoneWindow);
+}
+
+// Get a harder difficulty level for AERO mode questions
+export function getHarderDifficulty(current: Difficulty): Difficulty {
+  const levels: Difficulty[] = ['beginner', 'easy', 'medium', 'hard'];
+  const idx = levels.indexOf(current);
+  return levels[Math.min(idx + 1, levels.length - 1)];
+}
+
 export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
   const ranges = getOperationRanges(difficulty, isWet);
