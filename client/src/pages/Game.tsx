@@ -1517,7 +1517,7 @@ export default function Game() {
           </div>
         </div>
         {/* Confirm Strategy Button - Fixed Bottom */}
-        <div className="fixed bottom-0 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
           {selectedDriver && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
@@ -1540,9 +1540,10 @@ export default function Game() {
             <button
               onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
               className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+              style={{ fontFamily: 'Formula1' }}
               data-testid="button-back-menu"
             >
-              &lt;&lt; Menu
+              Back
             </button>
           </Link>
         </div>
@@ -1913,15 +1914,17 @@ export default function Game() {
           >
             {selectedTab === 'multiplayer' ? 'Enter Lobby' : isPracticeMode ? 'Start Practice' : 'Start Engine'}
           </motion.button>
-          <Link href="/">
-            <button
-              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-              className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
-              data-testid="button-back-menu"
-            >
-              &lt;&lt; Menu
-            </button>
-          </Link>
+          <button
+            onClick={() => {
+              if (state.soundEnabled) playCarouselClick();
+              setGameStatus("driver_select");
+            }}
+            className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
+            style={{ fontFamily: 'Formula1' }}
+            data-testid="button-back-menu"
+          >
+            Back
+          </button>
         </div>
         <style>{`
           @keyframes pulse-red {
