@@ -76,9 +76,9 @@ driver_select → selecting → countdown → racing → finished | crashed
 | F1 | 5-20 | 5-20 (capped) | All types |
 
 **Variable equation types:**
-- `x + a = b, x = ?`
-- `a − x = b, x = ?`
-- `ax = b, x = ?`
+- `x + a = b`
+- `a − x = b`
+- `ax = b`
 
 ---
 

@@ -140,7 +140,7 @@ Dynamic weather affects problem difficulty:
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, Vite
+- **Frontend**: React 19, TypeScript, Vite
 - **Styling**: Tailwind CSS v4, Shadcn/ui components
 - **Routing**: Wouter
 - **State**: React Query, localStorage for game persistence
