@@ -984,15 +984,28 @@ export default function Game() {
       }
 
       setProgress(newProgress);
-      setLapResults(prev => [...prev, { 
-        result: 'correct', 
+
+      // Create the main sector entry
+      const mainEntry = {
+        result: 'correct' as const,
         speed,
         question: question.display,
         playerAnswer: val,
         correctAnswer: question.answer,
         sectorColor,
         responseTime
-      }]);
+      };
+
+      // When aero was active and we gained 2 sectors, add a bonus entry with same color
+      const actualGain = newProgress - progress; // Handles capping at raceLength
+      if (aeroActive && actualGain === 2) {
+        setLapResults(prev => [...prev, mainEntry, {
+          ...mainEntry,
+          question: question.display + ' (AERO bonus)',
+        }]);
+      } else {
+        setLapResults(prev => [...prev, mainEntry]);
+      }
 
       if (newProgress >= raceLength) {
         if (isPracticeMode) {
