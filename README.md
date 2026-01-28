@@ -23,11 +23,11 @@ An interactive, gamified math practice web application designed for children (ag
 
 Each circuit is themed after a famous F1 track:
 
-- **MONZA** - Multiplication (The Temple of Speed)
-- **SPA** - Addition (The Longest Lap)
-- **MONACO** - Subtraction (Street Circuit)
-- **SUZUKA** - Division (Figure-8 Track)
-- **SILVERSTONE** - Variables/Algebra (Home of F1)
+- **MONZA** - Multiplication
+- **SPA** - Addition
+- **MONACO** - Subtraction
+- **SUZUKA** - Division
+- **SILVERSTONE** - Variables/Algebra
 
 ### Difficulty Levels (Racing Series)
 
