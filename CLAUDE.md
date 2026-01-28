@@ -110,7 +110,7 @@ script/build.ts          # Custom build script
 
 **OVERTAKE (Energy Bar)**
 - Charges by answering correctly (faster = more energy)
-- Activates when behind opponent and within 2 sectors
+- Activates when behind opponent and within 2 sectors (disabled once opponent finishes)
 - While active: **2x progress** per correct answer + **1.5x harder questions** (0.5 boost factor)
 - Stacks with wet weather: dry+OVERTAKE = 1.5x, wet+OVERTAKE = 2x (next difficulty level)
 - Energy drains over time (100% = 5 seconds max)

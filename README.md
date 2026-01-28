@@ -40,7 +40,7 @@ Each circuit is themed after a famous F1 track:
 
 **OVERTAKE System (Energy Bar)**
 - Energy meter charges by answering questions correctly (faster = more charge)
-- Activates only when behind opponent and within 2 sectors
+- Activates only when behind opponent and within 2 sectors (disabled once opponent finishes)
 - While active: **2x progress** per correct answer + **1.5x harder questions** (halfway to next difficulty)
 - Difficulty stacks with weather: dry + OVERTAKE = 1.5x, wet + OVERTAKE = 2x (next difficulty level)
 - Energy drains over time (100% energy = 5 second max duration)
