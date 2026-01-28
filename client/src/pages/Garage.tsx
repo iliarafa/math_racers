@@ -220,7 +220,7 @@ export default function Garage() {
                     <Zap className="w-5 h-5 text-white/50" />
                     <div>
                       <span className="text-sm text-white/80">Power-Ups</span>
-                      <p className="text-[10px] text-white/40">OVERTAKE & ACTIVE AERO</p>
+                      <p className="text-[10px] text-white/40">Overtake & Active Aero</p>
                     </div>
                   </div>
                   <button
