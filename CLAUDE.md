@@ -130,6 +130,12 @@ script/build.ts          # Custom build script
 - Randomness: ±25% variation
 - Wet weather: +250ms base + harder numbers
 
+### Weather System
+- Dry: Standard difficulty
+- Wet: +0.5 difficulty factor (harder numbers)
+- Random: Circuit-specific rain probability
+- **Realism + Random**: Weather alternates 3-5 times during race (visual indicator shows current condition)
+
 ### Track Limits (Penalty System)
 
 **Standard Mode:**

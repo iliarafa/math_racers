@@ -110,6 +110,7 @@ Dynamic weather affects problem difficulty:
 - **Dry**: Standard difficulty (1.0x)
 - **Wet**: 1.5x harder questions (halfway to next difficulty level)
 - **Random**: Circuit-specific rain probability
+- **Realism + Random**: Weather alternates between dry and wet during the race
 
 ### Speed Feedback System
 
