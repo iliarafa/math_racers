@@ -572,6 +572,7 @@ export default function Game() {
   const [initialWeather, setInitialWeather] = useState<'dry' | 'wet'>('dry');
 
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
+  const botFinished = botProgress >= raceLength;
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer'>('race');
   const [isPaused, setIsPaused] = useState(false);
@@ -1370,7 +1371,7 @@ export default function Game() {
   // Handle OVERTAKE button activation (energy bar based)
   const handleOvertake = () => {
     const behindBot = botProgress > progress;
-    const withinRange = behindBot && (botProgress - progress) <= 2;
+    const withinRange = behindBot && (botProgress - progress) <= 2 && !botFinished;
 
     // If already active, allow deactivation (interrupt)
     if (overtakeActive) {
@@ -1537,6 +1538,20 @@ export default function Game() {
 
     return () => clearTimeout(timeout);
   }, [gameStatus, raceMode, isPaused, botFrozen, selectedDriver, raceLength, botProgress]);
+
+  // Deactivate OVERTAKE when bot finishes the race
+  useEffect(() => {
+    if (botFinished && overtakeActive) {
+      if (overtakeTimerRef.current) {
+        clearTimeout(overtakeTimerRef.current);
+        overtakeTimerRef.current = null;
+      }
+      setOvertakeActive(false);
+      setBotFrozen(false);
+      setOvertakeStartTime(null);
+      setOvertakeStartEnergy(0);
+    }
+  }, [botFinished, overtakeActive]);
 
   const handleMultiplayerSelect = () => {
     setSelectedDriver(null);
@@ -2753,12 +2768,12 @@ export default function Game() {
                 {/* OT Button - above 9 */}
                 <button
                   onClick={handleOvertake}
-                  disabled={overtakeEnergy <= 0 && !overtakeActive || isPaused}
+                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished}
                   className={cn(
                     "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95",
                     overtakeActive
                       ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
-                      : overtakeEnergy > 0 && botProgress > progress && (botProgress - progress) <= 2 && !isPaused
+                      : overtakeEnergy > 0 && botProgress > progress && (botProgress - progress) <= 2 && !isPaused && !botFinished
                         ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]"
                         : "bg-secondary text-secondary-foreground cursor-not-allowed"
                   )}
