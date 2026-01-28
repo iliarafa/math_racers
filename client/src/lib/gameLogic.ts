@@ -56,6 +56,7 @@ export interface GameState {
   powerUpsEnabled: boolean;
   personalBests: { [circuitId: string]: number };
   lapHistory: LapEntry[];
+  unlockedSeries: 'karting' | 'f3' | 'f2' | 'f1';  // Highest unlocked series
 }
 
 export const TEAM_COLORS = [
@@ -190,6 +191,13 @@ const INITIAL_STATE: GameState = {
   powerUpsEnabled: true,
   personalBests: {},
   lapHistory: [],
+  unlockedSeries: 'karting',
+};
+
+// Helper function to check if a series is unlocked
+export const isSeriesUnlocked = (series: string, unlockedSeries: string): boolean => {
+  const order = ['karting', 'f3', 'f2', 'f1'];
+  return order.indexOf(series) <= order.indexOf(unlockedSeries);
 };
 
 export const SHOP_ITEMS = [
@@ -242,6 +250,7 @@ export function useGameState() {
           powerUpsEnabled: parsed.powerUpsEnabled ?? true,
           personalBests: parsed.personalBests ?? {},
           lapHistory: parsed.lapHistory ?? [],
+          unlockedSeries: parsed.unlockedSeries ?? 'karting',
         };
       }
     } catch (error) {
@@ -329,6 +338,17 @@ export function useGameState() {
     setState(prev => ({ ...prev, racesWon: prev.racesWon + 1 }));
   };
 
+  const unlockNextSeries = () => {
+    setState(prev => {
+      const order: Array<typeof prev.unlockedSeries> = ['karting', 'f3', 'f2', 'f1'];
+      const idx = order.indexOf(prev.unlockedSeries);
+      if (idx < order.length - 1) {
+        return { ...prev, unlockedSeries: order[idx + 1] };
+      }
+      return prev;
+    });
+  };
+
   const updatePersonalBest = (circuitId: string, time: number) => {
     setState(prev => {
       const currentBest = prev.personalBests[circuitId];
@@ -397,6 +417,7 @@ export function useGameState() {
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,
+    unlockNextSeries,
     updatePersonalBest,
     resetAllData,
     recordLapTime,
