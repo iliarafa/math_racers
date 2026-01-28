@@ -1,6 +1,6 @@
 # F1 Math Racer: Grand Prix
 
-An interactive, gamified math practice web application designed for ages 6 and up. Players solve addition, subtraction, multiplication, division, and algebra problems in an authentic F1 racing theme with real-time multiplayer support, strategic power-ups, and a cosmetics system.
+An interactive, gamified math practice web application. Players solve addition, subtraction, multiplication, division, and algebra problems in an authentic F1 racing theme with real-time multiplayer support, strategic power-ups, and a cosmetics system.
 
 ## Features
 
