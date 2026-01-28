@@ -567,7 +567,10 @@ export default function Game() {
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
   const [actualWeather, setActualWeather] = useState<'dry' | 'wet'>('dry');
-  
+  // Alternating weather state for Realism mode with random weather
+  const [weatherChangePoints, setWeatherChangePoints] = useState<number[]>([]);
+  const [initialWeather, setInitialWeather] = useState<'dry' | 'wet'>('dry');
+
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer'>('race');
@@ -576,6 +579,42 @@ export default function Game() {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0);
+
+  // Check if we're in realism mode with random weather (alternating weather feature)
+  const isRealismRandom = state.simMode && selectedWeather === 'random';
+
+  // Generate random weather change points for a race
+  const generateWeatherSchedule = (length: number): number[] => {
+    const numChanges = 3 + Math.floor(Math.random() * 3); // 3-5 changes
+    const changePoints: number[] = [];
+    const minLap = Math.floor(length * 0.1);
+    const maxLap = Math.floor(length * 0.9);
+
+    for (let i = 0; i < numChanges; i++) {
+      const lap = minLap + Math.floor(Math.random() * (maxLap - minLap));
+      if (!changePoints.includes(lap)) {
+        changePoints.push(lap);
+      }
+    }
+
+    return changePoints.sort((a, b) => a - b);
+  };
+
+  // Get current weather based on progress and change points
+  const getCurrentWeather = (
+    currentProgress: number,
+    changePoints: number[],
+    startWeather: 'dry' | 'wet'
+  ): 'dry' | 'wet' => {
+    const changesPassed = changePoints.filter(p => currentProgress >= p).length;
+    return changesPassed % 2 === 0 ? startWeather : (startWeather === 'dry' ? 'wet' : 'dry');
+  };
+
+  // Compute current weather dynamically for realism random mode
+  const currentWeather = isRealismRandom
+    ? getCurrentWeather(progress, weatherChangePoints, initialWeather)
+    : actualWeather;
+
   const [lapResults, setLapResults] = useState<Array<{ 
     result: 'correct' | 'incorrect'; 
     speed: 'fast' | 'normal' | 'slow';
@@ -696,17 +735,27 @@ export default function Game() {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
       // Resolve random weather at countdown start using circuit-specific rain probability
       let resolvedWeather: 'dry' | 'wet';
+      const currentRaceLength = getRaceLength(selectedCircuit.id, state.simMode);
+
       if (selectedWeather === 'random') {
         const rainProbability = CIRCUIT_RAIN_PROBABILITY[selectedCircuit.id] || 0.5;
         resolvedWeather = Math.random() < rainProbability ? 'wet' : 'dry';
+
+        // In realism mode with random weather, set up alternating weather
+        if (state.simMode) {
+          const schedule = generateWeatherSchedule(currentRaceLength);
+          setWeatherChangePoints(schedule);
+          setInitialWeather(resolvedWeather);
+        }
       } else {
         resolvedWeather = selectedWeather;
+        // Clear alternating weather state for non-random weather
+        setWeatherChangePoints([]);
       }
       setActualWeather(resolvedWeather);
       const isWet = resolvedWeather === 'wet';
 
       // Initialize AERO zones based on race length and sim mode
-      const currentRaceLength = getRaceLength(selectedCircuit.id, state.simMode);
       const zones = getAeroZones(currentRaceLength, state.simMode);
       setAeroZones(zones);
       setAeroUsedZones(new Set());
@@ -1035,7 +1084,7 @@ export default function Game() {
           setAnswer("");
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
-          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet', boostFactor, question?.display));
+          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', boostFactor, question?.display));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1112,7 +1161,7 @@ export default function Game() {
             setTimeout(() => {
               setFeedback('idle');
               setAnswer('');
-              setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet', 0, question?.display));
+              setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display));
               questionStartTimeRef.current = Date.now();
             }, 800);
           }
@@ -1228,7 +1277,7 @@ export default function Game() {
           setTimeout(() => {
             setFeedback('idle');
             setAnswer("");
-            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet', 0, question?.display));
+            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display));
             questionStartTimeRef.current = Date.now();
           }, 800);
         }
@@ -1291,6 +1340,9 @@ export default function Game() {
     setRaceMode('bot'); // Race mode always uses bot opponent
     setSelectedWeather('dry');
     setActualWeather('dry');
+    // Reset alternating weather state
+    setWeatherChangePoints([]);
+    setInitialWeather('dry');
     resetStreak();
     penaltyTimeRef.current = 0;
     raceStartTimeRef.current = null;
@@ -1381,7 +1433,7 @@ export default function Game() {
 
     // Immediately generate a harder question so user answers it while AERO is active
     const nextDifficulty = getHarderDifficulty(currentDifficultyRef.current);
-    setQuestion(generateQuestion(selectedCircuit?.id || 'spa', nextDifficulty, actualWeather === 'wet', 0, question?.display));
+    setQuestion(generateQuestion(selectedCircuit?.id || 'spa', nextDifficulty, currentWeather === 'wet', 0, question?.display));
     questionStartTimeRef.current = Date.now();
     setAnswer(""); // Clear any partial answer
   };
@@ -2433,10 +2485,18 @@ export default function Game() {
             </AnimatePresence>
           </div>
 
-          {/* Timer on top */}
+          {/* Timer on top with weather indicator for realism random */}
           <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
             <Timer className="w-4 h-4 sm:w-5 sm:h-5" />
             {formatTime(elapsedTime)}
+            {isRealismRandom && (
+              <div className={cn(
+                "text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ml-2",
+                currentWeather === 'wet' ? "bg-blue-500/20 text-blue-400" : "bg-yellow-500/20 text-yellow-400"
+              )}>
+                {currentWeather === 'wet' ? 'WET' : 'DRY'}
+              </div>
+            )}
           </div>
           
           {/* Expression and Answer with Penalty Overlay */}

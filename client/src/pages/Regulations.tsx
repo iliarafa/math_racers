@@ -1,48 +1,86 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { ChevronLeft, Flag } from "lucide-react";
+import { ChevronLeft, ChevronDown, Flag } from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 
 const regulations = [
   {
     title: "RACE",
     color: "#d4640f",
-    description: "Each race consists of 20 sectors. Answer a math question correctly to advance through each sector and reach the finish line."
+    summary: "Answer 20 math questions correctly to cross the finish line.",
+    details: ["Each correct answer advances you one sector. Complete all sectors to finish the race."]
   },
   {
     title: "OVERTAKE",
     color: "#22c741",
-    description: "Build up your energy meter by answering questions correctly - faster answers charge more energy! You can only activate OVERTAKE when within 2 sectors of the bot. Press OVERTAKE to freeze your opponent while your energy drains over 5 seconds (at full charge). You can deactivate early by pressing again. Warning: a wrong answer while OVERTAKE is active immediately depletes all energy!"
+    summary: "Build energy by answering correctly. Faster answers charge more energy.",
+    details: [
+      "Activate when within 2 sectors of your opponent",
+      "Freezes opponent while energy drains (5s at full charge)",
+      "2× progress per correct answer while active",
+      "⚠️ Wrong answer depletes all energy instantly"
+    ]
   },
   {
     title: "ACTIVE AERO",
     color: "#3b82f6",
-    description: "AERO zones appear at specific points during the race (2 zones in normal mode, 5 in realism mode). When you enter a zone, press AERO to activate 2x sector boost - your next correct answer advances 2 sectors instead of 1! The question will be slightly harder while AERO is active. Each zone can only be used once, so time your activation wisely."
+    summary: "Hit AERO in designated zones for a 2× sector boost.",
+    details: [
+      "Standard: 2 zones (at 25% and 65%)",
+      "Realism: 5 zones (at 15%, 30%, 50%, 70%, 85%)",
+      "Questions are harder while AERO is active",
+      "Each zone can only be used once"
+    ]
   },
   {
     title: "SECTORS",
     color: "#a855f7",
-    description: "After each answer, your sector time is color-coded to show your performance. Purple means you set the fastest time for that sector (beating both your previous best and the bot). Green means you answered quickly (within 1.5x of the best time). Yellow indicates a slower response. Red appears when you give a wrong answer."
+    summary: "Sector times are color-coded: purple (fastest), green (quick), yellow (slow), red (wrong).",
+    details: [
+      "Purple: beat your best AND the bot",
+      "Green: within 1.5× of best time",
+      "Yellow: slower response",
+      "Red: wrong answer"
+    ]
   },
   {
     title: "TRACK LIMITS",
     color: "#ff0000",
-    description: "Wrong answers result in warnings and penalties. In standard mode: your first three mistakes are warnings, the fourth adds 5 seconds, and no further penalties until your 11th mistake causes a DNF. In realism mode: first two are warnings, third shows the black & white flag, fourth adds 5 seconds, fifth adds 10 seconds, then the cycle repeats (+5, +10). You crash and receive a DNF if your mistakes exceed 50% of the total laps."
+    summary: "Wrong answers trigger warnings and time penalties. Too many causes DNF.",
+    details: [
+      "Standard: 3 warnings, then 5s penalty on 4th, DNF on 11th",
+      "Realism: 2 warnings, then flag, then cycling 5s/10s penalties, DNF at 50% mistakes"
+    ]
   },
   {
     title: "WEATHER",
     color: "#3b82f6",
-    description: "Weather conditions affect the difficulty of math problems. Dry conditions use standard difficulty for your selected series. Wet conditions increase the difficulty with harder numbers. Random weather gives each circuit a specific chance of rain."
+    summary: "Dry uses standard difficulty. Wet increases difficulty.",
+    details: [
+      "Dry: normal difficulty for your series",
+      "Wet: increased difficulty with harder numbers",
+      "Random: circuit-specific rain probability",
+      "Realism + Random: weather alternates during the race"
+    ]
   },
   {
     title: "PRACTICE",
     color: "#eab308",
-    description: "Practice mode removes all penalties and lets you answer unlimited questions. When you give a wrong answer, you see \"Try Again\" and can attempt the same problem until you solve it correctly."
+    summary: "No penalties. Retry questions until you get them right.",
+    details: ["Practice mode removes all time penalties and lets you attempt the same problem repeatedly until solved."]
   },
   {
     title: "REALISM MODE",
     color: "#2ec9ba",
-    description: "Realism Mode extends your race to a full Grand Prix distance with realistic lap counts for each circuit. You must answer each question correctly to advance, making every sector count."
+    summary: "Full Grand Prix distance. Must answer correctly to advance.",
+    details: [
+      "Wrong answers don't advance the question. Solve it to proceed.",
+      "5 AERO zones instead of 2",
+      "Stricter penalties: 2 warnings, flag, then cycling 5s/10s",
+      "DNF if mistakes exceed 50% of total laps",
+      "Monaco: 78 laps, Monza: 53, Spa: 44, Suzuka: 53, Silverstone: 52"
+    ]
   }
 ];
 
@@ -70,20 +108,37 @@ export default function Regulations() {
 
           <div className="space-y-4">
             {regulations.map((reg, index) => (
-              <div
-                key={index}
-                className="bg-[#1e1e1e] border border-[#333] rounded-2xl p-4"
-              >
-                <h3
-                  className="font-bold mb-2 text-sm"
-                  style={{ color: reg.color }}
-                >
-                  {reg.title}
-                </h3>
-                <p className="text-white text-sm leading-relaxed">
-                  {reg.description}
-                </p>
-              </div>
+              <Collapsible key={index} className="bg-[#1e1e1e] border border-[#333] rounded-2xl">
+                <CollapsibleTrigger className="w-full p-4 flex items-start justify-between text-left group">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-sm mb-1" style={{ color: reg.color }}>
+                      {reg.title}
+                    </h3>
+                    <p className="text-white text-sm leading-relaxed">{reg.summary}</p>
+                  </div>
+                  <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-200 mt-1 ml-2 group-data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="px-4 pb-4 pt-0">
+                    <div className="border-t border-[#333] pt-3">
+                      {reg.details.length === 1 ? (
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                          {reg.details[0]}
+                        </p>
+                      ) : (
+                        <ul className="space-y-1.5">
+                          {reg.details.map((item, i) => (
+                            <li key={i} className="text-gray-400 text-sm flex gap-2">
+                              <span className="text-gray-600">•</span>
+                              <span>{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             ))}
           </div>
 
