@@ -90,11 +90,19 @@ Progress bars update live as times change, creating authentic F1 tension.
 
 ### Track Limits & Penalty System
 
-Mistakes result in escalating time penalties:
-- Mistakes 1-3: +2 seconds each
-- Mistakes 4-6: +5 seconds each
-- Mistakes 7-10: +10 seconds each
-- Mistake 11+: DNF (Did Not Finish)
+**Standard Mode:**
+- Mistakes 1-3: Warnings only (no time penalty)
+- Mistake 4: +5 second penalty
+- Mistakes 5-10: No additional penalties
+- Mistake 11: DNF (Did Not Finish)
+
+**Realism Mode:**
+- Mistakes 1-2: Warnings only
+- Mistake 3: Black & white flag warning
+- Mistake 4: +5 second penalty
+- Mistake 5: +10 second penalty
+- Mistakes 6+: Cycle repeats (+5, +10, +5, +10...)
+- DNF when mistakes exceed 50% of total laps (e.g., Monaco 78 laps = DNF at 40+ mistakes)
 
 ### Weather System
 
@@ -113,8 +121,9 @@ Dynamic weather affects problem difficulty:
 **Realism Mode (Full Grand Prix):**
 - First 5 questions calibrate your personal speed baseline
 - Questions 6+: At/under threshold = green, over = yellow
-- Wrong answers must be re-answered with time penalties
-- Crash (DNF) at 11 mistakes
+- Wrong answers must be re-answered correctly before advancing
+- Cycling penalties: +5s, +10s, +5s, +10s... starting from 4th mistake
+- Crash (DNF) when mistakes exceed 50% of total laps
 
 ### Garage & Customization
 

@@ -130,6 +130,20 @@ script/build.ts          # Custom build script
 - Randomness: ±25% variation
 - Wet weather: +250ms base + harder numbers
 
+### Track Limits (Penalty System)
+
+**Standard Mode:**
+- Mistakes 1-3: Warnings only (no time penalty)
+- Mistake 4: +5 second penalty
+- Mistakes 5-10: No additional penalties
+- Mistake 11: DNF
+
+**Realism Mode:**
+- Mistakes 1-2: Warnings
+- Mistake 3: Black & white flag
+- Mistake 4+: Cycling +5s/+10s penalties (4=+5, 5=+10, 6=+5, 7=+10...)
+- DNF threshold: `mistakes > Math.floor(raceLength * 0.5)` (50% of total laps)
+
 ### Race Configuration
 - Standard: 20 questions per race
 - Simulation mode: Circuit-specific lap counts (44-78 laps)

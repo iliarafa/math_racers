@@ -27,7 +27,7 @@ const regulations = [
   {
     title: "TRACK LIMITS",
     color: "#ff0000",
-    description: "Wrong answers result in time penalties that increase with each mistake. Your first three mistakes add 2 seconds each. Mistakes four through six add 5 seconds each. Mistakes seven through ten add 10 seconds each. If you make 11 mistakes, you crash and receive a DNF (Did Not Finish)."
+    description: "Wrong answers result in warnings and penalties. In standard mode: your first three mistakes are warnings, the fourth adds 5 seconds, and no further penalties until your 11th mistake causes a DNF. In realism mode: first two are warnings, third shows the black & white flag, fourth adds 5 seconds, fifth adds 10 seconds, then the cycle repeats (+5, +10). You crash and receive a DNF if your mistakes exceed 50% of the total laps."
   },
   {
     title: "WEATHER",

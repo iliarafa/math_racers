@@ -599,6 +599,7 @@ export default function Game() {
   const [finalMistakes, setFinalMistakes] = useState(0);
   const [showPenalty, setShowPenalty] = useState(false);
   const [showBlackWhiteFlag, setShowBlackWhiteFlag] = useState(false);
+  const [showFiveSecPenalty, setShowFiveSecPenalty] = useState(false);
   const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
   const [mistakeLog, setMistakeLog] = useState<Array<{ question: string; yourAnswer: number; correctAnswer: number }>>([]);
   const [showMistakeReview, setShowMistakeReview] = useState(false);
@@ -1134,42 +1135,41 @@ export default function Game() {
         // Apply penalty but don't advance question
         setShowPenalty(true);
 
-        // Apply time penalties same as standard mode
-        if (newMistakes === 1) {
-          const penalty = 2000;
-          setPenaltyMessage({ text: 'TRACK LIMITS - TRY AGAIN', color: 'yellow' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
-        } else if (newMistakes === 2) {
-          const penalty = 2000;
-          setPenaltyMessage({ text: 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
-        } else if (newMistakes === 3) {
-          const penalty = 2000;
-          setPenaltyMessage({ text: 'BLACK & WHITE FLAG - TRY AGAIN', color: 'yellow' });
-          setShowBlackWhiteFlag(true);
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
-        } else if (newMistakes <= 6) {
-          const penalty = 5000;
-          setPenaltyMessage({ text: '+5 SEC PENALTY - TRY AGAIN', color: 'red' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
-        } else if (newMistakes <= 10) {
-          const penalty = 10000;
-          setPenaltyMessage({ text: '+10 SEC PENALTY - TRY AGAIN', color: 'red' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
-        } else if (newMistakes >= 11) {
+        // Realism mode penalties: 1-2 warnings, 3rd black & white flag, then cycling +5/+10 penalties
+        // DNF threshold: mistakes > 50% of total laps
+        const dnfThreshold = Math.floor(raceLength * 0.5);
+
+        if (newMistakes > dnfThreshold) {
           setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
           setFinalMistakes(newMistakes);
           setGameStatus('crashed');
           return;
+        } else if (newMistakes === 1) {
+          // Warning only - no time penalty
+          setPenaltyMessage({ text: 'TRACK LIMITS - TRY AGAIN', color: 'yellow' });
+        } else if (newMistakes === 2) {
+          // Warning only - no time penalty
+          setPenaltyMessage({ text: 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
+        } else if (newMistakes === 3) {
+          // Black & white flag - no time penalty
+          setPenaltyMessage({ text: 'BLACK & WHITE FLAG - TRY AGAIN', color: 'yellow' });
+          setShowBlackWhiteFlag(true);
+        } else {
+          // Mistakes 4+: cycling +5/+10 penalties (4=+5, 5=+10, 6=+5, 7=+10, etc.)
+          const cyclePosition = (newMistakes - 4) % 2; // 0 for +5, 1 for +10
+          const penalty = cyclePosition === 0 ? 5000 : 10000;
+          setPenaltyMessage({ text: `+${penalty / 1000} SEC PENALTY - TRY AGAIN`, color: 'red' });
+          penaltyTimeRef.current += penalty;
+          setElapsedTime(prev => prev + penalty);
+          // Show +5s flash overlay on 4th mistake
+          if (newMistakes === 4) {
+            setShowFiveSecPenalty(true);
+            setTimeout(() => setShowFiveSecPenalty(false), 800);
+          }
         }
 
         setTimeout(() => { setShowPenalty(false); setShowBlackWhiteFlag(false); }, 1500);
-        
+
         // Clear answer but keep same question - don't reset questionStartTimeRef
         setTimeout(() => {
           setFeedback('idle');
@@ -1180,31 +1180,27 @@ export default function Game() {
         setShowPenalty(true);
 
         if (newMistakes === 1) {
-          const penalty = 2000;
+          // Warning only - no time penalty
           setPenaltyMessage({ text: 'TRACK LIMITS', color: 'yellow' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 2) {
-          const penalty = 2000;
+          // Warning only - no time penalty
           setPenaltyMessage({ text: 'TRACK LIMITS WARNING', color: 'yellow' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 3) {
-          const penalty = 2000;
+          // Warning only - no time penalty
           setPenaltyMessage({ text: 'BLACK & WHITE FLAG', color: 'yellow' });
           setShowBlackWhiteFlag(true);
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
-        } else if (newMistakes <= 6) {
+        } else if (newMistakes === 4) {
+          // Only the 4th mistake has a 5 second penalty
           const penalty = 5000;
           setPenaltyMessage({ text: '+5 SECOND PENALTY', color: 'red' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
+          // Show +5s flash overlay
+          setShowFiveSecPenalty(true);
+          setTimeout(() => setShowFiveSecPenalty(false), 800);
         } else if (newMistakes <= 10) {
-          const penalty = 10000;
-          setPenaltyMessage({ text: '+10 SECOND PENALTY', color: 'red' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
+          // Mistakes 5-10: warning only, no additional time penalty
+          setPenaltyMessage({ text: 'TRACK LIMITS', color: 'yellow' });
         } else if (newMistakes >= 11) {
           setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
           setFinalMistakes(newMistakes);
@@ -2443,22 +2439,45 @@ export default function Game() {
             {formatTime(elapsedTime)}
           </div>
           
-          {/* Expression below timer */}
-          <div className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-2">
-            {question?.display}
-          </div>
-          
-          {/* Answer display below expression */}
-          <div
-            className={cn(
-              "text-4xl sm:text-5xl md:text-6xl font-bold min-w-[80px] text-center mt-2",
-              feedback === 'idle' && "text-muted-foreground/50",
-              feedback === 'correct' && "text-green-600",
-              feedback === 'incorrect' && "text-red-600"
-            )}
-            data-testid="display-answer"
-          >
-            {answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
+          {/* Expression and Answer with Penalty Overlay */}
+          <div className="relative">
+            {/* Expression below timer */}
+            <div className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-2">
+              {question?.display}
+            </div>
+
+            {/* Answer display below expression */}
+            <div
+              className={cn(
+                "text-4xl sm:text-5xl md:text-6xl font-bold min-w-[80px] text-center mt-2",
+                feedback === 'idle' && "text-muted-foreground/50",
+                feedback === 'correct' && "text-green-600",
+                feedback === 'incorrect' && "text-red-600"
+              )}
+              data-testid="display-answer"
+            >
+              {answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
+            </div>
+
+            {/* +5s Penalty Flash Overlay */}
+            <AnimatePresence>
+              {showFiveSecPenalty && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: [1, 0.2, 1, 0.2, 1], scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="absolute inset-0 flex items-center justify-center z-10"
+                >
+                  <span
+                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600"
+                    style={{ fontFamily: 'Formula1' }}
+                  >
+                    +5s
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Minimal Feedback */}
@@ -2585,18 +2604,76 @@ export default function Game() {
           </div>
         </div>
 
-        {/* Boost/Overtake & Aero UI - only in bot race mode */}
-        {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (
-          <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4">
-            {/* Two rows of controls - grid for alignment */}
-            <div className="grid grid-cols-[80px_140px_52px] gap-x-3 gap-y-3 items-center">
-              {/* Row 1: Overtake */}
-              {/* Energy bar - right aligned */}
-              <div className="flex items-center justify-end">
-                <div className="w-16 h-4 bg-gray-700 rounded-full overflow-hidden relative">
+        {/* Large Keypad with integrated Power-ups row */}
+        <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
+          {/* Status Messages - floating above keypad */}
+          {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
+            <div className="flex justify-center mb-2 h-6 w-full max-w-md">
+              <div className="flex gap-2 items-center">
+                <AnimatePresence>
+                  {showBoostMessage && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className={cn(
+                        "text-sm font-bold px-3 py-1 rounded-full",
+                        botFrozen ? "bg-green-500 text-white" : "bg-yellow-500 text-black"
+                      )}
+                    >
+                      {showBoostMessage}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <AnimatePresence>
+                  {showAeroMessage && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className={cn(
+                        "text-sm font-bold px-3 py-1 rounded-full",
+                        showAeroMessage.includes('BOOST') ? "bg-blue-500 text-white" :
+                        showAeroMessage.includes('FAIL') ? "bg-red-500 text-white" :
+                        showAeroMessage.includes('ACTIVE') ? "bg-blue-400 text-white" :
+                        "bg-cyan-500 text-black"
+                      )}
+                    >
+                      {showAeroMessage}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
+            {/* Power-ups row - integrated as extended keypad row */}
+            {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (
+              <>
+                {/* AERO Button - above 7 */}
+                <button
+                  onClick={handleAero}
+                  disabled={!aeroAvailable || aeroActive || isPaused}
+                  className={cn(
+                    "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95",
+                    aeroActive
+                      ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
+                      : aeroAvailable && !isPaused
+                        ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] ring-2 ring-yellow-400 animate-pulse"
+                        : "bg-secondary text-secondary-foreground cursor-not-allowed"
+                  )}
+                  style={{ fontFamily: 'Formula1' }}
+                  data-testid="button-aero"
+                >
+                  {aeroActive ? 'ON' : 'AERO'}
+                </button>
+
+                {/* Energy Bar - above 8 */}
+                <div className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary overflow-hidden relative">
                   <motion.div
                     className={cn(
-                      "h-full rounded-full transition-all",
+                      "absolute inset-y-0 left-0 rounded-xl transition-all",
                       overtakeActive ? "bg-green-400" : "bg-green-500"
                     )}
                     animate={{
@@ -2608,126 +2685,32 @@ export default function Game() {
                       opacity: overtakeActive ? { repeat: Infinity, duration: 0.5 } : { duration: 0 }
                     }}
                   />
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-black z-10">
                     {overtakeEnergy}%
                   </span>
                 </div>
-              </div>
 
-              {/* OVERTAKE Button - centered */}
-              <button
-                onClick={handleOvertake}
-                disabled={overtakeEnergy <= 0 && !overtakeActive || isPaused}
-                className={cn(
-                  "px-4 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all w-full",
-                  overtakeActive
-                    ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
-                    : overtakeEnergy > 0 && botProgress > progress && (botProgress - progress) <= 2 && !isPaused
-                      ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)] hover:bg-green-400 active:scale-95"
-                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                )}
-                style={{ fontFamily: 'Formula1' }}
-                data-testid="button-overtake"
-              >
-                {overtakeActive ? 'ACTIVE!' : 'OVERTAKE'}
-              </button>
-
-              {/* Active indicator - left aligned */}
-              <div className="flex items-center justify-start">
-                <div
+                {/* OT Button - above 9 */}
+                <button
+                  onClick={handleOvertake}
+                  disabled={overtakeEnergy <= 0 && !overtakeActive || isPaused}
                   className={cn(
-                    "w-10 h-3 rounded-full transition-all duration-300",
+                    "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95",
                     overtakeActive
-                      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
-                      : "bg-gray-600"
+                      ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
+                      : overtakeEnergy > 0 && botProgress > progress && (botProgress - progress) <= 2 && !isPaused
+                        ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+                        : "bg-secondary text-secondary-foreground cursor-not-allowed"
                   )}
-                />
-              </div>
+                  style={{ fontFamily: 'Formula1' }}
+                  data-testid="button-overtake"
+                >
+                  {overtakeActive ? 'ON' : 'OT'}
+                </button>
+              </>
+            )}
 
-              {/* Row 2: Aero */}
-              {/* Zone indicator - right aligned */}
-              <div className="flex items-center justify-end">
-                <span className={cn(
-                  "text-xs font-bold",
-                  aeroAvailable ? "text-yellow-400" : "text-gray-400"
-                )}>
-                  {aeroAvailable ? "ZONE!" : `${aeroZones.length - aeroUsedZones.size} left`}
-                </span>
-              </div>
-
-              {/* AERO Button - centered */}
-              <button
-                onClick={handleAero}
-                disabled={!aeroAvailable || aeroActive || isPaused}
-                className={cn(
-                  "px-4 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all w-full",
-                  aeroActive
-                    ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
-                    : aeroAvailable && !isPaused
-                      ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] ring-2 ring-yellow-400 animate-pulse hover:bg-blue-400 active:scale-95"
-                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
-                )}
-                style={{ fontFamily: 'Formula1' }}
-                data-testid="button-aero"
-              >
-                {aeroActive ? 'AERO ON' : aeroAvailable ? 'AERO!' : 'AERO'}
-              </button>
-
-              {/* AERO active indicator */}
-              <div className="flex items-center justify-start">
-                <div
-                  className={cn(
-                    "w-10 h-3 rounded-full transition-all duration-300",
-                    aeroActive
-                      ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"
-                      : "bg-gray-600"
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Status Messages - below buttons (fixed height to prevent button shift) */}
-            <div className="flex gap-2 h-8 items-center">
-              <AnimatePresence>
-                {showBoostMessage && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className={cn(
-                      "text-sm font-bold px-3 py-1 rounded-full",
-                      botFrozen ? "bg-green-500 text-white" : "bg-yellow-500 text-black"
-                    )}
-                  >
-                    {showBoostMessage}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <AnimatePresence>
-                {showAeroMessage && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className={cn(
-                      "text-sm font-bold px-3 py-1 rounded-full",
-                      showAeroMessage.includes('BOOST') ? "bg-blue-500 text-white" :
-                      showAeroMessage.includes('FAIL') ? "bg-red-500 text-white" :
-                      showAeroMessage.includes('ACTIVE') ? "bg-blue-400 text-white" :
-                      "bg-cyan-500 text-black"
-                    )}
-                  >
-                    {showAeroMessage}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
-        )}
-
-        {/* Large Keypad */}
-        <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
+            {/* Regular keypad buttons */}
             {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
               <button
                 key={num}

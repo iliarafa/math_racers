@@ -807,17 +807,21 @@ export default function Multiplayer() {
       if (state.simMode) {
         // Realism mode: must answer correctly before continuing
         // Don't advance progress or lapResults, just count the mistake
-        // Still apply time penalties (use ref so timer picks it up)
-        if (newMistakes <= 2) {
-          penaltyTimeRef.current += 2000;
-        } else if (newMistakes <= 5) {
-          penaltyTimeRef.current += 5000;
-        } else if (newMistakes <= 10) {
-          penaltyTimeRef.current += 10000;
+        // Penalties: 1-2 warnings, 3 black & white flag, then cycling +5/+10 penalties
+        // DNF threshold: mistakes > 50% of total laps
+        const dnfThreshold = Math.floor(raceLength * 0.5);
+
+        if (newMistakes <= 3) {
+          // Warnings only - no time penalty for first 3 mistakes
+        } else if (newMistakes <= dnfThreshold) {
+          // Cycling +5/+10 penalties (4=+5, 5=+10, 6=+5, 7=+10, etc.)
+          const cyclePosition = (newMistakes - 4) % 2; // 0 for +5, 1 for +10
+          const penalty = cyclePosition === 0 ? 5000 : 10000;
+          penaltyTimeRef.current += penalty;
         }
-        
-        // Check for crash at 11 mistakes
-        if (newMistakes >= 11) {
+
+        // Check for crash when mistakes exceed 50% of laps
+        if (newMistakes > dnfThreshold) {
           // Notify server/opponent of crash
           if (wsRef.current) {
             wsRef.current.send(JSON.stringify({
