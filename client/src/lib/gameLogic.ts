@@ -437,24 +437,57 @@ function calculateComplexity(num1: number, num2: number, operation: string): num
     // Count carries/borrows
     const carries = countCarries(num1, num2, operation);
     // No carries: 1.0x, 1 carry: 1.3x, 2 carries: 1.6x, 3+ carries: 2.0x
-    return 1.0 + Math.min(carries, 3) * 0.3 + (carries > 3 ? 0.1 : 0);
+    const carryFactor = 1.0 + Math.min(carries, 3) * 0.3 + (carries > 3 ? 0.1 : 0);
+
+    // Add operand magnitude bonus for larger numbers (affects F2/F1)
+    const maxOperand = Math.max(num1, num2);
+    const sizeFactor = maxOperand >= 100 ? 1.15 : (maxOperand >= 50 ? 1.1 : 1.0);
+
+    return carryFactor * sizeFactor;
   }
 
   if (operation === 'Multiplication') {
-    // Based on digit count of the larger operand
-    const digits = Math.max(num1.toString().length, num2.toString().length);
-    // 1 digit: 1.0x, 2 digits: 1.5x
-    return digits === 1 ? 1.0 : 1.5;
+    const maxOperand = Math.max(num1, num2);
+    const minOperand = Math.min(num1, num2);
+
+    // Base complexity by max operand
+    let complexity = 1.0;
+    if (maxOperand >= 10) complexity = 1.4;      // 2-digit max
+    if (maxOperand >= 13) complexity = 1.6;      // Harder 2-digit
+
+    // Bonus if BOTH operands are 2-digit (e.g., 12×14 is much harder than 12×5)
+    if (minOperand >= 10) complexity += 0.4;     // Both 2-digit = 2.0x
+
+    return complexity;
   }
 
   if (operation === 'Division') {
-    // Based on dividend size
-    const digits = num1.toString().length;
-    // 1 digit: 1.0x, 2 digits: 1.25x, 3 digits: 1.5x
-    return 1.0 + (digits - 1) * 0.25;
+    const dividendDigits = num1.toString().length;
+    const divisor = num2;
+
+    // Base: larger dividends take longer
+    let complexity = 1.0 + (dividendDigits - 1) * 0.2;
+
+    // 2-digit divisors require long division mental model
+    if (divisor >= 10) complexity += 0.4;
+    // Even 1-digit divisors 7-9 are harder than 2-5
+    else if (divisor >= 7) complexity += 0.15;
+
+    return complexity;
   }
 
-  // Variables - use base time (complexity handled by operation modifier)
+  if (operation === 'Variables') {
+    // Variables have num1=answer, num2=coefficient for ax=b format
+    // For x+a=b format, num2 is the constant
+    const coefficient = num2;
+
+    // Larger coefficients = harder mental division
+    if (coefficient >= 10) return 1.6;   // 13x = 195 → 195÷13
+    if (coefficient >= 7) return 1.35;   // 8x = 64 → 64÷8
+    if (coefficient >= 5) return 1.2;    // 5x = 30 → 30÷5
+    return 1.0;  // Small coefficients or x+a=b format
+  }
+
   return 1.0;
 }
 
@@ -466,16 +499,17 @@ function calculateBotTime(
   num2?: number,
   isWet: boolean = false
 ): number {
-  // Base times in milliseconds by difficulty (slightly increased)
+  // Base times in milliseconds by difficulty (exponential scaling)
+  // Gap between levels increases as difficulty rises to match exponential difficulty increase
   let baseTime: number;
   if (difficulty === 'beginner') {
-    baseTime = 2500; // 2.5 seconds base for beginner (Karting)
+    baseTime = 2500; // 2.5 seconds base for beginner (Karting) - unchanged, balanced
   } else if (difficulty === 'easy') {
-    baseTime = 3000; // 3 seconds base for easy (F3)
+    baseTime = 3500; // 3.5 seconds base for easy (F3) - +1000ms from Karting
   } else if (difficulty === 'medium') {
-    baseTime = 3500; // 3.5 seconds base for medium (F2)
+    baseTime = 4500; // 4.5 seconds base for medium (F2) - +1000ms from F3
   } else {
-    baseTime = 4000; // 4 seconds base for hard (F1)
+    baseTime = 6000; // 6 seconds base for hard (F1) - +1500ms from F2
   }
 
   // Wet mode adds half the gap to next difficulty level (250ms)
