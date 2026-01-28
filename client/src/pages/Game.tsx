@@ -1936,7 +1936,7 @@ export default function Game() {
                       data-testid="weather-dry"
                     >
                       <img src={weatherSun} alt="Dry" className="w-8 h-8" />
-                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Standard</span>
+                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Dry</span>
                     </button>
                     <button
                       onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
@@ -1949,7 +1949,7 @@ export default function Game() {
                       data-testid="weather-wet"
                     >
                       <img src={weatherRain} alt="Wet" className="w-8 h-8" />
-                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Harder</span>
+                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Wet</span>
                     </button>
                     <button
                       onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
@@ -1962,7 +1962,7 @@ export default function Game() {
                       data-testid="weather-random"
                     >
                       <img src={weatherRandom} alt="Random" className="w-8 h-8" />
-                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Surprise</span>
+                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Random</span>
                     </button>
                   </div>
                 </motion.div>
