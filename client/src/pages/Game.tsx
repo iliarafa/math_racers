@@ -1060,7 +1060,7 @@ export default function Game() {
         }
       }
 
-      // Check if aero was active - deactivate on wrong answer
+      // Check if aero was active - deactivate on wrong answer (NO TIME PENALTY, but still counts as mistake)
       const wasAeroActive = aeroActive;
       if (wasAeroActive) {
         setAeroActive(false);
@@ -1076,8 +1076,48 @@ export default function Game() {
         correctAnswer: question.answer
       }]);
 
-      // Penalty multiplier: 2x if aero was active
-      const penaltyMultiplier = wasAeroActive ? 2 : 1;
+      // If AERO was active, just show "AERO OFF" and skip time penalty
+      if (wasAeroActive) {
+        setPenaltyMessage({ text: 'AERO OFF', color: 'yellow' });
+        setFeedback('incorrect');
+        setShowPenalty(true);
+
+        if (state.simMode) {
+          // Sim mode: keep same question, just clear answer
+          setTimeout(() => { setShowPenalty(false); }, 1500);
+          setTimeout(() => {
+            setFeedback('idle');
+            setAnswer('');
+          }, 600);
+        } else {
+          // Standard mode: advance to next question
+          const newProgress = progress + 1;
+          setProgress(newProgress);
+          setLapResults(prev => [...prev, {
+            result: 'incorrect',
+            speed: 'normal',
+            question: question.display,
+            playerAnswer: val,
+            correctAnswer: question.answer,
+            sectorColor: 'red',
+            responseTime
+          }]);
+
+          setTimeout(() => { setShowPenalty(false); }, 1500);
+
+          if (newProgress >= raceLength) {
+            finishRace(newMistakes);
+          } else {
+            setTimeout(() => {
+              setFeedback('idle');
+              setAnswer('');
+              setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet'));
+              questionStartTimeRef.current = Date.now();
+            }, 800);
+          }
+        }
+        return; // Skip time penalty logic
+      }
 
       if (isPracticeMode) {
         // Practice mode: show mistake but no penalties or crash
@@ -1093,32 +1133,32 @@ export default function Game() {
         // Realism mode: must answer correctly before continuing
         // Apply penalty but don't advance question
         setShowPenalty(true);
-        
-        // Apply time penalties same as standard mode (doubled if aero was active)
+
+        // Apply time penalties same as standard mode
         if (newMistakes === 1) {
-          const penalty = 2000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? 'TRACK LIMITS - AERO FAIL!' : 'TRACK LIMITS - TRY AGAIN', color: 'yellow' });
+          const penalty = 2000;
+          setPenaltyMessage({ text: 'TRACK LIMITS - TRY AGAIN', color: 'yellow' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 2) {
-          const penalty = 2000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? 'WARNING - AERO FAIL!' : 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
+          const penalty = 2000;
+          setPenaltyMessage({ text: 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 3) {
-          const penalty = 2000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? 'B&W FLAG - AERO FAIL!' : 'BLACK & WHITE FLAG - TRY AGAIN', color: 'yellow' });
+          const penalty = 2000;
+          setPenaltyMessage({ text: 'BLACK & WHITE FLAG - TRY AGAIN', color: 'yellow' });
           setShowBlackWhiteFlag(true);
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes <= 6) {
-          const penalty = 5000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? `+${penalty/1000} SEC - AERO FAIL!` : '+5 SEC PENALTY - TRY AGAIN', color: 'red' });
+          const penalty = 5000;
+          setPenaltyMessage({ text: '+5 SEC PENALTY - TRY AGAIN', color: 'red' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes <= 10) {
-          const penalty = 10000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? `+${penalty/1000} SEC - AERO FAIL!` : '+10 SEC PENALTY - TRY AGAIN', color: 'red' });
+          const penalty = 10000;
+          setPenaltyMessage({ text: '+10 SEC PENALTY - TRY AGAIN', color: 'red' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes >= 11) {
@@ -1136,33 +1176,33 @@ export default function Game() {
           setAnswer("");
         }, 600);
       } else {
-        // Standard race mode: apply penalties and advance (doubled if aero was active)
+        // Standard race mode: apply penalties and advance
         setShowPenalty(true);
 
         if (newMistakes === 1) {
-          const penalty = 2000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? 'TRACK LIMITS - AERO FAIL!' : 'TRACK LIMITS', color: 'yellow' });
+          const penalty = 2000;
+          setPenaltyMessage({ text: 'TRACK LIMITS', color: 'yellow' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 2) {
-          const penalty = 2000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? 'WARNING - AERO FAIL!' : 'TRACK LIMITS WARNING', color: 'yellow' });
+          const penalty = 2000;
+          setPenaltyMessage({ text: 'TRACK LIMITS WARNING', color: 'yellow' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes === 3) {
-          const penalty = 2000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? 'B&W FLAG - AERO FAIL!' : 'BLACK & WHITE FLAG', color: 'yellow' });
+          const penalty = 2000;
+          setPenaltyMessage({ text: 'BLACK & WHITE FLAG', color: 'yellow' });
           setShowBlackWhiteFlag(true);
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes <= 6) {
-          const penalty = 5000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? `+${penalty/1000} SEC - AERO FAIL!` : '+5 SECOND PENALTY', color: 'red' });
+          const penalty = 5000;
+          setPenaltyMessage({ text: '+5 SECOND PENALTY', color: 'red' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes <= 10) {
-          const penalty = 10000 * penaltyMultiplier;
-          setPenaltyMessage({ text: wasAeroActive ? `+${penalty/1000} SEC - AERO FAIL!` : '+10 SECOND PENALTY', color: 'red' });
+          const penalty = 10000;
+          setPenaltyMessage({ text: '+10 SECOND PENALTY', color: 'red' });
           penaltyTimeRef.current += penalty;
           setElapsedTime(prev => prev + penalty);
         } else if (newMistakes >= 11) {
