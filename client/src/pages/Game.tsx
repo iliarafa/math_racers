@@ -1034,7 +1034,7 @@ export default function Game() {
           setAnswer("");
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
-          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet', boostFactor));
+          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet', boostFactor, question?.display));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1111,7 +1111,7 @@ export default function Game() {
             setTimeout(() => {
               setFeedback('idle');
               setAnswer('');
-              setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet'));
+              setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet', 0, question?.display));
               questionStartTimeRef.current = Date.now();
             }, 800);
           }
@@ -1232,7 +1232,7 @@ export default function Game() {
           setTimeout(() => {
             setFeedback('idle');
             setAnswer("");
-            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet'));
+            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, actualWeather === 'wet', 0, question?.display));
             questionStartTimeRef.current = Date.now();
           }, 800);
         }
@@ -1385,7 +1385,7 @@ export default function Game() {
 
     // Immediately generate a harder question so user answers it while AERO is active
     const nextDifficulty = getHarderDifficulty(currentDifficultyRef.current);
-    setQuestion(generateQuestion(selectedCircuit?.id || 'spa', nextDifficulty, actualWeather === 'wet'));
+    setQuestion(generateQuestion(selectedCircuit?.id || 'spa', nextDifficulty, actualWeather === 'wet', 0, question?.display));
     questionStartTimeRef.current = Date.now();
     setAnswer(""); // Clear any partial answer
   };

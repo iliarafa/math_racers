@@ -696,11 +696,17 @@ export function getHarderDifficulty(current: Difficulty): Difficulty {
 // - isWet: adds 0.5 boost factor (1.5x harder)
 // - boostFactor: additional difficulty boost (0-1), e.g., 0.5 for OVERTAKE (1.5x harder)
 // - Factors stack: wet (0.5) + OVERTAKE (0.5) = 1.0 (next difficulty level), capped at 1.0
-export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false, boostFactor: number = 0): Question {
+// - previousDisplay: if provided, ensures the new question is different (avoids back-to-back duplicates)
+export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false, boostFactor: number = 0, previousDisplay?: string): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
   const ranges = getOperationRanges(difficulty, isWet, boostFactor);
 
   let num1: number = 0, num2: number = 0, display: string, answer: number;
+  let attempts = 0;
+  const maxAttempts = 5;
+
+  do {
+    attempts++;
 
   switch (circuit.type) {
     case "Multiplication": {
@@ -776,6 +782,9 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
       answer = num1 + num2;
     }
   }
+
+  // Retry if we got the same question as before (avoid back-to-back duplicates)
+  } while (previousDisplay && display === previousDisplay && attempts < maxAttempts);
 
   // Calculate bot's time for this question with complexity consideration
   const botTime = calculateBotTime(difficulty, circuit.type, num1, num2, isWet);
