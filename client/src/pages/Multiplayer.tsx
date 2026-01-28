@@ -1524,10 +1524,15 @@ export default function Multiplayer() {
               <div className="flex gap-2 mt-2">
                 {/* OVERTAKE button - can activate when conditions met, or tap to deactivate while active */}
                 <button
-                  onClick={activateOvertake}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (overtakeActive || canActivateOvertake) {
+                      activateOvertake();
+                    }
+                  }}
                   disabled={!overtakeActive && !canActivateOvertake}
                   className={cn(
-                    "flex-1 h-10 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2",
+                    "flex-1 h-10 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 touch-manipulation select-none",
                     overtakeActive
                       ? "bg-yellow-500 text-black animate-pulse"
                       : canActivateOvertake
@@ -1541,10 +1546,15 @@ export default function Multiplayer() {
 
                 {/* AERO button */}
                 <button
-                  onClick={activateAero}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (isAeroAvailable) {
+                      activateAero();
+                    }
+                  }}
                   disabled={!isAeroAvailable}
                   className={cn(
-                    "flex-1 h-10 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2",
+                    "flex-1 h-10 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 touch-manipulation select-none",
                     aeroActive
                       ? "bg-cyan-500 text-white"
                       : isAeroAvailable
@@ -1566,23 +1576,41 @@ export default function Multiplayer() {
                 <button
                   key={num}
                   type="button"
-                  onClick={() => { if (feedback === "idle") { playKeypadClick(); setAnswer(prev => prev + num.toString()); } }}
-                  className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (feedback === "idle") {
+                      playKeypadClick();
+                      setAnswer(prev => prev + num.toString());
+                    }
+                  }}
+                  className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80 touch-manipulation select-none"
                 >
                   {num}
                 </button>
               ))}
               <button
                 type="button"
-                onClick={() => { if (feedback === "idle") { playKeypadClick(); setAnswer(prev => prev.slice(0, -1)); } }}
-                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  if (feedback === "idle") {
+                    playKeypadClick();
+                    setAnswer(prev => prev.slice(0, -1));
+                  }
+                }}
+                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none"
               >
                 <Delete className="w-6 h-6 sm:w-8 sm:h-8" />
               </button>
               <button
                 type="button"
-                onClick={() => { if (feedback === "idle") { playKeypadClick(); setAnswer(prev => prev + "0"); } }}
-                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  if (feedback === "idle") {
+                    playKeypadClick();
+                    setAnswer(prev => prev + "0");
+                  }
+                }}
+                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80 touch-manipulation select-none"
               >
                 0
               </button>
@@ -1591,7 +1619,7 @@ export default function Multiplayer() {
                 onClick={() => handleSubmit()}
                 disabled={!answer || feedback !== "idle"}
                 className={cn(
-                  "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                  "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none",
                   answer && feedback === "idle"
                     ? "bg-green-600 text-white hover:bg-green-500"
                     : "bg-muted text-muted-foreground"

@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, getHarderDifficulty, calculateEnergyHarvest, Difficulty } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, getHarderDifficulty, calculateEnergyHarvest, Difficulty, isSeriesUnlocked } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -554,7 +554,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, unlockNextSeries, updatePersonalBest, recordLapTime } = useGameState();
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
   const [botProgress, setBotProgress] = useState(0);
@@ -1293,6 +1293,10 @@ export default function Game() {
     if (mistakeCount === 0) {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
        incrementRacesWon();
+       // Unlock next series if player won at their current highest unlocked series
+       if (selectedDriver?.id === state.unlockedSeries) {
+         unlockNextSeries();
+       }
        if (selectedDriver?.difficulty === 'hard' && state.soundEnabled) {
          playSimplyLovely();
        }
@@ -1593,13 +1597,21 @@ export default function Game() {
           <div className="flex flex-col items-center gap-3">
           {seriesOptions.map((series) => {
             const isSelected = selectedDriver?.id === series.id;
+            const isUnlocked = isSeriesUnlocked(series.id, state.unlockedSeries);
 
             return (
               <motion.button
                 key={series.id}
-                onClick={() => { setSelectedDriver(series.driver || null); if (state.soundEnabled) playCarouselClick(); }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full max-w-xs py-3 text-center"
+                onClick={() => {
+                  if (!isUnlocked) return;
+                  setSelectedDriver(series.driver || null);
+                  if (state.soundEnabled) playCarouselClick();
+                }}
+                whileTap={isUnlocked ? { scale: 0.98 } : undefined}
+                className={cn(
+                  "w-full max-w-xs py-3 text-center",
+                  !isUnlocked && "cursor-not-allowed"
+                )}
                 data-testid={`level-${series.id}`}
               >
                 <span
@@ -1608,23 +1620,23 @@ export default function Game() {
                     fontFamily: 'Formula1',
                     fontSize: '1.5rem',
                     fontWeight: 'bold',
-                    color: '#000000',
-                    opacity: isSelected ? 1 : 0.4,
+                    color: isUnlocked ? '#000000' : '#cccccc',
+                    opacity: isSelected ? 1 : (isUnlocked ? 0.4 : 0.3),
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  {series.name}
+                  {series.name}{!isUnlocked && ' 🔒'}
                 </span>
                 <span
                   className="block mt-1 uppercase tracking-widest"
                   style={{
                     fontSize: '0.65rem',
-                    color: '#000000',
-                    opacity: isSelected ? 0.6 : 0.3,
+                    color: isUnlocked ? '#000000' : '#cccccc',
+                    opacity: isSelected ? 0.6 : (isUnlocked ? 0.3 : 0.2),
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  {series.description}
+                  {isUnlocked ? series.description : 'Win to unlock'}
                 </span>
               </motion.button>
             );
@@ -2728,10 +2740,15 @@ export default function Game() {
               <>
                 {/* AERO Button - above 7 */}
                 <button
-                  onClick={handleAero}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (!(!aeroAvailable || aeroActive || isPaused)) {
+                      handleAero();
+                    }
+                  }}
                   disabled={!aeroAvailable || aeroActive || isPaused}
                   className={cn(
-                    "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95",
+                    "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
                     aeroActive
                       ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
                       : aeroAvailable && !isPaused
@@ -2767,10 +2784,15 @@ export default function Game() {
 
                 {/* OT Button - above 9 */}
                 <button
-                  onClick={handleOvertake}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished)) {
+                      handleOvertake();
+                    }
+                  }}
                   disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished}
                   className={cn(
-                    "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95",
+                    "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
                     overtakeActive
                       ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
                       : overtakeEnergy > 0 && botProgress > progress && (botProgress - progress) <= 2 && !isPaused && !botFinished
@@ -2790,9 +2812,15 @@ export default function Game() {
               <button
                 key={num}
                 type="button"
-                onClick={() => { if (!isPaused && feedback === 'idle') { playKeypadClick(); setAnswer(prev => prev + num.toString()); } }}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  if (!isPaused && feedback === 'idle') {
+                    playKeypadClick();
+                    setAnswer(prev => prev + num.toString());
+                  }
+                }}
                 disabled={isPaused}
-                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none"
                 data-testid={`keypad-${num}`}
               >
                 {num}
@@ -2800,18 +2828,30 @@ export default function Game() {
             ))}
             <button
               type="button"
-              onClick={() => { if (!isPaused && feedback === 'idle') { playKeypadClick(); setAnswer(prev => prev.slice(0, -1)); } }}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                if (!isPaused && feedback === 'idle') {
+                  playKeypadClick();
+                  setAnswer(prev => prev.slice(0, -1));
+                }
+              }}
               disabled={isPaused}
-              className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50"
+              className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50 touch-manipulation select-none"
               data-testid="keypad-delete"
             >
               <Delete className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
             <button
               type="button"
-              onClick={() => { if (!isPaused && feedback === 'idle') { playKeypadClick(); setAnswer(prev => prev + '0'); } }}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                if (!isPaused && feedback === 'idle') {
+                  playKeypadClick();
+                  setAnswer(prev => prev + '0');
+                }
+              }}
               disabled={isPaused}
-              className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50"
+              className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none"
               data-testid="keypad-0"
             >
               0
@@ -2821,7 +2861,7 @@ export default function Game() {
               onClick={() => handleSubmit()}
               disabled={!answer || feedback !== 'idle' || isPaused}
               className={cn(
-                "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center",
+                "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none",
                 answer && feedback === 'idle' && !isPaused
                   ? "bg-green-600 text-white hover:bg-green-500"
                   : "bg-muted text-muted-foreground"
