@@ -2418,7 +2418,7 @@ export default function Game() {
             )}
             data-testid="display-answer"
           >
-            {answer || "X="}
+            {answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
           </div>
 
           {/* Minimal Feedback */}
