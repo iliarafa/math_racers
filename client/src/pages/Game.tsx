@@ -967,8 +967,8 @@ export default function Game() {
       addCareerPoints(difficultyPoints);
 
       // OVERTAKE energy harvesting: speed-based, faster answers harvest more energy
-      // Only in bot race mode, not practice, and only when OVERTAKE is not active
-      if (raceMode === 'bot' && !isPracticeMode && !overtakeActive) {
+      // Only in bot race mode, not practice, only when OVERTAKE is not active, and power-ups enabled
+      if (raceMode === 'bot' && !isPracticeMode && !overtakeActive && state.powerUpsEnabled) {
         const energyGain = calculateEnergyHarvest(
           responseTime,
           currentDifficultyRef.current,
@@ -2546,7 +2546,7 @@ export default function Game() {
         </div>
 
         {/* Boost/Overtake & Aero UI - only in bot race mode */}
-        {raceMode === 'bot' && !isPracticeMode && (
+        {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (
           <div className="flex-1 flex flex-col items-center justify-center gap-2 px-4">
             {/* Two rows of controls - grid for alignment */}
             <div className="grid grid-cols-[80px_140px_52px] gap-x-3 gap-y-3 items-center">

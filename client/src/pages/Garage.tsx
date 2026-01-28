@@ -3,10 +3,10 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronDown, TrendingUp, Volume2, VolumeX, Flag, Gauge, Clock } from "lucide-react";
+import { ChevronLeft, ChevronDown, TrendingUp, Volume2, VolumeX, Flag, Gauge, Clock, Zap } from "lucide-react";
 
 export default function Garage() {
-  const { state, toggleSound, toggleSimMode, resetAllData, getLapHistory } = useGameState();
+  const { state, toggleSound, toggleSimMode, togglePowerUps, resetAllData, getLapHistory } = useGameState();
   const [showFullLog, setShowFullLog] = useState(false);
   const lapHistory = getLapHistory(20);
 
@@ -206,10 +206,35 @@ export default function Garage() {
                     )}
                     style={state.simMode ? { backgroundColor: state.teamColor } : {}}
                   >
-                    <span 
+                    <span
                       className={cn(
                         "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-in-out",
                         state.simMode ? "left-6" : "left-1"
+                      )}
+                    />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between" data-testid="toggle-powerups">
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-5 h-5 text-white/50" />
+                    <div>
+                      <span className="text-sm text-white/80">Power-Ups</span>
+                      <p className="text-[10px] text-white/40">OVERTAKE & ACTIVE AERO</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={togglePowerUps}
+                    className={cn(
+                      "w-11 h-6 rounded-full transition-colors relative",
+                      state.powerUpsEnabled ? "bg-green-500" : "bg-[#333]"
+                    )}
+                    style={state.powerUpsEnabled ? { backgroundColor: state.teamColor } : {}}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-in-out",
+                        state.powerUpsEnabled ? "left-6" : "left-1"
                       )}
                     />
                   </button>

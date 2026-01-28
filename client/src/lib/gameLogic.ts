@@ -53,6 +53,7 @@ export interface GameState {
   teamColor: string;
   soundEnabled: boolean;
   simMode: boolean;
+  powerUpsEnabled: boolean;
   personalBests: { [circuitId: string]: number };
   lapHistory: LapEntry[];
 }
@@ -186,6 +187,7 @@ const INITIAL_STATE: GameState = {
   teamColor: '#ff2800',
   soundEnabled: true,
   simMode: false,
+  powerUpsEnabled: true,
   personalBests: {},
   lapHistory: [],
 };
@@ -237,6 +239,7 @@ export function useGameState() {
           teamColor: parsed.teamColor ?? '#ff2800',
           soundEnabled: parsed.soundEnabled ?? true,
           simMode: parsed.simMode ?? false,
+          powerUpsEnabled: parsed.powerUpsEnabled ?? true,
           personalBests: parsed.personalBests ?? {},
           lapHistory: parsed.lapHistory ?? [],
         };
@@ -308,6 +311,10 @@ export function useGameState() {
 
   const toggleSimMode = () => {
     setState(prev => ({ ...prev, simMode: !prev.simMode }));
+  };
+
+  const togglePowerUps = () => {
+    setState(prev => ({ ...prev, powerUpsEnabled: !prev.powerUpsEnabled }));
   };
 
   const incrementLaps = () => {
@@ -386,6 +393,7 @@ export function useGameState() {
     setTeamColor,
     toggleSound,
     toggleSimMode,
+    togglePowerUps,
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,
