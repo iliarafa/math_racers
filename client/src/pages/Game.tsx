@@ -1625,7 +1625,7 @@ export default function Game() {
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  {series.name}{!isUnlocked && ' 🔒'}
+                  {series.name}
                 </span>
                 <span
                   className="block mt-1 uppercase tracking-widest"
