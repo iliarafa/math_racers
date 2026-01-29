@@ -89,9 +89,13 @@ export default function Regulations() {
             <section>
               <h2 className="text-lg font-semibold text-white border-b border-white/20 pb-2 mb-3">Practice</h2>
               <p className="text-white text-sm leading-relaxed mb-2">
-                No penalties. Retry questions until correct.
+                A pressure-free environment to sharpen your skills. Wrong answers don't count against you — retry each question until you get it right.
               </p>
-              <p className="text-white/50 text-sm">No time pressure or penalties applied</p>
+              <div className="text-white/50 text-sm space-y-1">
+                <p>No track limit penalties or disqualifications</p>
+                <p>Take your time to work through problems</p>
+                <p>Perfect for learning new operations</p>
+              </div>
             </section>
 
             <section>
