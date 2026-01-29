@@ -261,7 +261,7 @@ function VariablesContent() {
 
 export default function StrategyGuide() {
   const { state } = useGameState();
-  const [activeTab, setActiveTab] = useState<TabType>("addition");
+  const [activeTab, setActiveTab] = useState<TabType>("multiplication");
 
   const renderContent = () => {
     switch (activeTab) {
