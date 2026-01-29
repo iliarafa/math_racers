@@ -48,81 +48,16 @@ export default function Garage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            <div
-              className="sm:col-span-2 bg-black border border-[#333] rounded-2xl shadow-lg overflow-hidden"
-              data-testid="card-racer-log"
-            >
-              <button
-                onClick={() => setShowFullLog(!showFullLog)}
-                className="w-full p-4 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-white/50" />
-                  <span className="text-xs uppercase tracking-widest text-white/70">Racer Log</span>
-                </div>
-                <ChevronDown className={cn(
-                  "w-5 h-5 text-white/50 transition-transform",
-                  showFullLog && "rotate-180"
-                )} />
-              </button>
-              
-              <div className="px-4 pb-4">
-                {lapHistory.length > 0 ? (
-                  <div className="space-y-2">
-                    {(showFullLog ? lapHistory : lapHistory.slice(0, 3)).map((lap, index) => (
-                      <div 
-                        key={index} 
-                        className="flex items-center justify-between py-2 border-b border-[#333] last:border-0"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-white/40 text-xs font-mono w-6">#{index + 1}</span>
-                          <span className="text-white/80 text-sm">{lap.trackName}</span>
-                        </div>
-                        <span className="text-white font-mono text-sm" style={{ color: index === 0 ? state.teamColor : undefined }}>
-                          {lap.series && <span className="text-white/50 mr-2">{getSeriesLabel(lap.series)} |</span>}
-                          {formatTime(lap.time)}
-                        </span>
-                      </div>
-                    ))}
-                    {!showFullLog && lapHistory.length > 3 && (
-                      <p className="text-xs text-white/40 text-center pt-2">
-                        Tap to see {lapHistory.length - 3} more laps
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-white/40 text-center py-2">No races completed yet</p>
-                )}
-              </div>
-            </div>
 
-            <div 
-              className="sm:col-span-2 border border-[#333] rounded-2xl p-4 shadow-lg bg-[#000000]"
-              data-testid="card-telemetry"
-            >
-              <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
-              <div className="flex justify-between items-end">
-                <div className="text-center flex-1" data-testid="stat-laps">
-                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
-                    {state.totalLaps}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Total Laps</div>
-                </div>
-                <div className="text-center flex-1" data-testid="stat-points">
-                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
-                    {state.careerPoints}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Career Pts</div>
-                </div>
-                <div className="text-center flex-1" data-testid="stat-wins">
-                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
-                    {state.racesWon}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
-                </div>
+            <Link href="/regulations" className="col-span-1">
+              <div
+                className="h-full bg-black border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
+                data-testid="button-regulations"
+              >
+                <Flag className="w-8 h-8 text-white" />
+                <span className="text-xs uppercase tracking-widest text-white/70">Race Regulations</span>
               </div>
-            </div>
+            </Link>
 
             <Link href="/strategy" className="col-span-1">
               <div
@@ -135,7 +70,7 @@ export default function Garage() {
             </Link>
 
             <Link href="/reaction" className="col-span-1">
-              <div 
+              <div
                 className="h-full border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px] bg-black"
                 data-testid="button-reflex-training"
               >
@@ -146,17 +81,7 @@ export default function Garage() {
                   <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
                   <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
                 </div>
-                <span className="text-xs uppercase tracking-widest text-white/70">Reflex Test</span>
-              </div>
-            </Link>
-
-            <Link href="/regulations" className="col-span-1">
-              <div
-                className="h-full bg-black border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
-                data-testid="button-regulations"
-              >
-                <Flag className="w-8 h-8 text-white" />
-                <span className="text-xs uppercase tracking-widest text-white/70">Race Regulations</span>
+                <span className="text-xs uppercase tracking-widest text-white/70">Reflex Training</span>
               </div>
             </Link>
 
@@ -165,7 +90,7 @@ export default function Garage() {
               data-testid="card-pit-console"
             >
               <p className="text-xs uppercase tracking-widest text-white/50 mb-4">Pit Console</p>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between" data-testid="toggle-sound">
                   <div className="flex items-center gap-3">
@@ -181,7 +106,7 @@ export default function Garage() {
                     className="w-11 h-6 rounded-full transition-colors relative bg-[#00d269]"
                     style={state.soundEnabled ? { backgroundColor: state.teamColor } : {}}
                   >
-                    <span 
+                    <span
                       className={cn(
                         "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-in-out",
                         state.soundEnabled ? "left-6" : "left-1"
@@ -249,6 +174,81 @@ export default function Garage() {
                     Retire from Championship →
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <div
+              className="sm:col-span-2 border border-[#333] rounded-2xl p-4 shadow-lg bg-[#000000]"
+              data-testid="card-telemetry"
+            >
+              <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
+              <div className="flex justify-between items-end">
+                <div className="text-center flex-1" data-testid="stat-laps">
+                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
+                    {state.totalLaps}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Total Laps</div>
+                </div>
+                <div className="text-center flex-1" data-testid="stat-points">
+                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
+                    {state.careerPoints}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Career Pts</div>
+                </div>
+                <div className="text-center flex-1" data-testid="stat-wins">
+                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
+                    {state.racesWon}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="sm:col-span-2 bg-black border border-[#333] rounded-2xl shadow-lg overflow-hidden"
+              data-testid="card-racer-log"
+            >
+              <button
+                onClick={() => setShowFullLog(!showFullLog)}
+                className="w-full p-4 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <Clock className="w-5 h-5 text-white/50" />
+                  <span className="text-xs uppercase tracking-widest text-white/70">Racer Log</span>
+                </div>
+                <ChevronDown className={cn(
+                  "w-5 h-5 text-white/50 transition-transform",
+                  showFullLog && "rotate-180"
+                )} />
+              </button>
+
+              <div className="px-4 pb-4">
+                {lapHistory.length > 0 ? (
+                  <div className="space-y-2">
+                    {(showFullLog ? lapHistory : lapHistory.slice(0, 3)).map((lap, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between py-2 border-b border-[#333] last:border-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-white/40 text-xs font-mono w-6">#{index + 1}</span>
+                          <span className="text-white/80 text-sm">{lap.trackName}</span>
+                        </div>
+                        <span className="text-white font-mono text-sm" style={{ color: index === 0 ? state.teamColor : undefined }}>
+                          {lap.series && <span className="text-white/50 mr-2">{getSeriesLabel(lap.series)} |</span>}
+                          {formatTime(lap.time)}
+                        </span>
+                      </div>
+                    ))}
+                    {!showFullLog && lapHistory.length > 3 && (
+                      <p className="text-xs text-white/40 text-center pt-2">
+                        Tap to see {lapHistory.length - 3} more laps
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-white/40 text-center py-2">No races completed yet</p>
+                )}
               </div>
             </div>
 
