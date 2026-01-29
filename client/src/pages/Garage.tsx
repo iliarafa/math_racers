@@ -34,28 +34,28 @@ export default function Garage() {
   };
 
   return (
-    <GameLayout coins={state.coins} hideGarageButton lockViewport>
-      <div className="flex-1 overflow-y-auto p-4 md:p-5 bg-white">
+    <GameLayout coins={state.coins} hideGarageButton darkBackground lockViewport>
+      <div className="flex-1 overflow-y-auto p-4 md:p-5 bg-black">
         <div className="max-w-2xl mx-auto">
-          
+
           <div className="flex items-center gap-3 mb-5">
             <Link href="/">
-              <button className="min-w-11 min-h-11 flex items-center justify-center -ml-2 hover:bg-black/10 rounded-full transition-colors text-[#000000]" data-testid="button-back">
-                <ChevronLeft className="w-6 h-6 text-black" />
+              <button className="min-w-11 min-h-11 flex items-center justify-center -ml-2 hover:bg-white/10 rounded-full transition-colors text-white" data-testid="button-back">
+                <ChevronLeft className="w-6 h-6 text-white" />
               </button>
             </Link>
-            <h1 className="text-lg font-bold tracking-widest uppercase text-black"> Dashboard</h1>
+            <h1 className="text-lg font-bold tracking-widest uppercase text-white"> Dashboard</h1>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
-            <div 
-              className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl shadow-lg overflow-hidden"
+            <div
+              className="sm:col-span-2 bg-black border border-[#333] rounded-2xl shadow-lg overflow-hidden"
               data-testid="card-racer-log"
             >
               <button
                 onClick={() => setShowFullLog(!showFullLog)}
-                className="w-full p-4 flex items-center justify-between hover:bg-[#252525] transition-colors"
+                className="w-full p-4 flex items-center justify-between hover:bg-[#1a1a1a] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-white/50" />
@@ -104,19 +104,19 @@ export default function Garage() {
               <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
               <div className="flex justify-between items-end">
                 <div className="text-center flex-1" data-testid="stat-laps">
-                  <div className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>
+                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
                     {state.totalLaps}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Total Laps</div>
                 </div>
                 <div className="text-center flex-1" data-testid="stat-points">
-                  <div className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>
+                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
                     {state.careerPoints}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Career Pts</div>
                 </div>
                 <div className="text-center flex-1" data-testid="stat-wins">
-                  <div className="text-3xl md:text-4xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>
+                  <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>
                     {state.racesWon}
                   </div>
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
@@ -125,8 +125,8 @@ export default function Garage() {
             </div>
 
             <Link href="/strategy" className="col-span-1">
-              <div 
-                className="h-full bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#252525] active:scale-[0.98] transition-all min-h-[100px]"
+              <div
+                className="h-full bg-black border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
                 data-testid="button-strategy-guide"
               >
                 <TrendingUp className="w-8 h-8 text-yellow-400" />
@@ -160,8 +160,8 @@ export default function Garage() {
               </div>
             </Link>
 
-            <div 
-              className="sm:col-span-2 bg-[#1e1e1e] border border-[#333] rounded-2xl p-4 shadow-lg"
+            <div
+              className="sm:col-span-2 bg-black border border-[#333] rounded-2xl p-4 shadow-lg"
               data-testid="card-pit-console"
             >
               <p className="text-xs uppercase tracking-widest text-white/50 mb-4">Pit Console</p>

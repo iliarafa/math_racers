@@ -9,77 +9,69 @@ const regulations = [
     title: "RACE",
     color: "#d4640f",
     summary: "Answer 20 math questions correctly to cross the finish line.",
-    details: ["Each correct answer advances you one sector. Complete all sectors to finish the race."]
+    details: ["Each correct answer advances you one sector"]
   },
   {
     title: "OVERTAKE",
     color: "#22c741",
     summary: "Build energy by answering correctly. Faster answers charge more energy.",
     details: [
-      "Activate when within 2 sectors of your opponent",
-      "Freezes opponent while energy drains (5s at full charge)",
-      "2× progress per correct answer while active",
-      "⚠️ Wrong answer depletes all energy instantly"
+      "Activates when within two sectors of your opponent"
     ]
   },
   {
     title: "ACTIVE AERO",
     color: "#3b82f6",
-    summary: "Hit AERO in designated zones for a 2× sector boost.",
+    summary: "Engage AERO in designated zones for sector boosts.",
     details: [
-      "Standard: 2 zones (at 25% and 65%)",
-      "Realism: 5 zones (at 15%, 30%, 50%, 70%, 85%)",
-      "Questions are harder while AERO is active",
-      "Each zone can only be used once"
+      "There are two activation zones in Standard Mode and five in Realism Mode"
     ]
   },
   {
     title: "SECTORS",
     color: "#a855f7",
-    summary: "Sector times are color-coded: purple (fastest), green (quick), yellow (slow), red (wrong).",
+    summary: "Answer times are color-coded based on your performance.",
     details: [
-      "Purple: beat your best AND the bot",
-      "Green: within 1.5× of best time",
+      "Purple: fastest overall",
+      "Green: quick response",
       "Yellow: slower response",
-      "Red: wrong answer"
+      "Red: incorrect answer"
     ]
   },
   {
     title: "TRACK LIMITS",
     color: "#ff0000",
-    summary: "Wrong answers trigger warnings and time penalties. Too many causes DNF.",
+    summary: "Wrong answers trigger warnings and time penalties.",
     details: [
-      "Standard: 3 warnings, then 5s penalty on 4th, DNF on 11th",
-      "Realism: 2 warnings, then flag, then cycling 5s/10s penalties, DNF at 50% mistakes"
+      "Warnings come first, then time penalties",
+      "Too many mistakes results in disqualification"
     ]
   },
   {
     title: "WEATHER",
     color: "#3b82f6",
-    summary: "Dry uses standard difficulty. Wet increases difficulty.",
+    summary: "Weather conditions affect question difficulty.",
     details: [
-      "Dry: normal difficulty for your series",
-      "Wet: increased difficulty with harder numbers",
-      "Random: circuit-specific rain probability",
-      "Realism + Random: weather alternates during the race"
+      "Dry: standard difficulty",
+      "Wet: increased difficulty",
+      "Random: conditions may change mid-race"
     ]
   },
   {
     title: "PRACTICE",
     color: "#eab308",
-    summary: "No penalties. Retry questions until you get them right.",
-    details: ["Practice mode removes all time penalties and lets you attempt the same problem repeatedly until solved."]
+    summary: "No penalties. Retry questions until correct.",
+    details: ["No time pressure or penalties applied"]
   },
   {
     title: "REALISM MODE",
     color: "#2ec9ba",
-    summary: "Full Grand Prix distance. Must answer correctly to advance.",
+    summary: "Full Grand Prix distance with stricter rules.",
     details: [
-      "Wrong answers don't advance the question. Solve it to proceed.",
-      "5 AERO zones instead of 2",
-      "Stricter penalties: 2 warnings, flag, then cycling 5s/10s",
-      "DNF if mistakes exceed 50% of total laps",
-      "Monaco: 78 laps, Monza: 53, Spa: 44, Suzuka: 53, Silverstone: 52"
+      "Must answer correctly to advance",
+      "Additional AERO zones available",
+      "Stricter penalty system",
+      "Full lap count per circuit"
     ]
   }
 ];
@@ -108,7 +100,7 @@ export default function Regulations() {
 
           <div className="space-y-4">
             {regulations.map((reg, index) => (
-              <Collapsible key={index} className="bg-[#1e1e1e] border border-[#333] rounded-2xl">
+              <Collapsible key={index} className="bg-black border border-[#333] rounded-2xl">
                 <CollapsibleTrigger className="w-full p-4 flex items-start justify-between text-left group">
                   <div className="flex-1">
                     <h3 className="font-bold text-sm mb-1" style={{ color: reg.color }}>
