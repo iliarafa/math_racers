@@ -1597,7 +1597,7 @@ export default function Game() {
           <div className="flex flex-col items-center gap-3">
           {seriesOptions.map((series) => {
             const isSelected = selectedDriver?.id === series.id;
-            const isUnlocked = isSeriesAvailable(series.id, state.championedCircuits);
+            const isUnlocked = isPracticeMode || isSeriesAvailable(series.id, state.championedCircuits);
 
             return (
               <motion.button
@@ -1688,7 +1688,7 @@ export default function Game() {
   if (gameStatus === 'selecting') {
     const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
     const displayCircuit = selectedCircuit || CIRCUITS[0];
-    const isCircuitLocked = selectedDriver ? !isCircuitUnlockedForSeries(displayCircuit.id, selectedDriver.id, state.championedCircuits) : false;
+    const isCircuitLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(displayCircuit.id, selectedDriver.id, state.championedCircuits) : false);
 
     const goToPrevCircuit = () => {
       const newIndex = currentCircuitIndex === 0 ? CIRCUITS.length - 1 : currentCircuitIndex - 1;
@@ -2020,7 +2020,7 @@ export default function Game() {
         {selectedTab !== 'multiplayer' && (
           <div className="fixed bottom-40 left-0 right-0 flex justify-center gap-2">
             {CIRCUITS.map((circuit, index) => {
-              const dotLocked = selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false;
+              const dotLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false);
               return (
                 <button
                   key={circuit.id}
