@@ -1138,6 +1138,14 @@ export default function Game() {
           penaltyTimeRef.current = 0;
           raceStartTimeRef.current = Date.now();
           setInPurpleMode(false);
+
+          // Generate a fresh question for the next run
+          setTimeout(() => {
+            setFeedback('idle');
+            setAnswer("");
+            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display));
+            questionStartTimeRef.current = Date.now();
+          }, 600);
         } else {
           finishRace(mistakes);
         }
