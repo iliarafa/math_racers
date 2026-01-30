@@ -574,6 +574,10 @@ export default function Game() {
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
   const botFinished = botProgress >= raceLength;
   const [isPracticeMode, setIsPracticeMode] = useState(false);
+  // Track response times per sector position across practice runs
+  const practiceRunTimesRef = useRef<number[][]>([]);  // [position][run] = responseTime
+  const practiceRunCountRef = useRef<number>(0);       // How many complete 20-question runs
+  const currentRunTimesRef = useRef<number[]>([]);      // Times for the current in-progress run
   const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer'>('race');
   const [isPaused, setIsPaused] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
@@ -930,6 +934,10 @@ export default function Game() {
     setBotProgress(0);
     setBotLapResults([]);
     setSectorBestTimes([]); // Reset sector best times for new race
+    // Reset practice tracking refs
+    practiceRunTimesRef.current = [];
+    practiceRunCountRef.current = 0;
+    currentRunTimesRef.current = [];
     // Ensure race mode has bot opponent (practice mode uses solo)
     if (!isPracticeMode) {
       setRaceMode('bot');
@@ -955,60 +963,106 @@ export default function Game() {
         playCorrectSound();
       }
       
-      // F1-style competitive sector timing from lap 1:
-      // - PURPLE = fastest time for this sector (only one driver)
-      // - GREEN = correct answer, within 1.5x of best time
-      // - YELLOW = correct answer, slower than 1.5x best time
-
+      // Sector timing and coloring
       let speed: 'fast' | 'normal' | 'slow';
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
 
-      const sectorIndex = progress; // Current sector index (0-based)
-      const currentBest = sectorBestTimesRef.current[sectorIndex];
+      if (isPracticeMode) {
+        // Practice mode: performance-based sector coloring across runs
+        const position = progress; // 0-based sector position (0-19)
+        const runCount = practiceRunCountRef.current;
 
-      // Check if player has the overall fastest time for this sector
-      if (!currentBest || responseTime < currentBest.bestTime) {
-        // Player has new best time for this sector - gets purple
-        sectorColor = 'purple';
-        speed = 'fast';
-
-        // If bot previously had purple on this sector, demote to green
-        if (currentBest?.holder === 'bot') {
-          setBotLapResults(prev => {
-            const updated = [...prev];
-            if (updated[sectorIndex]?.sectorColor === 'purple') {
-              updated[sectorIndex] = { ...updated[sectorIndex], sectorColor: 'green' };
-            }
-            return updated;
-          });
-        }
-
-        // Update the sector best times - sync ref immediately to avoid race condition
-        const newBestTime = { bestTime: responseTime, holder: 'player' as const };
-        sectorBestTimesRef.current = [...sectorBestTimesRef.current];
-        sectorBestTimesRef.current[sectorIndex] = newBestTime;
-        setSectorBestTimes(times => {
-          const newTimes = [...times];
-          newTimes[sectorIndex] = newBestTime;
-          return newTimes;
-        });
-      } else {
-        // Player didn't beat the best - check if within threshold
-        const threshold = currentBest.bestTime * 1.5;
-        if (responseTime <= threshold) {
-          // GREEN - within 1.5x of best time
-          sectorColor = 'green';
-          speed = 'fast';
+        if (runCount === 0) {
+          // Run 1: compare against botTime
+          sectorColor = responseTime < question.botTime ? 'green' : 'yellow';
+          speed = responseTime < question.botTime ? 'fast' : 'slow';
+        } else if (runCount === 1) {
+          // Run 2: compare against player's own time from run 1
+          const prevTime = practiceRunTimesRef.current[position]?.[0];
+          if (prevTime !== undefined) {
+            sectorColor = responseTime < prevTime ? 'green' : 'yellow';
+            speed = responseTime < prevTime ? 'fast' : 'slow';
+          } else {
+            // Fallback to botTime if no data
+            sectorColor = responseTime < question.botTime ? 'green' : 'yellow';
+            speed = responseTime < question.botTime ? 'fast' : 'slow';
+          }
         } else {
-          // YELLOW - slower than 1.5x best time
-          sectorColor = 'yellow';
-          speed = 'slow';
+          // Run 3+: compare against best time across all previous runs
+          const allTimes = practiceRunTimesRef.current[position] ?? [];
+          const bestTime = allTimes.length > 0 ? Math.min(...allTimes) : question.botTime;
+          if (responseTime < bestTime) {
+            sectorColor = 'purple';
+            speed = 'fast';
+          } else {
+            const threshold = bestTime * 1.5;
+            sectorColor = responseTime <= threshold ? 'green' : 'yellow';
+            speed = responseTime <= threshold ? 'fast' : 'slow';
+          }
         }
-      }
 
-      // Purple mode state tracks if currently in a purple streak (for UI effects)
-      const newPurpleMode = sectorColor === 'purple';
-      setInPurpleMode(newPurpleMode);
+        // Record time for current run
+        currentRunTimesRef.current[position] = responseTime;
+
+        // Purple mode only for run 3+ purple sectors
+        if (runCount >= 2) {
+          setInPurpleMode(sectorColor === 'purple');
+        } else {
+          setInPurpleMode(false);
+        }
+      } else {
+        // Race mode: F1-style competitive sector timing
+        // - PURPLE = fastest time for this sector (only one driver)
+        // - GREEN = correct answer, within 1.5x of best time
+        // - YELLOW = correct answer, slower than 1.5x best time
+
+        const sectorIndex = progress; // Current sector index (0-based)
+        const currentBest = sectorBestTimesRef.current[sectorIndex];
+
+        // Check if player has the overall fastest time for this sector
+        if (!currentBest || responseTime < currentBest.bestTime) {
+          // Player has new best time for this sector - gets purple
+          sectorColor = 'purple';
+          speed = 'fast';
+
+          // If bot previously had purple on this sector, demote to green
+          if (currentBest?.holder === 'bot') {
+            setBotLapResults(prev => {
+              const updated = [...prev];
+              if (updated[sectorIndex]?.sectorColor === 'purple') {
+                updated[sectorIndex] = { ...updated[sectorIndex], sectorColor: 'green' };
+              }
+              return updated;
+            });
+          }
+
+          // Update the sector best times - sync ref immediately to avoid race condition
+          const newBestTime = { bestTime: responseTime, holder: 'player' as const };
+          sectorBestTimesRef.current = [...sectorBestTimesRef.current];
+          sectorBestTimesRef.current[sectorIndex] = newBestTime;
+          setSectorBestTimes(times => {
+            const newTimes = [...times];
+            newTimes[sectorIndex] = newBestTime;
+            return newTimes;
+          });
+        } else {
+          // Player didn't beat the best - check if within threshold
+          const threshold = currentBest.bestTime * 1.5;
+          if (responseTime <= threshold) {
+            // GREEN - within 1.5x of best time
+            sectorColor = 'green';
+            speed = 'fast';
+          } else {
+            // YELLOW - slower than 1.5x best time
+            sectorColor = 'yellow';
+            speed = 'slow';
+          }
+        }
+
+        // Purple mode state tracks if currently in a purple streak (for UI effects)
+        const newPurpleMode = sectorColor === 'purple';
+        setInPurpleMode(newPurpleMode);
+      }
 
       // Standard coins (no more DRS zones)
       addCoins(10);
@@ -1063,6 +1117,16 @@ export default function Game() {
 
       if (newProgress >= raceLength) {
         if (isPracticeMode) {
+          // Archive current run's times into practiceRunTimesRef
+          currentRunTimesRef.current.forEach((time, position) => {
+            if (!practiceRunTimesRef.current[position]) {
+              practiceRunTimesRef.current[position] = [];
+            }
+            practiceRunTimesRef.current[position].push(time);
+          });
+          practiceRunCountRef.current += 1;
+          currentRunTimesRef.current = []; // Reset for next run
+
           // In practice mode, reset and continue
           setProgress(0);
           setBotProgress(0);
