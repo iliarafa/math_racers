@@ -1639,10 +1639,10 @@ export default function Game() {
   // Driver Selection Screen - Racing Series Menu
   if (gameStatus === 'driver_select') {
     const seriesOptions = [
-      { id: 'f1', name: 'FORMULA 1', description: 'Champion', driver: DRIVERS.find(d => d.id === 'f1') },
-      { id: 'f2', name: 'FORMULA 2', description: 'Pro', driver: DRIVERS.find(d => d.id === 'f2') },
-      { id: 'f3', name: 'FORMULA 3', description: 'Rookie', driver: DRIVERS.find(d => d.id === 'f3') },
-      { id: 'karting', name: 'KARTING', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting') },
+      { id: 'f1', name: 'FORMULA 1', description: 'Champion', driver: DRIVERS.find(d => d.id === 'f1'), color: '#e10600' },
+      { id: 'f2', name: 'FORMULA 2', description: 'Pro', driver: DRIVERS.find(d => d.id === 'f2'), color: '#00a0dc' },
+      { id: 'f3', name: 'FORMULA 3', description: 'Rookie', driver: DRIVERS.find(d => d.id === 'f3'), color: '#000000' },
+      { id: 'karting', name: 'KARTING', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting'), color: '#888888' },
     ];
 
     return (
@@ -1692,7 +1692,7 @@ export default function Game() {
                     fontFamily: 'Formula1',
                     fontSize: '1.5rem',
                     fontWeight: 'bold',
-                    color: isUnlocked ? '#000000' : '#cccccc',
+                    color: isUnlocked ? series.color : '#cccccc',
                     opacity: isSelected ? 1 : (isUnlocked ? 0.4 : 0.3),
                     transition: 'all 0.2s ease',
                   }}
@@ -1703,7 +1703,7 @@ export default function Game() {
                   className="block mt-1 uppercase tracking-widest"
                   style={{
                     fontSize: '0.65rem',
-                    color: isUnlocked ? '#000000' : '#cccccc',
+                    color: isUnlocked ? series.color : '#cccccc',
                     opacity: isSelected ? 0.6 : (isUnlocked ? 0.3 : 0.2),
                     transition: 'all 0.2s ease',
                   }}
@@ -2683,7 +2683,7 @@ export default function Game() {
         <div className="flex flex-col justify-center px-4 gap-1">
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
-            <div className="relative h-4 bg-muted/50 rounded-full overflow-hidden">
+            <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">
               {/* Segmented progress bar showing bot's lap colors */}
               <div className="absolute inset-0 flex">
                 {Array.from({ length: raceLength }).map((_, i) => {
@@ -2719,7 +2719,7 @@ export default function Game() {
                   <div className="w-3 h-1.5 bg-red-400 rounded-sm" />
                 </div>
               </motion.div>
-              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-red-400 font-bold">BOT</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 leading-none text-[9px] text-red-400 font-bold">BOT</span>
             </div>
           )}
           
@@ -2773,7 +2773,7 @@ export default function Game() {
               )}
             </motion.div>
             {raceMode === 'bot' && (
-              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">YOU</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">YOU</span>
             )}
           </div>
           
