@@ -1362,7 +1362,8 @@ export default function Game() {
     setFinalMistakes(mistakeCount);
     setFeedback('idle');
     setGameStatus('finished');
-    if (mistakeCount === 0) {
+    const beatBot = raceMode === 'bot' && !botFinished;
+    if (beatBot) {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
        incrementRacesWon();
        // Record championship for this circuit at this series
@@ -1382,7 +1383,10 @@ export default function Game() {
 
   const getRaceResult = () => {
     let position: number;
-    if (finalMistakes === 0) {
+    if (raceMode === 'bot' && !botFinished) {
+      // Player finished before bot — P1
+      position = 1;
+    } else if (finalMistakes === 0) {
       position = 1;
     } else if (finalMistakes <= 2) {
       position = 2;
