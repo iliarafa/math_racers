@@ -5,7 +5,10 @@
       "Bash(git commit:*)",
       "Bash(git pull:*)",
       "Bash(npm run dev:open:*)",
-      "Bash(xxd:*)"
+      "Bash(xxd:*)",
+      "Bash(npm run check:*)",
+      "Bash(npx cap sync ios)",
+      "Bash(npx cap open ios)"
     ]
   }
 }
