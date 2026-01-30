@@ -2683,7 +2683,7 @@ export default function Game() {
         <div className="flex flex-col justify-center px-4 gap-1">
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
-            <div className="relative h-3 bg-muted/50 rounded-full overflow-hidden">
+            <div className="relative h-4 bg-muted/50 rounded-full overflow-hidden">
               {/* Segmented progress bar showing bot's lap colors */}
               <div className="absolute inset-0 flex">
                 {Array.from({ length: raceLength }).map((_, i) => {
@@ -2713,18 +2713,18 @@ export default function Game() {
                 className="absolute top-1/2 -translate-y-1/2 z-10"
                 animate={{ left: `${(botProgress / raceLength) * 100}%` }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                style={{ marginLeft: "-8px" }}
+                style={{ marginLeft: "-10px" }}
               >
-                <div className="w-4 h-2.5 bg-red-600 rounded-sm flex items-center justify-center">
-                  <div className="w-2 h-1 bg-red-400 rounded-sm" />
+                <div className="w-5 h-3 bg-red-600 rounded-sm flex items-center justify-center">
+                  <div className="w-3 h-1.5 bg-red-400 rounded-sm" />
                 </div>
               </motion.div>
-              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-red-400 font-bold">BOT</span>
+              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-red-400 font-bold">BOT</span>
             </div>
           )}
           
           {/* Player Progress Bar */}
-          <div className={cn("relative bg-muted rounded-full overflow-hidden", isPracticeMode ? "h-16" : "h-5")}>
+          <div className={cn("relative bg-muted rounded-full overflow-hidden", isPracticeMode ? "h-16" : "h-7")}>
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
               {Array.from({ length: raceLength }).map((_, i) => {
@@ -2760,25 +2760,25 @@ export default function Game() {
               className="absolute top-1/2 -translate-y-1/2 z-10"
               animate={{ left: `${(progress / raceLength) * 100}%` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{ marginLeft: isPracticeMode ? "-16px" : "-10px" }}
+              style={{ marginLeft: isPracticeMode ? "-16px" : "-12px" }}
             >
               {isPracticeMode ? (
                 <div className="w-8 h-6 bg-foreground rounded-sm flex items-center justify-center">
                   <div className="w-5 h-3 bg-primary rounded-sm" />
                 </div>
               ) : (
-                <div className="w-5 h-3 bg-foreground rounded-sm flex items-center justify-center">
-                  <div className="w-3 h-1.5 bg-primary rounded-sm" />
+                <div className="w-6 h-4 bg-foreground rounded-sm flex items-center justify-center">
+                  <div className="w-4 h-2 bg-primary rounded-sm" />
                 </div>
               )}
             </motion.div>
             {raceMode === 'bot' && (
-              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-muted-foreground font-bold">YOU</span>
+              <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">YOU</span>
             )}
           </div>
           
           {/* Progress text */}
-          <div className={cn("flex justify-between text-muted-foreground mt-0.5 px-1", isPracticeMode ? "text-xs" : "text-[10px]")}>
+          <div className={cn("flex justify-between text-muted-foreground mt-0.5 px-1", isPracticeMode ? "text-xs" : "text-[11px]")}>
             <span>Lap {progress + 1}/{raceLength}</span>
             <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
           </div>
