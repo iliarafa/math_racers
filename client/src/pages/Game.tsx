@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, getHarderDifficulty, calculateEnergyHarvest, Difficulty, isSeriesUnlocked } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, getHarderDifficulty, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -554,7 +554,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, unlockNextSeries, updatePersonalBest, recordLapTime } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, championCircuit, updatePersonalBest, recordLapTime } = useGameState();
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
   const [botProgress, setBotProgress] = useState(0);
@@ -1293,9 +1293,9 @@ export default function Game() {
     if (mistakeCount === 0) {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
        incrementRacesWon();
-       // Unlock next series if player won at their current highest unlocked series
-       if (selectedDriver?.id === state.unlockedSeries) {
-         unlockNextSeries();
+       // Record championship for this circuit at this series
+       if (selectedCircuit && selectedDriver) {
+         championCircuit(selectedCircuit.id, selectedDriver.id);
        }
        if (selectedDriver?.difficulty === 'hard' && state.soundEnabled) {
          playSimplyLovely();
@@ -1597,7 +1597,7 @@ export default function Game() {
           <div className="flex flex-col items-center gap-3">
           {seriesOptions.map((series) => {
             const isSelected = selectedDriver?.id === series.id;
-            const isUnlocked = isSeriesUnlocked(series.id, state.unlockedSeries);
+            const isUnlocked = isSeriesAvailable(series.id, state.championedCircuits);
 
             return (
               <motion.button
@@ -1688,7 +1688,8 @@ export default function Game() {
   if (gameStatus === 'selecting') {
     const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
     const displayCircuit = selectedCircuit || CIRCUITS[0];
-    
+    const isCircuitLocked = selectedDriver ? !isCircuitUnlockedForSeries(displayCircuit.id, selectedDriver.id, state.championedCircuits) : false;
+
     const goToPrevCircuit = () => {
       const newIndex = currentCircuitIndex === 0 ? CIRCUITS.length - 1 : currentCircuitIndex - 1;
       handleCircuitSelect(CIRCUITS[newIndex]);
@@ -1870,7 +1871,7 @@ export default function Game() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                  className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none relative"
                   style={{ 
                     backgroundColor: '#f0f0f0',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
@@ -1881,6 +1882,14 @@ export default function Game() {
                   onTouchEnd={handleTouchEnd}
                   data-testid={`hero-card-${displayCircuit.id}`}
                 >
+                  {/* Locked overlay */}
+                  {isCircuitLocked && selectedDriver && (
+                    <div className="absolute inset-0 rounded-[20px] bg-white/70 z-10 flex items-center justify-center p-6">
+                      <p className="text-center text-red-600 text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>
+                        Champion {getPreviousSeriesLabel(selectedDriver.id)} to unlock {displayCircuit.type}
+                      </p>
+                    </div>
+                  )}
                   {/* Header - Circuit Name & Flag */}
                   <div className="flex items-center justify-center gap-3 mb-4">
                     <h2 
@@ -2010,32 +2019,38 @@ export default function Game() {
         {/* Track Dots Indicator - only show for track selection */}
         {selectedTab !== 'multiplayer' && (
           <div className="fixed bottom-40 left-0 right-0 flex justify-center gap-2">
-            {CIRCUITS.map((circuit, index) => (
-              <button
-                key={circuit.id}
-                onClick={() => { handleCircuitSelect(circuit); if (state.soundEnabled) playCarouselClick(); }}
-                className={cn(
-                  "w-2 h-2 rounded-full transition-all",
-                  currentCircuitIndex === index 
-                    ? "bg-gray-900" 
-                    : "bg-gray-400"
-                )}
-                data-testid={`circuit-dot-${circuit.id}`}
-              />
-            ))}
+            {CIRCUITS.map((circuit, index) => {
+              const dotLocked = selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false;
+              return (
+                <button
+                  key={circuit.id}
+                  onClick={() => { handleCircuitSelect(circuit); if (state.soundEnabled) playCarouselClick(); }}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all",
+                    currentCircuitIndex === index
+                      ? (dotLocked ? "bg-gray-400" : "bg-gray-900")
+                      : (dotLocked ? "bg-gray-200" : "bg-gray-400")
+                  )}
+                  data-testid={`circuit-dot-${circuit.id}`}
+                />
+              );
+            })}
           </div>
         )}
         {/* Start Engine Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => { if (state.soundEnabled) playCarouselClick(); selectedTab === 'multiplayer' ? setLocation('/multiplayer') : handleStartRace(); }}
-            className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
-            style={{ 
+            whileHover={!isCircuitLocked ? { scale: 1.02 } : undefined}
+            whileTap={!isCircuitLocked ? { scale: 0.98 } : undefined}
+            onClick={() => { if (isCircuitLocked) return; if (state.soundEnabled) playCarouselClick(); selectedTab === 'multiplayer' ? setLocation('/multiplayer') : handleStartRace(); }}
+            className={cn(
+              "w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white",
+              isCircuitLocked && "opacity-40 cursor-not-allowed"
+            )}
+            style={{
               fontFamily: 'Formula1',
-              backgroundColor: selectedTab === 'multiplayer' ? '#2563eb' : isPracticeMode ? '#16a34a' : '#dc2626',
-              animation: selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite' : isPracticeMode ? 'pulse-green 2s infinite' : 'pulse-red 2s infinite'
+              backgroundColor: isCircuitLocked ? '#999999' : selectedTab === 'multiplayer' ? '#2563eb' : isPracticeMode ? '#16a34a' : '#dc2626',
+              animation: isCircuitLocked ? 'none' : selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite' : isPracticeMode ? 'pulse-green 2s infinite' : 'pulse-red 2s infinite'
             }}
             data-testid="button-start-race"
           >

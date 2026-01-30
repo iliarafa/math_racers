@@ -56,7 +56,8 @@ export interface GameState {
   powerUpsEnabled: boolean;
   personalBests: { [circuitId: string]: number };
   lapHistory: LapEntry[];
-  unlockedSeries: 'karting' | 'f3' | 'f2' | 'f1';  // Highest unlocked series
+  unlockedSeries: 'karting' | 'f3' | 'f2' | 'f1';  // Highest unlocked series (kept for backward compat)
+  championedCircuits: { [circuitId: string]: string[] }; // circuitId -> array of championed series
 }
 
 export const TEAM_COLORS = [
@@ -192,13 +193,76 @@ const INITIAL_STATE: GameState = {
   personalBests: {},
   lapHistory: [],
   unlockedSeries: 'karting',
+  championedCircuits: {},
 };
 
-// Helper function to check if a series is unlocked
+// Helper function to check if a series is unlocked (legacy, kept for backward compat)
 export const isSeriesUnlocked = (series: string, unlockedSeries: string): boolean => {
   const order = ['karting', 'f3', 'f2', 'f1'];
   return order.indexOf(series) <= order.indexOf(unlockedSeries);
 };
+
+const SERIES_ORDER = ['karting', 'f3', 'f2', 'f1'];
+
+// Check if a specific circuit is unlocked for a given series
+// A circuit is playable at a series if: it's karting, OR the circuit was championed at the previous series
+export const isCircuitUnlockedForSeries = (
+  circuitId: string,
+  series: string,
+  championedCircuits: { [circuitId: string]: string[] }
+): boolean => {
+  if (series === 'karting') return true;
+  const idx = SERIES_ORDER.indexOf(series);
+  if (idx <= 0) return true;
+  const previousSeries = SERIES_ORDER[idx - 1];
+  return (championedCircuits[circuitId] ?? []).includes(previousSeries);
+};
+
+// Check if a series is available (at least one circuit was championed at the previous series)
+export const isSeriesAvailable = (
+  series: string,
+  championedCircuits: { [circuitId: string]: string[] }
+): boolean => {
+  if (series === 'karting') return true;
+  const idx = SERIES_ORDER.indexOf(series);
+  if (idx <= 0) return true;
+  const previousSeries = SERIES_ORDER[idx - 1];
+  return CIRCUITS.some(c => (championedCircuits[c.id] ?? []).includes(previousSeries));
+};
+
+// Get display name of the previous series
+export const getPreviousSeriesLabel = (series: string): string => {
+  const idx = SERIES_ORDER.indexOf(series);
+  if (idx <= 0) return '';
+  const prevId = SERIES_ORDER[idx - 1];
+  const driver = DRIVERS.find(d => d.id === prevId);
+  return driver?.label ?? prevId;
+};
+
+// Derive the highest unlocked series from championedCircuits (for backward compat)
+const deriveUnlockedSeries = (championedCircuits: { [circuitId: string]: string[] }): GameState['unlockedSeries'] => {
+  // Walk from highest to lowest; a series is "unlocked" if at least one circuit was championed at the previous series
+  for (let i = SERIES_ORDER.length - 1; i > 0; i--) {
+    const series = SERIES_ORDER[i];
+    if (isSeriesAvailable(series, championedCircuits)) {
+      return series as GameState['unlockedSeries'];
+    }
+  }
+  return 'karting';
+};
+
+// Backfill championedCircuits from old unlockedSeries value
+// Assumes all circuits were championed at all series below the unlocked one
+function migrateChampionedCircuits(unlockedSeries: string): { [circuitId: string]: string[] } {
+  const result: { [circuitId: string]: string[] } = {};
+  const idx = SERIES_ORDER.indexOf(unlockedSeries);
+  if (idx <= 0) return result;
+  // Mark all circuits as championed for every series below the unlocked one
+  for (const circuit of CIRCUITS) {
+    result[circuit.id] = SERIES_ORDER.slice(0, idx); // e.g. for f3: ['karting']
+  }
+  return result;
+}
 
 export const SHOP_ITEMS = [
   { id: 'red-livery', name: 'Ferrari Red', type: 'livery', cost: 0, color: 'bg-red-600' },
@@ -235,6 +299,11 @@ export function useGameState() {
       const saved = localStorage.getItem('f1-math-racer-state');
       if (saved) {
         const parsed = JSON.parse(saved);
+        const unlockedSeries = parsed.unlockedSeries ?? 'karting';
+        // Migrate: if old data has unlockedSeries but no championedCircuits, backfill
+        const championedCircuits = parsed.championedCircuits && Object.keys(parsed.championedCircuits).length > 0
+          ? parsed.championedCircuits
+          : (unlockedSeries !== 'karting' ? migrateChampionedCircuits(unlockedSeries) : {});
         return {
           coins: parsed.coins ?? 0,
           unlockedItems: parsed.unlockedItems ?? ['red-livery', 'hard-tires'],
@@ -250,7 +319,8 @@ export function useGameState() {
           powerUpsEnabled: parsed.powerUpsEnabled ?? true,
           personalBests: parsed.personalBests ?? {},
           lapHistory: parsed.lapHistory ?? [],
-          unlockedSeries: parsed.unlockedSeries ?? 'karting',
+          unlockedSeries: unlockedSeries,
+          championedCircuits: championedCircuits,
         };
       }
     } catch (error) {
@@ -338,14 +408,19 @@ export function useGameState() {
     setState(prev => ({ ...prev, racesWon: prev.racesWon + 1 }));
   };
 
-  const unlockNextSeries = () => {
+  const championCircuit = (circuitId: string, series: string) => {
     setState(prev => {
-      const order: Array<typeof prev.unlockedSeries> = ['karting', 'f3', 'f2', 'f1'];
-      const idx = order.indexOf(prev.unlockedSeries);
-      if (idx < order.length - 1) {
-        return { ...prev, unlockedSeries: order[idx + 1] };
-      }
-      return prev;
+      const existing = prev.championedCircuits[circuitId] ?? [];
+      if (existing.includes(series)) return prev; // Already championed
+      const updated = {
+        ...prev.championedCircuits,
+        [circuitId]: [...existing, series],
+      };
+      return {
+        ...prev,
+        championedCircuits: updated,
+        unlockedSeries: deriveUnlockedSeries(updated),
+      };
     });
   };
 
@@ -417,7 +492,7 @@ export function useGameState() {
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,
-    unlockNextSeries,
+    championCircuit,
     updatePersonalBest,
     resetAllData,
     recordLapTime,
