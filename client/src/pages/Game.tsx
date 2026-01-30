@@ -571,9 +571,9 @@ export default function Game() {
   const [weatherChangePoints, setWeatherChangePoints] = useState<number[]>([]);
   const [initialWeather, setInitialWeather] = useState<'dry' | 'wet'>('dry');
 
-  const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : RACE_LENGTH;
-  const botFinished = botProgress >= raceLength;
   const [isPracticeMode, setIsPracticeMode] = useState(false);
+  const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, !isPracticeMode && state.simMode) : RACE_LENGTH;
+  const botFinished = botProgress >= raceLength;
   // Track response times per sector position across practice runs
   const practiceRunTimesRef = useRef<number[][]>([]);  // [position][run] = responseTime
   const practiceRunCountRef = useRef<number>(0);       // How many complete 20-question runs
@@ -586,7 +586,7 @@ export default function Game() {
   const [progress, setProgress] = useState(0);
 
   // Check if we're in realism mode with random weather (alternating weather feature)
-  const isRealismRandom = state.simMode && selectedWeather === 'random';
+  const isRealismRandom = !isPracticeMode && state.simMode && selectedWeather === 'random';
 
   // Generate random weather change points for a race
   const generateWeatherSchedule = (length: number): number[] => {
@@ -740,14 +740,14 @@ export default function Game() {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
       // Resolve random weather at countdown start using circuit-specific rain probability
       let resolvedWeather: 'dry' | 'wet';
-      const currentRaceLength = getRaceLength(selectedCircuit.id, state.simMode);
+      const currentRaceLength = getRaceLength(selectedCircuit.id, !isPracticeMode && state.simMode);
 
       if (selectedWeather === 'random') {
         const rainProbability = CIRCUIT_RAIN_PROBABILITY[selectedCircuit.id] || 0.5;
         resolvedWeather = Math.random() < rainProbability ? 'wet' : 'dry';
 
         // In realism mode with random weather, set up alternating weather
-        if (state.simMode) {
+        if (!isPracticeMode && state.simMode) {
           const schedule = generateWeatherSchedule(currentRaceLength);
           setWeatherChangePoints(schedule);
           setInitialWeather(resolvedWeather);
@@ -761,7 +761,7 @@ export default function Game() {
       const isWet = resolvedWeather === 'wet';
 
       // Initialize AERO zones based on race length and sim mode
-      const zones = getAeroZones(currentRaceLength, state.simMode);
+      const zones = getAeroZones(currentRaceLength, !isPracticeMode && state.simMode);
       setAeroZones(zones);
       setAeroUsedZones(new Set());
       setAeroAvailable(false);
@@ -1197,7 +1197,7 @@ export default function Game() {
         setFeedback('incorrect');
         setShowPenalty(true);
 
-        if (state.simMode) {
+        if (!isPracticeMode && state.simMode) {
           // Sim mode: keep same question, just clear answer
           setTimeout(() => { setShowPenalty(false); }, 1500);
           setTimeout(() => {
