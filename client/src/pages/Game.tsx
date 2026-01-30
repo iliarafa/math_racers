@@ -2683,7 +2683,7 @@ export default function Game() {
         <div className="flex flex-col justify-center px-4 gap-1">
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
-            <div className="relative h-4 bg-muted/50 rounded-full overflow-hidden">
+            <div className="relative h-4 bg-muted/50 overflow-hidden">
               {/* Segmented progress bar showing bot's lap colors */}
               <div className="absolute inset-0 flex">
                 {Array.from({ length: raceLength }).map((_, i) => {
@@ -2724,7 +2724,7 @@ export default function Game() {
           )}
           
           {/* Player Progress Bar */}
-          <div className={cn("relative bg-muted rounded-full overflow-hidden", isPracticeMode ? "h-16" : "h-7")}>
+          <div className={cn("relative bg-muted overflow-hidden", isPracticeMode ? "h-16" : "h-7")}>
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
               {Array.from({ length: raceLength }).map((_, i) => {
