@@ -2724,7 +2724,7 @@ export default function Game() {
           )}
           
           {/* Player Progress Bar */}
-          <div className="relative h-5 bg-muted rounded-full overflow-hidden">
+          <div className={cn("relative bg-muted rounded-full overflow-hidden", isPracticeMode ? "h-16" : "h-5")}>
             {/* Progress segments */}
             <div className="absolute inset-0 flex">
               {Array.from({ length: raceLength }).map((_, i) => {
@@ -2760,11 +2760,17 @@ export default function Game() {
               className="absolute top-1/2 -translate-y-1/2 z-10"
               animate={{ left: `${(progress / raceLength) * 100}%` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{ marginLeft: "-10px" }}
+              style={{ marginLeft: isPracticeMode ? "-16px" : "-10px" }}
             >
-              <div className="w-5 h-3 bg-foreground rounded-sm flex items-center justify-center">
-                <div className="w-3 h-1.5 bg-primary rounded-sm" />
-              </div>
+              {isPracticeMode ? (
+                <div className="w-8 h-6 bg-foreground rounded-sm flex items-center justify-center">
+                  <div className="w-5 h-3 bg-primary rounded-sm" />
+                </div>
+              ) : (
+                <div className="w-5 h-3 bg-foreground rounded-sm flex items-center justify-center">
+                  <div className="w-3 h-1.5 bg-primary rounded-sm" />
+                </div>
+              )}
             </motion.div>
             {raceMode === 'bot' && (
               <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] text-muted-foreground font-bold">YOU</span>
@@ -2772,7 +2778,7 @@ export default function Game() {
           </div>
           
           {/* Progress text */}
-          <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5 px-1">
+          <div className={cn("flex justify-between text-muted-foreground mt-0.5 px-1", isPracticeMode ? "text-xs" : "text-[10px]")}>
             <span>Lap {progress + 1}/{raceLength}</span>
             <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
           </div>
