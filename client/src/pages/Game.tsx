@@ -872,10 +872,10 @@ export default function Game() {
       } else if (e.key === 'Enter') {
         e.preventDefault();
         handleSubmit();
-      } else if (e.key === 'Clear') {
+      } else if (e.key === 'Clear' || e.key === '-') {
         e.preventDefault();
         handleAero();
-      } else if (e.key === '\\') {
+      } else if (e.key === '\\' || e.key === '+' || e.key === '=') {
         e.preventDefault();
         handleOvertake();
       }
