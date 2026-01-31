@@ -641,12 +641,12 @@ export default function Game() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
+  const [showCrashDebrief, setShowCrashDebrief] = useState(false);
   const [showPenalty, setShowPenalty] = useState(false);
   const [showBlackWhiteFlag, setShowBlackWhiteFlag] = useState(false);
   const [showFiveSecPenalty, setShowFiveSecPenalty] = useState(false);
   const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
   const [mistakeLog, setMistakeLog] = useState<Array<{ question: string; yourAnswer: number; correctAnswer: number }>>([]);
-  const [showMistakeReview, setShowMistakeReview] = useState(false);
   const [questionAttempts, setQuestionAttempts] = useState(0);
   const [currentSectorRed, setCurrentSectorRed] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -1378,7 +1378,6 @@ export default function Game() {
     setAnswer("");
     setQuestion(null);
     setMistakeLog([]);
-    setShowMistakeReview(false);
     setQuestionAttempts(0);
     setCurrentSectorRed(false);
     setRaceMode('bot'); // Race mode always uses bot opponent
@@ -2085,12 +2084,12 @@ export default function Game() {
             )}
             style={{
               fontFamily: 'Formula1',
-              backgroundColor: isCircuitLocked ? '#999999' : selectedTab === 'multiplayer' ? '#2563eb' : isPracticeMode ? '#16a34a' : '#dc2626',
-              animation: isCircuitLocked ? 'none' : selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite' : isPracticeMode ? 'pulse-green 2s infinite' : 'pulse-red 2s infinite'
+              backgroundColor: isCircuitLocked ? '#999999' : selectedTab === 'multiplayer' ? '#2563eb' : '#16a34a',
+              animation: isCircuitLocked ? 'none' : selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite' : 'pulse-green 2s infinite'
             }}
             data-testid="button-start-race"
           >
-            {selectedTab === 'multiplayer' ? 'Enter Lobby' : isPracticeMode ? 'Start Practice' : 'Start Engine'}
+            {selectedTab === 'multiplayer' ? 'Enter Lobby' : isPracticeMode ? 'Start Practice' : 'Go to Grid'}
           </motion.button>
           <button
             onClick={() => {
@@ -2197,47 +2196,72 @@ export default function Game() {
   }
 
   if (gameStatus === 'crashed') {
+    if (showCrashDebrief) {
+      return (
+        <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+          <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
+            <div className="bg-black p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Formula1' }}>Debrief</h2>
+                <button
+                  onClick={() => setShowCrashDebrief(false)}
+                  className="p-2 hover:bg-secondary rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {mistakeLog.map((mistake, index) => (
+                  <div key={index} className="rounded-lg p-4">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white" style={{ fontFamily: 'Formula1' }}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="text-lg font-bold text-white" style={{ fontFamily: 'Formula1' }}>{mistake.question}</div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground uppercase tracking-wide">Input:</span>
+                            <span className="ml-2 font-bold text-red-500" style={{ fontFamily: 'Formula1' }}>{mistake.yourAnswer}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground uppercase tracking-wide">Solution:</span>
+                            <span className="ml-2 font-bold text-green-500" style={{ fontFamily: 'Formula1' }}>{mistake.correctAnswer}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowCrashDebrief(false)}
+                className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
+                style={{ fontFamily: 'Formula1' }}
+              >
+                Close Review
+              </button>
+            </div>
+          </div>
+        </GameLayout>
+      );
+    }
+
     return (
       <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
-        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full overflow-y-auto p-4">
-          <div className="rounded-xl p-8 w-full text-center space-y-8">
-            
-            <div className="space-y-2">
-               <div className="text-sm font-medium text-red-600 uppercase tracking-widest">Race Over</div>
-               <div className="text-6xl font-bold tracking-tighter text-red-600">DNF</div>
-               <div className="text-xl font-medium text-red-600">Car Retired</div>
-            </div>
-
-            <div className="py-6 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Circuit</span>
-                <span className="font-bold">{selectedCircuit?.name}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Laps Completed</span>
-                <span className="font-bold">{progress}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Time Before Crash</span>
-                <span className="font-bold font-mono">{formatTime(elapsedTime)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Mistakes</span>
-                <span className="font-bold text-red-600">{finalMistakes}</span>
-              </div>
-            </div>
-
-            <div className="grid gap-3">
-              <button onClick={restartRace} className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2" data-testid="button-try-again">
-                <RotateCcw className="w-4 h-4" /> Try Again
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+          <div className="text-[7rem] leading-none font-bold text-red-600" style={{ fontFamily: 'Formula1, sans-serif' }}>DNF</div>
+          <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
+            <Link href="/garage">
+              <button className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all">
+                Back to Garage
               </button>
-              <Link href="/garage">
-                <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-return-garage">
-                  <Home className="w-4 h-4" /> Return to Garage
-                </button>
-              </Link>
-            </div>
-
+            </Link>
+            <button onClick={() => setShowCrashDebrief(true)} className="w-full bg-black text-yellow-400 h-12 rounded-lg font-medium hover:bg-black/90 transition-all">
+              Debrief
+            </button>
           </div>
         </div>
       </GameLayout>
@@ -2292,21 +2316,12 @@ export default function Game() {
             </div>
 
             <div className="grid gap-3">
-              {mistakeLog.length > 0 && (
-                <button
-                  onClick={() => setShowMistakeReview(true)}
-                  className="w-full bg-black hover:bg-black/80 text-yellow-400 h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
-                  data-testid="button-review-mistakes"
-                >
-                  <X className="w-4 h-4" /> Debrief
-                </button>
-              )}
               <button
                 onClick={() => setShowAnalytics(true)}
-                className="w-full bg-green-600 hover:bg-green-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
-                data-testid="button-analytics"
+                className="w-full bg-black hover:bg-black/80 text-yellow-400 h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                data-testid="button-debrief"
               >
-                <BarChart3 className="w-4 h-4" /> Analytics
+                <BarChart3 className="w-4 h-4" /> Debrief
               </button>
               <button onClick={restartRace} className="w-full bg-green-600 hover:bg-green-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2" data-testid="button-race-again">
                 <RotateCcw className="w-4 h-4" /> Race Again
@@ -2320,107 +2335,55 @@ export default function Game() {
 
           </div>
 
-          {/* Mistake Review Modal */}
-          {showMistakeReview && (
+          {/* Debrief Modal */}
+          {showAnalytics && (
             <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
               <div className="bg-black p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Formula1' }}>Debrief</h2>
                   <button
-                    onClick={() => setShowMistakeReview(false)}
-                    className="p-2 hover:bg-secondary rounded-full transition-colors"
-                    data-testid="button-close-review"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {mistakeLog.map((mistake, index) => (
-                    <div key={index} className="rounded-lg p-4">
-                      <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white" style={{ fontFamily: 'Formula1' }}>
-                          {index + 1}
-                        </div>
-                        <div className="flex-1 space-y-2">
-                          <div className="text-lg font-bold text-white" style={{ fontFamily: 'Formula1' }}>{mistake.question}</div>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-muted-foreground uppercase tracking-wide">Input:</span>
-                              <span className="ml-2 font-bold text-red-500" style={{ fontFamily: 'Formula1' }}>{mistake.yourAnswer}</span>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground uppercase tracking-wide">Solution:</span>
-                              <span className="ml-2 font-bold text-green-500" style={{ fontFamily: 'Formula1' }}>{mistake.correctAnswer}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setShowMistakeReview(false)}
-                  className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
-                  style={{ fontFamily: 'Formula1' }}
-                  data-testid="button-close-review-bottom"
-                >
-                  Close Review
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Analytics Modal */}
-          {showAnalytics && (
-            <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-              <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>Race Analytics</h2>
-                  <button
                     onClick={() => setShowAnalytics(false)}
-                    className="p-2 hover:bg-secondary rounded-full transition-colors"
-                    data-testid="button-close-analytics"
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    data-testid="button-close-debrief"
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-6 h-6 text-white" />
                   </button>
                 </div>
 
-                {/* Summary Stats */}
+                {/* Sector Summary */}
                 <div className="grid grid-cols-4 gap-3 mb-6">
                   <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-3 text-center">
                     <div className="text-2xl font-bold text-purple-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'purple').length}
                     </div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Purple</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Purple</div>
                   </div>
                   <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-3 text-center">
                     <div className="text-2xl font-bold text-green-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'green').length}
                     </div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Green</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Green</div>
                   </div>
                   <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-3 text-center">
                     <div className="text-2xl font-bold text-yellow-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'yellow').length}
                     </div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Yellow</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Yellow</div>
                   </div>
                   <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3 text-center">
                     <div className="text-2xl font-bold text-red-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'red').length}
                     </div>
-                    <div className="text-xs text-muted-foreground uppercase tracking-wide">Red</div>
+                    <div className="text-xs text-gray-400 uppercase tracking-wide">Red</div>
                   </div>
                 </div>
 
                 {/* Lap-by-lap breakdown */}
                 <div className="space-y-2">
                   {lapResults.map((lap, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-center gap-3 bg-secondary/30 border border-border rounded-lg p-3"
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg p-3"
                     >
                       <div className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white",
@@ -2432,10 +2395,10 @@ export default function Game() {
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{lap.question}</div>
+                        <div className="text-lg font-bold text-white" style={{ fontFamily: 'Formula1' }}>{lap.question}</div>
                       </div>
                       <div className="text-right flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground font-mono">
+                        <span className="text-xs text-gray-400 font-mono">
                           {(lap.responseTime / 1000).toFixed(3)}s
                         </span>
                         {lap.result === 'correct' ? (
@@ -2456,7 +2419,7 @@ export default function Game() {
                     onClick={exportTelemetryCSV}
                     className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2 uppercase tracking-wider"
                     style={{ fontFamily: 'Formula1' }}
-                    data-testid="button-share-analytics"
+                    data-testid="button-share-debrief"
                   >
                     <Share2 className="w-4 h-4" /> Share
                   </button>
@@ -2464,9 +2427,9 @@ export default function Game() {
                     onClick={() => setShowAnalytics(false)}
                     className="flex-1 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
                     style={{ fontFamily: 'Formula1' }}
-                    data-testid="button-close-analytics-bottom"
+                    data-testid="button-close-debrief-bottom"
                   >
-                    Close
+                    Close Review
                   </button>
                 </div>
               </div>
@@ -2551,12 +2514,9 @@ export default function Game() {
                   <motion.div
                     animate={{ opacity: [1, 0.3, 1] }}
                     transition={{ duration: 0.3, repeat: 3 }}
-                    className={cn(
-                      "text-white px-3 py-0.5 rounded-lg font-bold text-xs",
-                      penaltyMessage.color === 'red' ? "bg-red-600" : "bg-yellow-600"
-                    )}
+                    className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
                   >
-                    {penaltyMessage.text}
+                    TRACK LIMITS
                   </motion.div>
                 </motion.div>
               )}
@@ -2624,19 +2584,6 @@ export default function Game() {
               {feedback === 'correct' && (
                 <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-1 text-xs">
                   <Check className="w-3 h-3" /> Correct
-                </motion.div>
-              )}
-              {feedback === 'incorrect' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 5 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  exit={{ opacity: 0 }} 
-                  className={cn(
-                    "font-medium flex items-center gap-1 text-xs",
-                    penaltyMessage.color === 'yellow' ? "text-yellow-600" : "text-red-600"
-                  )}
-                >
-                  <X className="w-3 h-3" /> {penaltyMessage.text}
                 </motion.div>
               )}
             </AnimatePresence>
