@@ -620,19 +620,21 @@ export default function Game() {
     ? getCurrentWeather(progress, weatherChangePoints, initialWeather)
     : actualWeather;
 
-  const [lapResults, setLapResults] = useState<Array<{ 
-    result: 'correct' | 'incorrect'; 
+  const [lapResults, setLapResults] = useState<Array<{
+    result: 'correct' | 'incorrect';
     speed: 'fast' | 'normal' | 'slow';
     question: string;
     playerAnswer: number;
     correctAnswer: number;
     sectorColor: 'green' | 'purple' | 'yellow' | 'red';
     responseTime: number;
+    wrongAttempts?: number[];
   }>>([]);
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
   // Track the best time for each sector and who holds it (F1-style competitive timing)
+  const [revealedAttempts, setRevealedAttempts] = useState<Set<string>>(new Set());
   const [sectorBestTimes, setSectorBestTimes] = useState<Array<{
     bestTime: number;
     holder: 'player' | 'bot';
@@ -659,6 +661,7 @@ export default function Game() {
   const [showBoostMessage, setShowBoostMessage] = useState<string | null>(null);
   const [overtakeAvailable, setOvertakeAvailable] = useState(false);       // Latched availability
   const overtakeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const wrongAttemptsRef = useRef<number[]>([]);
   // AERO system state (DRS-style zone-based)
   const [aeroZones, setAeroZones] = useState<number[]>([]);           // Zone start positions
   const [aeroAvailable, setAeroAvailable] = useState(false);          // Currently in an unused zone?
@@ -1137,8 +1140,10 @@ export default function Game() {
         playerAnswer: val,
         correctAnswer: question.answer,
         sectorColor,
-        responseTime
+        responseTime,
+        ...(wrongAttemptsRef.current.length > 0 && { wrongAttempts: [...wrongAttemptsRef.current] }),
       };
+      wrongAttemptsRef.current = [];
 
       // When aero was active and we gained 2 sectors, add a bonus entry with same color
       const actualGain = newProgress - progress; // Handles capping at raceLength
@@ -1236,6 +1241,7 @@ export default function Game() {
         yourAnswer: val,
         correctAnswer: question.answer
       }]);
+      wrongAttemptsRef.current.push(val);
 
       // If AERO was active, just show "AERO OFF" and skip time penalty
       if (wasAeroActive) {
@@ -1363,6 +1369,7 @@ export default function Game() {
     setBotProgress(0);
     setLapResults([]);
     setBotLapResults([]);
+    setRevealedAttempts(new Set());
     setSectorBestTimes([]); // Reset sector best times
     setMistakes(0);
     setFinalMistakes(0);
@@ -1379,6 +1386,7 @@ export default function Game() {
     setQuestion(null);
     setMistakeLog([]);
     setQuestionAttempts(0);
+    wrongAttemptsRef.current = [];
     setCurrentSectorRed(false);
     setRaceMode('bot'); // Race mode always uses bot opponent
     setSelectedWeather('dry');
@@ -2395,7 +2403,28 @@ export default function Game() {
                         {index + 1}
                       </div>
                       <div className="flex-1">
-                        <div className="text-lg font-bold text-white" style={{ fontFamily: 'Formula1' }}>{lap.question}</div>
+                        <div className="text-lg font-bold text-white" style={{ fontFamily: 'Formula1' }}>
+                          {lap.question}
+                          {lap.wrongAttempts && lap.wrongAttempts.map((a, i) => {
+                            const key = `${index}-${i}`;
+                            const revealed = revealedAttempts.has(key);
+                            return (
+                              <span
+                                key={i}
+                                className="text-red-500 font-bold ml-2 cursor-pointer"
+                                style={{ fontFamily: 'Formula1' }}
+                                onClick={() => setRevealedAttempts(prev => {
+                                  const next = new Set(prev);
+                                  if (next.has(key)) next.delete(key);
+                                  else next.add(key);
+                                  return next;
+                                })}
+                              >
+                                {revealed ? `${lap.question}=${a}` : a}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </div>
                       <div className="text-right flex items-center gap-3">
                         <span className="text-xs text-gray-400 font-mono">
