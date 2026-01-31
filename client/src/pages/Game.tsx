@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, getHarderDifficulty, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -647,6 +647,8 @@ export default function Game() {
   const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
   const [mistakeLog, setMistakeLog] = useState<Array<{ question: string; yourAnswer: number; correctAnswer: number }>>([]);
   const [showMistakeReview, setShowMistakeReview] = useState(false);
+  const [questionAttempts, setQuestionAttempts] = useState(0);
+  const [currentSectorRed, setCurrentSectorRed] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   // OVERTAKE system state (energy bar based)
   const [overtakeEnergy, setOvertakeEnergy] = useState(0);           // 0-100% energy meter
@@ -958,6 +960,10 @@ export default function Game() {
     const responseTime = Date.now() - questionStartTimeRef.current;
 
     if (val === question.answer) {
+      // Override sector color to red if player needed retries on this question
+      const hadRetries = questionAttempts > 0;
+      setQuestionAttempts(0);
+      setCurrentSectorRed(false);
       setFeedback('correct');
       if (soundEnabledRef.current) {
         playCorrectSound();
@@ -1059,6 +1065,11 @@ export default function Game() {
           }
         }
 
+        // Force red sector if player needed retries (race mode only)
+        if (hadRetries && !isPracticeMode) {
+          sectorColor = 'red';
+        }
+
         // Purple mode state tracks if currently in a purple streak (for UI effects)
         const newPurpleMode = sectorColor === 'purple';
         setInPurpleMode(newPurpleMode);
@@ -1138,6 +1149,8 @@ export default function Game() {
           penaltyTimeRef.current = 0;
           raceStartTimeRef.current = Date.now();
           setInPurpleMode(false);
+          setQuestionAttempts(0);
+          setCurrentSectorRed(false);
 
           // Generate a fresh question for the next run
           setTimeout(() => {
@@ -1205,39 +1218,37 @@ export default function Game() {
         setFeedback('incorrect');
         setShowPenalty(true);
 
-        if (!isPracticeMode && state.simMode) {
-          // Sim mode: keep same question, just clear answer
+        if (!isPracticeMode) {
+          // Race mode (standard + realism): per-question retry with AERO OFF
+          const newAttempts = questionAttempts + 1;
+          setQuestionAttempts(newAttempts);
+          setCurrentSectorRed(true);
+
+          if (newAttempts >= 4) {
+            setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
+            setFinalMistakes(newMistakes);
+            setGameStatus('crashed');
+            return;
+          } else if (newAttempts === 1) {
+            setPenaltyMessage({ text: 'AERO OFF - 2 ATTEMPTS LEFT', color: 'yellow' });
+          } else if (newAttempts === 2) {
+            setPenaltyMessage({ text: 'AERO OFF - 1 ATTEMPT LEFT', color: 'yellow' });
+          } else if (newAttempts === 3) {
+            setPenaltyMessage({ text: 'AERO OFF - LAST CHANCE!', color: 'red' });
+          }
+
           setTimeout(() => { setShowPenalty(false); }, 1500);
           setTimeout(() => {
             setFeedback('idle');
             setAnswer('');
           }, 600);
         } else {
-          // Standard mode: advance to next question
-          const newProgress = progress + 1;
-          setProgress(newProgress);
-          setLapResults(prev => [...prev, {
-            result: 'incorrect',
-            speed: 'normal',
-            question: question.display,
-            playerAnswer: val,
-            correctAnswer: question.answer,
-            sectorColor: 'red',
-            responseTime
-          }]);
-
+          // Practice mode with AERO: just clear and retry
           setTimeout(() => { setShowPenalty(false); }, 1500);
-
-          if (newProgress >= raceLength) {
-            finishRace(newMistakes);
-          } else {
-            setTimeout(() => {
-              setFeedback('idle');
-              setAnswer('');
-              setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display));
-              questionStartTimeRef.current = Date.now();
-            }, 800);
-          }
+          setTimeout(() => {
+            setFeedback('idle');
+            setAnswer('');
+          }, 600);
         }
         return; // Skip time penalty logic
       }
@@ -1252,108 +1263,33 @@ export default function Game() {
           setFeedback('idle');
           setAnswer("");
         }, 600);
-      } else if (state.simMode) {
-        // Realism mode: must answer correctly before continuing
-        // Apply penalty but don't advance question
+      } else {
+        // Race mode (standard + realism): per-question retry
+        const newAttempts = questionAttempts + 1;
+        setQuestionAttempts(newAttempts);
+        setCurrentSectorRed(true);
         setShowPenalty(true);
 
-        // Realism mode penalties: 1-2 warnings, 3rd black & white flag, then cycling +5/+10 penalties
-        // DNF threshold: mistakes > 50% of total laps
-        const dnfThreshold = Math.floor(raceLength * 0.5);
-
-        if (newMistakes > dnfThreshold) {
+        if (newAttempts >= 4) {
+          // DNF
           setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
           setFinalMistakes(newMistakes);
           setGameStatus('crashed');
           return;
-        } else if (newMistakes === 1) {
-          // Warning only - no time penalty
-          setPenaltyMessage({ text: 'TRACK LIMITS - TRY AGAIN', color: 'yellow' });
-        } else if (newMistakes === 2) {
-          // Warning only - no time penalty
-          setPenaltyMessage({ text: 'TRACK LIMITS WARNING - TRY AGAIN', color: 'yellow' });
-        } else if (newMistakes === 3) {
-          // Black & white flag - no time penalty
-          setPenaltyMessage({ text: 'BLACK & WHITE FLAG - TRY AGAIN', color: 'yellow' });
-          setShowBlackWhiteFlag(true);
-        } else {
-          // Mistakes 4+: cycling +5/+10 penalties (4=+5, 5=+10, 6=+5, 7=+10, etc.)
-          const cyclePosition = (newMistakes - 4) % 2; // 0 for +5, 1 for +10
-          const penalty = cyclePosition === 0 ? 5000 : 10000;
-          setPenaltyMessage({ text: `+${penalty / 1000} SEC PENALTY - TRY AGAIN`, color: 'red' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
-          // Show +5s flash overlay on 4th mistake
-          if (newMistakes === 4) {
-            setShowFiveSecPenalty(true);
-            setTimeout(() => setShowFiveSecPenalty(false), 800);
-          }
+        } else if (newAttempts === 1) {
+          setPenaltyMessage({ text: 'WRONG - 2 ATTEMPTS LEFT', color: 'yellow' });
+        } else if (newAttempts === 2) {
+          setPenaltyMessage({ text: 'WRONG - 1 ATTEMPT LEFT', color: 'yellow' });
+        } else if (newAttempts === 3) {
+          setPenaltyMessage({ text: 'WRONG - LAST CHANCE!', color: 'red' });
         }
 
-        setTimeout(() => { setShowPenalty(false); setShowBlackWhiteFlag(false); }, 1500);
-
-        // Clear answer but keep same question - don't reset questionStartTimeRef
+        setTimeout(() => { setShowPenalty(false); }, 1500);
+        // Keep same question, clear answer only
         setTimeout(() => {
           setFeedback('idle');
           setAnswer("");
         }, 600);
-      } else {
-        // Standard race mode: apply penalties and advance
-        setShowPenalty(true);
-
-        if (newMistakes === 1) {
-          // Warning only - no time penalty
-          setPenaltyMessage({ text: 'TRACK LIMITS', color: 'yellow' });
-        } else if (newMistakes === 2) {
-          // Warning only - no time penalty
-          setPenaltyMessage({ text: 'TRACK LIMITS WARNING', color: 'yellow' });
-        } else if (newMistakes === 3) {
-          // Warning only - no time penalty
-          setPenaltyMessage({ text: 'BLACK & WHITE FLAG', color: 'yellow' });
-          setShowBlackWhiteFlag(true);
-        } else if (newMistakes === 4) {
-          // Only the 4th mistake has a 5 second penalty
-          const penalty = 5000;
-          setPenaltyMessage({ text: '+5 SECOND PENALTY', color: 'red' });
-          penaltyTimeRef.current += penalty;
-          setElapsedTime(prev => prev + penalty);
-          // Show +5s flash overlay
-          setShowFiveSecPenalty(true);
-          setTimeout(() => setShowFiveSecPenalty(false), 800);
-        } else if (newMistakes <= 10) {
-          // Mistakes 5-10: warning only, no additional time penalty
-          setPenaltyMessage({ text: 'TRACK LIMITS', color: 'yellow' });
-        } else if (newMistakes >= 11) {
-          setPenaltyMessage({ text: 'YOU CRASHED!', color: 'red' });
-          setFinalMistakes(newMistakes);
-          setGameStatus('crashed');
-          return;
-        }
-
-        setTimeout(() => { setShowPenalty(false); setShowBlackWhiteFlag(false); }, 1500);
-
-        const newProgress = progress + 1;
-        setProgress(newProgress);
-        setLapResults(prev => [...prev, { 
-          result: 'incorrect', 
-          speed: 'normal',
-          question: question.display,
-          playerAnswer: val,
-          correctAnswer: question.answer,
-          sectorColor: 'red',
-          responseTime
-        }]);
-
-        if (newProgress >= raceLength) {
-          finishRace(newMistakes);
-        } else {
-          setTimeout(() => {
-            setFeedback('idle');
-            setAnswer("");
-            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display));
-            questionStartTimeRef.current = Date.now();
-          }, 800);
-        }
       }
     }
   };
@@ -1418,6 +1354,8 @@ export default function Game() {
     setQuestion(null);
     setMistakeLog([]);
     setShowMistakeReview(false);
+    setQuestionAttempts(0);
+    setCurrentSectorRed(false);
     setRaceMode('bot'); // Race mode always uses bot opponent
     setSelectedWeather('dry');
     setActualWeather('dry');
@@ -1512,10 +1450,7 @@ export default function Game() {
       playAeroActivatedSound();
     }
 
-    // Immediately generate a harder question so user answers it while AERO is active
-    const nextDifficulty = getHarderDifficulty(currentDifficultyRef.current);
-    setQuestion(generateQuestion(selectedCircuit?.id || 'spa', nextDifficulty, currentWeather === 'wet', 0, question?.display));
-    questionStartTimeRef.current = Date.now();
+    // Keep the current question - no harder question, just the 2x progress reward
     setAnswer(""); // Clear any partial answer
   };
 
@@ -2240,7 +2175,7 @@ export default function Game() {
     return (
       <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full overflow-y-auto p-4">
-          <div className="bg-card border border-red-500 rounded-xl p-8 w-full text-center space-y-8 shadow-sm">
+          <div className="rounded-xl p-8 w-full text-center space-y-8">
             
             <div className="space-y-2">
                <div className="text-sm font-medium text-red-600 uppercase tracking-widest">Race Over</div>
@@ -2248,7 +2183,7 @@ export default function Game() {
                <div className="text-xl font-medium text-red-600">Car Retired</div>
             </div>
 
-            <div className="py-6 border-y border-border space-y-4">
+            <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Circuit</span>
                 <span className="font-bold">{selectedCircuit?.name}</span>
@@ -2293,7 +2228,7 @@ export default function Game() {
     return (
       <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-start max-w-xl mx-auto w-full overflow-y-auto p-4">
-          <div className="bg-card border border-border rounded-xl p-6 w-full text-center space-y-6 shadow-sm">
+          <div className="rounded-xl p-6 w-full text-center space-y-6">
 
             <div className="space-y-2">
                <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Race Result</div>
@@ -2306,7 +2241,7 @@ export default function Game() {
                )}
             </div>
 
-            <div className="py-6 border-y border-border space-y-4">
+            <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Circuit</span>
                 <span className="font-bold">{selectedCircuit?.name}</span>
@@ -2335,20 +2270,20 @@ export default function Game() {
               {mistakeLog.length > 0 && (
                 <button
                   onClick={() => setShowMistakeReview(true)}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-black hover:bg-black/80 text-yellow-400 h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
                   data-testid="button-review-mistakes"
                 >
-                  <X className="w-4 h-4" /> Review {mistakeLog.length} Mistake{mistakeLog.length > 1 ? 's' : ''}
+                  <X className="w-4 h-4" /> Debrief
                 </button>
               )}
               <button
                 onClick={() => setShowAnalytics(true)}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                className="w-full bg-green-600 hover:bg-green-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
                 data-testid="button-analytics"
               >
                 <BarChart3 className="w-4 h-4" /> Analytics
               </button>
-              <button onClick={restartRace} className="w-full bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all flex items-center justify-center gap-2" data-testid="button-race-again">
+              <button onClick={restartRace} className="w-full bg-green-600 hover:bg-green-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2" data-testid="button-race-again">
                 <RotateCcw className="w-4 h-4" /> Race Again
               </button>
               <Link href="/">
@@ -2362,10 +2297,10 @@ export default function Game() {
 
           {/* Mistake Review Modal */}
           {showMistakeReview && (
-            <div className="absolute inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-              <div className="bg-card border border-border rounded-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
+              <div className="bg-black p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>Mistake Review</h2>
+                  <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Formula1' }}>Debrief</h2>
                   <button
                     onClick={() => setShowMistakeReview(false)}
                     className="p-2 hover:bg-secondary rounded-full transition-colors"
@@ -2377,7 +2312,7 @@ export default function Game() {
 
                 <div className="space-y-3">
                   {mistakeLog.map((mistake, index) => (
-                    <div key={index} className="bg-secondary/30 border border-border rounded-lg p-4">
+                    <div key={index} className="bg-secondary/30 rounded-lg p-4">
                       <div className="flex items-start gap-4">
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white" style={{ fontFamily: 'Formula1' }}>
                           {index + 1}
@@ -2386,11 +2321,11 @@ export default function Game() {
                           <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{mistake.question}</div>
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                              <span className="text-muted-foreground uppercase tracking-wide">Your Answer:</span>
+                              <span className="text-muted-foreground uppercase tracking-wide">Input:</span>
                               <span className="ml-2 font-bold text-red-500" style={{ fontFamily: 'Formula1' }}>{mistake.yourAnswer}</span>
                             </div>
                             <div>
-                              <span className="text-muted-foreground uppercase tracking-wide">Correct Answer:</span>
+                              <span className="text-muted-foreground uppercase tracking-wide">Solution:</span>
                               <span className="ml-2 font-bold text-green-500" style={{ fontFamily: 'Formula1' }}>{mistake.correctAnswer}</span>
                             </div>
                           </div>
@@ -2744,7 +2679,7 @@ export default function Game() {
                                  lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
                                  lapData.sectorColor === 'red' ? "bg-red-500" : "bg-transparent";
                 } else if (isCurrent) {
-                  segmentColor = "bg-gray-400/50";
+                  segmentColor = currentSectorRed ? "bg-red-500 animate-pulse" : "bg-gray-400/50";
                 }
                 
                 return (
