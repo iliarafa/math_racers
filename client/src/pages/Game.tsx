@@ -2146,23 +2146,25 @@ export default function Game() {
         <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden pb-16">
           
           {/* F1 Starting Lights */}
-          <div className="flex gap-4">
-            {[1, 2, 3, 4, 5].map((light) => (
-              <motion.div
-                key={light}
-                initial={{ opacity: 0.3 }}
-                animate={{ 
-                  opacity: countdownLight >= light ? 1 : 0.3,
-                  scale: countdownLight >= light ? 1 : 0.95
-                }}
-                className={cn(
-                  "w-12 h-12 md:w-16 md:h-16 rounded-full border-4 transition-colors duration-200",
-                  countdownLight >= light 
-                    ? "bg-red-600 border-red-700 shadow-[0_0_30px_rgba(220,38,38,0.6)]" 
-                    : "bg-neutral-200 border-neutral-300"
-                )}
-              />
-            ))}
+          <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
+            <div className="flex gap-2 md:gap-3 justify-center">
+              {[1, 2, 3, 4, 5].map((light) => (
+                <motion.div
+                  key={light}
+                  initial={{ opacity: 0.3 }}
+                  animate={{
+                    opacity: countdownLight >= light ? 1 : 0.3,
+                    scale: countdownLight >= light ? 1 : 0.95
+                  }}
+                  className={cn(
+                    "w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4",
+                    countdownLight >= light
+                      ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]"
+                      : "bg-zinc-800 border-zinc-700"
+                  )}
+                />
+              ))}
+            </div>
           </div>
 
         </div>
@@ -2180,14 +2182,16 @@ export default function Game() {
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex gap-4"
+            className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800"
           >
-            {[1, 2, 3, 4, 5].map((light) => (
-              <div
-                key={light}
-                className="w-12 h-12 md:w-16 md:h-16 rounded-full border-4 bg-green-500 border-green-600 shadow-[0_0_30px_rgba(34,197,94,0.6)]"
-              />
-            ))}
+            <div className="flex gap-2 md:gap-3 justify-center">
+              {[1, 2, 3, 4, 5].map((light) => (
+                <div
+                  key={light}
+                  className="w-10 h-10 md:w-16 md:h-16 rounded-full border-2 md:border-4 bg-green-500 border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.8)] md:shadow-[0_0_30px_rgba(34,197,94,0.8)]"
+                />
+              ))}
+            </div>
           </motion.div>
 
           <motion.div 
