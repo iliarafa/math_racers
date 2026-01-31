@@ -657,6 +657,7 @@ export default function Game() {
   const [overtakeStartEnergy, setOvertakeStartEnergy] = useState(0);
   const [botFrozen, setBotFrozen] = useState(false);        // Bot freeze state
   const [showBoostMessage, setShowBoostMessage] = useState<string | null>(null);
+  const [overtakeAvailable, setOvertakeAvailable] = useState(false);       // Latched availability
   const overtakeTimerRef = useRef<NodeJS.Timeout | null>(null);
   // AERO system state (DRS-style zone-based)
   const [aeroZones, setAeroZones] = useState<number[]>([]);           // Zone start positions
@@ -674,6 +675,30 @@ export default function Game() {
   useEffect(() => {
     soundEnabledRef.current = state.soundEnabled;
   }, [state.soundEnabled]);
+
+  // Latch OVERTAKE availability: once within range, stays available until explicitly cleared
+  useEffect(() => {
+    // Latch ON: once player is behind bot and within 2 sectors, mark available
+    if (
+      !overtakeAvailable &&
+      !overtakeActive &&
+      overtakeEnergy > 0 &&
+      botProgress > progress &&
+      (botProgress - progress) <= 2 &&
+      !botFinished &&
+      gameStatus === 'racing'
+    ) {
+      setOvertakeAvailable(true);
+    }
+    // Latch OFF: clear if energy gone, bot finished, or race not active
+    if (
+      overtakeAvailable &&
+      !overtakeActive &&
+      (overtakeEnergy <= 0 || botFinished || gameStatus !== 'racing')
+    ) {
+      setOvertakeAvailable(false);
+    }
+  }, [botProgress, progress, overtakeEnergy, overtakeActive, botFinished, gameStatus, overtakeAvailable]);
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -1370,6 +1395,7 @@ export default function Game() {
     // Reset OVERTAKE state
     setOvertakeEnergy(0);
     setOvertakeActive(false);
+    setOvertakeAvailable(false);
     setOvertakeStartTime(null);
     setOvertakeStartEnergy(0);
     setBotFrozen(false);
@@ -1388,9 +1414,6 @@ export default function Game() {
 
   // Handle OVERTAKE button activation (energy bar based)
   const handleOvertake = () => {
-    const behindBot = botProgress > progress;
-    const withinRange = behindBot && (botProgress - progress) <= 2 && !botFinished;
-
     // If already active, allow deactivation (interrupt)
     if (overtakeActive) {
       if (overtakeTimerRef.current) {
@@ -1404,12 +1427,13 @@ export default function Game() {
       return;
     }
 
-    // Can only activate if: has energy, within range, not paused
-    if (overtakeEnergy <= 0 || !withinRange || gameStatus !== 'racing' || isPaused) {
+    // Can only activate if: has energy, available (latched), not paused
+    if (overtakeEnergy <= 0 || !overtakeAvailable || gameStatus !== 'racing' || isPaused) {
       return;
     }
 
-    // Activate OVERTAKE mode
+    // Activate OVERTAKE mode — clear availability latch
+    setOvertakeAvailable(false);
     setOvertakeActive(true);
     setBotFrozen(true);
     setOvertakeStartTime(Date.now());
@@ -1562,6 +1586,7 @@ export default function Game() {
         overtakeTimerRef.current = null;
       }
       setOvertakeActive(false);
+      setOvertakeAvailable(false);
       setBotFrozen(false);
       setOvertakeStartTime(null);
       setOvertakeStartEnergy(0);
@@ -2312,13 +2337,13 @@ export default function Game() {
 
                 <div className="space-y-3">
                   {mistakeLog.map((mistake, index) => (
-                    <div key={index} className="bg-secondary/30 rounded-lg p-4">
+                    <div key={index} className="rounded-lg p-4">
                       <div className="flex items-start gap-4">
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white" style={{ fontFamily: 'Formula1' }}>
                           {index + 1}
                         </div>
                         <div className="flex-1 space-y-2">
-                          <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{mistake.question}</div>
+                          <div className="text-lg font-bold text-white" style={{ fontFamily: 'Formula1' }}>{mistake.question}</div>
                           <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                               <span className="text-muted-foreground uppercase tracking-wide">Input:</span>
@@ -2827,7 +2852,7 @@ export default function Game() {
                     "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
                     overtakeActive
                       ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
-                      : overtakeEnergy > 0 && botProgress > progress && (botProgress - progress) <= 2 && !isPaused && !botFinished
+                      : overtakeAvailable && !isPaused
                         ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]"
                         : "bg-secondary text-secondary-foreground cursor-not-allowed"
                   )}
