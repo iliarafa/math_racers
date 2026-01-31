@@ -872,12 +872,18 @@ export default function Game() {
       } else if (e.key === 'Enter') {
         e.preventDefault();
         handleSubmit();
+      } else if (e.key === 'Clear') {
+        e.preventDefault();
+        handleAero();
+      } else if (e.key === '\\') {
+        e.preventDefault();
+        handleOvertake();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameStatus, feedback, question, answer, selectedCircuit, progress, mistakes, isPaused]);
+  }, [gameStatus, feedback, question, answer, selectedCircuit, progress, mistakes, isPaused, aeroAvailable, aeroActive, overtakeEnergy, overtakeActive, overtakeAvailable, botFinished]);
 
   const handleDriverSelect = (driver: Driver) => {
     initAudio();
