@@ -629,6 +629,7 @@ export default function Game() {
     sectorColor: 'green' | 'purple' | 'yellow' | 'red';
     responseTime: number;
     wrongAttempts?: number[];
+    aeroBonus?: boolean;
   }>>([]);
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
@@ -1156,7 +1157,7 @@ export default function Game() {
       if (aeroActive && actualGain === 2) {
         setLapResults(prev => [...prev, mainEntry, {
           ...mainEntry,
-          question: question.display + ' (AERO bonus)',
+          aeroBonus: true,
         }]);
       } else {
         setLapResults(prev => [...prev, mainEntry]);
@@ -2399,59 +2400,52 @@ export default function Game() {
 
                 {/* Lap-by-lap breakdown */}
                 <div className="space-y-2">
-                  {lapResults.map((lap, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg p-3"
-                    >
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white",
-                        lap.sectorColor === 'purple' && "bg-purple-600",
-                        lap.sectorColor === 'green' && "bg-green-600",
-                        lap.sectorColor === 'yellow' && "bg-yellow-600",
-                        lap.sectorColor === 'red' && "bg-red-600"
-                      )} style={{ fontFamily: 'Formula1' }}>
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-lg font-bold text-white" style={{ fontFamily: 'Formula1' }}>
-                          {lap.question}
-                          {lap.wrongAttempts && lap.wrongAttempts.map((a, i) => {
-                            const key = `${index}-${i}`;
-                            const revealed = revealedAttempts.has(key);
-                            return (
-                              <span
-                                key={i}
-                                className="text-red-500 font-bold ml-2 cursor-pointer"
-                                style={{ fontFamily: 'Formula1' }}
-                                onClick={() => setRevealedAttempts(prev => {
-                                  const next = new Set(prev);
-                                  if (next.has(key)) next.delete(key);
-                                  else next.add(key);
-                                  return next;
-                                })}
-                              >
-                                {revealed ? `${lap.question}=${lap.correctAnswer}` : a}
-                              </span>
-                            );
-                          })}
+                  {lapResults.map((lap, index) => {
+                    const hasWrong = lap.wrongAttempts && lap.wrongAttempts.length > 0;
+                    const revealed = hasWrong && revealedAttempts.has(String(index));
+                    return (
+                      <div
+                        key={index}
+                        className={cn(
+                          "flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg p-3",
+                          hasWrong && "cursor-pointer"
+                        )}
+                        onClick={hasWrong ? () => setRevealedAttempts(prev => {
+                          const next = new Set(prev);
+                          const k = String(index);
+                          if (next.has(k)) next.delete(k); else next.add(k);
+                          return next;
+                        }) : undefined}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm text-white",
+                          lap.sectorColor === 'purple' && "bg-purple-600",
+                          lap.sectorColor === 'green' && "bg-green-600",
+                          lap.sectorColor === 'yellow' && "bg-yellow-600",
+                          lap.sectorColor === 'red' && "bg-red-600"
+                        )} style={{ fontFamily: 'Formula1' }}>
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <div className={cn("text-lg font-bold", revealed ? "text-green-500" : "text-white")} style={{ fontFamily: 'Formula1' }}>
+                            {revealed ? `${lap.question} = ${lap.correctAnswer}` : lap.question}
+                          </div>
+                        </div>
+                        <div className="text-right flex items-center gap-3">
+                          <span className="text-xs text-gray-400 font-mono">
+                            {(lap.responseTime / 1000).toFixed(3)}s
+                          </span>
+                          {!revealed && (
+                            hasWrong
+                              ? lap.wrongAttempts!.map((a, i) => (
+                                  <span key={i} className="text-red-500 font-bold" style={{ fontFamily: 'Formula1' }}>{i > 0 ? ',' : ''}{a}</span>
+                                ))
+                              : <span className="text-green-500 font-bold" style={{ fontFamily: 'Formula1' }}>{lap.playerAnswer}</span>
+                          )}
                         </div>
                       </div>
-                      <div className="text-right flex items-center gap-3">
-                        <span className="text-xs text-gray-400 font-mono">
-                          {(lap.responseTime / 1000).toFixed(3)}s
-                        </span>
-                        {lap.result === 'correct' ? (
-                          <span className="text-green-500 font-bold" style={{ fontFamily: 'Formula1' }}>{lap.playerAnswer}</span>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-red-500 line-through" style={{ fontFamily: 'Formula1' }}>{lap.playerAnswer}</span>
-                            <span className="text-green-500 font-bold" style={{ fontFamily: 'Formula1' }}>{lap.correctAnswer}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <div className="flex gap-3 mt-6">
