@@ -1349,7 +1349,7 @@ export default function Game() {
     }
     // Update personal best time and record session lap time (only in race mode, not practice)
     if (!isPracticeMode && selectedCircuit) {
-      updatePersonalBest(selectedCircuit.id, elapsedTime);
+      updatePersonalBest(selectedCircuit.id, elapsedTime, selectedDriver?.difficulty);
       recordLapTime(elapsedTime, selectedCircuit.name, selectedDriver?.id);
     }
   };
@@ -2289,7 +2289,8 @@ export default function Game() {
   if (gameStatus === 'finished') {
     const { position } = getRaceResult();
     const isWinner = position === 1;
-    const previousBest = selectedCircuit ? state.personalBests[selectedCircuit.id] : null;
+    const pbKey = selectedCircuit ? (selectedDriver?.difficulty ? `${selectedCircuit.id}:${selectedDriver.difficulty}` : selectedCircuit.id) : null;
+    const previousBest = pbKey ? state.personalBests[pbKey] : null;
     const isNewBest = previousBest ? elapsedTime < previousBest : true;
 
     return (
@@ -2430,7 +2431,7 @@ export default function Game() {
                                   return next;
                                 })}
                               >
-                                {revealed ? `${lap.question}=${a}` : a}
+                                {revealed ? `${lap.question}=${lap.correctAnswer}` : a}
                               </span>
                             );
                           })}

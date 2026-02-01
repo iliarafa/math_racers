@@ -424,13 +424,14 @@ export function useGameState() {
     });
   };
 
-  const updatePersonalBest = (circuitId: string, time: number) => {
+  const updatePersonalBest = (circuitId: string, time: number, difficulty?: Difficulty) => {
     setState(prev => {
-      const currentBest = prev.personalBests[circuitId];
+      const key = difficulty ? `${circuitId}:${difficulty}` : circuitId;
+      const currentBest = prev.personalBests[key];
       if (!currentBest || time < currentBest) {
         return {
           ...prev,
-          personalBests: { ...prev.personalBests, [circuitId]: time }
+          personalBests: { ...prev.personalBests, [key]: time }
         };
       }
       return prev;
