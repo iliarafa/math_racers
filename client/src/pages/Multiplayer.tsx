@@ -127,8 +127,9 @@ export default function Multiplayer() {
   const [opponentSectorColors, setOpponentSectorColors] = useState<string[]>([]);
   const [countdownValue, setCountdownValue] = useState(5);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [inPurpleMode, setInPurpleMode] = useState(false);
-  const [realismThreshold, setRealismThreshold] = useState<number | null>(null);
+  const [sectorBestTimes, setSectorBestTimes] = useState<Array<{ bestTime: number; holder: 'host' | 'guest' } | null>>([]);
+  const sectorBestTimesRef = useRef<Array<{ bestTime: number; holder: 'host' | 'guest' } | null>>([]);
+  const [questionAttempts, setQuestionAttempts] = useState(0);
   const [lapResults, setLapResults] = useState<Array<{
     result: 'correct' | 'incorrect';
     speed: 'fast' | 'normal' | 'slow';
@@ -241,10 +242,11 @@ export default function Multiplayer() {
         raceStartTimeRef.current = Date.now();
         questionStartTimeRef.current = Date.now();
         penaltyTimeRef.current = 0;
-        // Reset lap results and purple mode for new race
+        // Reset lap results and sector tracking for new race
         setLapResults([]);
-        setInPurpleMode(false);
-        setRealismThreshold(null);
+        setSectorBestTimes([]);
+        sectorBestTimesRef.current = [];
+        setQuestionAttempts(0);
         setProgress(0);
         setMistakes(0);
         setOpponentProgress(0);
@@ -271,6 +273,25 @@ export default function Multiplayer() {
           setOpponentProgress(message.hostProgress);
           setOpponentMistakes(message.hostMistakes);
           if (message.hostSectorColors) setOpponentSectorColors(message.hostSectorColors);
+        }
+        // Update sector best times and demote purple sectors if opponent now holds them
+        if (message.sectorBestTimes) {
+          const newBestTimes = message.sectorBestTimes;
+          setSectorBestTimes(newBestTimes);
+          sectorBestTimesRef.current = newBestTimes;
+
+          const myRole = isHostRef.current ? 'host' : 'guest';
+          setLapResults(prev => {
+            let changed = false;
+            const updated = prev.map((entry, i) => {
+              if (entry.sectorColor === 'purple' && newBestTimes[i]?.holder && newBestTimes[i].holder !== myRole) {
+                changed = true;
+                return { ...entry, sectorColor: 'green' as const };
+              }
+              return entry;
+            });
+            return changed ? updated : prev;
+          });
         }
         break;
       case "player_finished":
@@ -624,107 +645,44 @@ export default function Multiplayer() {
 
     // Calculate response time
     const responseTime = Date.now() - questionStartTimeRef.current;
-    const difficulty = selectedDriver?.difficulty || 'easy';
-    let speed: 'fast' | 'normal' | 'slow';
-    
-    if (state.simMode) {
-      // Realism mode: first 5 questions are calibration (all green)
-      const currentQuestionNumber = progress + 1;
-      
-      if (currentQuestionNumber <= 5) {
-        speed = 'fast';
-        
-        if (currentQuestionNumber === 5) {
-          // Get all response times from first 4 correct answers plus this one
-          const calibrationTimes = lapResults
-            .filter(lap => lap.result === 'correct')
-            .map(lap => lap.responseTime);
-          calibrationTimes.push(responseTime);
-          
-          // Find the fastest time as the threshold
-          if (calibrationTimes.length > 0) {
-            const fastest = Math.min(...calibrationTimes);
-            setRealismThreshold(fastest);
-          }
-        }
-      } else {
-        const threshold = realismThreshold || 3000;
-        speed = responseTime <= threshold ? 'fast' : 'slow';
-      }
-    } else {
-      const fastThreshold = difficulty === 'easy' ? 2000 : difficulty === 'medium' ? 3000 : 4000;
-      const slowThreshold = difficulty === 'easy' ? 4000 : difficulty === 'medium' ? 5000 : 7000;
-      speed = responseTime < fastThreshold ? 'fast' : responseTime > slowThreshold ? 'slow' : 'normal';
-    }
-    
-    // Purple retention threshold: 3 seconds for all levels
-    const purpleThreshold = 3000;
-    const isPurpleFast = responseTime < purpleThreshold;
-    
+
     if (val === currentQuestion.answer) {
       setFeedback("correct");
-      
-      // Determine sector color and purple mode state
-      // In realism mode, purple is disabled during calibration (first 5 questions)
-      let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
-      let newPurpleMode = inPurpleMode;
-      const currentQuestionNum = progress + 1;
-      const isCalibrating = state.simMode && currentQuestionNum <= 5;
-      
-      if (isCalibrating) {
-        // During calibration: all correct answers are green, no purple mode
-        sectorColor = 'green';
-        newPurpleMode = false;
-      } else if (inPurpleMode) {
-        // Already in purple mode - must be under purple threshold to maintain
-        if (isPurpleFast) {
-          sectorColor = 'purple';
-        } else {
-          sectorColor = speed === 'slow' ? 'yellow' : 'green';
-          newPurpleMode = false;
-        }
+
+      // F1-style competitive sector timing
+      const sectorIndex = progress;
+      const currentBest = sectorBestTimesRef.current[sectorIndex];
+
+      let sectorColor: 'green' | 'purple' | 'yellow' | 'red';
+      let speed: 'fast' | 'normal' | 'slow';
+
+      if (!currentBest || responseTime < currentBest.bestTime) {
+        sectorColor = 'purple';
+        speed = 'fast';
       } else {
-        // Not in purple mode - check if we should enter
-        // Count consecutive correct answers AFTER losing purple
-        // Skip both the last purple lap AND the breaking lap
-        let consecutiveCorrect = 0;
-        let lastPurpleIndex = -1;
-        
-        // Find the last purple lap
-        for (let j = lapResults.length - 1; j >= 0; j--) {
-          if (lapResults[j].sectorColor === 'purple') {
-            lastPurpleIndex = j;
-            break;
-          }
-        }
-        
-        // Count consecutive correct AFTER the breaking lap
-        // If never had purple (lastPurpleIndex = -1), count from start
-        // If had purple, skip the purple lap AND the lap that broke it
-        const startIndex = lastPurpleIndex === -1 ? 0 : lastPurpleIndex + 2;
-        for (let j = startIndex; j < lapResults.length; j++) {
-          if (lapResults[j].result === 'correct') {
-            consecutiveCorrect++;
-          } else {
-            consecutiveCorrect = 0;
-          }
-        }
-        
-        // Include this answer
-        consecutiveCorrect++;
-        
-        // Enter purple mode on 5th consecutive correct
-        if (consecutiveCorrect >= 5) {
-          newPurpleMode = true;
-          sectorColor = 'purple';
-        } else if (speed === 'slow') {
-          sectorColor = 'yellow';
-        } else {
+        const threshold = currentBest.bestTime * 1.5;
+        if (responseTime <= threshold) {
           sectorColor = 'green';
+          speed = 'fast';
+        } else {
+          sectorColor = 'yellow';
+          speed = 'slow';
         }
       }
-      
-      setInPurpleMode(newPurpleMode);
+
+      // Red override: if player had retries on this question (realism mode)
+      if (questionAttempts > 0 && state.simMode) {
+        sectorColor = 'red';
+      }
+
+      // Update local sector best times optimistically
+      if (!currentBest || responseTime < currentBest.bestTime) {
+        const myRole = isHostRef.current ? 'host' : 'guest';
+        const newBestTimes = [...sectorBestTimesRef.current];
+        newBestTimes[sectorIndex] = { bestTime: responseTime, holder: myRole as 'host' | 'guest' };
+        setSectorBestTimes(newBestTimes);
+        sectorBestTimesRef.current = newBestTimes;
+      }
 
       // Calculate progress increment (2x if AERO active OR OVERTAKE active)
       const hasBonus = aeroActive || overtakeActive;
@@ -743,7 +701,8 @@ export default function Multiplayer() {
       // Harvest energy if power-ups enabled and NOT using overtake
       if (powerUpsEnabled && !overtakeActive) {
         const circuit = selectedCircuit || CIRCUITS[0];
-        const energyGain = calculateEnergyHarvest(responseTime, difficulty as Difficulty, circuit.type);
+        const driverDifficulty = selectedDriver?.difficulty || 'easy';
+        const energyGain = calculateEnergyHarvest(responseTime, driverDifficulty as Difficulty, circuit.type);
         const newEnergy = Math.min(100, overtakeEnergy + energyGain);
         setOvertakeEnergy(newEnergy);
 
@@ -764,7 +723,7 @@ export default function Multiplayer() {
         setAeroActive(false);
       }
 
-      // Send progress update
+      // Send progress update with responseTime for sector best time tracking
       if (wsRef.current) {
         wsRef.current.send(JSON.stringify({
           type: "progress_update",
@@ -773,7 +732,8 @@ export default function Multiplayer() {
           mistakes,
           aeroBonus: aeroActive,
           overtakeBonus: overtakeActive,
-          sectorColor
+          sectorColor,
+          responseTime
         }));
       }
 
@@ -795,6 +755,7 @@ export default function Multiplayer() {
           setAnswer("");
           setCurrentQuestionIndex(prev => prev + 1);
           questionStartTimeRef.current = Date.now();
+          setQuestionAttempts(0);
           // Generate new harder question if overtake still active
           if (overtakeActive && selectedCircuit && selectedDriver) {
             const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
@@ -808,8 +769,8 @@ export default function Multiplayer() {
       const newMistakes = mistakes + 1;
       setMistakes(newMistakes);
 
-      // Break purple mode on incorrect answer
-      setInPurpleMode(false);
+      // Track retries for red sector override in realism mode
+      setQuestionAttempts(prev => prev + 1);
 
       // Show track limits warning
       setShowPenalty(true);
@@ -926,12 +887,13 @@ export default function Multiplayer() {
             setAnswer("");
             setCurrentQuestionIndex(prev => prev + 1);
             questionStartTimeRef.current = Date.now();
+            setQuestionAttempts(0);
           }, 600);
         }
       }
     }
   };
-  
+
   const formatTime = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
@@ -947,8 +909,9 @@ export default function Multiplayer() {
     isHostRef.current = false;
     setIsHost(false);
     setLapResults([]);
-    setInPurpleMode(false);
-    setRealismThreshold(null);
+    setSectorBestTimes([]);
+    sectorBestTimesRef.current = [];
+    setQuestionAttempts(0);
     // Reset power-ups state
     setPowerUpsEnabled(false);
     setOvertakeEnergy(0);
@@ -1640,7 +1603,7 @@ export default function Multiplayer() {
                   <div className="w-4 h-2 bg-primary rounded-sm" />
                 </div>
               </motion.div>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">YOU</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">{playerName ? playerName.slice(0, 3).toUpperCase() : "YOU"}</span>
             </div>
 
             {/* Progress text */}

@@ -34,6 +34,8 @@ interface GameRoom {
   // Sector colors for progress bar rendering
   hostSectorColors: string[];
   guestSectorColors: string[];
+  // Per-sector best times for F1-style competitive timing
+  sectorBestTimes: Array<{ bestTime: number; holder: 'host' | 'guest' } | null>;
 }
 
 const rooms = new Map<string, GameRoom>();
@@ -146,6 +148,7 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
       guestOvertakeDuration: 0,
       hostSectorColors: [],
       guestSectorColors: [],
+      sectorBestTimes: [],
     });
   }
 
@@ -198,6 +201,7 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
   room.guestOvertakeDuration = 0;
   room.hostSectorColors = [];
   room.guestSectorColors = [];
+  room.sectorBestTimes = [];
 
   // Generate AERO zones (2 zones at 25% and 65% of race length)
   if (room.powerUpsEnabled) {
@@ -233,7 +237,7 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
   }, 1000);
 }
 
-function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progress: number; mistakes: number; aeroBonus?: boolean; overtakeBonus?: boolean; sectorColor?: string }) {
+function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progress: number; mistakes: number; aeroBonus?: boolean; overtakeBonus?: boolean; sectorColor?: string; responseTime?: number }) {
   const room = rooms.get(message.roomCode);
   if (!room || room.status !== "racing") return;
 
@@ -245,6 +249,9 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
   // Calculate expected progress increment (1 normally, 2 with AERO or OVERTAKE bonus)
   const hasDoubleBonus = message.aeroBonus || message.overtakeBonus;
   const expectedIncrement = hasDoubleBonus ? 2 : 1;
+
+  // Track previous progress for sector best time calculation
+  const previousProgress = isHost ? room.hostProgress : room.guestProgress;
 
   // Validate progress is sequential (can only increment by 1 or 2 with bonus)
   if (isHost) {
@@ -273,6 +280,17 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
     }
   }
 
+  // Update per-sector best times (only for correct answers with responseTime)
+  if (message.responseTime !== undefined && message.sectorColor !== 'red') {
+    const newProgress = message.progress;
+    for (let s = previousProgress; s < newProgress; s++) {
+      const currentBest = room.sectorBestTimes[s];
+      if (!currentBest || message.responseTime < currentBest.bestTime) {
+        room.sectorBestTimes[s] = { bestTime: message.responseTime, holder: isHost ? 'host' : 'guest' };
+      }
+    }
+  }
+
   broadcastToRoom(message.roomCode, {
     type: "opponent_progress",
     hostProgress: room.hostProgress,
@@ -280,7 +298,8 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
     hostMistakes: room.hostMistakes,
     guestMistakes: room.guestMistakes,
     hostSectorColors: room.hostSectorColors,
-    guestSectorColors: room.guestSectorColors
+    guestSectorColors: room.guestSectorColors,
+    sectorBestTimes: room.sectorBestTimes
   });
 }
 
@@ -595,6 +614,7 @@ export function createRoom(roomCode: string, hostId: string, raceLength: number 
     guestOvertakeDuration: 0,
     hostSectorColors: [],
     guestSectorColors: [],
+    sectorBestTimes: [],
   });
 }
 
