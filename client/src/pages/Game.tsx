@@ -635,10 +635,6 @@ export default function Game() {
   const questionStartTimeRef = useRef<number>(Date.now());
   // Track the best time for each sector and who holds it (F1-style competitive timing)
   const [revealedAttempts, setRevealedAttempts] = useState<Set<string>>(new Set());
-  const [sectorBestTimes, setSectorBestTimes] = useState<Array<{
-    bestTime: number;
-    holder: 'player' | 'bot';
-  }>>([]);
   const [gameStatus, setGameStatus] = useState<'driver_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
@@ -673,7 +669,7 @@ export default function Game() {
   const soundEnabledRef = useRef(state.soundEnabled);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
-  const sectorBestTimesRef = useRef(sectorBestTimes);
+  const sectorBestTimesRef = useRef<Array<{bestTime: number; holder: 'player' | 'bot'}>>([]);
 
   useEffect(() => {
     soundEnabledRef.current = state.soundEnabled;
@@ -703,10 +699,6 @@ export default function Game() {
     }
   }, [botProgress, progress, overtakeEnergy, overtakeActive, botFinished, gameStatus, overtakeAvailable]);
 
-  // Keep ref in sync with state
-  useEffect(() => {
-    sectorBestTimesRef.current = sectorBestTimes;
-  }, [sectorBestTimes]);
 
   // Keep difficulty ref in sync with selected driver
   useEffect(() => {
@@ -969,7 +961,7 @@ export default function Game() {
     if (!selectedCircuit) return;
     setBotProgress(0);
     setBotLapResults([]);
-    setSectorBestTimes([]); // Reset sector best times for new race
+    sectorBestTimesRef.current = []; // Reset sector best times for new race
     // Reset practice tracking refs
     practiceRunTimesRef.current = [];
     practiceRunCountRef.current = 0;
@@ -1080,11 +1072,6 @@ export default function Game() {
           const newBestTime = { bestTime: responseTime, holder: 'player' as const };
           sectorBestTimesRef.current = [...sectorBestTimesRef.current];
           sectorBestTimesRef.current[sectorIndex] = newBestTime;
-          setSectorBestTimes(times => {
-            const newTimes = [...times];
-            newTimes[sectorIndex] = newBestTime;
-            return newTimes;
-          });
         } else {
           // Player didn't beat the best - check if within threshold
           const threshold = currentBest.bestTime * 1.5;
@@ -1178,7 +1165,7 @@ export default function Game() {
           setBotProgress(0);
           setLapResults([]);
           setBotLapResults([]);
-          setSectorBestTimes([]); // Reset sector best times
+          sectorBestTimesRef.current = []; // Reset sector best times
           setMistakes(0);
           setElapsedTime(0);
           penaltyTimeRef.current = 0;
@@ -1375,7 +1362,7 @@ export default function Game() {
     setLapResults([]);
     setBotLapResults([]);
     setRevealedAttempts(new Set());
-    setSectorBestTimes([]); // Reset sector best times
+    sectorBestTimesRef.current = []; // Reset sector best times
     setMistakes(0);
     setFinalMistakes(0);
     setShowPenalty(false);
@@ -1573,11 +1560,6 @@ export default function Game() {
         const newBestTime = { bestTime: lapTime, holder: 'bot' as const };
         sectorBestTimesRef.current = [...sectorBestTimesRef.current];
         sectorBestTimesRef.current[sectorIndex] = newBestTime;
-        setSectorBestTimes(times => {
-          const newTimes = [...times];
-          newTimes[sectorIndex] = newBestTime;
-          return newTimes;
-        });
       } else {
         // Bot didn't beat the best - assign green/yellow based on factor
         sectorColor = randomFactor <= 1.15 ? 'green' : 'yellow';

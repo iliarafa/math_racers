@@ -149,7 +149,6 @@ export default function Multiplayer() {
   const [opponentSectorColors, setOpponentSectorColors] = useState<string[]>([]);
   const [countdownValue, setCountdownValue] = useState(5);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [sectorBestTimes, setSectorBestTimes] = useState<Array<{ bestTime: number; holder: 'host' | 'guest' } | null>>([]);
   const sectorBestTimesRef = useRef<Array<{ bestTime: number; holder: 'host' | 'guest' } | null>>([]);
   const [questionAttempts, setQuestionAttempts] = useState(0);
   const [lapResults, setLapResults] = useState<Array<{
@@ -291,7 +290,6 @@ export default function Multiplayer() {
         penaltyTimeRef.current = 0;
         // Reset lap results and sector tracking for new race
         setLapResults([]);
-        setSectorBestTimes([]);
         sectorBestTimesRef.current = [];
         setQuestionAttempts(0);
         setProgress(0);
@@ -324,7 +322,6 @@ export default function Multiplayer() {
         // Update sector best times and demote purple sectors if opponent now holds them
         if (message.sectorBestTimes) {
           const newBestTimes = message.sectorBestTimes;
-          setSectorBestTimes(newBestTimes);
           sectorBestTimesRef.current = newBestTimes;
 
           const myRole = isHostRef.current ? 'host' : 'guest';
@@ -727,7 +724,6 @@ export default function Multiplayer() {
         const myRole = isHostRef.current ? 'host' : 'guest';
         const newBestTimes = [...sectorBestTimesRef.current];
         newBestTimes[sectorIndex] = { bestTime: responseTime, holder: myRole as 'host' | 'guest' };
-        setSectorBestTimes(newBestTimes);
         sectorBestTimesRef.current = newBestTimes;
       }
 
@@ -956,7 +952,6 @@ export default function Multiplayer() {
     isHostRef.current = false;
     setIsHost(false);
     setLapResults([]);
-    setSectorBestTimes([]);
     sectorBestTimesRef.current = [];
     setQuestionAttempts(0);
     // Reset power-ups state
