@@ -629,7 +629,6 @@ export default function Game() {
     sectorColor: 'green' | 'purple' | 'yellow' | 'red';
     responseTime: number;
     wrongAttempts?: number[];
-    aeroBonus?: boolean;
   }>>([]);
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
@@ -1157,7 +1156,6 @@ export default function Game() {
       if (aeroActive && actualGain === 2) {
         setLapResults(prev => [...prev, mainEntry, {
           ...mainEntry,
-          aeroBonus: true,
         }]);
       } else {
         setLapResults(prev => [...prev, mainEntry]);
