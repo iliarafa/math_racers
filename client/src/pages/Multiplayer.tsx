@@ -73,18 +73,40 @@ const playKeypadClick = () => {
     const ctx = getAudioContext();
     const oscillator = ctx.createOscillator();
     const gainNode = ctx.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(ctx.destination);
-    
+
     oscillator.frequency.value = 600;
     oscillator.type = 'sine';
-    
+
     gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.04);
-    
+
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.04);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+const playBeep = (frequency: number = 800, duration: number = 150) => {
+  try {
+    const ctx = getAudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.frequency.value = frequency;
+    oscillator.type = 'square';
+
+    gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
+
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + duration / 1000);
   } catch (e) {
     // Silent fail
   }
@@ -169,9 +191,31 @@ export default function Multiplayer() {
   const questionStartTimeRef = useRef<number>(Date.now());
   const isHostRef = useRef<boolean>(false);
   const penaltyTimeRef = useRef<number>(0);
+  const soundEnabledRef = useRef(state.soundEnabled);
+  const prevCountdownRef = useRef<number | null>(null);
   
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : 20;
-  
+
+  // Keep soundEnabledRef in sync
+  useEffect(() => {
+    soundEnabledRef.current = state.soundEnabled;
+  }, [state.soundEnabled]);
+
+  // Play beeps as countdown lights illuminate
+  useEffect(() => {
+    if (gameStatus === "countdown") {
+      // countdownValue counts down 5→1, each decrease means a new light turns on
+      if (prevCountdownRef.current !== null && countdownValue < prevCountdownRef.current) {
+        if (soundEnabledRef.current) {
+          playBeep(800, 150);
+        }
+      }
+      prevCountdownRef.current = countdownValue;
+    } else {
+      prevCountdownRef.current = null;
+    }
+  }, [countdownValue, gameStatus]);
+
   // WebSocket connection
   const connectWebSocket = useCallback((code: string, host: boolean) => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -238,6 +282,9 @@ export default function Multiplayer() {
         setCountdownValue(message.count);
         break;
       case "race_start":
+        if (soundEnabledRef.current) {
+          playBeep(1200, 200);
+        }
         setGameStatus("racing");
         raceStartTimeRef.current = Date.now();
         questionStartTimeRef.current = Date.now();
@@ -1392,30 +1439,33 @@ export default function Multiplayer() {
     );
   }
   
-  // Countdown
+  // Countdown with F1 starting lights
   if (gameStatus === "countdown") {
+    // countdownValue goes 5→1, so lights on = 6 - countdownValue
+    const lightsOn = 6 - countdownValue;
     return (
       <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
-        <div className="flex-1 flex flex-col items-center justify-center gap-8">
-          <div className="flex gap-4">
-            {[1, 2, 3, 4, 5].map((light) => (
-              <motion.div
-                key={light}
-                initial={{ opacity: 0.3 }}
-                animate={{ 
-                  opacity: countdownValue <= (6 - light) ? 1 : 0.3,
-                  scale: countdownValue <= (6 - light) ? 1 : 0.95
-                }}
-                className={cn(
-                  "w-12 h-12 rounded-full border-4 transition-colors",
-                  countdownValue <= (6 - light)
-                    ? "bg-red-600 border-red-700 shadow-[0_0_20px_rgba(220,38,38,0.6)]" 
-                    : "bg-neutral-200 border-neutral-300"
-                )}
-              />
-            ))}
+        <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden pb-16">
+          <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
+            <div className="flex gap-2 md:gap-3 justify-center">
+              {[1, 2, 3, 4, 5].map((light) => (
+                <motion.div
+                  key={light}
+                  initial={{ opacity: 0.3 }}
+                  animate={{
+                    opacity: lightsOn >= light ? 1 : 0.3,
+                    scale: lightsOn >= light ? 1 : 0.95
+                  }}
+                  className={cn(
+                    "w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4",
+                    lightsOn >= light
+                      ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]"
+                      : "bg-zinc-800 border-zinc-700"
+                  )}
+                />
+              ))}
+            </div>
           </div>
-          <p className="text-2xl font-bold">Get Ready!</p>
         </div>
       </GameLayout>
     );
