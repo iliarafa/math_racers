@@ -145,7 +145,7 @@ export default function Multiplayer() {
   } | null>(null);
 
   // Power-ups state
-  const [powerUpsEnabled, setPowerUpsEnabled] = useState(false);
+  const [powerUpsEnabled, setPowerUpsEnabled] = useState(true);
   const [overtakeEnergy, setOvertakeEnergy] = useState(0);
   const [overtakeActive, setOvertakeActive] = useState(false);
   const [overtakeEndTime, setOvertakeEndTime] = useState<number | null>(null);
@@ -1654,8 +1654,7 @@ export default function Multiplayer() {
 
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
               {/* Power-ups row - integrated as top keypad row */}
-              {powerUpsEnabled && (
-                <>
+              {/* Power-ups always visible; disabled when toggled off */}
                   {/* AERO Button */}
                   <button
                     onPointerDown={(e) => {
@@ -1664,7 +1663,7 @@ export default function Multiplayer() {
                         activateAero();
                       }
                     }}
-                    disabled={!isAeroAvailable || aeroActive}
+                    disabled={!powerUpsEnabled || !isAeroAvailable || aeroActive}
                     className={cn(
                       "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
                       aeroActive
@@ -1707,7 +1706,7 @@ export default function Multiplayer() {
                         activateOvertake();
                       }
                     }}
-                    disabled={!overtakeActive && !canActivateOvertake}
+                    disabled={!powerUpsEnabled || (!overtakeActive && !canActivateOvertake)}
                     className={cn(
                       "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
                       overtakeActive
@@ -1720,8 +1719,6 @@ export default function Multiplayer() {
                   >
                     {overtakeActive ? 'ON' : 'OT'}
                   </button>
-                </>
-              )}
 
               {/* Regular keypad buttons */}
               {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (

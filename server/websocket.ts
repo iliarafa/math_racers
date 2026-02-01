@@ -134,7 +134,7 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
       raceLength: 20,
       status: "waiting",
       // Power-ups initialization
-      powerUpsEnabled: false,
+      powerUpsEnabled: true,
       aeroZones: [],
       hostOvertakeEnergy: 0,
       guestOvertakeEnergy: 0,
