@@ -4,7 +4,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, type Difficulty } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, X, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight, Zap, Wind } from "lucide-react";
+import { Copy, Check, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 
 // Import assets for track selection
 import weatherSun from "@/assets/weather_sun.png";
@@ -21,6 +21,7 @@ import flag_monaco from "@/assets/flag_monaco.png";
 import flag_uk from "@/assets/flag_uk.png";
 import flag_belgium from "@/assets/flag_belgium.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
+import trackLimitsFlag from "@/assets/track-limits-flag.png";
 
 const CIRCUIT_MAP_IMAGES: Record<string, { black: string }> = {
   monza: { black: circuit_monza_black },
@@ -152,6 +153,13 @@ export default function Multiplayer() {
   const [aeroActive, setAeroActive] = useState(false);
   const [opponentEnergy, setOpponentEnergy] = useState(0);
   const [overtakeQuestion, setOvertakeQuestion] = useState<Question | null>(null);
+
+  // UI feedback states (matching single-player)
+  const [showPenalty, setShowPenalty] = useState(false);
+  const [showBlackWhiteFlag, setShowBlackWhiteFlag] = useState(false);
+  const [showFiveSecPenalty, setShowFiveSecPenalty] = useState(false);
+  const [showBoostMessage, setShowBoostMessage] = useState<string | null>(null);
+  const [showAeroMessage, setShowAeroMessage] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const playerIdRef = useRef<string>(Math.random().toString(36).substring(7));
@@ -289,6 +297,8 @@ export default function Multiplayer() {
         setOvertakeActive(true);
         setOvertakeStartEnergy(message.energy);
         setOvertakeEndTime(Date.now() + message.duration);
+        setShowBoostMessage("2X BOOST ACTIVE");
+        setTimeout(() => setShowBoostMessage(null), 2000);
         break;
       case "opponent_overtake_activated":
         // Opponent activated overtake - no effect on us, just informational
@@ -301,6 +311,7 @@ export default function Multiplayer() {
           setOvertakeStartEnergy(0);
           setOvertakeQuestion(null);
           setOvertakeEnergy(message.remainingEnergy || 0);
+          setShowBoostMessage(null);
         }
         break;
       case "aero_activated":
@@ -310,6 +321,8 @@ export default function Multiplayer() {
           newSet.add(message.zone);
           return newSet;
         });
+        setShowAeroMessage("AERO ACTIVE");
+        setTimeout(() => setShowAeroMessage(null), 2000);
         break;
     }
   };
@@ -784,6 +797,13 @@ export default function Multiplayer() {
       // Break purple mode on incorrect answer
       setInPurpleMode(false);
 
+      // Show track limits warning
+      setShowPenalty(true);
+      if (newMistakes >= 3) {
+        setShowBlackWhiteFlag(true);
+      }
+      setTimeout(() => { setShowPenalty(false); }, 1500);
+
       // Reset AERO active state on wrong answer
       if (aeroActive) {
         setAeroActive(false);
@@ -803,7 +823,7 @@ export default function Multiplayer() {
         setOvertakeEnergy(0);
         setOvertakeQuestion(null);
       }
-      
+
       if (state.simMode) {
         // Realism mode: must answer correctly before continuing
         // Don't advance progress or lapResults, just count the mistake
@@ -818,6 +838,9 @@ export default function Multiplayer() {
           const cyclePosition = (newMistakes - 4) % 2; // 0 for +5, 1 for +10
           const penalty = cyclePosition === 0 ? 5000 : 10000;
           penaltyTimeRef.current += penalty;
+          // Show +5s penalty flash
+          setShowFiveSecPenalty(true);
+          setTimeout(() => setShowFiveSecPenalty(false), 1000);
         }
 
         // Check for crash when mistakes exceed 50% of laps
@@ -1435,28 +1458,82 @@ export default function Multiplayer() {
             <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">MULTIPLAYER</span>
           </div>
 
-          {/* Main content */}
+          {/* Main content - compact header zone */}
           <div className="flex flex-col items-center px-4 pt-0">
+            {/* Track Limits Warning */}
+            <div className="h-12 flex items-center justify-center">
+              <AnimatePresence>
+                {showPenalty && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center gap-2"
+                  >
+                    {showBlackWhiteFlag && (
+                      <img
+                        src={trackLimitsFlag}
+                        alt="Black and White Flag"
+                        className="h-8 w-12 object-cover rounded"
+                      />
+                    )}
+                    <motion.div
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 0.3, repeat: 3 }}
+                      className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                    >
+                      TRACK LIMITS
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Timer */}
             <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
               <Timer className="w-4 h-4 sm:w-5 sm:h-5" />
               {formatTime(elapsedTime)}
             </div>
-            
-            <div className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-2">
-              {currentQuestion?.display}
-            </div>
-            
-            <div
-              className={cn(
-                "text-4xl sm:text-5xl md:text-6xl font-bold min-w-[80px] text-center mt-2",
-                feedback === "idle" && "text-muted-foreground/50",
-                feedback === "correct" && "text-green-600",
-                feedback === "incorrect" && "text-red-600"
-              )}
-            >
-              {answer || "X="}
+
+            {/* Expression and Answer with Penalty Overlay */}
+            <div className="relative">
+              <div className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-2">
+                {currentQuestion?.display}
+              </div>
+
+              <div
+                className={cn(
+                  "text-4xl sm:text-5xl md:text-6xl font-bold min-w-[80px] text-center mt-2",
+                  feedback === "idle" && "text-muted-foreground/50",
+                  feedback === "correct" && "text-green-600",
+                  feedback === "incorrect" && "text-red-600"
+                )}
+              >
+                {answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
+              </div>
+
+              {/* +5s Penalty Flash Overlay */}
+              <AnimatePresence>
+                {showFiveSecPenalty && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: [1, 0.2, 1, 0.2, 1], scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="absolute inset-0 flex items-center justify-center z-10"
+                  >
+                    <span
+                      className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600"
+                      style={{ fontFamily: 'Formula1' }}
+                    >
+                      +5s
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
+            {/* Minimal Feedback - only "Correct" like single player */}
             <div className="h-4 flex items-center justify-center">
               <AnimatePresence mode="wait">
                 {feedback === "correct" && (
@@ -1464,114 +1541,202 @@ export default function Multiplayer() {
                     <Check className="w-3 h-3" /> Correct
                   </motion.div>
                 )}
-                {feedback === "incorrect" && (
-                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-red-600 font-medium flex items-center gap-1 text-xs">
-                    <X className="w-3 h-3" /> Wrong
-                  </motion.div>
-                )}
               </AnimatePresence>
             </div>
           </div>
 
-          {/* Dual Progress Bars */}
-          <div className="flex-1 flex flex-col justify-center px-4 gap-2">
-            {/* Your progress - colored segments */}
-            <div>
-              <div className="flex justify-between text-[10px] text-muted-foreground mb-0.5 px-1">
-                <span className={cn("font-medium", inPurpleMode ? "text-purple-500" : "text-primary")}>
-                  You {inPurpleMode && "🔥"}
-                </span>
-                <span>Lap {progress}/{raceLength}</span>
-              </div>
-              <div className="relative h-4 bg-muted rounded-full overflow-hidden flex">
-                {lapResults.map((lap, index) => {
-                  const segmentWidth = 100 / raceLength;
-                  const colorClass = 
-                    lap.sectorColor === 'purple' ? 'bg-purple-500' :
-                    lap.sectorColor === 'green' ? 'bg-green-500' :
-                    lap.sectorColor === 'yellow' ? 'bg-yellow-500' :
-                    'bg-red-500';
+          {/* Progress Bars */}
+          <div className="flex flex-col justify-center px-4 gap-1">
+            {/* Opponent Progress Bar */}
+            <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">
+              <div className="absolute inset-0 flex">
+                {Array.from({ length: raceLength }).map((_, i) => {
+                  const isCompleted = i < opponentProgress;
                   return (
-                    <motion.div
-                      key={index}
-                      className={cn("h-full", colorClass)}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${segmentWidth}%` }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
+                        isCompleted ? "bg-orange-500/70" : "bg-transparent"
+                      )}
                     />
                   );
                 })}
               </div>
-            </div>
-            
-            {/* Opponent progress */}
-            <div>
-              <div className="flex justify-between text-[10px] text-muted-foreground mb-0.5 px-1">
-                <span className="font-medium text-orange-500">Opponent</span>
-                <span>Lap {opponentProgress}/{raceLength}</span>
-              </div>
-              <div className="relative h-4 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className="absolute inset-y-0 left-0 bg-orange-500 rounded-full"
-                  animate={{ width: `${(opponentProgress / raceLength) * 100}%` }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-              </div>
+              {/* Opponent car indicator */}
+              <motion.div
+                className="absolute top-1/2 -translate-y-1/2 z-10"
+                animate={{ left: `${(opponentProgress / raceLength) * 100}%` }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ marginLeft: "-10px" }}
+              >
+                <div className="w-5 h-3 bg-red-600 rounded-sm flex items-center justify-center">
+                  <div className="w-3 h-1.5 bg-red-400 rounded-sm" />
+                </div>
+              </motion.div>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 leading-none text-[9px] text-red-400 font-bold">
+                {opponentName ? opponentName.slice(0, 3).toUpperCase() : "OPP"}
+              </span>
             </div>
 
-            {/* Power-ups buttons */}
-            {powerUpsEnabled && (
-              <div className="flex gap-2 mt-2">
-                {/* OVERTAKE button - can activate when conditions met, or tap to deactivate while active */}
-                <button
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    if (overtakeActive || canActivateOvertake) {
-                      activateOvertake();
-                    }
-                  }}
-                  disabled={!overtakeActive && !canActivateOvertake}
-                  className={cn(
-                    "flex-1 h-10 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 touch-manipulation select-none",
-                    overtakeActive
-                      ? "bg-yellow-500 text-black animate-pulse"
-                      : canActivateOvertake
-                        ? "bg-yellow-500 text-black hover:bg-yellow-400"
-                        : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  <Zap className="w-4 h-4" />
-                  {overtakeActive ? `2X BOOST ${overtakeEnergy}%` : `OVERTAKE ${overtakeEnergy}%`}
-                </button>
+            {/* Player Progress Bar */}
+            <div className="relative h-7 bg-muted rounded-full overflow-hidden">
+              <div className="absolute inset-0 flex">
+                {Array.from({ length: raceLength }).map((_, i) => {
+                  const isCompleted = i < progress;
+                  const lapData = lapResults[i];
 
-                {/* AERO button */}
-                <button
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    if (isAeroAvailable) {
-                      activateAero();
-                    }
-                  }}
-                  disabled={!isAeroAvailable}
-                  className={cn(
-                    "flex-1 h-10 rounded-lg font-bold text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 touch-manipulation select-none",
-                    aeroActive
-                      ? "bg-cyan-500 text-white"
-                      : isAeroAvailable
-                        ? "bg-cyan-500 text-white hover:bg-cyan-400"
-                        : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  <Wind className="w-4 h-4" />
-                  {aeroActive ? "AERO ON" : "AERO"}
-                </button>
+                  let segmentColor = "bg-transparent";
+                  if (isCompleted && lapData) {
+                    segmentColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
+                                   lapData.sectorColor === 'green' ? "bg-green-500" :
+                                   lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
+                                   lapData.sectorColor === 'red' ? "bg-red-500" : "bg-transparent";
+                  }
+
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
+                        segmentColor
+                      )}
+                    />
+                  );
+                })}
               </div>
-            )}
+              {/* Player car indicator */}
+              <motion.div
+                className="absolute top-1/2 -translate-y-1/2 z-10"
+                animate={{ left: `${(progress / raceLength) * 100}%` }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ marginLeft: "-12px" }}
+              >
+                <div className="w-6 h-4 bg-foreground rounded-sm flex items-center justify-center">
+                  <div className="w-4 h-2 bg-primary rounded-sm" />
+                </div>
+              </motion.div>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">YOU</span>
+            </div>
+
+            {/* Progress text */}
+            <div className="flex justify-between text-[11px] text-muted-foreground mt-0.5 px-1">
+              <span>Lap {progress + 1}/{raceLength}</span>
+              <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
+            </div>
           </div>
 
-          {/* Keypad */}
-          <div className="flex-1 flex flex-col justify-start items-center px-4 min-h-0 pb-16 sm:pb-4">
+          {/* Keypad with integrated Power-ups row */}
+          <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
+            {/* Status Messages - floating above keypad */}
+            {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
+              <div className="flex justify-center mb-2 h-6 w-full max-w-md">
+                <div className="flex gap-2 items-center">
+                  <AnimatePresence>
+                    {showBoostMessage && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="text-sm font-bold px-3 py-1 rounded-full bg-yellow-500 text-black"
+                      >
+                        {showBoostMessage}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <AnimatePresence>
+                    {showAeroMessage && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className={cn(
+                          "text-sm font-bold px-3 py-1 rounded-full",
+                          showAeroMessage.includes('BOOST') ? "bg-blue-500 text-white" :
+                          showAeroMessage.includes('ACTIVE') ? "bg-blue-400 text-white" :
+                          "bg-cyan-500 text-black"
+                        )}
+                      >
+                        {showAeroMessage}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
+              {/* Power-ups row - integrated as top keypad row */}
+              {powerUpsEnabled && (
+                <>
+                  {/* AERO Button */}
+                  <button
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      if (isAeroAvailable && !aeroActive) {
+                        activateAero();
+                      }
+                    }}
+                    disabled={!isAeroAvailable || aeroActive}
+                    className={cn(
+                      "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
+                      aeroActive
+                        ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
+                        : isAeroAvailable
+                          ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] ring-2 ring-yellow-400 animate-pulse"
+                          : "bg-secondary text-secondary-foreground cursor-not-allowed"
+                    )}
+                    style={{ fontFamily: 'Formula1' }}
+                  >
+                    {aeroActive ? 'ON' : 'AERO'}
+                  </button>
+
+                  {/* Energy Bar */}
+                  <div className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary overflow-hidden relative">
+                    <motion.div
+                      className={cn(
+                        "absolute inset-y-0 left-0 rounded-xl transition-all",
+                        overtakeActive ? "bg-green-400" : "bg-green-500"
+                      )}
+                      animate={{
+                        width: `${overtakeEnergy}%`,
+                        opacity: overtakeActive ? [1, 0.7, 1] : 1
+                      }}
+                      transition={{
+                        width: { duration: 0.1 },
+                        opacity: overtakeActive ? { repeat: Infinity, duration: 0.5 } : { duration: 0 }
+                      }}
+                    />
+                    <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-black z-10">
+                      {overtakeEnergy}%
+                    </span>
+                  </div>
+
+                  {/* OT Button */}
+                  <button
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      if (overtakeActive || canActivateOvertake) {
+                        activateOvertake();
+                      }
+                    }}
+                    disabled={!overtakeActive && !canActivateOvertake}
+                    className={cn(
+                      "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
+                      overtakeActive
+                        ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
+                        : canActivateOvertake
+                          ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+                          : "bg-secondary text-secondary-foreground cursor-not-allowed"
+                    )}
+                    style={{ fontFamily: 'Formula1' }}
+                  >
+                    {overtakeActive ? 'ON' : 'OT'}
+                  </button>
+                </>
+              )}
+
+              {/* Regular keypad buttons */}
               {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
                 <button
                   key={num}
@@ -1629,24 +1794,6 @@ export default function Multiplayer() {
               </button>
             </div>
           </div>
-
-          {/* OVERTAKE active overlay indicator */}
-          <AnimatePresence>
-            {overtakeActive && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="absolute top-16 left-4 right-4 bg-yellow-500/90 rounded-lg px-4 py-2 flex items-center justify-center gap-2 z-40"
-              >
-                <Zap className="w-5 h-5 text-black" />
-                <span className="font-bold text-black text-sm uppercase tracking-wider">
-                  2X BOOST ACTIVE - Harder Questions!
-                </span>
-                <span className="font-mono text-black font-bold">{overtakeEnergy}%</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </GameLayout>
     );
