@@ -81,6 +81,7 @@ script/build.ts          # Custom build script
 ### State Management
 - **Single-player:** localStorage via `useGameState()` hook
 - **Session data:** sessionStorage for lap times (cross-component)
+- **Series selection:** localStorage `lastSelectedDriverId` — persisted when selecting a series in single-player, read as default in multiplayer
 - **Server state:** React Query (available but minimally used)
 - **Multiplayer:** PostgreSQL for room persistence, WebSocket for real-time sync
 

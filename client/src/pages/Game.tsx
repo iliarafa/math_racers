@@ -880,6 +880,7 @@ export default function Game() {
   const handleDriverSelect = (driver: Driver) => {
     initAudio();
     setSelectedDriver(driver);
+    localStorage.setItem('lastSelectedDriverId', driver.id);
     setGameStatus('selecting');
   };
 

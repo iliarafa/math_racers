@@ -136,7 +136,10 @@ export default function Multiplayer() {
   // Game state
   const [gameStatus, setGameStatus] = useState<GameStatus>("lobby");
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(CIRCUITS[0]);
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(DRIVERS[0]);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(() => {
+    const savedId = localStorage.getItem('lastSelectedDriverId');
+    return (savedId && DRIVERS.find(d => d.id === savedId)) || DRIVERS[0];
+  });
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -473,12 +476,11 @@ export default function Multiplayer() {
       return;
     }
     
-    // Default circuit and driver for now
-    const circuit = CIRCUITS[0];
-    const driver = DRIVERS[0];
+    const circuit = selectedCircuit || CIRCUITS[0];
+    const driver = selectedDriver || DRIVERS[0];
     setSelectedCircuit(circuit);
     setSelectedDriver(driver);
-    
+
     try {
       const tempQuestions: Question[] = [];
       for (let i = 0; i < getRaceLength(circuit.id, state.simMode); i++) {

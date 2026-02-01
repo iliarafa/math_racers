@@ -19,6 +19,7 @@ An interactive, gamified math practice web application. Players solve addition, 
 - 1v1 head-to-head races via WebSocket
 - 4-digit room codes for easy joining
 - Live progress bars showing both players
+- Selected series/difficulty carries over from single-player to multiplayer
 - Winner determined by fewer mistakes; ties broken by time
 
 ### Circuits (Math Operations)
