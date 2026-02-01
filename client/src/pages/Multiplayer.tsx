@@ -959,7 +959,7 @@ export default function Multiplayer() {
             >
               Multiplayer Lobby
             </h1>
-            <p className="text-sm text-gray-500 mt-1">Connect to global server</p>
+            <p className="text-sm text-red-500 mt-1">*LAN Only</p>
           </div>
           
           {mode === "menu" && (

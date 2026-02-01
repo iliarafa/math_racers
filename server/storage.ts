@@ -162,8 +162,13 @@ class FallbackStorage implements IStorage {
         error.message?.includes('EAI_AGAIN') ||
         error.message?.includes('getaddrinfo');
 
-      if (isConnectionError) {
-        console.log("⚠️ Database unavailable - switching to in-memory storage (LAN mode)");
+      const isSchemaError =
+        error.message?.includes('column') && error.message?.includes('does not exist') ||
+        error.message?.includes('relation') && error.message?.includes('does not exist');
+
+      if (isConnectionError || isSchemaError) {
+        const reason = isSchemaError ? "schema out of date" : "unavailable";
+        console.log(`⚠️ Database ${reason} - switching to in-memory storage (LAN mode)`);
         this.usingFallback = true;
         return fallbackOperation();
       }
