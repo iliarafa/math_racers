@@ -1114,8 +1114,9 @@ export default function Game() {
         setOvertakeEnergy(prev => Math.min(prev + energyGain, 100));
       }
 
-      // Calculate progress - double if aero was active
-      const progressGain = aeroActive ? 2 : 1;
+      // Calculate progress - double if aero or overtake was active
+      const hasBonus = aeroActive || overtakeActive;
+      const progressGain = hasBonus ? 2 : 1;
       const newProgress = Math.min(progress + progressGain, raceLength); // Cap at race length
 
       // Deactivate aero after use (success)
@@ -1138,9 +1139,9 @@ export default function Game() {
       };
       wrongAttemptsRef.current = [];
 
-      // When aero was active and we gained 2 sectors, add a bonus entry with same color
+      // When aero/overtake was active and we gained 2 sectors, add a bonus entry with same color
       const actualGain = newProgress - progress; // Handles capping at raceLength
-      if (aeroActive && actualGain === 2) {
+      if (hasBonus && actualGain === 2) {
         setLapResults(prev => [...prev, mainEntry, {
           ...mainEntry,
         }]);
