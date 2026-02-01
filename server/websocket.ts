@@ -31,6 +31,9 @@ interface GameRoom {
   guestOvertakeStartTime: number | null;
   hostOvertakeDuration: number;
   guestOvertakeDuration: number;
+  // Sector colors for progress bar rendering
+  hostSectorColors: string[];
+  guestSectorColors: string[];
 }
 
 const rooms = new Map<string, GameRoom>();
@@ -141,6 +144,8 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
       guestOvertakeStartTime: null,
       hostOvertakeDuration: 0,
       guestOvertakeDuration: 0,
+      hostSectorColors: [],
+      guestSectorColors: [],
     });
   }
 
@@ -191,6 +196,8 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
   room.guestOvertakeStartTime = null;
   room.hostOvertakeDuration = 0;
   room.guestOvertakeDuration = 0;
+  room.hostSectorColors = [];
+  room.guestSectorColors = [];
 
   // Generate AERO zones (2 zones at 25% and 65% of race length)
   if (room.powerUpsEnabled) {
@@ -226,7 +233,7 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
   }, 1000);
 }
 
-function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progress: number; mistakes: number; aeroBonus?: boolean; overtakeBonus?: boolean }) {
+function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progress: number; mistakes: number; aeroBonus?: boolean; overtakeBonus?: boolean; sectorColor?: string }) {
   const room = rooms.get(message.roomCode);
   if (!room || room.status !== "racing") return;
 
@@ -245,11 +252,25 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
     if (message.progress !== expectedProgress) return; // Reject out-of-order updates
     room.hostProgress = message.progress;
     room.hostMistakes = message.mistakes;
+    // Store sector color(s) - push twice for bonus (2-sector jump)
+    if (message.sectorColor) {
+      room.hostSectorColors.push(message.sectorColor);
+      if (hasDoubleBonus) {
+        room.hostSectorColors.push(message.sectorColor);
+      }
+    }
   } else {
     const expectedProgress = room.guestProgress + expectedIncrement;
     if (message.progress !== expectedProgress) return; // Reject out-of-order updates
     room.guestProgress = message.progress;
     room.guestMistakes = message.mistakes;
+    // Store sector color(s) - push twice for bonus (2-sector jump)
+    if (message.sectorColor) {
+      room.guestSectorColors.push(message.sectorColor);
+      if (hasDoubleBonus) {
+        room.guestSectorColors.push(message.sectorColor);
+      }
+    }
   }
 
   broadcastToRoom(message.roomCode, {
@@ -257,7 +278,9 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
     hostProgress: room.hostProgress,
     guestProgress: room.guestProgress,
     hostMistakes: room.hostMistakes,
-    guestMistakes: room.guestMistakes
+    guestMistakes: room.guestMistakes,
+    hostSectorColors: room.hostSectorColors,
+    guestSectorColors: room.guestSectorColors
   });
 }
 
@@ -280,7 +303,9 @@ function handleMistakeUpdate(ws: WebSocket, message: { roomCode: string; mistake
     hostProgress: room.hostProgress,
     guestProgress: room.guestProgress,
     hostMistakes: room.hostMistakes,
-    guestMistakes: room.guestMistakes
+    guestMistakes: room.guestMistakes,
+    hostSectorColors: room.hostSectorColors,
+    guestSectorColors: room.guestSectorColors
   });
 }
 
@@ -568,6 +593,8 @@ export function createRoom(roomCode: string, hostId: string, raceLength: number 
     guestOvertakeStartTime: null,
     hostOvertakeDuration: 0,
     guestOvertakeDuration: 0,
+    hostSectorColors: [],
+    guestSectorColors: [],
   });
 }
 

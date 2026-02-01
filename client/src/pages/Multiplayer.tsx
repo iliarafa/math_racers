@@ -124,6 +124,7 @@ export default function Multiplayer() {
   const [mistakes, setMistakes] = useState(0);
   const [opponentProgress, setOpponentProgress] = useState(0);
   const [opponentMistakes, setOpponentMistakes] = useState(0);
+  const [opponentSectorColors, setOpponentSectorColors] = useState<string[]>([]);
   const [countdownValue, setCountdownValue] = useState(5);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
@@ -248,6 +249,7 @@ export default function Multiplayer() {
         setMistakes(0);
         setOpponentProgress(0);
         setOpponentMistakes(0);
+        setOpponentSectorColors([]);
         setCurrentQuestionIndex(0);
         // Reset power-ups state
         setOvertakeEnergy(0);
@@ -264,9 +266,11 @@ export default function Multiplayer() {
         if (isHostRef.current) {
           setOpponentProgress(message.guestProgress);
           setOpponentMistakes(message.guestMistakes);
+          if (message.guestSectorColors) setOpponentSectorColors(message.guestSectorColors);
         } else {
           setOpponentProgress(message.hostProgress);
           setOpponentMistakes(message.hostMistakes);
+          if (message.hostSectorColors) setOpponentSectorColors(message.hostSectorColors);
         }
         break;
       case "player_finished":
@@ -721,7 +725,20 @@ export default function Multiplayer() {
       }
       
       setInPurpleMode(newPurpleMode);
-      setLapResults(prev => [...prev, { result: 'correct', speed, sectorColor, responseTime }]);
+
+      // Calculate progress increment (2x if AERO active OR OVERTAKE active)
+      const hasBonus = aeroActive || overtakeActive;
+      const progressIncrement = hasBonus ? 2 : 1;
+      const newProgress = Math.min(progress + progressIncrement, raceLength);
+      const actualGain = newProgress - progress;
+
+      // Push two lap result entries when bonus gives a 2-sector jump
+      const lapEntry = { result: 'correct' as const, speed, sectorColor, responseTime };
+      if (hasBonus && actualGain === 2) {
+        setLapResults(prev => [...prev, lapEntry, { ...lapEntry }]);
+      } else {
+        setLapResults(prev => [...prev, lapEntry]);
+      }
 
       // Harvest energy if power-ups enabled and NOT using overtake
       if (powerUpsEnabled && !overtakeActive) {
@@ -740,10 +757,6 @@ export default function Multiplayer() {
         }
       }
 
-      // Calculate progress increment (2x if AERO active OR OVERTAKE active)
-      const hasBonus = aeroActive || overtakeActive;
-      const progressIncrement = hasBonus ? 2 : 1;
-      const newProgress = Math.min(progress + progressIncrement, raceLength);
       setProgress(newProgress);
 
       // Reset AERO active state after using
@@ -759,7 +772,8 @@ export default function Multiplayer() {
           progress: newProgress,
           mistakes,
           aeroBonus: aeroActive,
-          overtakeBonus: overtakeActive
+          overtakeBonus: overtakeActive,
+          sectorColor
         }));
       }
 
@@ -890,7 +904,8 @@ export default function Multiplayer() {
             type: "progress_update",
             roomCode,
             progress: newProgress,
-            mistakes: newMistakes
+            mistakes: newMistakes,
+            sectorColor: 'red'
           }));
         }
         
@@ -1552,12 +1567,21 @@ export default function Multiplayer() {
               <div className="absolute inset-0 flex">
                 {Array.from({ length: raceLength }).map((_, i) => {
                   const isCompleted = i < opponentProgress;
+                  const oppColor = opponentSectorColors[i];
+                  let segmentColor = "bg-transparent";
+                  if (isCompleted) {
+                    segmentColor = oppColor === 'purple' ? "bg-purple-500/70" :
+                                   oppColor === 'green' ? "bg-green-500/70" :
+                                   oppColor === 'yellow' ? "bg-yellow-500/70" :
+                                   oppColor === 'red' ? "bg-red-500/70" :
+                                   "bg-orange-500/70";
+                  }
                   return (
                     <div
                       key={i}
                       className={cn(
                         "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                        isCompleted ? "bg-orange-500/70" : "bg-transparent"
+                        segmentColor
                       )}
                     />
                   );
