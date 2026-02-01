@@ -152,12 +152,10 @@ script/build.ts          # Custom build script
 
 ### Penalty System (Per-Question Retry)
 - Each question allows up to 4 attempts
-- Attempt 1 wrong: "2 ATTEMPTS LEFT" warning
-- Attempt 2 wrong: "1 ATTEMPT LEFT" warning
-- Attempt 3 wrong: "LAST CHANCE!" red warning
-- Attempt 4 wrong: DNF/Crash (race ends)
+- Wrong answer shows "TRACK LIMITS" warning in a red container (with black-and-white flag)
+- 4th wrong attempt on the same question: DNF/Crash (race ends)
 - Wrong answer during AERO: AERO deactivated, same retry system applies
-- Practice mode: no penalties, just "TRY AGAIN" with infinite retries
+- Practice mode: no penalties, infinite retries
 
 ### Race Configuration
 - Standard: 20 questions per race

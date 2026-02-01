@@ -94,13 +94,11 @@ Progress bars update live as times change, creating authentic F1 tension.
 ### Penalty System (Per-Question Retry)
 
 Each question allows up to 4 attempts before a crash (DNF):
-- **1st wrong answer**: Warning — "2 ATTEMPTS LEFT"
-- **2nd wrong answer**: Warning — "1 ATTEMPT LEFT"
-- **3rd wrong answer**: Red warning — "LAST CHANCE!"
-- **4th wrong answer**: DNF (Did Not Finish) — race ends
+- Wrong answer shows a **"TRACK LIMITS"** warning in a red container with a black-and-white flag
+- **4th wrong answer** on the same question: DNF (Did Not Finish) — race ends
 
 Wrong answer during AERO deactivates AERO; the retry system still applies.
-Practice mode has no penalties — infinite retries with "TRY AGAIN" feedback.
+Practice mode has no penalties — infinite retries.
 
 ### Weather System
 
