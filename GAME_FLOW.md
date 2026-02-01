@@ -3,17 +3,18 @@
 ## Game States
 
 ```
-driver_select → selecting → countdown → racing → finished | crashed
+driver_select → selecting → countdown → go → racing → finished | crashed
 ```
 
 | State | Description |
 |-------|-------------|
 | `driver_select` | Player chooses difficulty (racing series) |
-| `selecting` | Player chooses circuit, weather, and mode (Race/Practice/Multiplayer) |
+| `selecting` | Player chooses circuit, weather, and mode (Race/Practice) |
 | `countdown` | 5-light F1 start sequence |
+| `go` | Race start signal |
 | `racing` | Active gameplay - answering math questions |
 | `finished` | Race completed successfully |
-| `crashed` | DNF - exceeded 10 mistakes |
+| `crashed` | DNF - 4th wrong attempt on a single question |
 
 ---
 
@@ -98,9 +99,9 @@ driver_select → selecting → countdown → racing → finished | crashed
 
 | Mode | Race Length | Bot Opponent | Penalties | Progress Reset |
 |------|-------------|--------------|-----------|----------------|
-| Race | 20 questions | Yes | Yes | No |
-| Practice | Infinite | No | No (just "Try Again") | Yes (loops) |
-| Sim Mode | Real lap count | Yes | Yes | No |
+| Race | 20 questions | Yes (bot) | Yes (4 attempts/question) | No |
+| Practice | Infinite | No (solo) | No (just "Try Again") | Yes (loops) |
+| Realism Race | Real lap count | Yes (bot) | Yes (4 attempts/question) | No |
 
 ---
 
@@ -123,18 +124,18 @@ driver_select → selecting → countdown → racing → finished | crashed
 
 ## Penalty System (Race Mode Only)
 
-| Mistake # | Penalty | Time Added |
-|-----------|---------|------------|
-| 1 | Track Limits | +2 sec |
-| 2 | Track Limits Warning | +2 sec |
-| 3 | Black & White Flag | +2 sec |
-| 4-6 | 5 Second Penalty | +5 sec |
-| 7-10 | 10 Second Penalty | +10 sec |
-| 11+ | Crash (DNF) | Race ends |
+Per-question retry system (same for standard and realism):
 
-### Sim Mode Penalty Behavior
-- Same penalties as Race mode
-- Player must answer correctly before advancing (question doesn't change on wrong answer)
+| Attempt # | Message | Result |
+|-----------|---------|--------|
+| 1st wrong | "WRONG - 2 ATTEMPTS LEFT" | Warning (yellow) |
+| 2nd wrong | "WRONG - 1 ATTEMPT LEFT" | Warning (yellow) |
+| 3rd wrong | "WRONG - LAST CHANCE!" | Warning (red) |
+| 4th wrong | "YOU CRASHED!" | DNF - Race ends |
+
+- Wrong answer during AERO: AERO deactivated + same retry countdown
+- Player must answer correctly before advancing (question stays the same)
+- Practice mode: no penalties, infinite retries with "TRY AGAIN"
 
 ---
 
@@ -151,14 +152,14 @@ driver_select → selecting → countdown → racing → finished | crashed
 
 ### Bot Response Time (per question, for sector colors)
 
-Base time calculated as: `baseTime × operationModifier × randomFactor(0.75-1.25)`
+Base time calculated as: `baseTime × operationModifier × complexityModifier × randomFactor(0.75-1.25)`
 
 | Series | Base Time |
 |--------|-----------|
-| Karting | 2,000ms |
-| F3 | 2,500ms |
-| F2 | 3,000ms |
-| F1 | 3,500ms |
+| Karting | 2,500ms |
+| F3 | 3,500ms |
+| F2 | 4,500ms |
+| F1 | 6,000ms |
 
 | Operation | Modifier |
 |-----------|----------|
@@ -167,6 +168,8 @@ Base time calculated as: `baseTime × operationModifier × randomFactor(0.75-1.2
 | Multiplication | 1.15 |
 | Division | 1.20 |
 | Variables | 1.25 |
+
+Wet weather adds +250ms to base time.
 
 ---
 
@@ -218,20 +221,32 @@ Difficulty boosts interpolate toward the next difficulty level and stack:
 | F1 | 3 | 6 |
 
 ### Special Rewards
-- **Perfect race (0 mistakes):** Confetti animation + races won counter
-- **Perfect race on F1:** Plays "Simply Lovely" audio
+- **Beat the bot:** Confetti animation + races won counter + circuit championed at current series
+- **Beat the bot on F1:** Plays "Simply Lovely" audio
 
 ---
 
 ## Race Result Calculation
 
-| Mistakes | Finishing Position |
-|----------|-------------------|
-| 0 | P1 |
-| 1-2 | P2 |
-| 3+ | Position = mistake count (capped at P20) |
+| Condition | Finishing Position |
+|-----------|-------------------|
+| Beat the bot (finished before bot) | P1 |
+| 0 mistakes (bot already finished) | P1 |
+| 1-2 mistakes | P2 |
+| 3+ mistakes | Position = mistake count (capped at P20) |
 
 Position maps to 2025 F1 driver standings (P1 = Lando Norris, P2 = Max Verstappen, etc.)
+
+---
+
+## Championship Progression System
+
+- Win a race (beat the bot) to **champion** that circuit at the current series
+- Championing a circuit at one series unlocks that circuit at the **next** series
+- A series becomes available when at least one circuit is championed at the previous series
+- Series order: Karting → F3 → F2 → F1
+- Practice mode bypasses all series/circuit locks
+- Stored as `championedCircuits: { [circuitId]: string[] }` (circuit → list of championed series)
 
 ---
 
@@ -239,10 +254,10 @@ Position maps to 2025 F1 driver standings (P1 = Lando Norris, P2 = Max Verstappe
 
 ### localStorage (permanent)
 - Coins, career points, races won
-- Unlocked/equipped items
+- Championed circuits (progression)
 - Personal best times per circuit
 - Lap history (last 100 entries)
-- Settings (sound, sim mode, team color)
+- Settings (sound, sim mode, power-ups enabled)
 
 ### sessionStorage (per session)
 - Top 10 lap times for leaderboard display

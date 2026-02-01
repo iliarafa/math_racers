@@ -10,9 +10,9 @@ F1 Math Racer: Grand Prix - A gamified math practice web application for childre
 
 ```bash
 # Development
-npm run dev              # Start backend server (port 5000)
-npm run dev:client       # Start Vite dev server (frontend only)
-npm run dev:open         # Backend + auto open browser
+npm run dev              # Start backend server (port 3000)
+npm run dev:client       # Start Vite dev server (frontend only, port 5000)
+npm run dev:open         # Backend + auto open browser (port 3000)
 npm run check            # TypeScript type checking
 
 # Production
@@ -26,7 +26,7 @@ npm run db:push          # Sync Drizzle ORM schema to PostgreSQL
 ## Architecture
 
 ### Stack
-- **Frontend:** React 19 + TypeScript + Vite + Wouter (routing) + Tailwind CSS v4 + Shadcn/ui (57 components)
+- **Frontend:** React 19 + TypeScript + Vite + Wouter (routing) + Tailwind CSS v4 + Shadcn/ui (55 components)
 - **Backend:** Node.js + Express + WebSocket (ws) + Drizzle ORM + PostgreSQL
 - **Mobile:** iOS via Capacitor
 - **Animation:** Framer Motion, canvas-confetti
@@ -36,18 +36,20 @@ npm run db:push          # Sync Drizzle ORM schema to PostgreSQL
 client/src/
 ├── pages/               # Route components
 │   ├── Welcome.tsx      # Home/landing page
-│   ├── Game.tsx         # Main single-player racing (~2700 lines)
-│   ├── Multiplayer.tsx  # 1v1 multiplayer racing
-│   ├── Garage.tsx       # Vehicle customization + shop
+│   ├── Game.tsx         # Main single-player racing (~2900 lines)
+│   ├── Multiplayer.tsx  # 1v1 multiplayer racing (~1900 lines)
+│   ├── Garage.tsx       # Dashboard (settings, stats, racer log)
 │   ├── StrategyGuide.tsx # Math reference guide
-│   ├── ReactionTest.tsx # Reaction time mini-game
-│   └── Regulations.tsx  # Game rules
+│   ├── ReactionTest.tsx # Reaction time mini-game (F1 lights)
+│   ├── Regulations.tsx  # Game rules
+│   └── not-found.tsx    # 404 error page
 ├── components/
-│   ├── ui/              # 57 Shadcn/ui components
+│   ├── ui/              # 55 Shadcn/ui components
 │   ├── layout/          # GameLayout wrapper
-│   └── TrackProgress.tsx
+│   ├── TrackProgress.tsx
+│   └── ErrorBoundary.tsx # React error boundary
 ├── lib/
-│   ├── gameLogic.ts     # Core game engine (~770 lines)
+│   ├── gameLogic.ts     # Core game engine (~920 lines)
 │   ├── queryClient.ts   # React Query config
 │   └── utils.ts
 ├── hooks/
@@ -58,8 +60,9 @@ client/src/
 server/
 ├── index.ts             # Express entry point
 ├── routes.ts            # REST API (room management)
-├── websocket.ts         # Real-time multiplayer (~300 lines)
+├── websocket.ts         # Real-time multiplayer (~620 lines)
 ├── storage.ts           # Abstract data layer (DB/memory fallback)
+├── static.ts            # Static file serving
 ├── db.ts                # Database connection
 └── vite.ts              # Vite dev server integration
 
@@ -81,11 +84,20 @@ script/build.ts          # Custom build script
 - **Server state:** React Query (available but minimally used)
 - **Multiplayer:** PostgreSQL for room persistence, WebSocket for real-time sync
 
+### Progression System (Championship)
+- Win a race (beat the bot) to "champion" that circuit at the current series
+- Championing a circuit at a series unlocks that circuit at the next series
+- A series becomes available when at least one circuit is championed at the previous series
+- Series order: Karting → F3 → F2 → F1
+- Practice mode bypasses all series/circuit locks
+- `championedCircuits` state: `{ [circuitId]: string[] }` maps circuits to championed series
+- Legacy `unlockedSeries` field kept for backward compatibility
+
 ### Key Files
-- `/client/src/lib/gameLogic.ts` - Question generation, bot timing, difficulty curves, sector colors
+- `/client/src/lib/gameLogic.ts` - Question generation, bot timing, difficulty curves, sector colors, progression system
 - `/client/src/pages/Game.tsx` - Main race gameplay with power-ups
 - `/client/src/pages/Multiplayer.tsx` - 1v1 multiplayer implementation
-- `/client/src/pages/Garage.tsx` - Shop and customization system
+- `/client/src/pages/Garage.tsx` - Dashboard (settings, telemetry stats, racer log)
 - `/server/websocket.ts` - Multiplayer game state machine
 - `/shared/schema.ts` - Database schema and TypeScript interfaces
 
@@ -123,11 +135,12 @@ script/build.ts          # Custom build script
 - Grants 2x sector boost
 - Harder question when active (bumps to next difficulty level via `getHarderDifficulty`)
 
-### Bot AI Timing
-- Base times: Karting 2500ms → F1 4000ms
+### Bot AI
+**Progress Speed** (time per lap advance): Karting 4000ms → F1 2000ms, ±30% random variation
+**Response Time** (for sector color comparison): Karting 2500ms → F1 6000ms base
 - Operation modifiers: Addition 0.85x (fastest) → Variables 1.25x (slowest)
 - Complexity analysis: carry/borrow counting, digit analysis
-- Randomness: ±25% variation
+- Randomness: ±25% variation on response time
 - Wet weather: +250ms base + harder numbers
 
 ### Weather System
@@ -136,19 +149,14 @@ script/build.ts          # Custom build script
 - Random: Circuit-specific rain probability
 - **Realism + Random**: Weather alternates 3-5 times during race (visual indicator shows current condition)
 
-### Track Limits (Penalty System)
-
-**Standard Mode:**
-- Mistakes 1-3: Warnings only (no time penalty)
-- Mistake 4: +5 second penalty
-- Mistakes 5-10: No additional penalties
-- Mistake 11: DNF
-
-**Realism Mode:**
-- Mistakes 1-2: Warnings
-- Mistake 3: Black & white flag
-- Mistake 4+: Cycling +5s/+10s penalties (4=+5, 5=+10, 6=+5, 7=+10...)
-- DNF threshold: `mistakes > Math.floor(raceLength * 0.5)` (50% of total laps)
+### Penalty System (Per-Question Retry)
+- Each question allows up to 4 attempts
+- Attempt 1 wrong: "2 ATTEMPTS LEFT" warning
+- Attempt 2 wrong: "1 ATTEMPT LEFT" warning
+- Attempt 3 wrong: "LAST CHANCE!" red warning
+- Attempt 4 wrong: DNF/Crash (race ends)
+- Wrong answer during AERO: AERO deactivated, same retry system applies
+- Practice mode: no penalties, just "TRY AGAIN" with infinite retries
 
 ### Race Configuration
 - Standard: 20 questions per race
@@ -166,6 +174,8 @@ script/build.ts          # Custom build script
 - questions: jsonb array
 - hostProgress, guestProgress, hostMistakes, guestMistakes
 - hostFinishTime, guestFinishTime, winnerId
+- powerUpsEnabled: boolean
+- createdAt: timestamp
 ```
 
 ## API & WebSocket

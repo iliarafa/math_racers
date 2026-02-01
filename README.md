@@ -1,6 +1,6 @@
 # F1 Math Racer: Grand Prix
 
-An interactive, gamified math practice web application. Players solve addition, subtraction, multiplication, division, and algebra problems in an authentic F1 racing theme with real-time multiplayer support, strategic power-ups, and a cosmetics system.
+An interactive, gamified math practice web application. Players solve addition, subtraction, multiplication, division, and algebra problems in an authentic F1 racing theme with real-time multiplayer support, strategic power-ups, and a championship progression system.
 
 ## Features
 
@@ -9,9 +9,11 @@ An interactive, gamified math practice web application. Players solve addition, 
 **Solo Racing**
 - F1-style 5-light countdown with audio cues
 - 20 questions per race (configurable via Realism Mode)
-- Grid position based on mistakes (0 = P1, 1-2 = P2, 3+ = position equals mistakes, 11+ = DNF/Crash)
+- Grid position based on mistakes (0 = P1, 1-2 = P2, 3+ = position equals mistakes)
+- Per-question retry system: 4 attempts per question, 4th wrong = DNF/Crash
 - Desktop keyboard support (0-9, Backspace, Enter)
 - Race against adaptive AI bot opponents
+- Championship progression: champion circuits to unlock higher series
 
 **Real-time Multiplayer**
 - 1v1 head-to-head races via WebSocket
@@ -59,9 +61,9 @@ The bot opponent's response time adapts dynamically based on three factors:
 
 **1. Difficulty Level Base Times:**
 - Karting: 2500ms base
-- F3: 3000ms base
-- F2: 3500ms base
-- F1: 4000ms base
+- F3: 3500ms base
+- F2: 4500ms base
+- F1: 6000ms base
 
 **2. Operation Type Modifier:**
 - Addition: 0.85x (fastest)
@@ -88,21 +90,16 @@ Both player and bot compete for the fastest time on each sector. Colors follow r
 
 Progress bars update live as times change, creating authentic F1 tension.
 
-### Track Limits & Penalty System
+### Penalty System (Per-Question Retry)
 
-**Standard Mode:**
-- Mistakes 1-3: Warnings only (no time penalty)
-- Mistake 4: +5 second penalty
-- Mistakes 5-10: No additional penalties
-- Mistake 11: DNF (Did Not Finish)
+Each question allows up to 4 attempts before a crash (DNF):
+- **1st wrong answer**: Warning — "2 ATTEMPTS LEFT"
+- **2nd wrong answer**: Warning — "1 ATTEMPT LEFT"
+- **3rd wrong answer**: Red warning — "LAST CHANCE!"
+- **4th wrong answer**: DNF (Did Not Finish) — race ends
 
-**Realism Mode:**
-- Mistakes 1-2: Warnings only
-- Mistake 3: Black & white flag warning
-- Mistake 4: +5 second penalty
-- Mistake 5: +10 second penalty
-- Mistakes 6+: Cycle repeats (+5, +10, +5, +10...)
-- DNF when mistakes exceed 50% of total laps (e.g., Monaco 78 laps = DNF at 40+ mistakes)
+Wrong answer during AERO deactivates AERO; the retry system still applies.
+Practice mode has no penalties — infinite retries with "TRY AGAIN" feedback.
 
 ### Weather System
 
@@ -112,33 +109,21 @@ Dynamic weather affects problem difficulty:
 - **Random**: Circuit-specific rain probability
 - **Realism + Random**: Weather alternates between dry and wet during the race
 
-### Speed Feedback System
+### Dashboard (Garage)
 
-**Standard Mode:**
-- Easy: Fast < 2s, Slow > 4s
-- Medium: Fast < 3s, Slow > 5s
-- Hard: Fast < 4s, Slow > 7s
-
-**Realism Mode (Full Grand Prix):**
-- First 5 questions calibrate your personal speed baseline
-- Questions 6+: At/under threshold = green, over = yellow
-- Wrong answers must be re-answered correctly before advancing
-- Cycling penalties: +5s, +10s, +5s, +10s... starting from 4th mistake
-- Crash (DNF) when mistakes exceed 50% of total laps
-
-### Garage & Customization
-
-**Vehicle Customization:**
-- **Liveries** (Team Colors): Ferrari Red (free), Alpine Blue (100 coins), Papaya Orange (200 coins), Silver Arrow (300 coins)
-- **Tire Types**: Hard/White (free), Medium/Yellow (150 coins), Soft/Red (250 coins)
-
-**Garage Dashboard:**
-- Realism Mode toggle
+**Pit Console (Settings):**
 - Sound effects toggle
+- Realism Mode toggle (full race distance & damage)
+- Power-Ups toggle (Overtake & Active Aero)
+- Retire from Championship (full progress reset)
+
+**Quick Links:**
+- Race Regulations (game rules)
 - Strategy Guide (interactive math reference with multiplication grids, division facts, number bonds)
-- Lap History (last 20 races with timestamps)
-- Personal Bests per circuit
-- Career Statistics (total laps, races won, career points, winning streak)
+- Reflex Training (F1 lights reaction time mini-game)
+
+**Telemetry:** Total Laps, Career Points, Races Won
+**Racer Log:** Last 20 races with timestamps and series info
 
 ### Post-Race Analytics
 
@@ -195,7 +180,7 @@ npm run db:push
 npm run dev
 ```
 
-The app will be available at `http://localhost:5000`
+The app will be available at `http://localhost:3000`
 
 ### iOS Build (Capacitor)
 
@@ -210,8 +195,8 @@ npx cap open ios
 ```
 client/               # React frontend
   src/
-    pages/            # Route components (Welcome, Game, Garage, Multiplayer)
-    components/       # UI components and layouts
+    pages/            # Route components (Welcome, Game, Garage, Multiplayer, etc.)
+    components/       # UI components, layouts, ErrorBoundary
     lib/              # Game logic, utilities, API client
     hooks/            # Custom React hooks
 
@@ -220,6 +205,7 @@ server/               # Express backend
   routes.ts           # API route definitions
   websocket.ts        # Multiplayer WebSocket handlers
   storage.ts          # Data access layer
+  static.ts           # Static file serving
 
 shared/               # Shared types and schemas
   schema.ts           # Drizzle schema and Zod validation
