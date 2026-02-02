@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
@@ -42,9 +42,8 @@ function MultiplicationGrid() {
           ))}
           
           {numbers.map(row => (
-            <>
-              <div 
-                key={`row-header-${row}`}
+            <Fragment key={row}>
+              <div
                 className={cn(
                   "grid-header bg-red-900/60 p-1.5 md:p-2 text-center font-bold text-red-300 transition-colors",
                   hoveredCell?.row === row && "bg-red-700 text-white"
@@ -74,7 +73,7 @@ function MultiplicationGrid() {
                   </div>
                 );
               })}
-            </>
+            </Fragment>
           ))}
         </div>
       </div>

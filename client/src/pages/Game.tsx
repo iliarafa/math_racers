@@ -657,6 +657,7 @@ export default function Game() {
   const [showBoostMessage, setShowBoostMessage] = useState<string | null>(null);
   const [overtakeAvailable, setOvertakeAvailable] = useState(false);       // Latched availability
   const overtakeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const overtakeRemainingRef = useRef<number>(0);  // Remaining ms when paused
   const wrongAttemptsRef = useRef<number[]>([]);
   // AERO system state (DRS-style zone-based)
   const [aeroZones, setAeroZones] = useState<number[]>([]);           // Zone start positions
@@ -900,7 +901,7 @@ export default function Game() {
     lines.push(`Difficulty,${selectedDriver?.name || 'Unknown'}`);
     lines.push(`Total Time,${formatTime(elapsedTime)}`);
     lines.push(`Total Mistakes,${finalMistakes}`);
-    lines.push(`Accuracy,${Math.round(((raceLength - finalMistakes) / raceLength) * 100)}%`);
+    lines.push(`Accuracy,${Math.max(0, Math.round(((raceLength - finalMistakes) / raceLength) * 100))}%`);
     lines.push('');
     
     // Lap-by-lap analytics
@@ -930,13 +931,13 @@ export default function Game() {
 
       navigator.share({
         title: 'F1 Math Racer - Race Telemetry',
-        text: `Race Results: ${selectedCircuit?.name || 'Race'} - ${formatTime(elapsedTime)} - ${Math.round(((raceLength - finalMistakes) / raceLength) * 100)}% accuracy`,
+        text: `Race Results: ${selectedCircuit?.name || 'Race'} - ${formatTime(elapsedTime)} - ${Math.max(0, Math.round(((raceLength - finalMistakes) / raceLength) * 100))}% accuracy`,
         files: [file]
       }).catch(() => {
         // If file sharing fails, try without file
         navigator.share({
           title: 'F1 Math Racer - Race Telemetry',
-          text: `Race Results: ${selectedCircuit?.name || 'Race'}\nTime: ${formatTime(elapsedTime)}\nAccuracy: ${Math.round(((raceLength - finalMistakes) / raceLength) * 100)}%\nMistakes: ${finalMistakes}`
+          text: `Race Results: ${selectedCircuit?.name || 'Race'}\nTime: ${formatTime(elapsedTime)}\nAccuracy: ${Math.max(0, Math.round(((raceLength - finalMistakes) / raceLength) * 100))}%\nMistakes: ${finalMistakes}`
         }).catch(() => {});
       });
     } else {
@@ -1446,6 +1447,7 @@ export default function Game() {
 
     // Calculate duration based on current energy (5 seconds at 100%)
     const durationMs = (overtakeEnergy / 100) * 5000;
+    overtakeRemainingRef.current = durationMs;
 
     // Set timer to end OVERTAKE when energy depletes
     overtakeTimerRef.current = setTimeout(() => {
@@ -1455,6 +1457,7 @@ export default function Game() {
       setOvertakeStartTime(null);
       setOvertakeStartEnergy(0);
       overtakeTimerRef.current = null;
+      overtakeRemainingRef.current = 0;
     }, durationMs);
   };
 
@@ -1519,6 +1522,37 @@ export default function Game() {
 
     return () => clearInterval(interval);
   }, [overtakeActive, overtakeStartTime, overtakeStartEnergy, isPaused]);
+
+  // Pause/resume OVERTAKE depletion timeout
+  useEffect(() => {
+    if (!overtakeActive) return;
+
+    if (isPaused) {
+      // Pause: clear timeout and calculate remaining time
+      if (overtakeTimerRef.current) {
+        clearTimeout(overtakeTimerRef.current);
+        overtakeTimerRef.current = null;
+        const elapsed = Date.now() - (overtakeStartTime ?? Date.now());
+        const totalDuration = (overtakeStartEnergy / 100) * 5000;
+        overtakeRemainingRef.current = Math.max(0, totalDuration - elapsed);
+      }
+    } else {
+      // Resume: restart timeout with remaining time
+      if (overtakeRemainingRef.current > 0 && !overtakeTimerRef.current) {
+        overtakeTimerRef.current = setTimeout(() => {
+          setOvertakeActive(false);
+          setBotFrozen(false);
+          setOvertakeEnergy(0);
+          setOvertakeStartTime(null);
+          setOvertakeStartEnergy(0);
+          overtakeTimerRef.current = null;
+          overtakeRemainingRef.current = 0;
+        }, overtakeRemainingRef.current);
+        // Adjust start time so drain animation stays in sync
+        setOvertakeStartTime(Date.now() - ((overtakeStartEnergy / 100) * 5000 - overtakeRemainingRef.current));
+      }
+    }
+  }, [isPaused, overtakeActive]);
 
   // Bot simulation during racing - uses setTimeout for per-lap timing
   useEffect(() => {
@@ -2314,7 +2348,7 @@ export default function Game() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Accuracy</span>
-                <span className="font-bold">{Math.round(((raceLength - finalMistakes) / raceLength) * 100)}%</span>
+                <span className="font-bold">{Math.max(0, Math.round(((raceLength - finalMistakes) / raceLength) * 100))}%</span>
               </div>
             </div>
 

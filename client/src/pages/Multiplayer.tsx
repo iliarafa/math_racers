@@ -277,6 +277,10 @@ export default function Multiplayer() {
         if (message.aeroZones) {
           setAeroZones(message.aeroZones);
         }
+        // Sync questions so both players answer the same set
+        if (message.questions) {
+          setQuestions(message.questions.map((q: any) => ({ display: q.display, answer: q.answer })));
+        }
         setGameStatus("countdown");
         setCountdownValue(5);
         break;
@@ -594,7 +598,9 @@ export default function Multiplayer() {
         circuitId: selectedCircuit.id,
         driverId: selectedDriver.id,
         weather: selectedWeather,
-        powerUpsEnabled
+        powerUpsEnabled,
+        questions: newQuestions.map(q => ({ display: q.display, answer: q.answer })),
+        raceLength
       }));
     } catch (err) {
       console.error("Failed to update room:", err);
@@ -1825,6 +1831,31 @@ export default function Multiplayer() {
               </button>
             </div>
           </div>
+        </div>
+      </GameLayout>
+    );
+  }
+
+  // Waiting for race result (e.g., crashed and waiting for opponent to finish)
+  if (gameStatus === "finished" && !raceResult) {
+    return (
+      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
+        <div className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="text-4xl font-bold text-red-500"
+          >
+            DNF
+          </motion.div>
+          <p className="text-muted-foreground">Waiting for opponent to finish...</p>
+          <button
+            onClick={goBack}
+            className="h-14 px-8 bg-primary text-primary-foreground rounded-lg font-bold text-lg hover:opacity-90 transition-all flex items-center gap-2"
+          >
+            <Home className="w-5 h-5" />
+            Back to Menu
+          </button>
         </div>
       </GameLayout>
     );

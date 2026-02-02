@@ -61,12 +61,44 @@ export function setupWebSocket(httpServer: Server) {
       if (clientInfo) {
         const room = rooms.get(clientInfo.roomCode);
         if (room) {
-          if (room.hostId === clientInfo.playerId) {
+          const isHost = room.hostId === clientInfo.playerId;
+          if (isHost) {
             room.hostWs = null;
-            broadcastToRoom(clientInfo.roomCode, { type: "player_disconnected", player: "host" });
           } else if (room.guestId === clientInfo.playerId) {
             room.guestWs = null;
-            broadcastToRoom(clientInfo.roomCode, { type: "player_disconnected", player: "guest" });
+          }
+          broadcastToRoom(clientInfo.roomCode, { type: "player_disconnected", player: isHost ? "host" : "guest" });
+
+          // If race is in progress, auto-finish the disconnected player so the other can complete
+          if (room.status === "racing") {
+            if (isHost && !room.hostFinished) {
+              room.hostFinished = true;
+              room.hostFinishTime = 999999;
+            } else if (!isHost && !room.guestFinished) {
+              room.guestFinished = true;
+              room.guestFinishTime = 999999;
+            }
+
+            // If the other player already finished, resolve the race
+            if (room.hostFinished && room.guestFinished) {
+              room.status = "finished";
+              let winnerId: string;
+              if (room.hostMistakes < room.guestMistakes) {
+                winnerId = room.hostId;
+              } else if (room.guestMistakes < room.hostMistakes) {
+                winnerId = room.guestId!;
+              } else {
+                winnerId = room.hostFinishTime! <= room.guestFinishTime! ? room.hostId : room.guestId!;
+              }
+              broadcastToRoom(clientInfo.roomCode, {
+                type: "race_complete",
+                winnerId,
+                hostFinishTime: room.hostFinishTime,
+                guestFinishTime: room.guestFinishTime,
+                hostMistakes: room.hostMistakes,
+                guestMistakes: room.guestMistakes
+              });
+            }
           }
         }
         clientToRoom.delete(ws);
@@ -84,7 +116,7 @@ function handleMessage(ws: WebSocket, message: any) {
       handleJoinRoom(ws, message);
       break;
     case "start_countdown":
-      handleStartCountdown(message.roomCode, message.circuitId, message.driverId, message.weather, message.powerUpsEnabled);
+      handleStartCountdown(message.roomCode, message.circuitId, message.driverId, message.weather, message.powerUpsEnabled, message.questions, message.raceLength);
       break;
     case "progress_update":
       handleProgressUpdate(ws, message);
@@ -171,11 +203,14 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
   }
 }
 
-function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: string, weather?: string, powerUpsEnabled?: boolean) {
+function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: string, weather?: string, powerUpsEnabled?: boolean, questions?: any[], raceLength?: number) {
   const room = rooms.get(roomCode);
   if (!room) return;
 
   room.status = "countdown";
+  if (raceLength !== undefined) {
+    room.raceLength = raceLength;
+  }
   room.hostProgress = 0;
   room.guestProgress = 0;
   room.hostMistakes = 0;
@@ -220,7 +255,8 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
     driverId,
     weather,
     powerUpsEnabled: room.powerUpsEnabled,
-    aeroZones: room.aeroZones
+    aeroZones: room.aeroZones,
+    questions
   });
 
   let count = 5;

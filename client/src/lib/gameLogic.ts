@@ -696,13 +696,22 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
   },
 };
 
+// Extended ranges beyond hard, used when wet/OVERTAKE boost is applied at F1 difficulty
+const BOOSTED_HARD_RANGES: OperationRanges = {
+  addition: { min: 75, max: 300 },
+  subtraction: { min: 75, max: 300 },
+  multiplication: { min: 7, max: 20 },
+  division: { min: 7, max: 20 },
+  variables: { min: 8, max: 30 },
+};
+
 // Get the next difficulty level for wet interpolation
 function getNextDifficulty(difficulty: Difficulty): Difficulty {
   switch (difficulty) {
     case 'beginner': return 'easy';
     case 'easy': return 'medium';
     case 'medium': return 'hard';
-    case 'hard': return 'hard'; // Cap at hard
+    case 'hard': return 'hard'; // Cap at hard (boosted ranges used separately)
   }
 }
 
@@ -720,8 +729,7 @@ function interpolateRange(
 
 function getOperationRanges(difficulty: Difficulty, isWet: boolean, boostFactor: number = 0): OperationRanges {
   const baseRanges = BASE_RANGES[difficulty];
-  const nextDifficulty = getNextDifficulty(difficulty);
-  const nextRanges = BASE_RANGES[nextDifficulty];
+  const nextRanges = difficulty === 'hard' ? BOOSTED_HARD_RANGES : BASE_RANGES[getNextDifficulty(difficulty)];
 
   // Calculate combined factor: wet adds 0.5, boost adds its value (e.g., 0.5 for OVERTAKE)
   const wetFactor = isWet ? 0.5 : 0;
