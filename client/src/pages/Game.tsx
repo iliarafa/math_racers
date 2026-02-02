@@ -1347,12 +1347,13 @@ export default function Game() {
     if (raceMode === 'bot' && !botFinished) {
       // Player finished before bot — P1
       position = 1;
-    } else if (finalMistakes === 0) {
-      position = 1;
-    } else if (finalMistakes <= 2) {
-      position = 2;
     } else {
-      position = finalMistakes;
+      // Finished behind bot: P2 baseline, +1 per mistake beyond 1
+      if (finalMistakes <= 1) {
+        position = 2;
+      } else {
+        position = 1 + finalMistakes; // 2 mistakes = P3, 3 = P4, etc.
+      }
     }
     if (position > DRIVERS_2025.length) position = DRIVERS_2025.length;
     return { position, driverName: DRIVERS_2025[position - 1] };
