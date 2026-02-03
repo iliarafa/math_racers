@@ -1141,11 +1141,41 @@ export default function Game() {
       };
       wrongAttemptsRef.current = [];
 
-      // When aero/overtake was active and we gained 2 sectors, add a bonus entry with same color
+      // When aero/overtake was active and we gained 2 sectors, add a bonus entry
       const actualGain = newProgress - progress; // Handles capping at raceLength
       if (hasBonus && actualGain === 2) {
+        // Bonus sector wasn't individually timed, so compute its color properly
+        const bonusSectorIndex = progress + 1;
+        const bonusBest = sectorBestTimesRef.current[bonusSectorIndex];
+        let bonusSectorColor: 'purple' | 'green' | 'yellow' = 'green';
+
+        if (!bonusBest || responseTime < bonusBest.bestTime) {
+          bonusSectorColor = 'purple';
+          // Demote bot's purple on this bonus sector if needed
+          if (bonusBest?.holder === 'bot') {
+            setBotLapResults(prev => {
+              const updated = [...prev];
+              if (updated[bonusSectorIndex]?.sectorColor === 'purple') {
+                updated[bonusSectorIndex] = { ...updated[bonusSectorIndex], sectorColor: 'green' };
+              }
+              return updated;
+            });
+          }
+          sectorBestTimesRef.current = [...sectorBestTimesRef.current];
+          sectorBestTimesRef.current[bonusSectorIndex] = { bestTime: responseTime, holder: 'player' as const };
+        } else {
+          const threshold = bonusBest.bestTime * 1.5;
+          bonusSectorColor = responseTime <= threshold ? 'green' : 'yellow';
+        }
+
+        // Force red if player had retries
+        if (hadRetries && !isPracticeMode) {
+          bonusSectorColor = 'red' as any;
+        }
+
         setLapResults(prev => [...prev, mainEntry, {
           ...mainEntry,
+          sectorColor: bonusSectorColor,
         }]);
       } else {
         setLapResults(prev => [...prev, mainEntry]);
@@ -1643,7 +1673,7 @@ export default function Game() {
     return (
       <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo */}
-        <div className="pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+        <div className="pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
           <Link href="/">
             <img
               src={logoImage}
@@ -1801,7 +1831,7 @@ export default function Game() {
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo — same position as driver select */}
-        <div className="pb-4 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+        <div className="pb-4 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
           <Link href="/">
             <img
               src={logoImage}
@@ -2645,7 +2675,7 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        <div className="flex flex-col justify-center px-4 md:px-8 gap-1">
+        <div className="flex flex-col justify-center px-4 md:px-8 gap-1 mt-12">
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
             <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">
