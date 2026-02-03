@@ -1641,9 +1641,9 @@ export default function Game() {
     ];
 
     return (
-      <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+      <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo */}
-        <div className="pb-4 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+        <div className="pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
           <Link href="/">
             <img
               src={logoImage}
@@ -1652,16 +1652,18 @@ export default function Game() {
             />
           </Link>
         </div>
-        {/* Series Selection */}
-        <div className="flex flex-col items-center px-8">
-          {/* Section Title */}
+        {/* Section Title — same position as pill toggle on track selection */}
+        <div className="mt-8 md:mt-24 mb-6 md:mb-24 flex justify-center">
           <h2
-            className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black mt-16 mb-16 md:mt-20 md:mb-20"
+            className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Formula1' }}
           >
             Select Series
           </h2>
-          <div className="flex flex-col items-center gap-3">
+        </div>
+        {/* Series Selection */}
+        <div className="flex flex-col items-center px-8">
+          <div className="flex flex-col items-center gap-3 md:gap-5">
           {seriesOptions.map((series) => {
             const isSelected = selectedDriver?.id === series.id;
             const isUnlocked = isPracticeMode || isSeriesAvailable(series.id, state.championedCircuits);
@@ -1685,7 +1687,7 @@ export default function Game() {
                   className="block"
                   style={{
                     fontFamily: 'Formula1',
-                    fontSize: window.innerWidth >= 768 ? '1.8rem' : '1.5rem',
+                    fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                     fontWeight: 'bold',
                     color: isUnlocked ? series.color : '#cccccc',
                     opacity: isSelected ? 1 : (isUnlocked ? 0.4 : 0.3),
@@ -1809,7 +1811,7 @@ export default function Game() {
           </Link>
         </div>
         {/* Race/Practice/Multiplayer Pill Toggle — same position as "Select Series" title */}
-        <div className="mt-8 md:mt-20 mb-6 md:mb-20 flex justify-center">
+        <div className="mt-8 md:mt-24 mb-6 md:mb-24 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
               onClick={() => { setSelectedTab('race'); setIsPracticeMode(false); setRaceMode('bot'); if (state.soundEnabled) playCarouselClick(); }}
@@ -1854,7 +1856,7 @@ export default function Game() {
         </div>
         {/* Main Content - Hero Card with Side Chevrons */}
         {/* Card area — same position as series buttons list */}
-        <div className="flex items-start justify-center px-8 pb-24 md:pb-32">
+        <div className="flex items-center justify-center px-8 pb-24 md:pb-32">
           {selectedTab === 'multiplayer' ? (
             /* Multiplayer Card */
             (<div className="flex flex-col items-center">
@@ -1863,7 +1865,7 @@ export default function Game() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="w-[350px] md:w-[450px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
                 style={{
                   backgroundColor: '#f0f0f0',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
@@ -1939,7 +1941,7 @@ export default function Game() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="w-[350px] md:w-[450px] rounded-[20px] p-4 md:p-6 flex flex-col transition-colors duration-300 select-none relative"
+                  className="w-[350px] md:w-[500px] rounded-[20px] p-4 md:p-6 flex flex-col transition-colors duration-300 select-none relative"
                   style={{ 
                     backgroundColor: '#f0f0f0',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
@@ -2290,7 +2292,7 @@ export default function Game() {
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="text-[7rem] leading-none font-bold text-red-600" style={{ fontFamily: 'Formula1, sans-serif' }}>DNF</div>
-          <div className="mt-8 flex flex-col gap-3 w-full max-w-xs md:max-w-sm">
+          <div className="mt-8 flex flex-col gap-3 w-full max-w-xs md:max-w-md">
             <Link href="/garage">
               <button className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all">
                 Back to Garage
@@ -2390,25 +2392,25 @@ export default function Game() {
 
                 {/* Sector Summary */}
                 <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
-                  <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-2 md:p-3 text-center">
+                  <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-2 md:p-4 text-center">
                     <div className="text-2xl font-bold text-purple-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'purple').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Purple</div>
                   </div>
-                  <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-2 md:p-3 text-center">
+                  <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-2 md:p-4 text-center">
                     <div className="text-2xl font-bold text-green-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'green').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Green</div>
                   </div>
-                  <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-2 md:p-3 text-center">
+                  <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-2 md:p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'yellow').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Yellow</div>
                   </div>
-                  <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-2 md:p-3 text-center">
+                  <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-2 md:p-4 text-center">
                     <div className="text-2xl font-bold text-red-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'red').length}
                     </div>
@@ -2751,7 +2753,7 @@ export default function Game() {
         <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
           {/* Status Messages - floating above keypad */}
           {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
-            <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-lg">
+            <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
               <div className="flex gap-2 items-center">
                 <AnimatePresence>
                   {showBoostMessage && (
@@ -2790,7 +2792,7 @@ export default function Game() {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-lg">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-xl">
             {/* Power-ups row - integrated as extended keypad row */}
             {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (
               <>

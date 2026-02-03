@@ -58,8 +58,8 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
       )}
       {/* Main Content Area */}
       <main className={cn(
-        "flex-1 flex flex-col max-w-5xl mx-auto w-full min-h-0",
-        lockViewport ? "p-0" : "p-6",
+        "flex-1 flex flex-col max-w-5xl md:max-w-6xl mx-auto w-full min-h-0",
+        lockViewport ? "p-0" : "p-6 md:p-10",
         darkBackground && "bg-black"
       )}>
         {children}

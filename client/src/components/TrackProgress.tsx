@@ -10,7 +10,7 @@ interface TrackProgressProps {
 
 export function TrackProgress({ circuit, progress, total, showPenalty = false }: TrackProgressProps) {
   return (
-    <div className="w-full max-w-lg mx-auto" data-testid="track-progress">
+    <div className="w-full max-w-lg md:max-w-xl mx-auto" data-testid="track-progress">
       <div
         id="circuit-visualizer"
         className="relative mx-auto flex justify-center items-center"
@@ -18,12 +18,12 @@ export function TrackProgress({ circuit, progress, total, showPenalty = false }:
         <img
           src={monzaTrackImage}
           alt="Monza Circuit"
-          className="w-full max-w-[400px] h-auto"
+          className="w-full max-w-[400px] md:max-w-[500px] h-auto"
           data-testid="track-image"
         />
       </div>
 
-      <div className="flex justify-between items-center text-sm text-muted-foreground mt-4 px-1">
+      <div className="flex justify-between items-center text-sm md:text-base text-muted-foreground mt-4 px-1">
         <span>Lap {progress} / {total}</span>
         <div id="dashboard-container" style={{ display: 'flex', gap: '15px', justifyContent: 'center', alignItems: 'center' }}>
           {showPenalty && (

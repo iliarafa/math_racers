@@ -1285,8 +1285,8 @@ export default function Multiplayer() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="w-[350px] md:w-[450px] rounded-[20px] p-6 flex flex-col transition-colors duration-300"
-            style={{ 
+            className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300"
+            style={{
               backgroundColor: '#f0f0f0',
               boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
             }}
@@ -1670,7 +1670,7 @@ export default function Multiplayer() {
           <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
             {/* Status Messages - floating above keypad */}
             {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
-              <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-lg">
+              <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
                 <div className="flex gap-2 items-center">
                   <AnimatePresence>
                     {showBoostMessage && (
@@ -1705,7 +1705,7 @@ export default function Multiplayer() {
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-lg">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-xl">
               {/* Power-ups row - integrated as top keypad row */}
               {/* Power-ups always visible; disabled when toggled off */}
                   {/* AERO Button */}
@@ -1883,7 +1883,7 @@ export default function Multiplayer() {
             {isWinner ? "YOU WIN!" : "YOU LOSE"}
           </motion.div>
           
-          <div className="bg-secondary rounded-xl p-6 w-full max-w-sm md:max-w-md">
+          <div className="bg-secondary rounded-xl p-6 w-full max-w-sm md:max-w-lg">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div></div>
               <div className="text-sm font-medium text-muted-foreground">You</div>

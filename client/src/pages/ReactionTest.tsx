@@ -185,7 +185,7 @@ export default function ReactionTest() {
 
   return (
     <GameLayout trackName="Reflex Training" lockViewport>
-      <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full px-4 space-y-4 md:space-y-6 overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center max-w-xl md:max-w-2xl mx-auto w-full px-4 space-y-4 md:space-y-8 overflow-hidden">
         
         <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
           <div className="flex gap-2 md:gap-3 justify-center">
@@ -211,7 +211,7 @@ export default function ReactionTest() {
         <button
           onClick={gameState === 'jumpstart' || gameState === 'result' ? resetGame : handleLaunch}
           className={cn(
-            "w-full max-w-xs h-16 md:h-20 rounded-xl font-bold text-xl md:text-2xl transition-all flex items-center justify-center gap-2 md:gap-3",
+            "w-full max-w-xs h-16 md:h-24 rounded-xl font-bold text-xl md:text-3xl transition-all flex items-center justify-center gap-2 md:gap-3",
             gameState === 'go' && "bg-green-600 text-white hover:bg-green-500 animate-pulse",
             gameState === 'idle' && "bg-primary text-primary-foreground hover:opacity-90",
             (gameState === 'sequence' || gameState === 'waiting') && "bg-yellow-600 text-white hover:bg-yellow-500",

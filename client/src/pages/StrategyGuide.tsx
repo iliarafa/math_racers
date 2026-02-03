@@ -28,12 +28,12 @@ function MultiplicationGrid() {
       
       <div className="overflow-x-auto -mx-2 px-2">
         <div className="grid-container font-mono text-xs md:text-base" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(32px, 1fr))', gap: '2px', minWidth: '340px' }}>
-          <div className="grid-header-corner bg-neutral-800 p-1.5 md:p-2 text-center font-bold text-neutral-500">×</div>
+          <div className="grid-header-corner bg-neutral-800 p-1.5 md:p-2.5 text-center font-bold text-neutral-500">×</div>
           {numbers.map(n => (
             <div 
               key={`header-${n}`} 
               className={cn(
-                "grid-header bg-red-900/60 p-1.5 md:p-2 text-center font-bold text-red-300 transition-colors",
+                "grid-header bg-red-900/60 p-1.5 md:p-2.5 text-center font-bold text-red-300 transition-colors",
                 hoveredCell?.col === n && "bg-red-700 text-white"
               )}
             >
@@ -45,7 +45,7 @@ function MultiplicationGrid() {
             <Fragment key={row}>
               <div
                 className={cn(
-                  "grid-header bg-red-900/60 p-1.5 md:p-2 text-center font-bold text-red-300 transition-colors",
+                  "grid-header bg-red-900/60 p-1.5 md:p-2.5 text-center font-bold text-red-300 transition-colors",
                   hoveredCell?.row === row && "bg-red-700 text-white"
                 )}
               >
@@ -60,7 +60,7 @@ function MultiplicationGrid() {
                     onMouseEnter={() => setHoveredCell({ row, col })}
                     onMouseLeave={() => setHoveredCell(null)}
                     className={cn(
-                      "p-1.5 md:p-2 text-center transition-all cursor-pointer border border-neutral-700",
+                      "p-1.5 md:p-2.5 text-center transition-all cursor-pointer border border-neutral-700",
                       isIntersection 
                         ? "bg-yellow-500 text-black font-bold scale-110 z-10 shadow-lg shadow-yellow-500/50" 
                         : isHighlighted 
@@ -97,7 +97,7 @@ function DivisionContent() {
         <p className="text-sm text-neutral-400">Division is the reverse of multiplication. If you know one, you know the other!</p>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         {factFamilies.map((family, i) => (
           <div key={i} className="tech-card-glow">
             <div className="text-xs text-neutral-500 mb-2 font-mono">FACT FAMILY #{i + 1}</div>
@@ -136,7 +136,7 @@ function AdditionContent() {
         <p className="text-sm text-neutral-400">Master these number pairs to add faster than your rivals!</p>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 md:grid-cols-3">
         {numberBonds.map((bond, i) => (
           <div key={i} className="tech-card-glow">
             <div className="text-center mb-3">
@@ -184,7 +184,7 @@ function SubtractionContent() {
         <p className="text-sm text-neutral-400">Calculate the gap between positions like a race engineer!</p>
       </div>
       
-      <div className="grid gap-4">
+      <div className="grid gap-4 md:gap-6">
         {examples.map((ex, i) => (
           <div key={i} className="tech-card-glow flex flex-col md:flex-row md:items-center gap-4">
             <div className="text-xl font-mono font-bold text-white bg-orange-600 px-4 py-2 rounded text-center min-w-[120px]">
@@ -226,7 +226,7 @@ function VariablesContent() {
         </p>
       </div>
       
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         {examples.map((ex, i) => (
           <div key={i} className="tech-card-glow">
             <div className="flex items-center gap-4 mb-3">
@@ -279,7 +279,7 @@ export default function StrategyGuide() {
 
   return (
     <GameLayout darkBackground lockViewport>
-      <div className="strategy-view bg-black flex-1 overflow-y-auto p-4 md:p-6">
+      <div className="strategy-view bg-black flex-1 overflow-y-auto p-4 md:p-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex items-center gap-4">
             <Link href="/garage">
@@ -291,7 +291,7 @@ export default function StrategyGuide() {
               </button>
             </Link>
             <div>
-              <h1 className="text-lg md:text-2xl font-bold tracking-tight text-white font-mono">RACE STRATEGY & DATA</h1>
+              <h1 className="text-lg md:text-3xl font-bold tracking-tight text-white font-mono">RACE STRATEGY & DATA</h1>
               <p className="text-xs text-neutral-400">Your complete math reference guide</p>
             </div>
           </div>
@@ -302,7 +302,7 @@ export default function StrategyGuide() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 min-h-11 min-w-11 rounded-lg font-mono text-xs md:text-sm transition-all",
+                  "flex items-center gap-1.5 px-3 min-h-11 min-w-11 rounded-lg font-mono text-xs md:text-base transition-all",
                   activeTab === tab.id
                     ? "bg-white text-black shadow-lg shadow-white/20"
                     : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white"
