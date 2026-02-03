@@ -69,7 +69,7 @@ export default function Garage() {
               </div>
             </Link>
 
-            <Link href="/reaction" className="col-span-1 sm:col-span-2">
+            <Link href="/reaction" className="col-span-1">
               <div
                 className="h-full border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px] bg-black"
                 data-testid="button-reflex-training"

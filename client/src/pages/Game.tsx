@@ -1718,7 +1718,7 @@ export default function Game() {
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => { if (state.soundEnabled) playCarouselClick(); requestAnimationFrame(() => handleDriverSelect(selectedDriver)); }}
+              onClick={() => { if (state.soundEnabled) playCarouselClick(); handleDriverSelect(selectedDriver); }}
               className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{
                 fontFamily: 'Formula1',
@@ -1809,7 +1809,7 @@ export default function Game() {
           </Link>
         </div>
         {/* Race/Practice/Multiplayer Pill Toggle — same position as "Select Series" title */}
-        <div className="mt-16 md:mt-20 mb-16 md:mb-20 flex justify-center">
+        <div className="mt-8 md:mt-20 mb-6 md:mb-20 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
               onClick={() => { setSelectedTab('race'); setIsPracticeMode(false); setRaceMode('bot'); if (state.soundEnabled) playCarouselClick(); }}
@@ -1854,7 +1854,7 @@ export default function Game() {
         </div>
         {/* Main Content - Hero Card with Side Chevrons */}
         {/* Card area — same position as series buttons list */}
-        <div className="flex items-center justify-center px-8 pb-24 md:pb-32">
+        <div className="flex items-start justify-center px-8 pb-24 md:pb-32">
           {selectedTab === 'multiplayer' ? (
             /* Multiplayer Card */
             (<div className="flex flex-col items-center">
@@ -1939,7 +1939,7 @@ export default function Game() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="w-[350px] md:w-[450px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none relative"
+                  className="w-[350px] md:w-[450px] rounded-[20px] p-4 md:p-6 flex flex-col transition-colors duration-300 select-none relative"
                   style={{ 
                     backgroundColor: '#f0f0f0',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
@@ -1974,18 +1974,18 @@ export default function Game() {
                   </div>
 
                   {/* Track Map */}
-                  <div className="flex-1 flex items-center justify-center py-6">
+                  <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                     {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
                       <img 
                         src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black} 
                         alt={`${displayCircuit.name} circuit`}
-                        className="h-40 md:h-52 object-contain"
+                        className="h-32 md:h-52 object-contain"
                         style={{ maxWidth: '280px' }}
                       />
                     ) : (
                       <svg 
                         viewBox="0 0 300 160" 
-                        className="w-full h-40 md:h-52"
+                        className="w-full h-32 md:h-52"
                         style={{ maxWidth: '280px' }}
                       >
                         <path
@@ -2017,7 +2017,7 @@ export default function Game() {
                   </div>
 
                   {/* Info - Math Type */}
-                  <div className="text-center mb-4">
+                  <div className="text-center mb-2 md:mb-4">
                     <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
                     <div 
                       className="text-lg font-bold uppercase text-gray-900"
@@ -2086,7 +2086,7 @@ export default function Game() {
         </div>
         {/* Track Dots Indicator - only show for track selection */}
         {selectedTab !== 'multiplayer' && (
-          <div className="fixed bottom-40 left-0 right-0 flex justify-center gap-2">
+          <div className="fixed bottom-44 left-0 right-0 flex justify-center gap-2">
             {CIRCUITS.map((circuit, index) => {
               const dotLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false);
               return (
@@ -2389,30 +2389,30 @@ export default function Game() {
                 </div>
 
                 {/* Sector Summary */}
-                <div className="grid grid-cols-4 gap-3 mb-6">
-                  <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-3 text-center">
+                <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
+                  <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-2 md:p-3 text-center">
                     <div className="text-2xl font-bold text-purple-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'purple').length}
                     </div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Purple</div>
+                    <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Purple</div>
                   </div>
-                  <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-3 text-center">
+                  <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-2 md:p-3 text-center">
                     <div className="text-2xl font-bold text-green-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'green').length}
                     </div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Green</div>
+                    <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Green</div>
                   </div>
-                  <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-3 text-center">
+                  <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-2 md:p-3 text-center">
                     <div className="text-2xl font-bold text-yellow-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'yellow').length}
                     </div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Yellow</div>
+                    <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Yellow</div>
                   </div>
-                  <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-3 text-center">
+                  <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-2 md:p-3 text-center">
                     <div className="text-2xl font-bold text-red-400" style={{ fontFamily: 'Formula1' }}>
                       {lapResults.filter(l => l.sectorColor === 'red').length}
                     </div>
-                    <div className="text-xs text-gray-400 uppercase tracking-wide">Red</div>
+                    <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Red</div>
                   </div>
                 </div>
 
@@ -2643,7 +2643,7 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        <div className="flex flex-col justify-center px-4 md:px-8 gap-1 mt-8">
+        <div className="flex flex-col justify-center px-4 md:px-8 gap-1">
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
             <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">

@@ -92,10 +92,6 @@
   --radius: 0.5rem;
 }
 
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
 html, body {
   overflow-x: hidden;
   overscroll-behavior-x: none;
