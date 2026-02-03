@@ -36,7 +36,7 @@ export default function Garage() {
   return (
     <GameLayout coins={state.coins} hideGarageButton darkBackground lockViewport>
       <div className="flex-1 overflow-y-auto p-4 md:p-5 bg-black">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl md:max-w-3xl mx-auto">
 
           <div className="flex items-center gap-3 mb-5">
             <Link href="/">

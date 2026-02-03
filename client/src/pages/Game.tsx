@@ -1648,7 +1648,7 @@ export default function Game() {
             <img
               src={logoImage}
               alt="F1 Math Racer"
-              className="h-8 object-contain cursor-pointer hover:opacity-70 transition-opacity"
+              className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
             />
           </Link>
         </div>
@@ -1656,7 +1656,7 @@ export default function Game() {
         <div className="flex flex-col items-center px-8">
           {/* Section Title */}
           <h2
-            className="text-3xl font-bold uppercase tracking-wider text-black mt-16 mb-16"
+            className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black mt-16 mb-16 md:mt-20 md:mb-20"
             style={{ fontFamily: 'Formula1' }}
           >
             Select Series
@@ -1676,7 +1676,7 @@ export default function Game() {
                 }}
                 whileTap={isUnlocked ? { scale: 0.98 } : undefined}
                 className={cn(
-                  "w-full max-w-xs py-3 text-center",
+                  "w-full max-w-xs md:max-w-md py-3 text-center",
                   !isUnlocked && "cursor-not-allowed"
                 )}
                 data-testid={`level-${series.id}`}
@@ -1685,7 +1685,7 @@ export default function Game() {
                   className="block"
                   style={{
                     fontFamily: 'Formula1',
-                    fontSize: '1.5rem',
+                    fontSize: window.innerWidth >= 768 ? '1.8rem' : '1.5rem',
                     fontWeight: 'bold',
                     color: isUnlocked ? series.color : '#cccccc',
                     opacity: isSelected ? 1 : (isUnlocked ? 0.4 : 0.3),
@@ -1719,8 +1719,8 @@ export default function Game() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => { if (state.soundEnabled) playCarouselClick(); handleDriverSelect(selectedDriver); }}
-              className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
-              style={{ 
+              className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+              style={{
                 fontFamily: 'Formula1',
                 backgroundColor: '#22c55e',
                 animation: 'pulse-green 2s infinite'
@@ -1798,23 +1798,23 @@ export default function Game() {
 
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
-        {/* App Logo */}
+        {/* App Logo — same position as driver select */}
         <div className="pb-4 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
           <Link href="/">
             <img
               src={logoImage}
               alt="F1 Math Racer"
-              className="h-8 object-contain cursor-pointer hover:opacity-70 transition-opacity"
+              className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
             />
           </Link>
         </div>
-        {/* Race/Practice/Multiplayer Pill Toggle */}
-        <div className="pb-4 flex justify-center">
+        {/* Race/Practice/Multiplayer Pill Toggle — same position as "Select Series" title */}
+        <div className="mt-16 md:mt-20 mb-16 md:mb-20 flex justify-center">
           <div className="rounded-full p-1 flex gap-1 bg-gray-200">
             <button
               onClick={() => { setSelectedTab('race'); setIsPracticeMode(false); setRaceMode('bot'); if (state.soundEnabled) playCarouselClick(); }}
               className={cn(
-                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
+                "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
                 selectedTab === 'race'
                   ? "bg-red-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
@@ -1827,7 +1827,7 @@ export default function Game() {
             <button
               onClick={() => { setSelectedTab('practice'); setIsPracticeMode(true); setRaceMode('solo'); if (state.soundEnabled) playCarouselClick(); }}
               className={cn(
-                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
+                "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
                 selectedTab === 'practice' 
                   ? "bg-green-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
@@ -1840,7 +1840,7 @@ export default function Game() {
             <button
               onClick={() => { setSelectedTab('multiplayer'); if (state.soundEnabled) playCarouselClick(); }}
               className={cn(
-                "px-4 py-2 rounded-full font-bold text-xs uppercase tracking-wider transition-all",
+                "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
                 selectedTab === 'multiplayer'
                   ? "bg-blue-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
@@ -1853,7 +1853,8 @@ export default function Game() {
           </div>
         </div>
         {/* Main Content - Hero Card with Side Chevrons */}
-        <div className="flex-1 flex items-start justify-center px-8 pb-24 pt-4">
+        {/* Card area — same position as series buttons list */}
+        <div className="flex items-start justify-center px-8 pb-24 md:pb-32">
           {selectedTab === 'multiplayer' ? (
             /* Multiplayer Card */
             (<div className="flex flex-col items-center">
@@ -1862,8 +1863,8 @@ export default function Game() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
-                style={{ 
+                className="w-[350px] md:w-[450px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                style={{
                   backgroundColor: '#f0f0f0',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
                 }}
@@ -1938,7 +1939,7 @@ export default function Game() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none relative"
+                  className="w-[350px] md:w-[450px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none relative"
                   style={{ 
                     backgroundColor: '#f0f0f0',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
@@ -1978,13 +1979,13 @@ export default function Game() {
                       <img 
                         src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black} 
                         alt={`${displayCircuit.name} circuit`}
-                        className="h-40 object-contain"
+                        className="h-40 md:h-52 object-contain"
                         style={{ maxWidth: '280px' }}
                       />
                     ) : (
                       <svg 
                         viewBox="0 0 300 160" 
-                        className="w-full h-40"
+                        className="w-full h-40 md:h-52"
                         style={{ maxWidth: '280px' }}
                       >
                         <path
@@ -2111,7 +2112,7 @@ export default function Game() {
             whileTap={!isCircuitLocked ? { scale: 0.98 } : undefined}
             onClick={() => { if (isCircuitLocked) return; if (state.soundEnabled) playCarouselClick(); selectedTab === 'multiplayer' ? setLocation('/multiplayer') : handleStartRace(); }}
             className={cn(
-              "w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white",
+              "w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white",
               isCircuitLocked && "opacity-40 cursor-not-allowed"
             )}
             style={{
@@ -2289,7 +2290,7 @@ export default function Game() {
       <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="text-[7rem] leading-none font-bold text-red-600" style={{ fontFamily: 'Formula1, sans-serif' }}>DNF</div>
-          <div className="mt-8 flex flex-col gap-3 w-full max-w-xs">
+          <div className="mt-8 flex flex-col gap-3 w-full max-w-xs md:max-w-sm">
             <Link href="/garage">
               <button className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all">
                 Back to Garage
@@ -2642,7 +2643,7 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        <div className="flex flex-col justify-center px-4 gap-1">
+        <div className="flex flex-col justify-center px-4 md:px-8 gap-1">
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
             <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">
@@ -2750,7 +2751,7 @@ export default function Game() {
         <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
           {/* Status Messages - floating above keypad */}
           {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
-            <div className="flex justify-center mb-2 h-6 w-full max-w-md">
+            <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-lg">
               <div className="flex gap-2 items-center">
                 <AnimatePresence>
                   {showBoostMessage && (
@@ -2789,7 +2790,7 @@ export default function Game() {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-lg">
             {/* Power-ups row - integrated as extended keypad row */}
             {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (
               <>

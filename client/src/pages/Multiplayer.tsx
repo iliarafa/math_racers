@@ -986,7 +986,7 @@ export default function Multiplayer() {
             <img 
               src={logoImage} 
               alt="F1 Math Racer" 
-              className="h-8 object-contain cursor-pointer hover:opacity-70 transition-opacity"
+              className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
               data-testid="img-app-logo"
             />
           </Link>
@@ -998,7 +998,7 @@ export default function Multiplayer() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[350px] bg-white rounded-[24px] p-6 sm:p-8"
+          className="w-full max-w-[350px] md:max-w-[450px] bg-white rounded-[24px] p-6 sm:p-8"
           style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
         >
           {/* Header Section */}
@@ -1285,7 +1285,7 @@ export default function Multiplayer() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.2 }}
-            className="w-[350px] rounded-[20px] p-6 flex flex-col transition-colors duration-300"
+            className="w-[350px] md:w-[450px] rounded-[20px] p-6 flex flex-col transition-colors duration-300"
             style={{ 
               backgroundColor: '#f0f0f0',
               boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
@@ -1313,7 +1313,7 @@ export default function Multiplayer() {
                 <img 
                   src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black} 
                   alt={`${displayCircuit.name} circuit`}
-                  className="h-40 object-contain"
+                  className="h-40 md:h-52 object-contain"
                   style={{ maxWidth: '280px' }}
                 />
               ) : (
@@ -1413,7 +1413,7 @@ export default function Multiplayer() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={startRace}
-            className="w-full max-w-sm py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-black"
+            className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-black"
             style={{ 
               fontFamily: 'Formula1',
               backgroundColor: '#ffffff',
@@ -1670,7 +1670,7 @@ export default function Multiplayer() {
           <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
             {/* Status Messages - floating above keypad */}
             {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
-              <div className="flex justify-center mb-2 h-6 w-full max-w-md">
+              <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-lg">
                 <div className="flex gap-2 items-center">
                   <AnimatePresence>
                     {showBoostMessage && (
@@ -1705,7 +1705,7 @@ export default function Multiplayer() {
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-lg">
               {/* Power-ups row - integrated as top keypad row */}
               {/* Power-ups always visible; disabled when toggled off */}
                   {/* AERO Button */}
@@ -1883,7 +1883,7 @@ export default function Multiplayer() {
             {isWinner ? "YOU WIN!" : "YOU LOSE"}
           </motion.div>
           
-          <div className="bg-secondary rounded-xl p-6 w-full max-w-sm">
+          <div className="bg-secondary rounded-xl p-6 w-full max-w-sm md:max-w-md">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div></div>
               <div className="text-sm font-medium text-muted-foreground">You</div>
