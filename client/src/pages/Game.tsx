@@ -1718,7 +1718,7 @@ export default function Game() {
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => { if (state.soundEnabled) playCarouselClick(); handleDriverSelect(selectedDriver); }}
+              onClick={() => { if (state.soundEnabled) playCarouselClick(); requestAnimationFrame(() => handleDriverSelect(selectedDriver)); }}
               className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{
                 fontFamily: 'Formula1',
@@ -1854,7 +1854,7 @@ export default function Game() {
         </div>
         {/* Main Content - Hero Card with Side Chevrons */}
         {/* Card area — same position as series buttons list */}
-        <div className="flex items-start justify-center px-8 pb-24 md:pb-32">
+        <div className="flex items-center justify-center px-8 pb-24 md:pb-32">
           {selectedTab === 'multiplayer' ? (
             /* Multiplayer Card */
             (<div className="flex flex-col items-center">
@@ -2161,7 +2161,7 @@ export default function Game() {
   // Countdown screen with F1 starting lights
   if (gameStatus === 'countdown') {
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden pb-16">
           
           {/* F1 Starting Lights */}
@@ -2194,7 +2194,7 @@ export default function Game() {
   // GO state - lights out, green indicator
   if (gameStatus === 'go') {
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center gap-8 overflow-hidden pb-16">
           
           {/* Green GO indicator */}
@@ -2235,7 +2235,7 @@ export default function Game() {
   if (gameStatus === 'crashed') {
     if (showCrashDebrief) {
       return (
-        <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+        <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
           <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
             <div className="bg-black p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
@@ -2287,7 +2287,7 @@ export default function Game() {
     }
 
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="text-[7rem] leading-none font-bold text-red-600" style={{ fontFamily: 'Formula1, sans-serif' }}>DNF</div>
           <div className="mt-8 flex flex-col gap-3 w-full max-w-xs md:max-w-sm">
@@ -2313,7 +2313,7 @@ export default function Game() {
     const isNewBest = previousBest ? elapsedTime < previousBest : true;
 
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-start max-w-xl mx-auto w-full overflow-y-auto p-4">
           <div className="rounded-xl p-6 w-full text-center space-y-6">
 
@@ -2494,7 +2494,7 @@ export default function Game() {
 
   // Racing phase
   return (
-    <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
       <div className="flex-1 flex flex-col w-full overflow-hidden relative min-h-0">
 
         {/* Pause Overlay */}
@@ -2643,7 +2643,7 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        <div className="flex flex-col justify-center px-4 md:px-8 gap-1">
+        <div className="flex flex-col justify-center px-4 md:px-8 gap-1 mt-8">
           {/* Bot Progress Bar (only in bot mode) */}
           {raceMode === 'bot' && (
             <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">

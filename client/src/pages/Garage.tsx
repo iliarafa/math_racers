@@ -34,7 +34,7 @@ export default function Garage() {
   };
 
   return (
-    <GameLayout coins={state.coins} hideGarageButton darkBackground lockViewport>
+    <GameLayout hideGarageButton darkBackground lockViewport>
       <div className="flex-1 overflow-y-auto p-4 md:p-5 bg-black">
         <div className="max-w-2xl md:max-w-3xl mx-auto">
 
@@ -69,7 +69,7 @@ export default function Garage() {
               </div>
             </Link>
 
-            <Link href="/reaction" className="col-span-1">
+            <Link href="/reaction" className="col-span-1 sm:col-span-2">
               <div
                 className="h-full border border-[#333] rounded-2xl p-4 shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px] bg-black"
                 data-testid="button-reflex-training"
@@ -182,9 +182,9 @@ export default function Garage() {
 
             <div
               className="sm:col-span-2 border border-[#333] rounded-2xl p-4 shadow-lg bg-[#000000]"
-              data-testid="card-telemetry"
+              data-testid="card-career"
             >
-              <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Telemetry</p>
+              <p className="text-xs uppercase tracking-widest text-white/50 mb-3">Career</p>
               <div className="flex justify-between items-end">
                 <div className="text-center flex-1" data-testid="stat-laps">
                   <div className="text-3xl md:text-4xl font-normal text-white" style={{ fontFamily: 'Formula1' }}>

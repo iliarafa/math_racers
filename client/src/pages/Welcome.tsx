@@ -36,7 +36,7 @@ export default function Welcome() {
   const { state } = useGameState();
 
   return (
-    <GameLayout coins={state.coins} hideHeader lockViewport>
+    <GameLayout hideHeader lockViewport>
       <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 md:space-y-8 px-4 overflow-hidden">
         
         <div className="space-y-6 max-w-2xl flex flex-col items-center">

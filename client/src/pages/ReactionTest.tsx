@@ -184,7 +184,7 @@ export default function ReactionTest() {
   };
 
   return (
-    <GameLayout coins={state.coins} trackName="Reflex Training" lockViewport>
+    <GameLayout trackName="Reflex Training" lockViewport>
       <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full px-4 space-y-4 md:space-y-6 overflow-hidden">
         
         <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">

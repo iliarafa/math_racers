@@ -1,11 +1,10 @@
 import { Link } from "wouter";
-import { Trophy, Wrench, Flag, Home } from "lucide-react";
+import { Wrench, Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
 interface GameLayoutProps {
   children: React.ReactNode;
-  coins: number;
   trackName?: string;
   hideHeader?: boolean;
   lockViewport?: boolean;
@@ -13,7 +12,7 @@ interface GameLayoutProps {
   hideGarageButton?: boolean;
 }
 
-export function GameLayout({ children, coins, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false }: GameLayoutProps) {
   return (
     <div className={cn(
       "text-foreground flex flex-col",
@@ -54,11 +53,6 @@ export function GameLayout({ children, coins, trackName, hideHeader = false, loc
                 </button>
               </Link>
             )}
-            
-            <div className="flex items-center gap-1.5 md:gap-2 text-sm px-2 md:px-3 py-1.5 rounded-md text-[#ffffff] bg-[#000000]" style={{ fontFamily: 'Formula1' }}>
-              <Trophy className="w-3 h-3" />
-              <span>{coins}</span>
-            </div>
           </div>
         </header>
       )}

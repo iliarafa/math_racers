@@ -1151,7 +1151,7 @@ export default function Multiplayer() {
   // Waiting room
   if (gameStatus === "waiting") {
     return (
-      <GameLayout coins={state.coins} hideHeader>
+      <GameLayout hideHeader>
         <div className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
           <h1 className="text-2xl font-bold">Waiting for Opponent</h1>
           
@@ -1447,7 +1447,7 @@ export default function Multiplayer() {
     // countdownValue goes 5→1, so lights on = 6 - countdownValue
     const lightsOn = 6 - countdownValue;
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
+      <GameLayout trackName={selectedCircuit?.name || ""}>
         <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden pb-16">
           <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
             <div className="flex gap-2 md:gap-3 justify-center">
@@ -1482,7 +1482,7 @@ export default function Multiplayer() {
       : questions[currentQuestionIndex];
     
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""} lockViewport>
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col w-full overflow-hidden relative min-h-0">
           {/* Header */}
           <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
@@ -1839,7 +1839,7 @@ export default function Multiplayer() {
   // Waiting for race result (e.g., crashed and waiting for opponent to finish)
   if (gameStatus === "finished" && !raceResult) {
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
+      <GameLayout trackName={selectedCircuit?.name || ""}>
         <div className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
           <motion.div
             initial={{ scale: 0 }}
@@ -1870,7 +1870,7 @@ export default function Multiplayer() {
     const opponentMistakesResult = isHost ? raceResult.guestMistakes : raceResult.hostMistakes;
     
     return (
-      <GameLayout coins={state.coins} trackName={selectedCircuit?.name || ""}>
+      <GameLayout trackName={selectedCircuit?.name || ""}>
         <div className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
           <motion.div
             initial={{ scale: 0 }}
