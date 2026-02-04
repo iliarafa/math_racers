@@ -1677,7 +1677,7 @@ export default function Game() {
       { id: 'f1', name: 'FORMULA 1', description: 'Champion', driver: DRIVERS.find(d => d.id === 'f1'), color: '#e10600' },
       { id: 'f2', name: 'FORMULA 2', description: 'Pro', driver: DRIVERS.find(d => d.id === 'f2'), color: '#00a0dc' },
       { id: 'f3', name: 'FORMULA 3', description: 'Rookie', driver: DRIVERS.find(d => d.id === 'f3'), color: '#000000' },
-      { id: 'karting', name: 'KARTING', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting'), color: '#FFDE21' },
+      { id: 'karting', name: 'KARTING', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting'), color: '#FFCE1B' },
     ];
 
     return (
