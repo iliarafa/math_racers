@@ -37,7 +37,7 @@ export default function Welcome() {
 
   return (
     <GameLayout hideHeader lockViewport>
-      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 px-4 overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-16 px-4 overflow-hidden">
         
         <div className="space-y-12 max-w-2xl flex flex-col items-center">
           <img 
