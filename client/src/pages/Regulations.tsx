@@ -36,7 +36,12 @@ export default function Regulations() {
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 Build energy by answering correctly. Faster answers charge more energy.
               </p>
-              <p className="text-white/50 text-sm md:text-base">Activates when within two sectors of your opponent</p>
+              <div className="text-white/50 text-sm md:text-base space-y-1">
+                <p>Activates when behind and within two sectors of your opponent</p>
+                <p>2x progress per correct answer while active</p>
+                <p>Harder questions while active</p>
+                <p>A wrong answer depletes all energy immediately</p>
+              </div>
             </section>
 
             <section>
@@ -66,11 +71,11 @@ export default function Regulations() {
             <section>
               <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Track Limits</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
-                Wrong answers trigger warnings and time penalties.
+                Each question allows up to 4 attempts.
               </p>
               <div className="text-white/50 text-sm md:text-base space-y-1">
-                <p>Warnings come first, then time penalties</p>
-                <p>Too many mistakes results in disqualification</p>
+                <p>Wrong answers show a track limits warning</p>
+                <p>4th wrong attempt on the same question results in a crash (DNF)</p>
               </div>
             </section>
 
@@ -104,10 +109,8 @@ export default function Regulations() {
                 Full Grand Prix distance with stricter rules.
               </p>
               <div className="text-white/50 text-sm md:text-base space-y-1">
-                <p>Must answer correctly to advance</p>
-                <p>Additional AERO zones available</p>
-                <p>Stricter penalty system</p>
-                <p>Full lap count per circuit</p>
+                <p>Full lap count per circuit (44–78 laps)</p>
+                <p>Five AERO zones instead of two</p>
               </div>
             </section>
           </div>
