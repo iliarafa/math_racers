@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, type Difficulty } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight, Zap } from "lucide-react";
@@ -117,7 +117,7 @@ type Weather = 'dry' | 'wet' | 'random';
 
 
 export default function Multiplayer() {
-  const { state, addCoins } = useGameState();
+  const { state, addCoins, addCareerPoints } = useGameState();
   const [, setLocation] = useLocation();
   
   // Lobby state
@@ -354,6 +354,9 @@ export default function Multiplayer() {
         if (message.winnerId === playerIdRef.current) {
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
           addCoins(100);
+          addCareerPoints(POSITION_POINTS[1]);
+        } else {
+          addCareerPoints(POSITION_POINTS[2]);
         }
         break;
       // Power-ups events

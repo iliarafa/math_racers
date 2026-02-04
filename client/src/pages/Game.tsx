@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -1102,9 +1102,6 @@ export default function Game() {
       addCoins(10);
       incrementStreak();
       incrementLaps();
-      const difficultyPoints = selectedDriver?.difficulty === 'hard' ? 3 : selectedDriver?.difficulty === 'medium' ? 2 : 1;
-      addCareerPoints(difficultyPoints);
-
       // OVERTAKE energy harvesting: speed-based, faster answers harvest more energy
       // Only in bot race mode, not practice, only when OVERTAKE is not active, and power-ups enabled
       if (raceMode === 'bot' && !isPracticeMode && !overtakeActive && state.powerUpsEnabled) {
@@ -1365,6 +1362,19 @@ export default function Game() {
        if (selectedDriver?.difficulty === 'hard' && state.soundEnabled) {
          playSimplyLovely();
        }
+    }
+    // Award position-based career points (only in bot race mode, not practice)
+    if (raceMode === 'bot' && !isPracticeMode) {
+      let position: number;
+      if (beatBot) {
+        position = 1;
+      } else if (mistakeCount <= 1) {
+        position = 2;
+      } else {
+        position = 1 + mistakeCount;
+      }
+      if (position > DRIVERS_2025.length) position = DRIVERS_2025.length;
+      addCareerPoints(POSITION_POINTS[position] ?? 0);
     }
     // Update personal best time and record session lap time (only in race mode, not practice)
     if (!isPracticeMode && selectedCircuit) {

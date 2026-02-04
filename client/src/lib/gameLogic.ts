@@ -91,6 +91,10 @@ export const DRIVERS: Driver[] = [
   { id: "f1", name: "F1", difficulty: "hard", label: "Formula 1" }
 ];
 
+export const POSITION_POINTS: Record<number, number> = {
+  1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1
+};
+
 export const DRIVERS_2025 = [
   "Lando Norris",        // 1st - World Champion (0-1 mistakes)
   "Max Verstappen",      // 2nd
