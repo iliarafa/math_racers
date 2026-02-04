@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import heroImage from "@assets/redd_red.png";
+import heroImage from "@assets/hero_tight_post.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
 let audioContext: AudioContext | null = null;
@@ -37,9 +37,9 @@ export default function Welcome() {
 
   return (
     <GameLayout hideHeader lockViewport>
-      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 md:space-y-10 px-4 overflow-hidden">
+      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-12 px-4 overflow-hidden">
         
-        <div className="space-y-6 max-w-2xl flex flex-col items-center">
+        <div className="space-y-12 max-w-2xl flex flex-col items-center">
           <img 
             src={logoImage} 
             alt="Math Racer" 
