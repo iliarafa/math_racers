@@ -1683,7 +1683,7 @@ export default function Game() {
           </Link>
         </div>
         {/* Section Title — same position as pill toggle on track selection */}
-        <div className="mt-8 md:mt-24 mb-6 md:mb-24 flex justify-center">
+        <div className="mt-8 md:mt-24 mb-10 md:mb-24 flex justify-center">
           <h2
             className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Formula1' }}
