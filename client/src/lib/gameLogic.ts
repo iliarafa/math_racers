@@ -243,6 +243,23 @@ export const getPreviousSeriesLabel = (series: string): string => {
   return driver?.label ?? prevId;
 };
 
+// Get the label of the first series where the circuit is NOT yet championed (below the target series)
+export const getNextRequiredSeriesLabel = (
+  circuitId: string,
+  series: string,
+  championedCircuits: { [circuitId: string]: string[] }
+): string => {
+  const championed = championedCircuits[circuitId] ?? [];
+  const targetIdx = SERIES_ORDER.indexOf(series);
+  for (let i = 0; i < targetIdx; i++) {
+    if (!championed.includes(SERIES_ORDER[i])) {
+      const driver = DRIVERS.find(d => d.id === SERIES_ORDER[i]);
+      return driver?.label ?? SERIES_ORDER[i];
+    }
+  }
+  return getPreviousSeriesLabel(series);
+};
+
 // Derive the highest unlocked series from championedCircuits (for backward compat)
 const deriveUnlockedSeries = (championedCircuits: { [circuitId: string]: string[] }): GameState['unlockedSeries'] => {
   // Walk from highest to lowest; a series is "unlocked" if at least one circuit was championed at the previous series

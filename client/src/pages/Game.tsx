@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -1996,7 +1996,7 @@ export default function Game() {
                   {isCircuitLocked && selectedDriver && (
                     <div className="absolute inset-0 rounded-[20px] bg-white/70 z-10 flex items-center justify-center p-6">
                       <p className="text-center text-red-600 text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>
-                        Champion {getPreviousSeriesLabel(selectedDriver.id)} to unlock {displayCircuit.type}
+                        Champion {getNextRequiredSeriesLabel(displayCircuit.id, selectedDriver.id, state.championedCircuits)} to unlock {displayCircuit.type}
                       </p>
                     </div>
                   )}
