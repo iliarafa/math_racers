@@ -1009,7 +1009,7 @@ export default function Multiplayer() {
             <Globe className="w-12 h-12 text-black mb-3" />
             <h1 
               className="text-2xl font-bold text-black uppercase tracking-wide"
-              style={{ fontFamily: 'Formula1' }}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
             >
               Multiplayer Lobby
             </h1>
@@ -1034,7 +1034,7 @@ export default function Multiplayer() {
               <button
                 onClick={() => setMode("create")}
                 className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-white transition-all hover:opacity-90"
-                style={{ backgroundColor: '#ff2800', fontFamily: 'Formula1' }}
+                style={{ backgroundColor: '#ff2800', fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-host-session"
               >
                 Host Session
@@ -1044,7 +1044,7 @@ export default function Multiplayer() {
               <button
                 onClick={() => setMode("join")}
                 className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-black border-2 border-black bg-white transition-all hover:bg-gray-100"
-                style={{ fontFamily: 'Formula1' }}
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-join-existing"
               >
                 Join Existing
@@ -1054,7 +1054,7 @@ export default function Multiplayer() {
               <Link href="/">
                 <button
                   className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider w-full mt-2"
-                  style={{ fontFamily: 'Formula1' }}
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
                   data-testid="button-back-home"
                 >
                   Back
@@ -1079,7 +1079,7 @@ export default function Multiplayer() {
               <button
                 onClick={createRoom}
                 className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-white transition-all hover:opacity-90"
-                style={{ backgroundColor: '#ff2800', fontFamily: 'Formula1' }}
+                style={{ backgroundColor: '#ff2800', fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-create-room"
               >
                 Create Room
@@ -1087,7 +1087,7 @@ export default function Multiplayer() {
               <button
                 onClick={() => { setMode("menu"); setError(""); }}
                 className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider"
-                style={{ fontFamily: 'Formula1' }}
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-back-create"
               >
                 Back
@@ -1121,7 +1121,7 @@ export default function Multiplayer() {
               <button
                 onClick={joinRoom}
                 className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-white transition-all hover:opacity-90"
-                style={{ backgroundColor: '#ff2800', fontFamily: 'Formula1' }}
+                style={{ backgroundColor: '#ff2800', fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-join-room"
               >
                 Join Room
@@ -1129,7 +1129,7 @@ export default function Multiplayer() {
               <button
                 onClick={() => { setMode("menu"); setError(""); }}
                 className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider"
-                style={{ fontFamily: 'Formula1' }}
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-back-join"
               >
                 Back
@@ -1220,7 +1220,7 @@ export default function Multiplayer() {
                 <button
                   onClick={() => setGameStatus("track_select")}
                   className="h-14 px-8 bg-black text-white rounded-lg font-bold text-lg hover:bg-gray-800 transition-all"
-                  style={{ fontFamily: 'Formula1' }}
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
                   data-testid="button-choose-track"
                 >
                   Choose Track
@@ -1263,7 +1263,7 @@ export default function Multiplayer() {
         {/* Header */}
         <div className="pt-4 pb-2 flex justify-center shrink-0">
           <div className="bg-black text-white px-4 py-2 rounded-full">
-            <span className="font-bold text-xs uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>
+            <span className="font-bold text-xs uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               Multiplayer - Choose Track
             </span>
           </div>
@@ -1299,7 +1299,7 @@ export default function Multiplayer() {
             <div className="flex items-center justify-center gap-3 mb-4">
               <h2 
                 className="text-2xl font-bold uppercase tracking-wider text-gray-900"
-                style={{ fontFamily: 'Formula1' }}
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
                 {displayCircuit.name}
               </h2>
@@ -1331,7 +1331,7 @@ export default function Multiplayer() {
               <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
               <div 
                 className="text-lg font-bold uppercase text-gray-900"
-                style={{ fontFamily: 'Formula1' }}
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
                 {displayCircuit.type}
               </div>
@@ -1418,7 +1418,7 @@ export default function Multiplayer() {
             onClick={startRace}
             className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-black"
             style={{ 
-              fontFamily: 'Formula1',
+              fontFamily: 'Oxanium, sans-serif',
               backgroundColor: '#ffffff',
               animation: 'pulse-white 2s infinite'
             }}
@@ -1558,7 +1558,7 @@ export default function Multiplayer() {
                   >
                     <span
                       className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600"
-                      style={{ fontFamily: 'Formula1' }}
+                      style={{ fontFamily: 'Oxanium, sans-serif' }}
                     >
                       +5s
                     </span>
@@ -1728,7 +1728,7 @@ export default function Multiplayer() {
                           ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] ring-2 ring-yellow-400 animate-pulse"
                           : "bg-secondary text-secondary-foreground cursor-not-allowed"
                     )}
-                    style={{ fontFamily: 'Formula1' }}
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     {aeroActive ? 'ON' : 'AERO'}
                   </button>
@@ -1771,7 +1771,7 @@ export default function Multiplayer() {
                           ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]"
                           : "bg-secondary text-secondary-foreground cursor-not-allowed"
                     )}
-                    style={{ fontFamily: 'Formula1' }}
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     {overtakeActive ? 'ON' : 'OT'}
                   </button>

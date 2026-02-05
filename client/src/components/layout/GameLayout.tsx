@@ -19,7 +19,7 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
       lockViewport ? "h-screen overflow-hidden" : "min-h-screen",
       darkBackground ? "bg-black" : "bg-background"
     )} style={{ 
-      fontFamily: 'Formula1, sans-serif',
+      fontFamily: 'Oxanium, sans-serif',
       paddingTop: 'env(safe-area-inset-top)',
       paddingBottom: 'env(safe-area-inset-bottom)',
       paddingLeft: 'env(safe-area-inset-left)',

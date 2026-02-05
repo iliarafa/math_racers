@@ -60,7 +60,7 @@ export default function Welcome() {
             <button
               onClick={() => { if (state.soundEnabled) playClickSound(); }}
               className="px-16 py-4 bg-red-600 text-white text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-red-700 transition-colors md:px-20 md:py-5 md:text-3xl"
-              style={{ fontFamily: 'Formula1' }}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
               data-testid="button-start-race"
             >
               RACE
@@ -71,7 +71,7 @@ export default function Welcome() {
             <button
               onClick={() => { if (state.soundEnabled) playClickSound(); }}
               className="px-10 py-4 bg-black text-white text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-gray-800 transition-colors md:px-14 md:py-5 md:text-3xl"
-              style={{ fontFamily: 'Formula1' }}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
               data-testid="button-garage"
             >
               GARAGE

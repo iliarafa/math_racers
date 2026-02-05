@@ -227,7 +227,7 @@ export default function ReactionTest() {
         <Link href="/garage">
           <button
             className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 min-h-11 px-3 text-sm uppercase tracking-wider"
-            style={{ fontFamily: 'Formula1' }}
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
             data-testid="button-back-garage"
           >
             Back

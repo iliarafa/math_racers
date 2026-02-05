@@ -24,7 +24,7 @@ export default function Regulations() {
 
           <div className="space-y-6 md:space-y-8">
             <section>
-              <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Race</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white border-b border-white/20 pb-2 mb-3">Race</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 Answer 20 math questions correctly to cross the finish line.
               </p>
@@ -32,7 +32,7 @@ export default function Regulations() {
             </section>
 
             <section>
-              <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Overtake</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white border-b border-white/20 pb-2 mb-3">Overtake</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 Build energy by answering correctly. Faster answers charge more energy.
               </p>
@@ -45,7 +45,7 @@ export default function Regulations() {
             </section>
 
             <section>
-              <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Active Aero</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white border-b border-white/20 pb-2 mb-3">Active Aero</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 Engage AERO in designated zones for sector boosts.
               </p>
@@ -56,7 +56,7 @@ export default function Regulations() {
             </section>
 
             <section>
-              <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Sectors</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white border-b border-white/20 pb-2 mb-3">Sectors</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 Answer times are color-coded based on your performance.
               </p>
@@ -69,7 +69,7 @@ export default function Regulations() {
             </section>
 
             <section>
-              <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Track Limits</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white border-b border-white/20 pb-2 mb-3">Track Limits</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 Each question allows up to 4 attempts.
               </p>
@@ -80,7 +80,7 @@ export default function Regulations() {
             </section>
 
             <section>
-              <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Weather</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white border-b border-white/20 pb-2 mb-3">Weather</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 Weather conditions affect question difficulty.
               </p>
@@ -92,7 +92,7 @@ export default function Regulations() {
             </section>
 
             <section>
-              <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Practice</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white border-b border-white/20 pb-2 mb-3">Practice</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 A pressure-free environment to sharpen your skills. Wrong answers don't count against you — retry each question until you get it right.
               </p>
@@ -104,7 +104,7 @@ export default function Regulations() {
             </section>
 
             <section>
-              <h2 className="text-lg md:text-xl font-semibold text-white border-b border-white/20 pb-2 mb-3">Realism Mode</h2>
+              <h2 className="text-lg md:text-xl font-bold text-white border-b border-white/20 pb-2 mb-3">Realism Mode</h2>
               <p className="text-white text-sm md:text-base leading-relaxed mb-2">
                 Full Grand Prix distance with stricter rules.
               </p>

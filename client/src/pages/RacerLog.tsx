@@ -102,19 +102,19 @@ export default function RacerLog() {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-black/10 py-5 pb-8 px-4 z-50">
         <div className="max-w-2xl md:max-w-4xl mx-auto flex justify-between items-end">
           <div className="text-center flex-1">
-            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Formula1' }}>
+            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               {state.totalLaps}
             </div>
             <div className="text-[10px] uppercase tracking-widest text-black/40 mt-1">Total Laps</div>
           </div>
           <div className="text-center flex-1">
-            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Formula1' }}>
+            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               {state.careerPoints}
             </div>
             <div className="text-[10px] uppercase tracking-widest text-black/40 mt-1">Career Pts</div>
           </div>
           <div className="text-center flex-1">
-            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Formula1' }}>
+            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               {state.racesWon}
             </div>
             <div className="text-[10px] uppercase tracking-widest text-black/40 mt-1">Races Won</div>

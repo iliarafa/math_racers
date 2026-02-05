@@ -191,7 +191,7 @@ const WeatherCarousel = ({
               className="flex-[0_0_100%] min-w-0 flex flex-col items-center gap-2 py-2"
             >
               <img src={getWeatherIcon(weather.icon)} alt={weather.name} className="w-12 h-12 object-contain select-none" draggable={false} />
-              <div className="text-lg font-bold" style={{ fontFamily: 'Formula1' }}>{weather.name}</div>
+              <div className="text-lg font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>{weather.name}</div>
               <div className="text-xs text-muted-foreground text-center px-2" data-testid={`text-weather-description-${weather.id}`}>{weather.description}</div>
             </div>
           ))}
@@ -1696,7 +1696,7 @@ export default function Game() {
         <div className="mt-8 md:mt-24 mb-10 md:mb-24 flex justify-center">
           <h2
             className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black"
-            style={{ fontFamily: 'Formula1' }}
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Select Series
           </h2>
@@ -1726,7 +1726,7 @@ export default function Game() {
                 <span
                   className="block"
                   style={{
-                    fontFamily: 'Formula1',
+                    fontFamily: 'Oxanium, sans-serif',
                     fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                     fontWeight: 'bold',
                     color: isUnlocked ? series.color : '#cccccc',
@@ -1763,7 +1763,7 @@ export default function Game() {
               onClick={() => { if (state.soundEnabled) playCarouselClick(); handleDriverSelect(selectedDriver); }}
               className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{
-                fontFamily: 'Formula1',
+                fontFamily: 'Oxanium, sans-serif',
                 backgroundColor: '#22c55e',
                 animation: 'pulse-green 2s infinite'
               }}
@@ -1776,7 +1776,7 @@ export default function Game() {
             <button
               onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
               className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-              style={{ fontFamily: 'Formula1' }}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
               data-testid="button-back-menu"
             >
               Back
@@ -1861,7 +1861,7 @@ export default function Game() {
                   ? "bg-red-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               )}
-              style={{ fontFamily: 'Formula1' }}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
               data-testid="button-race-mode"
             >
               Race
@@ -1874,7 +1874,7 @@ export default function Game() {
                   ? "bg-green-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               )}
-              style={{ fontFamily: 'Formula1' }}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
               data-testid="button-practice-mode"
             >
               Practice
@@ -1887,7 +1887,7 @@ export default function Game() {
                   ? "bg-blue-600 text-white" 
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               )}
-              style={{ fontFamily: 'Formula1' }}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
               data-testid="button-multiplayer-mode"
             >
               Multiplayer
@@ -1916,7 +1916,7 @@ export default function Game() {
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <h2 
                     className="text-2xl font-bold uppercase tracking-wider text-gray-900"
-                    style={{ fontFamily: 'Formula1' }}
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     VS Mode
                   </h2>
@@ -1927,11 +1927,11 @@ export default function Game() {
                 <div className="flex-1 flex items-center justify-center py-6">
                   <div className="flex items-center gap-4">
                     <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>P1</span>
+                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>P1</span>
                     </div>
-                    <span className="text-3xl font-bold text-gray-400" style={{ fontFamily: 'Formula1' }}>VS</span>
+                    <span className="text-3xl font-bold text-gray-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>VS</span>
                     <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Formula1' }}>P2</span>
+                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>P2</span>
                     </div>
                   </div>
                 </div>
@@ -1941,7 +1941,7 @@ export default function Game() {
                   <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Real-Time Racing</div>
                   <div 
                     className="text-lg font-bold uppercase text-gray-900"
-                    style={{ fontFamily: 'Formula1' }}
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     Head to Head
                   </div>
@@ -1995,7 +1995,7 @@ export default function Game() {
                   {/* Locked overlay */}
                   {isCircuitLocked && selectedDriver && (
                     <div className="absolute inset-0 rounded-[20px] bg-white/70 z-10 flex items-center justify-center p-6">
-                      <p className="text-center text-red-600 text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Formula1' }}>
+                      <p className="text-center text-red-600 text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                         Champion {getNextRequiredSeriesLabel(displayCircuit.id, selectedDriver.id, state.championedCircuits)} to unlock {displayCircuit.type}
                       </p>
                     </div>
@@ -2004,7 +2004,7 @@ export default function Game() {
                   <div className="flex items-center justify-center gap-3 mb-4">
                     <h2 
                       className="text-2xl font-bold uppercase tracking-wider text-gray-900"
-                      style={{ fontFamily: 'Formula1' }}
+                      style={{ fontFamily: 'Oxanium, sans-serif' }}
                     >
                       {displayCircuit.name}
                     </h2>
@@ -2063,7 +2063,7 @@ export default function Game() {
                     <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
                     <div 
                       className="text-lg font-bold uppercase text-gray-900"
-                      style={{ fontFamily: 'Formula1' }}
+                      style={{ fontFamily: 'Oxanium, sans-serif' }}
                     >
                       {displayCircuit.type}
                     </div>
@@ -2158,7 +2158,7 @@ export default function Game() {
               isCircuitLocked && "opacity-40 cursor-not-allowed"
             )}
             style={{
-              fontFamily: 'Formula1',
+              fontFamily: 'Oxanium, sans-serif',
               backgroundColor: isCircuitLocked ? '#999999' : selectedTab === 'multiplayer' ? '#2563eb' : '#16a34a',
               animation: isCircuitLocked ? 'none' : selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite' : 'pulse-green 2s infinite'
             }}
@@ -2172,7 +2172,7 @@ export default function Game() {
               setGameStatus("driver_select");
             }}
             className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
-            style={{ fontFamily: 'Formula1' }}
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
             data-testid="button-back-menu"
           >
             Back
@@ -2281,7 +2281,7 @@ export default function Game() {
           <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
             <div className="bg-black p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Formula1' }}>Debrief</h2>
+                <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>Debrief</h2>
                 <button
                   onClick={() => setShowCrashDebrief(false)}
                   className="p-2 hover:bg-secondary rounded-full transition-colors"
@@ -2294,19 +2294,19 @@ export default function Game() {
                 {mistakeLog.map((mistake, index) => (
                   <div key={index} className="rounded-lg p-4">
                     <div className="flex items-start gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white" style={{ fontFamily: 'Formula1' }}>
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-600 flex items-center justify-center font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                         {index + 1}
                       </div>
                       <div className="flex-1 space-y-2">
-                        <div className="text-lg font-bold text-white" style={{ fontFamily: 'Formula1' }}>{mistake.question}</div>
+                        <div className="text-lg font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>{mistake.question}</div>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-muted-foreground uppercase tracking-wide">Input:</span>
-                            <span className="ml-2 font-bold text-red-500" style={{ fontFamily: 'Formula1' }}>{mistake.yourAnswer}</span>
+                            <span className="ml-2 font-bold text-red-500" style={{ fontFamily: 'Oxanium, sans-serif' }}>{mistake.yourAnswer}</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground uppercase tracking-wide">Solution:</span>
-                            <span className="ml-2 font-bold text-green-500" style={{ fontFamily: 'Formula1' }}>{mistake.correctAnswer}</span>
+                            <span className="ml-2 font-bold text-green-500" style={{ fontFamily: 'Oxanium, sans-serif' }}>{mistake.correctAnswer}</span>
                           </div>
                         </div>
                       </div>
@@ -2318,7 +2318,7 @@ export default function Game() {
               <button
                 onClick={() => setShowCrashDebrief(false)}
                 className="w-full mt-6 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
-                style={{ fontFamily: 'Formula1' }}
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
                 Close Review
               </button>
@@ -2331,7 +2331,7 @@ export default function Game() {
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <div className="text-[7rem] leading-none font-bold text-red-600" style={{ fontFamily: 'Formula1, sans-serif' }}>DNF</div>
+          <div className="text-[7rem] leading-none font-bold text-red-600" style={{ fontFamily: 'Oxanium, sans-serif' }}>DNF</div>
           <div className="mt-8 flex flex-col gap-3 w-full max-w-xs md:max-w-md">
             <Link href="/garage">
               <button className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all">
@@ -2420,7 +2420,7 @@ export default function Game() {
             <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
               <div className="bg-black p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Formula1' }}>Debrief</h2>
+                  <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>Debrief</h2>
                   <button
                     onClick={() => setShowAnalytics(false)}
                     className="p-2 hover:bg-white/10 rounded-full transition-colors"
@@ -2433,25 +2433,25 @@ export default function Game() {
                 {/* Sector Summary */}
                 <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
                   <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-2 md:p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-400" style={{ fontFamily: 'Formula1' }}>
+                    <div className="text-2xl font-bold text-purple-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                       {lapResults.filter(l => l.sectorColor === 'purple').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Purple</div>
                   </div>
                   <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-2 md:p-4 text-center">
-                    <div className="text-2xl font-bold text-green-400" style={{ fontFamily: 'Formula1' }}>
+                    <div className="text-2xl font-bold text-green-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                       {lapResults.filter(l => l.sectorColor === 'green').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Green</div>
                   </div>
                   <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-2 md:p-4 text-center">
-                    <div className="text-2xl font-bold text-yellow-400" style={{ fontFamily: 'Formula1' }}>
+                    <div className="text-2xl font-bold text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                       {lapResults.filter(l => l.sectorColor === 'yellow').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Yellow</div>
                   </div>
                   <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-2 md:p-4 text-center">
-                    <div className="text-2xl font-bold text-red-400" style={{ fontFamily: 'Formula1' }}>
+                    <div className="text-2xl font-bold text-red-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                       {lapResults.filter(l => l.sectorColor === 'red').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Red</div>
@@ -2483,11 +2483,11 @@ export default function Game() {
                           lap.sectorColor === 'green' && "bg-green-600",
                           lap.sectorColor === 'yellow' && "bg-yellow-600",
                           lap.sectorColor === 'red' && "bg-red-600"
-                        )} style={{ fontFamily: 'Formula1' }}>
+                        )} style={{ fontFamily: 'Oxanium, sans-serif' }}>
                           {index + 1}
                         </div>
                         <div className="flex-1">
-                          <div className={cn("text-lg font-bold", revealed ? "text-green-500" : "text-white")} style={{ fontFamily: 'Formula1' }}>
+                          <div className={cn("text-lg font-bold", revealed ? "text-green-500" : "text-white")} style={{ fontFamily: 'Oxanium, sans-serif' }}>
                             {revealed ? `${lap.question} = ${lap.correctAnswer}` : lap.question}
                           </div>
                         </div>
@@ -2498,9 +2498,9 @@ export default function Game() {
                           {!revealed && (
                             hasWrong
                               ? lap.wrongAttempts!.map((a, i) => (
-                                  <span key={i} className="text-red-500 font-bold" style={{ fontFamily: 'Formula1' }}>{i > 0 ? ',' : ''}{a}</span>
+                                  <span key={i} className="text-red-500 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>{i > 0 ? ',' : ''}{a}</span>
                                 ))
-                              : <span className="text-green-500 font-bold" style={{ fontFamily: 'Formula1' }}>{lap.playerAnswer}</span>
+                              : <span className="text-green-500 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>{lap.playerAnswer}</span>
                           )}
                         </div>
                       </div>
@@ -2512,7 +2512,7 @@ export default function Game() {
                   <button
                     onClick={exportTelemetryCSV}
                     className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2 uppercase tracking-wider"
-                    style={{ fontFamily: 'Formula1' }}
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
                     data-testid="button-share-debrief"
                   >
                     <Share2 className="w-4 h-4" /> Share
@@ -2520,7 +2520,7 @@ export default function Game() {
                   <button
                     onClick={() => setShowAnalytics(false)}
                     className="flex-1 bg-primary text-primary-foreground h-12 rounded-lg font-medium hover:opacity-90 transition-all uppercase tracking-wider"
-                    style={{ fontFamily: 'Formula1' }}
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
                     data-testid="button-close-debrief-bottom"
                   >
                     Close Review
@@ -2663,7 +2663,7 @@ export default function Game() {
                 >
                   <span
                     className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600"
-                    style={{ fontFamily: 'Formula1' }}
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     +5s
                   </span>
@@ -2853,7 +2853,7 @@ export default function Game() {
                         ? "bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] ring-2 ring-yellow-400 animate-pulse"
                         : "bg-secondary text-secondary-foreground cursor-not-allowed"
                   )}
-                  style={{ fontFamily: 'Formula1' }}
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
                   data-testid="button-aero"
                 >
                   {aeroActive ? 'ON' : 'AERO'}
@@ -2897,7 +2897,7 @@ export default function Game() {
                         ? "bg-green-500 text-white shadow-[0_0_15px_rgba(34,197,94,0.5)]"
                         : "bg-secondary text-secondary-foreground cursor-not-allowed"
                   )}
-                  style={{ fontFamily: 'Formula1' }}
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
                   data-testid="button-overtake"
                 >
                   {overtakeActive ? 'ON' : 'OT'}

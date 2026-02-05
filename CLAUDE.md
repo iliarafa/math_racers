@@ -55,7 +55,7 @@ client/src/
 ├── hooks/
 │   ├── use-mobile.tsx   # Mobile detection
 │   └── use-toast.ts     # Toast notifications
-└── assets/              # Images, Formula1 fonts
+└── assets/              # Images (Oxanium font loaded via Google Fonts)
 
 server/
 ├── index.ts             # Express entry point
