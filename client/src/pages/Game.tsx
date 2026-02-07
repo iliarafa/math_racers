@@ -21,12 +21,14 @@ import flagBelgium from "@/assets/flag_belgium.png";
 import flagMonaco from "@/assets/flag_monaco.png";
 import flagJapan from "@/assets/flag_japan.png";
 import flagUK from "@/assets/flag_uk.png";
+import flagAustralia from "@/assets/flag_australia.png";
 import trackLimitsFlag from "@/assets/track-limits-flag.png";
 import trackMonza from "@/assets/track_monza.png";
 import trackSpa from "@/assets/track_spa.png";
 import trackMonaco from "@/assets/track_monaco.png";
 import trackSuzuka from "@/assets/track_suzuka.png";
 import trackSilverstone from "@/assets/track_silverstone.png";
+import trackMelbourne from "@/assets/track_melbourne.png";
 import circuitMonzaRed from "@/assets/circuit_monza_red.png";
 import circuitMonzaBlack from "@/assets/circuit_monza_black.png";
 import circuitSuzukaRed from "@/assets/circuit_suzuka_red.png";
@@ -46,6 +48,7 @@ const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monaco": flagMonaco,
   "suzuka": flagJapan,
   "silverstone": flagUK,
+  "melbourne": flagAustralia,
 };
 
 const TRACK_IMAGES: { [circuitId: string]: string } = {
@@ -54,6 +57,7 @@ const TRACK_IMAGES: { [circuitId: string]: string } = {
   "monaco": trackMonaco,
   "suzuka": trackSuzuka,
   "silverstone": trackSilverstone,
+  "melbourne": trackMelbourne,
 };
 
 const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } } = {
@@ -105,6 +109,23 @@ const RandomDiceIcon = ({ className }: { className?: string }) => (
     <circle cx="16" cy="16" r="1.5" fill="currentColor" />
   </svg>
 );
+
+const createMelbourneCircuit = (op: string): Circuit => ({
+  id: 'melbourne',
+  name: 'MELBOURNE',
+  type: op,
+  description: 'Race Week',
+  mapUrl: '',
+  paths: { s1: '', s2: '', s3: '' }
+});
+
+const OPERATION_OPTIONS = [
+  { label: '+', type: 'Addition' },
+  { label: '−', type: 'Subtraction' },
+  { label: '×', type: 'Multiplication' },
+  { label: '÷', type: 'Division' },
+  { label: 'x=?', type: 'Variables' },
+];
 
 export type Weather = 'dry' | 'wet' | 'random';
 
@@ -572,6 +593,8 @@ export default function Game() {
   const [initialWeather, setInitialWeather] = useState<'dry' | 'wet'>('dry');
 
   const [isPracticeMode, setIsPracticeMode] = useState(false);
+  const [isRaceWeek, setIsRaceWeek] = useState(false);
+  const [selectedOperation, setSelectedOperation] = useState<string>('Addition');
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, !isPracticeMode && state.simMode) : RACE_LENGTH;
   const botFinished = botProgress >= raceLength;
   // Track response times per sector position across practice runs
@@ -797,7 +820,7 @@ export default function Game() {
           if (soundEnabledRef.current) {
             playBeep(1200, 200);
           }
-          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver.difficulty, isWet));
+          setQuestion(generateQuestion(selectedCircuit.id, selectedDriver.difficulty, isWet, 0, undefined, isRaceWeek ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
           setGameStatus('racing');
           return;
@@ -847,7 +870,11 @@ export default function Game() {
   // Auto-select first circuit when entering selecting state
   useEffect(() => {
     if (gameStatus === 'selecting' && !selectedCircuit) {
-      setSelectedCircuit(CIRCUITS[0]);
+      if (isRaceWeek) {
+        setSelectedCircuit(createMelbourneCircuit(selectedOperation));
+      } else {
+        setSelectedCircuit(CIRCUITS[0]);
+      }
     }
   }, [gameStatus, selectedCircuit]);
 
@@ -882,6 +909,9 @@ export default function Game() {
     initAudio();
     setSelectedDriver(driver);
     localStorage.setItem('lastSelectedDriverId', driver.id);
+    if (isRaceWeek) {
+      setSelectedCircuit(createMelbourneCircuit(selectedOperation));
+    }
     setGameStatus('selecting');
   };
 
@@ -1208,7 +1238,7 @@ export default function Game() {
           setTimeout(() => {
             setFeedback('idle');
             setAnswer("");
-            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display));
+            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display, isRaceWeek ? selectedOperation : undefined));
             questionStartTimeRef.current = Date.now();
           }, 600);
         } else {
@@ -1222,7 +1252,7 @@ export default function Game() {
           setAnswer("");
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
-          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', boostFactor, question?.display));
+          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', boostFactor, question?.display, isRaceWeek ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1752,6 +1782,28 @@ export default function Game() {
           })}
           </div>
         </div>
+        {/* Race Week Toggle */}
+        <div className="flex items-center justify-center gap-3 mt-6">
+          <button
+            onClick={() => setIsRaceWeek(!isRaceWeek)}
+            className={cn(
+              "w-12 h-6 rounded-full relative transition-colors duration-200",
+              isRaceWeek ? "bg-green-500" : "bg-gray-300"
+            )}
+          >
+            <motion.div
+              className="w-5 h-5 bg-white rounded-full absolute top-0.5"
+              animate={{ left: isRaceWeek ? '26px' : '2px' }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
+          </button>
+          <span
+            className="text-sm font-bold uppercase tracking-wider text-gray-600"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            Race Week
+          </span>
+        </div>
         {/* Confirm Strategy Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
           {selectedDriver && (
@@ -1797,7 +1849,7 @@ export default function Game() {
   if (gameStatus === 'selecting') {
     const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
     const displayCircuit = selectedCircuit || CIRCUITS[0];
-    const isCircuitLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(displayCircuit.id, selectedDriver.id, state.championedCircuits) : false);
+    const isCircuitLocked = (isPracticeMode || isRaceWeek) ? false : (selectedDriver ? !isCircuitUnlockedForSeries(displayCircuit.id, selectedDriver.id, state.championedCircuits) : false);
 
     const goToPrevCircuit = () => {
       const newIndex = currentCircuitIndex === 0 ? CIRCUITS.length - 1 : currentCircuitIndex - 1;
@@ -1952,6 +2004,113 @@ export default function Game() {
                   <p className="text-xs text-gray-500 mt-3">
                     Create or join a room to race against a friend in real-time
                   </p>
+                </div>
+              </motion.div>
+            </div>)
+          ) : isRaceWeek ? (
+            /* Race Week Card - Melbourne */
+            (<div className="flex flex-col items-center">
+              <motion.div
+                key="melbourne-card"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                style={{
+                  backgroundColor: '#f0f0f0',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                }}
+                data-testid="hero-card-melbourne"
+              >
+                {/* Header - Melbourne & Flag */}
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <h2
+                    className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  >
+                    MELBOURNE
+                  </h2>
+                  <img
+                    src={flagAustralia}
+                    alt="Australia flag"
+                    className="h-5 w-7 object-cover rounded-sm"
+                  />
+                </div>
+
+                {/* Track Map */}
+                <div className="flex-1 flex items-center justify-center py-3 md:py-6">
+                  <img
+                    src={trackMelbourne}
+                    alt="Melbourne circuit"
+                    className="h-32 md:h-52 object-contain"
+                    style={{ maxWidth: '280px' }}
+                  />
+                </div>
+
+                {/* Operation Selector */}
+                <div className="text-center mb-2 md:mb-4">
+                  <div className="text-sm uppercase tracking-wider mb-2 text-gray-500">Math Type</div>
+                  <div className="flex justify-center gap-2">
+                    {OPERATION_OPTIONS.map((op) => (
+                      <button
+                        key={op.type}
+                        onClick={() => {
+                          setSelectedOperation(op.type);
+                          setSelectedCircuit(createMelbourneCircuit(op.type));
+                          if (state.soundEnabled) playCarouselClick();
+                        }}
+                        className={cn(
+                          "rounded-full px-3 py-1.5 text-sm font-bold transition-all",
+                          selectedOperation === op.type
+                            ? "bg-red-600 text-white"
+                            : "bg-gray-300 text-gray-700"
+                        )}
+                        style={{ fontFamily: 'Oxanium, sans-serif' }}
+                      >
+                        {op.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Weather Toggle */}
+                <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+                  <button
+                    onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
+                    className={cn(
+                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                      selectedWeather === 'dry'
+                        ? "bg-yellow-500/20 ring-2 ring-yellow-500"
+                        : "bg-transparent hover:bg-white/5"
+                    )}
+                  >
+                    <img src={weatherSun} alt="Dry" className="w-8 h-8" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Dry</span>
+                  </button>
+                  <button
+                    onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
+                    className={cn(
+                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                      selectedWeather === 'wet'
+                        ? "bg-blue-500/20 ring-2 ring-blue-500"
+                        : "bg-transparent hover:bg-white/5"
+                    )}
+                  >
+                    <img src={weatherRain} alt="Wet" className="w-8 h-8" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Wet</span>
+                  </button>
+                  <button
+                    onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
+                    className={cn(
+                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                      selectedWeather === 'random'
+                        ? "bg-purple-500/20 ring-2 ring-purple-500"
+                        : "bg-transparent hover:bg-white/5"
+                    )}
+                  >
+                    <img src={weatherRandom} alt="Random" className="w-8 h-8" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Random</span>
+                  </button>
                 </div>
               </motion.div>
             </div>)
@@ -2127,7 +2286,7 @@ export default function Game() {
           )}
         </div>
         {/* Track Dots Indicator - only show for track selection */}
-        {selectedTab !== 'multiplayer' && (
+        {selectedTab !== 'multiplayer' && !isRaceWeek && (
           <div className="fixed bottom-44 left-0 right-0 flex justify-center gap-2">
             {CIRCUITS.map((circuit, index) => {
               const dotLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false);
