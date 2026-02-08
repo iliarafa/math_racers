@@ -677,7 +677,7 @@ export default function Game() {
   const questionStartTimeRef = useRef<number>(Date.now());
   // Track the best time for each sector and who holds it (F1-style competitive timing)
   const [revealedAttempts, setRevealedAttempts] = useState<Set<string>>(new Set());
-  const [gameStatus, setGameStatus] = useState<'driver_select' | 'operation_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('driver_select');
+  const [gameStatus, setGameStatus] = useState<'mode_select' | 'driver_select' | 'operation_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('mode_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -894,8 +894,8 @@ export default function Game() {
 
   // Guard: redirect to proper selection if missing driver/circuit
   useEffect(() => {
-    if (!selectedDriver && gameStatus !== 'driver_select' && gameStatus !== 'operation_select') {
-      setGameStatus('driver_select');
+    if (!selectedDriver && gameStatus !== 'mode_select' && gameStatus !== 'driver_select' && gameStatus !== 'operation_select') {
+      setGameStatus('mode_select');
     } else if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
       setGameStatus('selecting');
     }
@@ -1508,7 +1508,7 @@ export default function Game() {
     setShowPenalty(false);
     setElapsedTime(0);
     setCountdownLight(0);
-    setGameStatus('driver_select');
+    setGameStatus('mode_select');
     setSelectedDriver(null);
     setSelectedCircuit(null);
     setIsPracticeMode(false);
@@ -1825,9 +1825,126 @@ export default function Game() {
   const handleMultiplayerSelect = () => {
     setSelectedDriver(null);
     setSelectedCircuit(null);
-    setGameStatus('driver_select');
+    setGameStatus('mode_select');
     setLocation('/multiplayer');
   };
+
+  // Mode Selection Screen — Career vs Race Week
+  if (gameStatus === 'mode_select') {
+    return (
+      <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+        {/* App Logo */}
+        <div className="pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
+          <Link href="/">
+            <img
+              src={logoImage}
+              alt="F1 Math Racer"
+              className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
+            />
+          </Link>
+        </div>
+        {/* Section Title */}
+        <div className="mt-8 md:mt-24 mb-10 md:mb-24 flex justify-center">
+          <h2
+            className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            Select Mode
+          </h2>
+        </div>
+        {/* Mode Buttons */}
+        <div className="flex flex-col items-center px-8">
+          <div className="flex flex-col items-center gap-3 md:gap-5">
+            {/* Career Button */}
+            <motion.button
+              onClick={() => {
+                if (state.soundEnabled) playCarouselClick();
+                setGameStatus('driver_select');
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full max-w-xs md:max-w-md py-3 text-center"
+            >
+              <span
+                className="block"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                  fontWeight: 'bold',
+                  color: '#e10600',
+                  opacity: 0.7,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                CAREER
+              </span>
+              <span
+                className="block mt-1 uppercase tracking-widest"
+                style={{
+                  fontSize: '0.65rem',
+                  color: '#e10600',
+                  opacity: 0.4,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Championship
+              </span>
+            </motion.button>
+            {/* Race Week Button */}
+            <motion.button
+              onClick={() => {
+                if (state.soundEnabled) playCarouselClick();
+                setRaceWeekSelected(true);
+                setIsRaceWeek(true);
+                setGameStatus('operation_select');
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full max-w-xs md:max-w-md py-3 text-center"
+            >
+              <span
+                className="block"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                  fontWeight: 'bold',
+                  background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                RACE WEEK
+              </span>
+              <span
+                className="block mt-1 uppercase tracking-widest"
+                style={{
+                  fontSize: '0.65rem',
+                  background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  opacity: 0.6,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Melbourne
+              </span>
+            </motion.button>
+          </div>
+        </div>
+        {/* Back button */}
+        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+          <Link href="/">
+            <button
+              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
+              className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              Back
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   // Operation Selection Screen for Race Week
   if (gameStatus === 'operation_select') {
@@ -1934,7 +2051,8 @@ export default function Game() {
             onClick={() => {
               if (state.soundEnabled) playCarouselClick();
               setIsRaceWeek(false);
-              setGameStatus('driver_select');
+              setRaceWeekSelected(false);
+              setGameStatus('mode_select');
             }}
             className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
@@ -2028,53 +2146,9 @@ export default function Game() {
           })}
           </div>
         </div>
-        {/* Race Week Button */}
-        <div className="flex justify-center mt-6">
-          <motion.button
-            onClick={() => {
-              setRaceWeekSelected(true);
-              setSelectedDriver(null);
-              if (state.soundEnabled) playCarouselClick();
-            }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full max-w-xs md:max-w-md py-3 text-center"
-          >
-            <span
-              className="block"
-              style={{
-                fontFamily: 'Oxanium, sans-serif',
-                fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
-                fontWeight: 'bold',
-                background: raceWeekSelected
-                  ? 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)'
-                  : 'linear-gradient(90deg, #aaaaaa, #cccccc, #aaaaaa)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              RACE WEEK
-            </span>
-            <span
-              className="block mt-1 uppercase tracking-widest"
-              style={{
-                fontSize: '0.65rem',
-                background: raceWeekSelected
-                  ? 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)'
-                  : 'linear-gradient(90deg, #aaaaaa, #cccccc, #aaaaaa)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                opacity: raceWeekSelected ? 0.6 : 0.3,
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Melbourne
-            </span>
-          </motion.button>
-        </div>
         {/* Confirm Strategy Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
-          {(selectedDriver || raceWeekSelected) && (
+          {selectedDriver && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -2082,12 +2156,7 @@ export default function Game() {
               whileTap={{ scale: 0.98 }}
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
-                if (raceWeekSelected) {
-                  setIsRaceWeek(true);
-                  setGameStatus('operation_select');
-                } else {
-                  handleDriverSelect(selectedDriver!);
-                }
+                handleDriverSelect(selectedDriver!);
               }}
               className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{
@@ -2097,19 +2166,20 @@ export default function Game() {
               }}
               data-testid="button-confirm-strategy"
             >
-              {raceWeekSelected ? 'Weekend Warm Up' : 'Select Track'}
+              Select Track
             </motion.button>
           )}
-          <Link href="/">
-            <button
-              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-              className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-              data-testid="button-back-menu"
-            >
-              Back
-            </button>
-          </Link>
+          <button
+            onClick={() => {
+              if (state.soundEnabled) playCarouselClick();
+              setGameStatus('mode_select');
+            }}
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+            data-testid="button-back-menu"
+          >
+            Back
+          </button>
         </div>
         <style>{`
           @keyframes pulse-green {
@@ -2669,6 +2739,7 @@ export default function Game() {
               if (state.soundEnabled) playCarouselClick();
               if (isRaceWeek) {
                 setIsRaceWeek(false);
+                setRaceWeekSelected(false);
                 setRaceWeekPhase('rw_practice');
                 setRaceWeekLockedDifficulty(null);
                 setRaceWeekPolePosition(false);
@@ -2676,8 +2747,10 @@ export default function Game() {
                 setRaceWeekQualifyingCompleted(false);
                 dynamicDifficultyRef.current = null;
                 setSelectedTab('race');
+                setGameStatus("mode_select");
+              } else {
+                setGameStatus("driver_select");
               }
-              setGameStatus("driver_select");
             }}
             className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
