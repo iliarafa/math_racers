@@ -68,13 +68,15 @@ export const TEAM_COLORS = [
 ];
 
 export const RACE_LENGTH = 20;
+export const RACE_WEEK_PRACTICE_LENGTH = 30;
 
 export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   suzuka: 53,
   monaco: 78,
   spa: 44,
   silverstone: 52,
-  monza: 53
+  monza: 53,
+  melbourne: 58
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -852,13 +854,56 @@ export function getHarderDifficulty(current: Difficulty): Difficulty {
   return levels[Math.min(idx + 1, levels.length - 1)];
 }
 
+// Get an easier difficulty level (drops to previous level)
+export function getEasierDifficulty(current: Difficulty): Difficulty {
+  const levels: Difficulty[] = ['beginner', 'easy', 'medium', 'hard'];
+  return levels[Math.max(levels.indexOf(current) - 1, 0)];
+}
+
+// Dynamic difficulty state for Race Week practice
+export interface DynamicDifficultyState {
+  currentDifficulty: Difficulty;
+  rollingScore: number; // resets on level change
+}
+
+export function initDynamicDifficulty(start: Difficulty): DynamicDifficultyState {
+  return { currentDifficulty: start, rollingScore: 0 };
+}
+
+export function updateDynamicDifficulty(
+  state: DynamicDifficultyState,
+  correct: boolean,
+  responseTime: number,
+  operationType: string
+): DynamicDifficultyState {
+  const expectedTime = getExpectedTime(state.currentDifficulty, operationType);
+  const fast = responseTime < expectedTime;
+  const delta = correct ? (fast ? 1 : 0) : -1;
+  const newScore = state.rollingScore + delta;
+
+  if (newScore >= 3) {
+    const harder = getHarderDifficulty(state.currentDifficulty);
+    return harder !== state.currentDifficulty
+      ? { currentDifficulty: harder, rollingScore: 0 }
+      : { ...state, rollingScore: 3 };
+  }
+  if (newScore <= -3) {
+    const easier = getEasierDifficulty(state.currentDifficulty);
+    return easier !== state.currentDifficulty
+      ? { currentDifficulty: easier, rollingScore: 0 }
+      : { ...state, rollingScore: -3 };
+  }
+  return { ...state, rollingScore: newScore };
+}
+
 // Generate a math question based on circuit, difficulty, and optional modifiers
 // - isWet: adds 0.5 boost factor (1.5x harder)
 // - boostFactor: additional difficulty boost (0-1), e.g., 0.5 for OVERTAKE (1.5x harder)
 // - Factors stack: wet (0.5) + OVERTAKE (0.5) = 1.0 (next difficulty level), capped at 1.0
 // - previousDisplay: if provided, ensures the new question is different (avoids back-to-back duplicates)
-export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false, boostFactor: number = 0, previousDisplay?: string): Question {
+export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false, boostFactor: number = 0, previousDisplay?: string, operationOverride?: string): Question {
   const circuit = CIRCUITS.find(c => c.id === circuitId) || CIRCUITS[0];
+  const effectiveType = operationOverride || circuit.type;
   const ranges = getOperationRanges(difficulty, isWet, boostFactor);
 
   let num1: number = 0, num2: number = 0, display: string, answer: number;
@@ -868,7 +913,7 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
   do {
     attempts++;
 
-  switch (circuit.type) {
+  switch (effectiveType) {
     case "Multiplication": {
       const range = ranges.multiplication;
       num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
@@ -947,7 +992,7 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
   } while (previousDisplay && display === previousDisplay && attempts < maxAttempts);
 
   // Calculate bot's time for this question with complexity consideration
-  const botTime = calculateBotTime(difficulty, circuit.type, num1, num2, isWet);
+  const botTime = calculateBotTime(difficulty, effectiveType, num1, num2, isWet);
 
-  return { display, answer, botTime, num1, num2, operation: circuit.type };
+  return { display, answer, botTime, num1, num2, operation: effectiveType };
 }
