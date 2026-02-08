@@ -68,6 +68,7 @@ export const TEAM_COLORS = [
 ];
 
 export const RACE_LENGTH = 20;
+export const RACE_WEEK_PRACTICE_LENGTH = 30;
 
 export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   suzuka: 53,
@@ -851,6 +852,48 @@ export function getHarderDifficulty(current: Difficulty): Difficulty {
   const levels: Difficulty[] = ['beginner', 'easy', 'medium', 'hard'];
   const idx = levels.indexOf(current);
   return levels[Math.min(idx + 1, levels.length - 1)];
+}
+
+// Get an easier difficulty level (drops to previous level)
+export function getEasierDifficulty(current: Difficulty): Difficulty {
+  const levels: Difficulty[] = ['beginner', 'easy', 'medium', 'hard'];
+  return levels[Math.max(levels.indexOf(current) - 1, 0)];
+}
+
+// Dynamic difficulty state for Race Week practice
+export interface DynamicDifficultyState {
+  currentDifficulty: Difficulty;
+  rollingScore: number; // resets on level change
+}
+
+export function initDynamicDifficulty(start: Difficulty): DynamicDifficultyState {
+  return { currentDifficulty: start, rollingScore: 0 };
+}
+
+export function updateDynamicDifficulty(
+  state: DynamicDifficultyState,
+  correct: boolean,
+  responseTime: number,
+  operationType: string
+): DynamicDifficultyState {
+  const expectedTime = getExpectedTime(state.currentDifficulty, operationType);
+  const fast = responseTime < expectedTime;
+  const delta = correct ? (fast ? 1 : 0) : -1;
+  const newScore = state.rollingScore + delta;
+
+  if (newScore >= 3) {
+    const harder = getHarderDifficulty(state.currentDifficulty);
+    return harder !== state.currentDifficulty
+      ? { currentDifficulty: harder, rollingScore: 0 }
+      : { ...state, rollingScore: 3 };
+  }
+  if (newScore <= -3) {
+    const easier = getEasierDifficulty(state.currentDifficulty);
+    return easier !== state.currentDifficulty
+      ? { currentDifficulty: easier, rollingScore: 0 }
+      : { ...state, rollingScore: -3 };
+  }
+  return { ...state, rollingScore: newScore };
 }
 
 // Generate a math question based on circuit, difficulty, and optional modifiers
