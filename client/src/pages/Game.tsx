@@ -597,6 +597,7 @@ export default function Game() {
   const [selectedOperation, setSelectedOperation] = useState<string>('Addition');
   // Race Week session state
   const [raceWeekPhase, setRaceWeekPhase] = useState<'rw_practice' | 'rw_qualifying' | 'rw_race'>('rw_practice');
+  const [raceWeekSelected, setRaceWeekSelected] = useState(false);
   const dynamicDifficultyRef = useRef<DynamicDifficultyState | null>(null);
   const [raceWeekLockedDifficulty, setRaceWeekLockedDifficulty] = useState<Difficulty | null>(null);
   const [raceWeekPolePosition, setRaceWeekPolePosition] = useState(false);
@@ -1167,7 +1168,7 @@ export default function Game() {
       incrementLaps();
       // OVERTAKE energy harvesting: speed-based, faster answers harvest more energy
       // Only in bot race mode, not practice, only when OVERTAKE is not active, and power-ups enabled
-      if (raceMode === 'bot' && !isPracticeMode && !overtakeActive && state.powerUpsEnabled) {
+      if (raceMode === 'bot' && !isPracticeMode && !overtakeActive && state.powerUpsEnabled && !(isRaceWeek && raceWeekPhase !== 'rw_race')) {
         const energyGain = calculateEnergyHarvest(
           responseTime,
           currentDifficultyRef.current,
@@ -1987,6 +1988,7 @@ export default function Game() {
                 key={series.id}
                 onClick={() => {
                   if (!isUnlocked) return;
+                  setRaceWeekSelected(false);
                   setSelectedDriver(series.driver || null);
                   if (state.soundEnabled) playCarouselClick();
                 }}
@@ -2030,9 +2032,9 @@ export default function Game() {
         <div className="flex justify-center mt-6">
           <motion.button
             onClick={() => {
-              setIsRaceWeek(true);
+              setRaceWeekSelected(true);
+              setSelectedDriver(null);
               if (state.soundEnabled) playCarouselClick();
-              setGameStatus('operation_select');
             }}
             whileTap={{ scale: 0.98 }}
             className="w-full max-w-xs md:max-w-md py-3 text-center"
@@ -2043,10 +2045,11 @@ export default function Game() {
                 fontFamily: 'Oxanium, sans-serif',
                 fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                 fontWeight: 'bold',
-                background: 'linear-gradient(90deg, #00008B, #FFFFFF, #FF0000)',
+                background: raceWeekSelected
+                  ? 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)'
+                  : 'linear-gradient(90deg, #aaaaaa, #cccccc, #aaaaaa)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                opacity: 0.75,
                 transition: 'all 0.2s ease',
               }}
             >
@@ -2056,10 +2059,12 @@ export default function Game() {
               className="block mt-1 uppercase tracking-widest"
               style={{
                 fontSize: '0.65rem',
-                background: 'linear-gradient(90deg, #00008B, #FFFFFF, #FF0000)',
+                background: raceWeekSelected
+                  ? 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)'
+                  : 'linear-gradient(90deg, #aaaaaa, #cccccc, #aaaaaa)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                opacity: 0.45,
+                opacity: raceWeekSelected ? 0.6 : 0.3,
                 transition: 'all 0.2s ease',
               }}
             >
@@ -2069,13 +2074,21 @@ export default function Game() {
         </div>
         {/* Confirm Strategy Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
-          {selectedDriver && (
+          {(selectedDriver || raceWeekSelected) && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => { if (state.soundEnabled) playCarouselClick(); handleDriverSelect(selectedDriver); }}
+              onClick={() => {
+                if (state.soundEnabled) playCarouselClick();
+                if (raceWeekSelected) {
+                  setIsRaceWeek(true);
+                  setGameStatus('operation_select');
+                } else {
+                  handleDriverSelect(selectedDriver!);
+                }
+              }}
               className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{
                 fontFamily: 'Oxanium, sans-serif',
@@ -2084,7 +2097,7 @@ export default function Game() {
               }}
               data-testid="button-confirm-strategy"
             >
-              Select Track
+              {raceWeekSelected ? 'Weekend Warm Up' : 'Select Track'}
             </motion.button>
           )}
           <Link href="/">
@@ -3463,7 +3476,7 @@ export default function Game() {
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-xl">
             {/* Power-ups row - integrated as extended keypad row */}
-            {raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled && (
+            {((raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled) || isRaceWeek) && (
               <>
                 {/* AERO Button - above 7 */}
                 <button
@@ -3513,11 +3526,11 @@ export default function Game() {
                 <button
                   onPointerDown={(e) => {
                     e.preventDefault();
-                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished)) {
+                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished || (isRaceWeek && raceWeekPhase !== 'rw_race'))) {
                       handleOvertake();
                     }
                   }}
-                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished}
+                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished || (isRaceWeek && raceWeekPhase !== 'rw_race')}
                   className={cn(
                     "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
                     overtakeActive
