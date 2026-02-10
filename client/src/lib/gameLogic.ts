@@ -865,36 +865,56 @@ export function getEasierDifficulty(current: Difficulty): Difficulty {
 export interface DynamicDifficultyState {
   currentDifficulty: Difficulty;
   rollingScore: number; // resets on level change
+  consecutiveSlowSectors: number; // tracks consecutive sectors where player was slower than bot
 }
 
 export function initDynamicDifficulty(start: Difficulty): DynamicDifficultyState {
-  return { currentDifficulty: start, rollingScore: 0 };
+  return { currentDifficulty: start, rollingScore: 0, consecutiveSlowSectors: 0 };
 }
 
 export function updateDynamicDifficulty(
   state: DynamicDifficultyState,
   correct: boolean,
   responseTime: number,
-  operationType: string
+  operationType: string,
+  slowerThanBot: boolean = false
 ): DynamicDifficultyState {
   const expectedTime = getExpectedTime(state.currentDifficulty, operationType);
   const fast = responseTime < expectedTime;
   const delta = correct ? (fast ? 1 : 0) : -1;
   const newScore = state.rollingScore + delta;
 
+  // Track consecutive sectors where player was slower than bot
+  let slowSectors = state.consecutiveSlowSectors;
+  if (correct) {
+    slowSectors = slowerThanBot ? slowSectors + 1 : 0;
+  } else {
+    slowSectors = 0; // wrong answers already penalize via rolling score
+  }
+
+  // Drop difficulty if player was slower than bot for 2 consecutive sectors
+  if (slowSectors >= 2) {
+    const easier = getEasierDifficulty(state.currentDifficulty);
+    if (easier !== state.currentDifficulty) {
+      return { currentDifficulty: easier, rollingScore: 0, consecutiveSlowSectors: 0 };
+    }
+    // Already at easiest — just cap the counter
+    return { ...state, rollingScore: newScore, consecutiveSlowSectors: 2 };
+  }
+
   if (newScore >= 3) {
     const harder = getHarderDifficulty(state.currentDifficulty);
     return harder !== state.currentDifficulty
-      ? { currentDifficulty: harder, rollingScore: 0 }
-      : { ...state, rollingScore: 3 };
+      ? { currentDifficulty: harder, rollingScore: 0, consecutiveSlowSectors: slowSectors }
+      : { ...state, rollingScore: 3, consecutiveSlowSectors: slowSectors };
   }
   if (newScore <= -3) {
     const easier = getEasierDifficulty(state.currentDifficulty);
     return easier !== state.currentDifficulty
-      ? { currentDifficulty: easier, rollingScore: 0 }
-      : { ...state, rollingScore: -3 };
+      ? { currentDifficulty: easier, rollingScore: 0, consecutiveSlowSectors: 0 }
+      : { ...state, rollingScore: -3, consecutiveSlowSectors: slowSectors };
   }
-  return { ...state, rollingScore: newScore };
+  return { ...state, rollingScore: newScore, consecutiveSlowSectors: slowSectors };
 }
 
 // Generate a math question based on circuit, difficulty, and optional modifiers

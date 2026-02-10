@@ -1197,7 +1197,8 @@ export default function Game() {
 
       // Update dynamic difficulty for Grand Prix practice and Pre-Season Testing
       if (((isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting) && dynamicDifficultyRef.current) {
-        const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, true, responseTime, question.operation || 'Addition');
+        const slowerThanBot = responseTime > question.botTime;
+        const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, true, responseTime, question.operation || 'Addition', slowerThanBot);
         dynamicDifficultyRef.current = updated;
         currentDifficultyRef.current = updated.currentDifficulty;
         setDynamicDifficultyDisplay(updated.currentDifficulty);
@@ -3653,8 +3654,8 @@ export default function Game() {
           
           {/* Dynamic difficulty indicator for Grand Prix practice (PST shows it above keypad instead) */}
           {(isGrandPrix && grandPrixPhase === 'rw_practice') && (
-            <div className="text-xs text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-              Level: {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
+            <div className="text-xs uppercase tracking-wider font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: dynamicDifficultyDisplay === 'hard' ? '#ef4444' : dynamicDifficultyDisplay === 'medium' ? '#38bdf8' : dynamicDifficultyDisplay === 'easy' ? '#000000' : '#22c55e' }}>
+              {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
             </div>
           )}
 
@@ -3901,8 +3902,8 @@ export default function Game() {
 
           {/* PST level indicator above keypad */}
           {isPreSeasonTesting && (
-            <div className="text-xs text-gray-500 uppercase tracking-wider text-center mb-1" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-              Level: {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
+            <div className="text-xs uppercase tracking-wider text-center mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: dynamicDifficultyDisplay === 'hard' ? '#ef4444' : dynamicDifficultyDisplay === 'medium' ? '#38bdf8' : dynamicDifficultyDisplay === 'easy' ? '#000000' : '#22c55e' }}>
+              {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
             </div>
           )}
 
