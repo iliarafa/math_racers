@@ -58,7 +58,7 @@ export default function Leaderboard() {
         setLoading(false);
       })
       .catch(() => {
-        setError('Failed to load leaderboard');
+        setEntries([]);
         setLoading(false);
       });
   }, [selectedOp]);
