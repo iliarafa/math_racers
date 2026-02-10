@@ -41,6 +41,7 @@ import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
+import pstTitle from "@/assets/pst_title.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
@@ -1967,13 +1968,13 @@ export default function Game() {
                 className="block"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                  fontSize: window.innerWidth >= 768 ? '1.8rem' : '1.2rem',
                   fontWeight: 'bold',
                   color: '#CE1126',
                   transition: 'all 0.2s ease',
                 }}
               >
-                PRE-SEASON<br />TESTING
+                PRE-SEASON TESTING
               </span>
               <span
                 className="block mt-1 uppercase tracking-widest"
@@ -2029,18 +2030,22 @@ export default function Game() {
         </div>
         {/* Welcome Section */}
         <div className="mt-6 md:mt-24 mb-6 md:mb-16 flex flex-col items-center px-8">
+          {isPreSeasonTesting ? (
+            <img src={pstTitle} alt="Pre-Season Testing" className="object-contain" style={{ maxWidth: '28rem', width: '100%' }} />
+          ) : (
           <h2
             className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black text-center"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
-            {isPreSeasonTesting ? (<>PRE-SEASON<br />TESTING</>) : 'Welcome to Grand Prix!'}
+            {'Welcome to Grand Prix!'}
           </h2>
+          )}
           <p
             className="mt-3 text-center text-gray-500"
             style={{ fontFamily: 'Oxanium, sans-serif', fontSize: '0.8rem', maxWidth: '28rem' }}
           >
             {isPreSeasonTesting
-              ? 'Unlimited practice with dynamic difficulty — the level adjusts as you go. Press BOX when you\'re ready to end the session. Welcome to Bahrain.'
+              ? <>Continuous testing. Dynamic difficulty adjustment.<br />Press BOX to enter pits. BACK TO TRACK to race again.<br />Follow your performance in different stints.<br /><br />This is pre-season testing in Bahrain.</>
               : 'Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to Melbourne, Australia.'}
           </p>
           <h3
