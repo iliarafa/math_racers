@@ -1964,29 +1964,7 @@ export default function Game() {
               whileTap={{ scale: 0.98 }}
               className="w-full max-w-xs md:max-w-md pt-6 pb-3 text-center"
             >
-              <span
-                className="block"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '1.8rem' : '1.2rem',
-                  fontWeight: 'bold',
-                  color: '#CE1126',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                PRE-SEASON TESTING
-              </span>
-              <span
-                className="block mt-1 uppercase tracking-widest"
-                style={{
-                  fontSize: '0.65rem',
-                  color: '#CE1126',
-                  opacity: 0.6,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Bahrain
-              </span>
+              <img src={pstTitle} alt="Pre-Season Testing" className="object-contain mx-auto" style={{ maxWidth: '16rem', width: '100%' }} />
             </motion.button>
           </div>
         </div>
