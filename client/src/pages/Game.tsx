@@ -1954,22 +1954,22 @@ export default function Game() {
                 Melbourne
               </span>
             </motion.button>
-            {/* Pre-Season Testing Button */}
-            <motion.button
-              onClick={() => {
-                if (state.soundEnabled) playCarouselClick();
-                setIsPreSeasonTesting(true);
-                setGameStatus('operation_select');
-              }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full max-w-xs md:max-w-md pt-6 pb-3 text-center"
-            >
-              <img src={pstTitle} alt="Pre-Season Testing" className="object-contain mx-auto" style={{ maxWidth: '16rem', width: '100%' }} />
-            </motion.button>
           </div>
         </div>
-        {/* Back button */}
+        {/* Pre-Season Testing + Back — pinned to bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+          <motion.button
+            onClick={() => {
+              if (state.soundEnabled) playCarouselClick();
+              setIsPreSeasonTesting(true);
+              setGameStatus('operation_select');
+            }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full max-w-xs md:max-w-md pb-10 text-center"
+            style={{ marginTop: '-36px' }}
+          >
+            <img src={pstTitle} alt="Pre-Season Testing" className="object-contain mx-auto" style={{ maxWidth: '16rem', width: '100%' }} />
+          </motion.button>
           <Link href="/">
             <button
               onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
