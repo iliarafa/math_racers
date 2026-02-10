@@ -350,7 +350,7 @@ export function useGameState() {
           unlockedSeries: unlockedSeries,
           championedCircuits: championedCircuits,
           playerName: parsed.playerName ?? '',
-          playerId: parsed.playerId || crypto.randomUUID(),
+          playerId: parsed.playerId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36)),
         };
       }
     } catch (error) {
@@ -1037,8 +1037,9 @@ export function calculatePSTScore(
   difficultyAchieved: Difficulty,
   lapCount: number = 57
 ): number {
+  if (totalTimeMs <= 0 || lapCount <= 0) return 0;
   const timeInSeconds = totalTimeMs / 1000;
-  const correctAnswers = lapCount - mistakes;
+  const correctAnswers = Math.max(0, lapCount - mistakes);
   const difficultyMultipliers: Record<Difficulty, number> = {
     beginner: 1.0,
     easy: 1.5,
@@ -1047,5 +1048,5 @@ export function calculatePSTScore(
   };
   const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
   const score = (lapCount / timeInSeconds) * (correctAnswers / lapCount) * multiplier * 1000;
-  return Math.round(score);
+  return Math.min(Math.round(score), 100000);
 }

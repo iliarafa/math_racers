@@ -59,6 +59,7 @@ export default function Leaderboard() {
       })
       .catch(() => {
         setEntries([]);
+        setError('offline');
         setLoading(false);
       });
   }, [selectedOp]);
@@ -102,6 +103,12 @@ export default function Leaderboard() {
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <div className="text-white/40 text-sm uppercase tracking-widest">Loading...</div>
+            </div>
+          ) : error === 'offline' ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-3">
+              <Trophy className="w-12 h-12 text-white/20" />
+              <div className="text-white/40 text-sm uppercase tracking-widest">Leaderboard Unavailable</div>
+              <p className="text-white/25 text-xs">Connect to the internet to view rankings</p>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center py-20">

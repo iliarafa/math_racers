@@ -150,6 +150,10 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      if (typeof playerName !== 'string' || playerName.length > 20) {
+        return res.status(400).json({ error: "Invalid player name" });
+      }
+
       const validOperations = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'];
       if (!validOperations.includes(operation)) {
         return res.status(400).json({ error: "Invalid operation" });
@@ -162,6 +166,18 @@ export async function registerRoutes(
 
       if (typeof score !== 'number' || score < 0 || score > 100000) {
         return res.status(400).json({ error: "Invalid score" });
+      }
+
+      if (typeof totalTime !== 'number' || totalTime < 1000 || totalTime > 3600000) {
+        return res.status(400).json({ error: "Invalid time" });
+      }
+
+      if (typeof mistakes !== 'number' || mistakes < 0 || mistakes > 200) {
+        return res.status(400).json({ error: "Invalid mistakes" });
+      }
+
+      if (typeof accuracy !== 'number' || accuracy < 0 || accuracy > 100) {
+        return res.status(400).json({ error: "Invalid accuracy" });
       }
 
       const entry = await storage.submitLeaderboardEntry({

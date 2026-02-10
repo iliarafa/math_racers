@@ -917,8 +917,8 @@ export default function Game() {
         const baseTime = Date.now() - raceStartTimeRef.current!;
         setElapsedTime(baseTime + penaltyTimeRef.current);
       }, 10);
-    } else if (isPaused && raceStartTimeRef.current !== null) {
-      // When pausing, adjust the start time to account for paused duration
+    } else if ((isPaused || showNamePrompt) && raceStartTimeRef.current !== null) {
+      // When pausing or showing name prompt, adjust the start time to account for paused duration
       const pausedDuration = Date.now() - raceStartTimeRef.current - (elapsedTime - penaltyTimeRef.current);
       if (pausedDuration > 0) {
         raceStartTimeRef.current = raceStartTimeRef.current + pausedDuration;
@@ -1599,6 +1599,7 @@ export default function Game() {
     setPstCycleCount(0);
     setShowNamePrompt(false);
     setPendingScoreSubmission(null);
+    setNameInput('');
   };
 
   // Helper to reset race state and go back to selecting screen (for Grand Prix phase transitions)
