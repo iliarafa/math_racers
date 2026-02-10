@@ -156,6 +156,7 @@ const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
   "monaco": 0.25,     // Monaco: 20-30% -> 25%
   "monza": 0.20,      // Monza: 15-25% -> 20%
   "bahrain": 0.05,    // Bahrain: Very rare rain -> 5%
+  "melbourne": 0.15,  // Melbourne: Rare rain -> 15%
 };
 
 // Weather Carousel Component
@@ -614,7 +615,6 @@ export default function Game() {
   const [selectedOperation, setSelectedOperation] = useState<string>('Addition');
   // Grand Prix session state
   const [grandPrixPhase, setGrandPrixPhase] = useState<'rw_practice' | 'rw_qualifying' | 'rw_race'>('rw_practice');
-  const [grandPrixSelected, setGrandPrixSelected] = useState(false);
   const dynamicDifficultyRef = useRef<DynamicDifficultyState | null>(null);
   const [grandPrixLockedDifficulty, setGrandPrixLockedDifficulty] = useState<Difficulty | null>(null);
   const [grandPrixPolePosition, setGrandPrixPolePosition] = useState(false);
@@ -819,7 +819,7 @@ export default function Game() {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
       // Resolve random weather at countdown start using circuit-specific rain probability
       let resolvedWeather: 'dry' | 'wet';
-      const currentRaceLength = getRaceLength(selectedCircuit.id, !isPracticeMode && effectiveSimMode);
+      const currentRaceLength = raceLength;
 
       if (selectedWeather === 'random') {
         const rainProbability = CIRCUIT_RAIN_PROBABILITY[selectedCircuit.id] || 0.5;
@@ -840,7 +840,15 @@ export default function Game() {
       const isWet = resolvedWeather === 'wet';
 
       // Initialize AERO zones based on race length and sim mode
-      const zones = getAeroZones(currentRaceLength, !isPracticeMode && effectiveSimMode);
+      let zones: number[];
+      if (isPracticeMode) {
+        // Practice modes: 1 AERO zone per 10 laps, evenly spaced
+        const count = Math.floor(currentRaceLength / 10);
+        const spacing = currentRaceLength / (count + 1);
+        zones = Array.from({ length: count }, (_, i) => Math.floor(spacing * (i + 1)));
+      } else {
+        zones = getAeroZones(currentRaceLength, effectiveSimMode);
+      }
       setAeroZones(zones);
       setAeroUsedZones(new Set());
       setAeroAvailable(false);
@@ -1259,6 +1267,7 @@ export default function Game() {
           setInPurpleMode(false);
           setQuestionAttempts(0);
           setCurrentSectorRed(false);
+          setAeroUsedZones(new Set());
 
           // Generate a fresh question for the next run
           setTimeout(() => {
@@ -1877,7 +1886,6 @@ export default function Game() {
               disabled={!isGrandPrixUnlocked}
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
-                setGrandPrixSelected(true);
                 setIsGrandPrix(true);
                 setGameStatus('operation_select');
               }}
@@ -2079,7 +2087,6 @@ export default function Game() {
               if (state.soundEnabled) playCarouselClick();
               setIsGrandPrix(false);
               setIsPreSeasonTesting(false);
-              setGrandPrixSelected(false);
               setGameStatus('mode_select');
             }}
             className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
@@ -2134,7 +2141,6 @@ export default function Game() {
                 key={series.id}
                 onClick={() => {
                   if (!isUnlocked) return;
-                  setGrandPrixSelected(false);
                   setSelectedDriver(series.driver || null);
                   if (state.soundEnabled) playCarouselClick();
                 }}
@@ -2870,7 +2876,6 @@ export default function Game() {
               if (state.soundEnabled) playCarouselClick();
               if (isGrandPrix) {
                 setIsGrandPrix(false);
-                setGrandPrixSelected(false);
                 setGrandPrixPhase('rw_practice');
                 setGrandPrixLockedDifficulty(null);
                 setGrandPrixPolePosition(false);
