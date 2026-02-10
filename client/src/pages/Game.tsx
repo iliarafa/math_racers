@@ -1969,8 +1969,7 @@ export default function Game() {
                   fontFamily: 'Oxanium, sans-serif',
                   fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                   fontWeight: 'bold',
-                  color: '#333333',
-                  opacity: 0.7,
+                  color: '#CE1126',
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -1980,8 +1979,8 @@ export default function Game() {
                 className="block mt-1 uppercase tracking-widest"
                 style={{
                   fontSize: '0.65rem',
-                  color: '#333333',
-                  opacity: 0.4,
+                  color: '#CE1126',
+                  opacity: 0.6,
                   transition: 'all 0.2s ease',
                 }}
               >
