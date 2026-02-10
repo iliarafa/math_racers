@@ -2871,7 +2871,7 @@ export default function Game() {
               fontFamily: 'Oxanium, sans-serif',
               backgroundColor: isCircuitLocked ? '#999999'
                 : selectedTab === 'multiplayer' ? '#2563eb'
-                : selectedTab === 'testing' ? '#374151'
+                : selectedTab === 'testing' ? '#16a34a'
                 : selectedTab === 'rw_practice' ? '#16a34a'
                 : selectedTab === 'rw_qualifying' ? '#f59e0b'
                 : selectedTab === 'rw_race' ? '#dc2626'
