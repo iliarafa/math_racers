@@ -22,6 +22,7 @@ import flagMonaco from "@/assets/flag_monaco.png";
 import flagJapan from "@/assets/flag_japan.png";
 import flagUK from "@/assets/flag_uk.png";
 import flagAustralia from "@/assets/flag_australia.png";
+import flagBahrain from "@/assets/flag_bahrain.jpeg";
 import trackLimitsFlag from "@/assets/track-limits-flag.png";
 import trackMonza from "@/assets/track_monza.png";
 import trackSpa from "@/assets/track_spa.png";
@@ -39,6 +40,7 @@ import circuitSilverstoneRed from "@/assets/circuit_silverstone_red.png";
 import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
+import trackBahrain from "@/assets/track_bahrain.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
@@ -49,6 +51,7 @@ const FLAG_IMAGES: { [circuitId: string]: string } = {
   "suzuka": flagJapan,
   "silverstone": flagUK,
   "melbourne": flagAustralia,
+  "bahrain": flagBahrain,
 };
 
 const TRACK_IMAGES: { [circuitId: string]: string } = {
@@ -1958,7 +1961,7 @@ export default function Game() {
                 setGameStatus('operation_select');
               }}
               whileTap={{ scale: 0.98 }}
-              className="w-full max-w-xs md:max-w-md py-3 text-center"
+              className="w-full max-w-xs md:max-w-md pt-6 pb-3 text-center"
             >
               <span
                 className="block"
@@ -1971,7 +1974,7 @@ export default function Game() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                PRE-SEASON TESTING
+                PRE-SEASON<br />TESTING
               </span>
               <span
                 className="block mt-1 uppercase tracking-widest"
@@ -2321,10 +2324,10 @@ export default function Game() {
           {isPreSeasonTesting ? (
             <div className="rounded-full p-1 flex gap-1 bg-gray-200">
               <button
-                className="px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all bg-gray-700 text-white"
+                className="px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all bg-red-600 text-white"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
-                Testing
+                Pre-Season
               </button>
             </div>
           ) : isGrandPrix ? (
@@ -2452,7 +2455,7 @@ export default function Game() {
                 }}
                 data-testid="hero-card-bahrain"
               >
-                {/* Header - Bahrain */}
+                {/* Header - Bahrain & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <h2
                     className="text-2xl font-bold uppercase tracking-wider text-gray-900"
@@ -2460,13 +2463,21 @@ export default function Game() {
                   >
                     BAHRAIN
                   </h2>
+                  <img
+                    src={flagBahrain}
+                    alt="Bahrain flag"
+                    className="h-5 w-7 object-cover rounded-sm"
+                  />
                 </div>
 
-                {/* Placeholder area */}
-                <div className="flex-1 flex items-center justify-center py-6">
-                  <div className="text-6xl font-bold text-gray-300" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-                    {OPERATION_OPTIONS.find(o => o.type === selectedOperation)?.label || '+'}
-                  </div>
+                {/* Track Map */}
+                <div className="flex-1 flex items-center justify-center py-3 md:py-6">
+                  <img
+                    src={trackBahrain}
+                    alt="Bahrain circuit"
+                    className="h-32 md:h-52 object-contain"
+                    style={{ maxWidth: '280px' }}
+                  />
                 </div>
 
                 {/* Operation — static display */}
