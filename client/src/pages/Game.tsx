@@ -627,17 +627,13 @@ export default function Game() {
   const effectiveSimMode = (isGrandPrix || isPreSeasonTesting) ? true : state.simMode;
 
   const raceLength = (() => {
-    if (isPreSeasonTesting) return 100;
+    if (isPracticeMode && !isGrandPrix) return 100;
     if (!selectedCircuit) return RACE_LENGTH;
     if (isGrandPrix && grandPrixPhase === 'rw_practice') return GRAND_PRIX_PRACTICE_LENGTH;
     if (isGrandPrix && grandPrixPhase === 'rw_qualifying') return RACE_LENGTH;
     return getRaceLength(selectedCircuit.id, !isPracticeMode && effectiveSimMode);
   })();
   const botFinished = botProgress >= raceLength;
-  // Track response times per sector position across practice runs
-  const practiceRunTimesRef = useRef<number[][]>([]);  // [position][run] = responseTime
-  const practiceRunCountRef = useRef<number>(0);       // How many complete 20-question runs
-  const currentRunTimesRef = useRef<number[]>([]);      // Times for the current in-progress run
   const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer' | 'rw_practice' | 'rw_qualifying' | 'rw_race' | 'testing'>('race');
   const [isPaused, setIsPaused] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
@@ -1050,10 +1046,6 @@ export default function Game() {
     setBotProgress(0);
     setBotLapResults([]);
     sectorBestTimesRef.current = []; // Reset sector best times for new race
-    // Reset practice tracking refs
-    practiceRunTimesRef.current = [];
-    practiceRunCountRef.current = 0;
-    currentRunTimesRef.current = [];
     // Ensure race mode has bot opponent (practice mode uses solo)
     if (!isPracticeMode) {
       setRaceMode('bot');
@@ -1088,48 +1080,22 @@ export default function Game() {
       let sectorColor: 'green' | 'purple' | 'yellow' | 'red' = 'green';
 
       if (isPracticeMode) {
-        // Practice mode: performance-based sector coloring across runs
-        const position = progress; // 0-based sector position (0-19)
-        const runCount = practiceRunCountRef.current;
-
-        if (runCount === 0) {
-          // Run 1: compare against botTime
-          sectorColor = responseTime < question.botTime ? 'green' : 'yellow';
-          speed = responseTime < question.botTime ? 'fast' : 'slow';
-        } else if (runCount === 1) {
-          // Run 2: compare against player's own time from run 1
-          const prevTime = practiceRunTimesRef.current[position]?.[0];
-          if (prevTime !== undefined) {
-            sectorColor = responseTime < prevTime ? 'green' : 'yellow';
-            speed = responseTime < prevTime ? 'fast' : 'slow';
-          } else {
-            // Fallback to botTime if no data
-            sectorColor = responseTime < question.botTime ? 'green' : 'yellow';
-            speed = responseTime < question.botTime ? 'fast' : 'slow';
-          }
+        // Practice mode: bot-time threshold sector coloring
+        const botTime = question.botTime;
+        if (responseTime < botTime * 0.5) {
+          sectorColor = 'purple';
+          speed = 'fast';
+        } else if (responseTime < botTime) {
+          sectorColor = 'green';
+          speed = 'fast';
+        } else if (responseTime < botTime * 1.5) {
+          sectorColor = 'yellow';
+          speed = 'normal';
         } else {
-          // Run 3+: compare against best time across all previous runs
-          const allTimes = practiceRunTimesRef.current[position] ?? [];
-          const bestTime = allTimes.length > 0 ? Math.min(...allTimes) : question.botTime;
-          if (responseTime < bestTime) {
-            sectorColor = 'purple';
-            speed = 'fast';
-          } else {
-            const threshold = bestTime * 1.5;
-            sectorColor = responseTime <= threshold ? 'green' : 'yellow';
-            speed = responseTime <= threshold ? 'fast' : 'slow';
-          }
+          sectorColor = 'red';
+          speed = 'slow';
         }
-
-        // Record time for current run
-        currentRunTimesRef.current[position] = responseTime;
-
-        // Purple mode only for run 3+ purple sectors
-        if (runCount >= 2) {
-          setInPurpleMode(sectorColor === 'purple');
-        } else {
-          setInPurpleMode(false);
-        }
+        setInPurpleMode(sectorColor === 'purple');
       } else {
         // Race mode: F1-style competitive sector timing
         // - PURPLE = fastest time for this sector (only one driver)
@@ -1280,16 +1246,6 @@ export default function Game() {
 
       if (newProgress >= raceLength) {
         if (isPracticeMode && !(isGrandPrix && grandPrixPhase === 'rw_practice')) {
-          // Archive current run's times into practiceRunTimesRef
-          currentRunTimesRef.current.forEach((time, position) => {
-            if (!practiceRunTimesRef.current[position]) {
-              practiceRunTimesRef.current[position] = [];
-            }
-            practiceRunTimesRef.current[position].push(time);
-          });
-          practiceRunCountRef.current += 1;
-          currentRunTimesRef.current = []; // Reset for next run
-
           // In practice mode, reset and continue
           setProgress(0);
           setBotProgress(0);
@@ -3458,7 +3414,7 @@ export default function Game() {
 
   // Racing phase
   return (
-    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport headerRight={isPreSeasonTesting ? (
+    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport headerRight={(isPracticeMode && !isGrandPrix) ? (
         <button
           onClick={() => {
             const lastEnd = pstStintsRef.current.length > 0
@@ -3724,7 +3680,7 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        {(!(isPracticeMode && !isPreSeasonTesting) && effectiveSimMode) ? (
+        {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? (
           /* Sector Grid for all sim/realism mode races */
           <div className="flex flex-col justify-center px-4 md:px-8 gap-1 mt-2">
             <div className="mx-auto">
