@@ -1938,9 +1938,7 @@ export default function Game() {
                   fontFamily: 'Oxanium, sans-serif',
                   fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                   fontWeight: 'bold',
-                  background: isGrandPrixUnlocked
-                    ? 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)'
-                    : 'linear-gradient(90deg, #999 0%, #bbb 45%, #999 100%)',
+                  background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   transition: 'all 0.2s ease',
@@ -1952,9 +1950,7 @@ export default function Game() {
                 className="block mt-1 uppercase tracking-widest"
                 style={{
                   fontSize: '0.65rem',
-                  background: isGrandPrixUnlocked
-                    ? 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)'
-                    : 'linear-gradient(90deg, #999 0%, #bbb 45%, #999 100%)',
+                  background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   opacity: 0.6,
@@ -1963,6 +1959,19 @@ export default function Game() {
               >
                 Melbourne
               </span>
+              {!isGrandPrixUnlocked && (
+                <span
+                  className="block mt-1"
+                  style={{
+                    fontSize: '0.55rem',
+                    fontVariant: 'small-caps',
+                    color: '#e10600',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  available 3/5
+                </span>
+              )}
             </motion.button>
           </div>
         </div>
