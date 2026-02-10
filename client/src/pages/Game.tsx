@@ -3712,12 +3712,12 @@ export default function Game() {
         </div>
 
         {/* Progress Bar - between result and keypad */}
-        {isPreSeasonTesting ? (
-          /* 5x20 Sector Grid for Pre-Season Testing */
+        {(!(isPracticeMode && !isPreSeasonTesting) && effectiveSimMode) ? (
+          /* Sector Grid for all sim/realism mode races */
           <div className="flex flex-col justify-center px-4 md:px-8 gap-1 mt-2">
             <div className="mx-auto">
-              <div className="grid grid-cols-[repeat(20,_1fr)] gap-[2px]">
-                {Array.from({ length: 100 }).map((_, i) => {
+              <div className={`grid gap-[2px]`} style={{ gridTemplateColumns: `repeat(${raceLength >= 40 ? 20 : 10}, 1fr)` }}>
+                {Array.from({ length: raceLength }).map((_, i) => {
                   const isCompleted = i < progress;
                   const isCurrent = i === progress;
                   const lapData = lapResults[i];
