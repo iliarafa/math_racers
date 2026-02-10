@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, RACE_WEEK_PRACTICE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -114,7 +114,16 @@ const createMelbourneCircuit = (op: string): Circuit => ({
   id: 'melbourne',
   name: 'MELBOURNE',
   type: op,
-  description: 'Race Week',
+  description: 'Grand Prix',
+  mapUrl: '',
+  paths: { s1: '', s2: '', s3: '' }
+});
+
+const createBahrainCircuit = (op: string): Circuit => ({
+  id: 'bahrain',
+  name: 'BAHRAIN',
+  type: op,
+  description: 'Pre-Season Testing',
   mapUrl: '',
   paths: { s1: '', s2: '', s3: '' }
 });
@@ -142,6 +151,7 @@ const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
   "suzuka": 0.42,     // Suzuka: 35-50% -> 42%
   "monaco": 0.25,     // Monaco: 20-30% -> 25%
   "monza": 0.20,      // Monza: 15-25% -> 20%
+  "bahrain": 0.05,    // Bahrain: Very rare rain -> 5%
 };
 
 // Weather Carousel Component
@@ -593,26 +603,27 @@ export default function Game() {
   const [initialWeather, setInitialWeather] = useState<'dry' | 'wet'>('dry');
 
   const [isPracticeMode, setIsPracticeMode] = useState(false);
-  const [isRaceWeek, setIsRaceWeek] = useState(false);
+  const [isGrandPrix, setIsGrandPrix] = useState(false);
+  const [isPreSeasonTesting, setIsPreSeasonTesting] = useState(false);
   const [selectedOperation, setSelectedOperation] = useState<string>('Addition');
-  // Race Week session state
-  const [raceWeekPhase, setRaceWeekPhase] = useState<'rw_practice' | 'rw_qualifying' | 'rw_race'>('rw_practice');
-  const [raceWeekSelected, setRaceWeekSelected] = useState(false);
+  // Grand Prix session state
+  const [grandPrixPhase, setGrandPrixPhase] = useState<'rw_practice' | 'rw_qualifying' | 'rw_race'>('rw_practice');
+  const [grandPrixSelected, setGrandPrixSelected] = useState(false);
   const dynamicDifficultyRef = useRef<DynamicDifficultyState | null>(null);
-  const [raceWeekLockedDifficulty, setRaceWeekLockedDifficulty] = useState<Difficulty | null>(null);
-  const [raceWeekPolePosition, setRaceWeekPolePosition] = useState(false);
+  const [grandPrixLockedDifficulty, setGrandPrixLockedDifficulty] = useState<Difficulty | null>(null);
+  const [grandPrixPolePosition, setGrandPrixPolePosition] = useState(false);
   const polePositionUsedRef = useRef(false);
-  const [raceWeekPracticeCompleted, setRaceWeekPracticeCompleted] = useState(false);
-  const [raceWeekQualifyingCompleted, setRaceWeekQualifyingCompleted] = useState(false);
+  const [grandPrixPracticeCompleted, setGrandPrixPracticeCompleted] = useState(false);
+  const [grandPrixQualifyingCompleted, setGrandPrixQualifyingCompleted] = useState(false);
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
 
-  // Force sim mode on for Race Week
-  const effectiveSimMode = isRaceWeek ? true : state.simMode;
+  // Force sim mode on for Grand Prix and Pre-Season Testing
+  const effectiveSimMode = (isGrandPrix || isPreSeasonTesting) ? true : state.simMode;
 
   const raceLength = (() => {
     if (!selectedCircuit) return RACE_LENGTH;
-    if (isRaceWeek && raceWeekPhase === 'rw_practice') return RACE_WEEK_PRACTICE_LENGTH;
-    if (isRaceWeek && raceWeekPhase === 'rw_qualifying') return RACE_LENGTH;
+    if (isGrandPrix && grandPrixPhase === 'rw_practice') return GRAND_PRIX_PRACTICE_LENGTH;
+    if (isGrandPrix && grandPrixPhase === 'rw_qualifying') return RACE_LENGTH;
     return getRaceLength(selectedCircuit.id, !isPracticeMode && effectiveSimMode);
   })();
   const botFinished = botProgress >= raceLength;
@@ -620,7 +631,7 @@ export default function Game() {
   const practiceRunTimesRef = useRef<number[][]>([]);  // [position][run] = responseTime
   const practiceRunCountRef = useRef<number>(0);       // How many complete 20-question runs
   const currentRunTimesRef = useRef<number[]>([]);      // Times for the current in-progress run
-  const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer' | 'rw_practice' | 'rw_qualifying' | 'rw_race'>('race');
+  const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer' | 'rw_practice' | 'rw_qualifying' | 'rw_race' | 'testing'>('race');
   const [isPaused, setIsPaused] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -832,19 +843,19 @@ export default function Game() {
       setAeroAvailable(false);
       setAeroActive(false);
 
-      // Set difficulty for Race Week phases
-      const raceDifficulty = (isRaceWeek && raceWeekLockedDifficulty && raceWeekPhase !== 'rw_practice')
-        ? raceWeekLockedDifficulty
+      // Set difficulty for Grand Prix phases
+      const raceDifficulty = (isGrandPrix && grandPrixLockedDifficulty && grandPrixPhase !== 'rw_practice')
+        ? grandPrixLockedDifficulty
         : selectedDriver.difficulty;
       currentDifficultyRef.current = raceDifficulty;
 
-      // Initialize dynamic difficulty for Race Week practice
-      if (isRaceWeek && raceWeekPhase === 'rw_practice') {
+      // Initialize dynamic difficulty for Grand Prix practice and Pre-Season Testing
+      if ((isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting) {
         dynamicDifficultyRef.current = initDynamicDifficulty(selectedDriver.difficulty);
         setDynamicDifficultyDisplay(selectedDriver.difficulty);
       }
 
-      // Reset pole position used flag for Race Week race
+      // Reset pole position used flag for Grand Prix race
       polePositionUsedRef.current = false;
 
       let lightCount = 0;
@@ -854,7 +865,7 @@ export default function Game() {
           if (soundEnabledRef.current) {
             playBeep(1200, 200);
           }
-          setQuestion(generateQuestion(selectedCircuit.id, raceDifficulty, isWet, 0, undefined, isRaceWeek ? selectedOperation : undefined));
+          setQuestion(generateQuestion(selectedCircuit.id, raceDifficulty, isWet, 0, undefined, (isGrandPrix || isPreSeasonTesting) ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
           setGameStatus('racing');
           return;
@@ -904,8 +915,10 @@ export default function Game() {
   // Auto-select first circuit when entering selecting state
   useEffect(() => {
     if (gameStatus === 'selecting' && !selectedCircuit) {
-      if (isRaceWeek) {
+      if (isGrandPrix) {
         setSelectedCircuit(createMelbourneCircuit(selectedOperation));
+      } else if (isPreSeasonTesting) {
+        setSelectedCircuit(createBahrainCircuit(selectedOperation));
       } else {
         setSelectedCircuit(CIRCUITS[0]);
       }
@@ -943,8 +956,10 @@ export default function Game() {
     initAudio();
     setSelectedDriver(driver);
     localStorage.setItem('lastSelectedDriverId', driver.id);
-    if (isRaceWeek) {
+    if (isGrandPrix) {
       setSelectedCircuit(createMelbourneCircuit(selectedOperation));
+    } else if (isPreSeasonTesting) {
+      setSelectedCircuit(createBahrainCircuit(selectedOperation));
     }
     setGameStatus('selecting');
   };
@@ -1168,7 +1183,7 @@ export default function Game() {
       incrementLaps();
       // OVERTAKE energy harvesting: speed-based, faster answers harvest more energy
       // Only in bot race mode, not practice, only when OVERTAKE is not active, and power-ups enabled
-      if (raceMode === 'bot' && !isPracticeMode && !overtakeActive && state.powerUpsEnabled && !(isRaceWeek && raceWeekPhase !== 'rw_race')) {
+      if (raceMode === 'bot' && !isPracticeMode && !overtakeActive && state.powerUpsEnabled && !(isGrandPrix && grandPrixPhase !== 'rw_race')) {
         const energyGain = calculateEnergyHarvest(
           responseTime,
           currentDifficultyRef.current,
@@ -1177,8 +1192,8 @@ export default function Game() {
         setOvertakeEnergy(prev => Math.min(prev + energyGain, 100));
       }
 
-      // Update dynamic difficulty for Race Week practice
-      if (isRaceWeek && raceWeekPhase === 'rw_practice' && dynamicDifficultyRef.current) {
+      // Update dynamic difficulty for Grand Prix practice and Pre-Season Testing
+      if (((isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting) && dynamicDifficultyRef.current) {
         const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, true, responseTime, question.operation || 'Addition');
         dynamicDifficultyRef.current = updated;
         currentDifficultyRef.current = updated.currentDifficulty;
@@ -1188,8 +1203,8 @@ export default function Game() {
       // Calculate progress - double if aero or overtake was active
       const hasBonus = aeroActive || overtakeActive;
       let progressGain = hasBonus ? 2 : 1;
-      // Race Week pole position advantage: first correct answer = 2 sectors
-      if (isRaceWeek && raceWeekPhase === 'rw_race' && raceWeekPolePosition && !polePositionUsedRef.current) {
+      // Grand Prix pole position advantage: first correct answer = 2 sectors
+      if (isGrandPrix && grandPrixPhase === 'rw_race' && grandPrixPolePosition && !polePositionUsedRef.current) {
         progressGain = 2;
         polePositionUsedRef.current = true;
       }
@@ -1256,7 +1271,7 @@ export default function Game() {
       }
 
       if (newProgress >= raceLength) {
-        if (isPracticeMode && !(isRaceWeek && raceWeekPhase === 'rw_practice')) {
+        if (isPracticeMode && !(isGrandPrix && grandPrixPhase === 'rw_practice')) {
           // Archive current run's times into practiceRunTimesRef
           currentRunTimesRef.current.forEach((time, position) => {
             if (!practiceRunTimesRef.current[position]) {
@@ -1285,14 +1300,14 @@ export default function Game() {
           setTimeout(() => {
             setFeedback('idle');
             setAnswer("");
-            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display, isRaceWeek ? selectedOperation : undefined));
+            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display, (isGrandPrix || isPreSeasonTesting) ? selectedOperation : undefined));
             questionStartTimeRef.current = Date.now();
           }, 600);
-        } else if (isRaceWeek && raceWeekPhase === 'rw_practice') {
-          // Race Week practice: lock difficulty and finish (no auto-loop)
+        } else if (isGrandPrix && grandPrixPhase === 'rw_practice') {
+          // Grand Prix practice: lock difficulty and finish (no auto-loop)
           const achievedDifficulty = dynamicDifficultyRef.current?.currentDifficulty || selectedDriver!.difficulty;
-          setRaceWeekLockedDifficulty(achievedDifficulty);
-          setRaceWeekPracticeCompleted(true);
+          setGrandPrixLockedDifficulty(achievedDifficulty);
+          setGrandPrixPracticeCompleted(true);
           finishRace(mistakes);
         } else {
           finishRace(mistakes);
@@ -1305,7 +1320,7 @@ export default function Game() {
           setAnswer("");
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
-          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', boostFactor, question?.display, isRaceWeek ? selectedOperation : undefined));
+          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', boostFactor, question?.display, (isGrandPrix || isPreSeasonTesting) ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1318,8 +1333,8 @@ export default function Game() {
       }
       resetStreak();
 
-      // Update dynamic difficulty for Race Week practice on wrong answer
-      if (isRaceWeek && raceWeekPhase === 'rw_practice' && dynamicDifficultyRef.current) {
+      // Update dynamic difficulty for Grand Prix practice and Pre-Season Testing on wrong answer
+      if (((isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting) && dynamicDifficultyRef.current) {
         const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, false, responseTime, question.operation || 'Addition');
         dynamicDifficultyRef.current = updated;
         currentDifficultyRef.current = updated.currentDifficulty;
@@ -1472,10 +1487,10 @@ export default function Game() {
       updatePersonalBest(selectedCircuit.id, elapsedTime, selectedDriver?.difficulty);
       recordLapTime(elapsedTime, selectedCircuit.name, selectedDriver?.id);
     }
-    // Race Week qualifying: determine pole position
-    if (isRaceWeek && raceWeekPhase === 'rw_qualifying') {
-      setRaceWeekPolePosition(beatBot);
-      setRaceWeekQualifyingCompleted(true);
+    // Grand Prix qualifying: determine pole position
+    if (isGrandPrix && grandPrixPhase === 'rw_qualifying') {
+      setGrandPrixPolePosition(beatBot);
+      setGrandPrixQualifyingCompleted(true);
     }
   };
 
@@ -1549,19 +1564,20 @@ export default function Game() {
     setAeroActive(false);
     setAeroUsedZones(new Set());
     setShowAeroMessage(null);
-    // Reset Race Week state
-    setRaceWeekPhase('rw_practice');
-    setRaceWeekLockedDifficulty(null);
-    setRaceWeekPolePosition(false);
+    // Reset Grand Prix state
+    setGrandPrixPhase('rw_practice');
+    setGrandPrixLockedDifficulty(null);
+    setGrandPrixPolePosition(false);
     polePositionUsedRef.current = false;
-    setRaceWeekPracticeCompleted(false);
-    setRaceWeekQualifyingCompleted(false);
+    setGrandPrixPracticeCompleted(false);
+    setGrandPrixQualifyingCompleted(false);
     dynamicDifficultyRef.current = null;
     setDynamicDifficultyDisplay('beginner');
-    setIsRaceWeek(false);
+    setIsGrandPrix(false);
+    setIsPreSeasonTesting(false);
   };
 
-  // Helper to reset race state and go back to selecting screen (for Race Week phase transitions)
+  // Helper to reset race state and go back to selecting screen (for Grand Prix phase transitions)
   const restartToSelectingScreen = () => {
     setProgress(0);
     setBotProgress(0);
@@ -1758,8 +1774,8 @@ export default function Game() {
     // Bot speed varies by difficulty - base time per question in ms
     // Higher = slower bot = more time for player
     // Karting (beginner) = slowest bot to give young kids more time
-    // Race Week: bot uses locked difficulty from practice
-    const botDifficulty = (isRaceWeek && raceWeekLockedDifficulty) ? raceWeekLockedDifficulty : selectedDriver?.difficulty;
+    // Grand Prix: bot uses locked difficulty from practice
+    const botDifficulty = (isGrandPrix && grandPrixLockedDifficulty) ? grandPrixLockedDifficulty : selectedDriver?.difficulty;
     const baseSpeed = botDifficulty === 'beginner' ? 4000 :
                       botDifficulty === 'easy' ? 3000 :
                       botDifficulty === 'medium' ? 2500 : 2000; // hard (F1)
@@ -1829,7 +1845,7 @@ export default function Game() {
     setLocation('/multiplayer');
   };
 
-  // Mode Selection Screen — Career vs Race Week
+  // Mode Selection Screen — Career vs Grand Prix
   if (gameStatus === 'mode_select') {
     return (
       <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
@@ -1889,12 +1905,12 @@ export default function Game() {
                 Championship
               </span>
             </motion.button>
-            {/* Race Week Button */}
+            {/* Grand Prix Button */}
             <motion.button
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
-                setRaceWeekSelected(true);
-                setIsRaceWeek(true);
+                setGrandPrixSelected(true);
+                setIsGrandPrix(true);
                 setGameStatus('operation_select');
               }}
               whileTap={{ scale: 0.98 }}
@@ -1912,7 +1928,7 @@ export default function Game() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                RACE WEEK
+                GRAND PRIX
               </span>
               <span
                 className="block mt-1 uppercase tracking-widest"
@@ -1926,6 +1942,41 @@ export default function Game() {
                 }}
               >
                 Melbourne
+              </span>
+            </motion.button>
+            {/* Pre-Season Testing Button */}
+            <motion.button
+              onClick={() => {
+                if (state.soundEnabled) playCarouselClick();
+                setIsPreSeasonTesting(true);
+                setGameStatus('operation_select');
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full max-w-xs md:max-w-md py-3 text-center"
+            >
+              <span
+                className="block"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                  fontWeight: 'bold',
+                  color: '#333333',
+                  opacity: 0.7,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                PRE-SEASON TESTING
+              </span>
+              <span
+                className="block mt-1 uppercase tracking-widest"
+                style={{
+                  fontSize: '0.65rem',
+                  color: '#333333',
+                  opacity: 0.4,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Bahrain
               </span>
             </motion.button>
           </div>
@@ -1946,7 +1997,7 @@ export default function Game() {
     );
   }
 
-  // Operation Selection Screen for Race Week
+  // Operation Selection Screen for Grand Prix / Pre-Season Testing
   if (gameStatus === 'operation_select') {
     const operationItems = [
       { label: 'Addition', symbol: '+', type: 'Addition' },
@@ -1971,16 +2022,18 @@ export default function Game() {
         {/* Welcome Section */}
         <div className="mt-6 md:mt-24 mb-6 md:mb-16 flex flex-col items-center px-8">
           <h2
-            className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black whitespace-nowrap"
+            className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black text-center"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
-            Welcome to Race Week!
+            {isPreSeasonTesting ? (<>PRE-SEASON<br />TESTING</>) : 'Welcome to Grand Prix!'}
           </h2>
           <p
             className="mt-3 text-center text-gray-500"
             style={{ fontFamily: 'Oxanium, sans-serif', fontSize: '0.8rem', maxWidth: '28rem' }}
           >
-            Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to Melbourne, Australia.
+            {isPreSeasonTesting
+              ? 'Unlimited practice with dynamic difficulty — the level adjusts as you go. Press BOX when you\'re ready to end the session. Welcome to Bahrain.'
+              : 'Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to Melbourne, Australia.'}
           </p>
           <h3
             className="mt-4 text-xl md:text-2xl font-bold uppercase tracking-wider text-black"
@@ -1989,10 +2042,10 @@ export default function Game() {
             Select Operation
           </h3>
         </div>
-        {/* Operation List */}
+        {/* Operation Grid */}
         <div className="flex flex-col items-center px-8">
-          <div className="flex flex-col items-center gap-3 md:gap-5">
-            {operationItems.map((op) => (
+          <div className="grid grid-cols-2 gap-3 w-full max-w-xs md:max-w-md">
+            {operationItems.map((op, index) => (
               <motion.button
                 key={op.type}
                 onClick={() => {
@@ -2000,32 +2053,40 @@ export default function Game() {
                   const kartingDriver = DRIVERS.find(d => d.id === 'karting')!;
                   setSelectedDriver(kartingDriver);
                   localStorage.setItem('lastSelectedDriverId', kartingDriver.id);
-                  setSelectedCircuit(createMelbourneCircuit(op.type));
-                  setRaceWeekPhase('rw_practice');
-                  setRaceWeekLockedDifficulty(null);
-                  setRaceWeekPolePosition(false);
-                  setRaceWeekPracticeCompleted(false);
-                  setRaceWeekQualifyingCompleted(false);
-                  dynamicDifficultyRef.current = null;
-                  setIsPracticeMode(true);
-                  setRaceMode('solo');
-                  setSelectedTab('rw_practice');
+                  if (isPreSeasonTesting) {
+                    setSelectedCircuit(createBahrainCircuit(op.type));
+                    setIsPracticeMode(true);
+                    setRaceMode('solo');
+                    setSelectedTab('testing');
+                    dynamicDifficultyRef.current = null;
+                  } else {
+                    setSelectedCircuit(createMelbourneCircuit(op.type));
+                    setGrandPrixPhase('rw_practice');
+                    setGrandPrixLockedDifficulty(null);
+                    setGrandPrixPolePosition(false);
+                    setGrandPrixPracticeCompleted(false);
+                    setGrandPrixQualifyingCompleted(false);
+                    dynamicDifficultyRef.current = null;
+                    setIsPracticeMode(true);
+                    setRaceMode('solo');
+                    setSelectedTab('rw_practice');
+                  }
                   if (state.soundEnabled) playCarouselClick();
                   initAudio();
                   setGameStatus('selecting');
                 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full max-w-xs md:max-w-md py-2 text-center"
+                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                className={`h-20 md:h-24 rounded-xl bg-gray-100 flex flex-col items-center justify-center${index === operationItems.length - 1 ? ' col-span-2' : ''}`}
               >
                 <span
                   className="block"
                   style={{
                     fontFamily: 'Oxanium, sans-serif',
-                    fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                    fontSize: window.innerWidth >= 768 ? '2rem' : '1.4rem',
                     fontWeight: 'bold',
                     color: '#000000',
                     opacity: 0.7,
-                    transition: 'all 0.2s ease',
                   }}
                 >
                   {op.symbol}
@@ -2033,10 +2094,10 @@ export default function Game() {
                 <span
                   className="block mt-1 uppercase tracking-widest"
                   style={{
-                    fontSize: '0.65rem',
+                    fontFamily: 'Oxanium, sans-serif',
+                    fontSize: '0.6rem',
                     color: '#000000',
                     opacity: 0.4,
-                    transition: 'all 0.2s ease',
                   }}
                 >
                   {op.label}
@@ -2050,8 +2111,9 @@ export default function Game() {
           <button
             onClick={() => {
               if (state.soundEnabled) playCarouselClick();
-              setIsRaceWeek(false);
-              setRaceWeekSelected(false);
+              setIsGrandPrix(false);
+              setIsPreSeasonTesting(false);
+              setGrandPrixSelected(false);
               setGameStatus('mode_select');
             }}
             className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
@@ -2106,7 +2168,7 @@ export default function Game() {
                 key={series.id}
                 onClick={() => {
                   if (!isUnlocked) return;
-                  setRaceWeekSelected(false);
+                  setGrandPrixSelected(false);
                   setSelectedDriver(series.driver || null);
                   if (state.soundEnabled) playCarouselClick();
                 }}
@@ -2195,7 +2257,7 @@ export default function Game() {
   if (gameStatus === 'selecting') {
     const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
     const displayCircuit = selectedCircuit || CIRCUITS[0];
-    const isCircuitLocked = (isPracticeMode || isRaceWeek) ? false : (selectedDriver ? !isCircuitUnlockedForSeries(displayCircuit.id, selectedDriver.id, state.championedCircuits) : false);
+    const isCircuitLocked = (isPracticeMode || isGrandPrix) ? false : (selectedDriver ? !isCircuitUnlockedForSeries(displayCircuit.id, selectedDriver.id, state.championedCircuits) : false);
 
     const goToPrevCircuit = () => {
       const newIndex = currentCircuitIndex === 0 ? CIRCUITS.length - 1 : currentCircuitIndex - 1;
@@ -2248,14 +2310,23 @@ export default function Game() {
             />
           </Link>
         </div>
-        {/* Tab Toggle — Race Week phases or normal Race/Practice/Multiplayer */}
+        {/* Tab Toggle — Grand Prix phases, Pre-Season Testing, or normal Race/Practice/Multiplayer */}
         <div className="mt-8 md:mt-24 mb-6 md:mb-24 flex justify-center">
-          {isRaceWeek ? (
+          {isPreSeasonTesting ? (
+            <div className="rounded-full p-1 flex gap-1 bg-gray-200">
+              <button
+                className="px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all bg-gray-700 text-white"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+              >
+                Testing
+              </button>
+            </div>
+          ) : isGrandPrix ? (
             <div className="rounded-full p-1 flex gap-1 bg-gray-200">
               <button
                 onClick={() => {
                   setSelectedTab('rw_practice');
-                  setRaceWeekPhase('rw_practice');
+                  setGrandPrixPhase('rw_practice');
                   setIsPracticeMode(true);
                   setRaceMode('solo');
                   if (state.soundEnabled) playCarouselClick();
@@ -2272,9 +2343,9 @@ export default function Game() {
               </button>
               <button
                 onClick={() => {
-                  if (!raceWeekPracticeCompleted) return;
+                  if (!grandPrixPracticeCompleted) return;
                   setSelectedTab('rw_qualifying');
-                  setRaceWeekPhase('rw_qualifying');
+                  setGrandPrixPhase('rw_qualifying');
                   setIsPracticeMode(false);
                   setRaceMode('bot');
                   if (state.soundEnabled) playCarouselClick();
@@ -2283,7 +2354,7 @@ export default function Game() {
                   "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
                   selectedTab === 'rw_qualifying'
                     ? "bg-amber-500 text-white"
-                    : !raceWeekPracticeCompleted
+                    : !grandPrixPracticeCompleted
                       ? "bg-transparent text-gray-300 cursor-not-allowed"
                       : "bg-transparent text-gray-600 hover:text-gray-900"
                 )}
@@ -2293,9 +2364,9 @@ export default function Game() {
               </button>
               <button
                 onClick={() => {
-                  if (!raceWeekQualifyingCompleted) return;
+                  if (!grandPrixQualifyingCompleted) return;
                   setSelectedTab('rw_race');
-                  setRaceWeekPhase('rw_race');
+                  setGrandPrixPhase('rw_race');
                   setIsPracticeMode(false);
                   setRaceMode('bot');
                   if (state.soundEnabled) playCarouselClick();
@@ -2304,7 +2375,7 @@ export default function Game() {
                   "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
                   selectedTab === 'rw_race'
                     ? "bg-red-600 text-white"
-                    : !raceWeekQualifyingCompleted
+                    : !grandPrixQualifyingCompleted
                       ? "bg-transparent text-gray-300 cursor-not-allowed"
                       : "bg-transparent text-gray-600 hover:text-gray-900"
                 )}
@@ -2360,7 +2431,91 @@ export default function Game() {
         {/* Main Content - Hero Card with Side Chevrons */}
         {/* Card area — same position as series buttons list */}
         <div className="flex items-center justify-center px-8 pb-24 md:pb-32">
-          {selectedTab === 'multiplayer' ? (
+          {isPreSeasonTesting ? (
+            /* Pre-Season Testing Card - Bahrain */
+            (<div className="flex flex-col items-center">
+              <motion.div
+                key="bahrain-card"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                style={{
+                  backgroundColor: '#f0f0f0',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                }}
+                data-testid="hero-card-bahrain"
+              >
+                {/* Header - Bahrain */}
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <h2
+                    className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  >
+                    BAHRAIN
+                  </h2>
+                </div>
+
+                {/* Placeholder area */}
+                <div className="flex-1 flex items-center justify-center py-6">
+                  <div className="text-6xl font-bold text-gray-300" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    {OPERATION_OPTIONS.find(o => o.type === selectedOperation)?.label || '+'}
+                  </div>
+                </div>
+
+                {/* Operation — static display */}
+                <div className="text-center mb-2 md:mb-4">
+                  <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
+                  <div
+                    className="text-lg font-bold uppercase text-gray-900"
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  >
+                    {selectedOperation}
+                  </div>
+                </div>
+
+                {/* Weather Toggle */}
+                <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+                  <button
+                    onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
+                    className={cn(
+                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                      selectedWeather === 'dry'
+                        ? "bg-yellow-500/20 ring-2 ring-yellow-500"
+                        : "bg-transparent hover:bg-white/5"
+                    )}
+                  >
+                    <img src={weatherSun} alt="Dry" className="w-8 h-8" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Dry</span>
+                  </button>
+                  <button
+                    onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
+                    className={cn(
+                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                      selectedWeather === 'wet'
+                        ? "bg-blue-500/20 ring-2 ring-blue-500"
+                        : "bg-transparent hover:bg-white/5"
+                    )}
+                  >
+                    <img src={weatherRain} alt="Wet" className="w-8 h-8" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Wet</span>
+                  </button>
+                  <button
+                    onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
+                    className={cn(
+                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
+                      selectedWeather === 'random'
+                        ? "bg-purple-500/20 ring-2 ring-purple-500"
+                        : "bg-transparent hover:bg-white/5"
+                    )}
+                  >
+                    <img src={weatherRandom} alt="Random" className="w-8 h-8" />
+                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Random</span>
+                  </button>
+                </div>
+              </motion.div>
+            </div>)
+          ) : selectedTab === 'multiplayer' ? (
             /* Multiplayer Card */
             (<div className="flex flex-col items-center">
               <motion.div
@@ -2418,8 +2573,8 @@ export default function Game() {
                 </div>
               </motion.div>
             </div>)
-          ) : isRaceWeek ? (
-            /* Race Week Card - Melbourne */
+          ) : isGrandPrix ? (
+            /* Grand Prix Card - Melbourne */
             (<div className="flex flex-col items-center">
               <motion.div
                 key="melbourne-card"
@@ -2682,7 +2837,7 @@ export default function Game() {
           )}
         </div>
         {/* Track Dots Indicator - only show for track selection */}
-        {selectedTab !== 'multiplayer' && !isRaceWeek && (
+        {selectedTab !== 'multiplayer' && !isGrandPrix && !isPreSeasonTesting && (
           <div className="fixed bottom-44 left-0 right-0 flex justify-center gap-2">
             {CIRCUITS.map((circuit, index) => {
               const dotLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false);
@@ -2716,6 +2871,7 @@ export default function Game() {
               fontFamily: 'Oxanium, sans-serif',
               backgroundColor: isCircuitLocked ? '#999999'
                 : selectedTab === 'multiplayer' ? '#2563eb'
+                : selectedTab === 'testing' ? '#374151'
                 : selectedTab === 'rw_practice' ? '#16a34a'
                 : selectedTab === 'rw_qualifying' ? '#f59e0b'
                 : selectedTab === 'rw_race' ? '#dc2626'
@@ -2729,6 +2885,7 @@ export default function Game() {
             data-testid="button-start-race"
           >
             {selectedTab === 'multiplayer' ? 'Enter Lobby'
+              : selectedTab === 'testing' ? 'Go to Track'
               : selectedTab === 'rw_practice' ? 'Start Practice'
               : selectedTab === 'rw_qualifying' ? 'Start Qualifying'
               : selectedTab === 'rw_race' ? 'Start Race'
@@ -2737,14 +2894,19 @@ export default function Game() {
           <button
             onClick={() => {
               if (state.soundEnabled) playCarouselClick();
-              if (isRaceWeek) {
-                setIsRaceWeek(false);
-                setRaceWeekSelected(false);
-                setRaceWeekPhase('rw_practice');
-                setRaceWeekLockedDifficulty(null);
-                setRaceWeekPolePosition(false);
-                setRaceWeekPracticeCompleted(false);
-                setRaceWeekQualifyingCompleted(false);
+              if (isGrandPrix) {
+                setIsGrandPrix(false);
+                setGrandPrixSelected(false);
+                setGrandPrixPhase('rw_practice');
+                setGrandPrixLockedDifficulty(null);
+                setGrandPrixPolePosition(false);
+                setGrandPrixPracticeCompleted(false);
+                setGrandPrixQualifyingCompleted(false);
+                dynamicDifficultyRef.current = null;
+                setSelectedTab('race');
+                setGameStatus("mode_select");
+              } else if (isPreSeasonTesting) {
+                setIsPreSeasonTesting(false);
                 dynamicDifficultyRef.current = null;
                 setSelectedTab('race');
                 setGameStatus("mode_select");
@@ -2932,15 +3094,55 @@ export default function Game() {
     );
   }
 
-  // Race Week Practice Finish Screen
-  if (gameStatus === 'finished' && isRaceWeek && raceWeekPhase === 'rw_practice') {
-    const difficultyLabel = DRIVERS.find(d => d.difficulty === (raceWeekLockedDifficulty || 'beginner'))?.label || 'Karting';
+  // Pre-Season Testing Finish Screen
+  if (gameStatus === 'finished' && isPreSeasonTesting) {
+    const achievedLabel = DRIVERS.find(d => d.difficulty === (dynamicDifficultyRef.current?.currentDifficulty || dynamicDifficultyDisplay))?.label || 'Karting';
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full p-4">
           <div className="rounded-xl p-6 w-full text-center space-y-6">
             <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Race Week</div>
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Pre-Season Testing</div>
+              <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Testing Complete</div>
+            </div>
+            <div className="py-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Achieved Level</span>
+                <span className="font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>{achievedLabel}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Time</span>
+                <span className="font-bold font-mono">{formatTime(elapsedTime)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Questions</span>
+                <span className="font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>{progress}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Mistakes</span>
+                <span className={cn("font-bold", finalMistakes === 0 ? "text-green-600" : "text-red-600")}>{finalMistakes}</span>
+              </div>
+            </div>
+            <div className="grid gap-3">
+              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
+                <RotateCcw className="w-4 h-4" /> Back to Menu
+              </button>
+            </div>
+          </div>
+        </div>
+      </GameLayout>
+    );
+  }
+
+  // Grand Prix Practice Finish Screen
+  if (gameStatus === 'finished' && isGrandPrix && grandPrixPhase === 'rw_practice') {
+    const difficultyLabel = DRIVERS.find(d => d.difficulty === (grandPrixLockedDifficulty || 'beginner'))?.label || 'Karting';
+    return (
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
+        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full p-4">
+          <div className="rounded-xl p-6 w-full text-center space-y-6">
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Grand Prix</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Practice Complete</div>
             </div>
             <div className="py-6 space-y-4">
@@ -2962,7 +3164,7 @@ export default function Game() {
                 onClick={() => {
                   restartToSelectingScreen();
                   setSelectedTab('rw_qualifying');
-                  setRaceWeekPhase('rw_qualifying');
+                  setGrandPrixPhase('rw_qualifying');
                   setIsPracticeMode(false);
                   setRaceMode('bot');
                 }}
@@ -2991,9 +3193,9 @@ export default function Game() {
     );
   }
 
-  // Race Week Qualifying Finish Screen
-  if (gameStatus === 'finished' && isRaceWeek && raceWeekPhase === 'rw_qualifying') {
-    const gotPole = raceWeekPolePosition;
+  // Grand Prix Qualifying Finish Screen
+  if (gameStatus === 'finished' && isGrandPrix && grandPrixPhase === 'rw_qualifying') {
+    const gotPole = grandPrixPolePosition;
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full p-4">
@@ -3020,7 +3222,7 @@ export default function Game() {
                 onClick={() => {
                   restartToSelectingScreen();
                   setSelectedTab('rw_race');
-                  setRaceWeekPhase('rw_race');
+                  setGrandPrixPhase('rw_race');
                   setIsPracticeMode(false);
                   setRaceMode('bot');
                 }}
@@ -3269,11 +3471,13 @@ export default function Game() {
         {/* Mode badge and controls */}
         <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
           <div className="flex items-center gap-2">
-            {isRaceWeek && raceWeekPhase === 'rw_practice' ? (
+            {isPreSeasonTesting ? (
+              <span className="text-xs bg-gray-700 text-white px-2 py-0.5 rounded">TESTING</span>
+            ) : isGrandPrix && grandPrixPhase === 'rw_practice' ? (
               <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
-            ) : isRaceWeek && raceWeekPhase === 'rw_qualifying' ? (
+            ) : isGrandPrix && grandPrixPhase === 'rw_qualifying' ? (
               <span className="text-xs text-white px-2 py-0.5 rounded" style={{ backgroundColor: '#f59e0b' }}>QUALIFYING</span>
-            ) : isRaceWeek && raceWeekPhase === 'rw_race' ? (
+            ) : isGrandPrix && grandPrixPhase === 'rw_race' ? (
               <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE DAY</span>
             ) : isPracticeMode ? (
               <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
@@ -3282,6 +3486,16 @@ export default function Game() {
             )}
           </div>
           <div className="flex items-center gap-3">
+            {isPreSeasonTesting && (
+              <button
+                onClick={() => finishRace(mistakes)}
+                className="px-3 py-0.5 bg-orange-600 text-white text-xs font-bold rounded hover:bg-orange-500 transition-colors uppercase tracking-wider"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+                data-testid="button-box"
+              >
+                BOX
+              </button>
+            )}
             {!isPracticeMode && (
               <button
                 onClick={() => setIsPaused(true)}
@@ -3339,8 +3553,8 @@ export default function Game() {
             )}
           </div>
           
-          {/* Dynamic difficulty indicator for Race Week practice */}
-          {isRaceWeek && raceWeekPhase === 'rw_practice' && (
+          {/* Dynamic difficulty indicator for Grand Prix practice and Pre-Season Testing */}
+          {((isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting) && (
             <div className="text-xs text-gray-500 uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               Level: {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
             </div>
@@ -3549,7 +3763,7 @@ export default function Game() {
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-xl">
             {/* Power-ups row - integrated as extended keypad row */}
-            {((raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled) || isRaceWeek) && (
+            {((raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled) || isGrandPrix) && !isPreSeasonTesting && (
               <>
                 {/* AERO Button - above 7 */}
                 <button
@@ -3599,11 +3813,11 @@ export default function Game() {
                 <button
                   onPointerDown={(e) => {
                     e.preventDefault();
-                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished || (isRaceWeek && raceWeekPhase !== 'rw_race'))) {
+                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished || (isGrandPrix && grandPrixPhase !== 'rw_race'))) {
                       handleOvertake();
                     }
                   }}
-                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished || (isRaceWeek && raceWeekPhase !== 'rw_race')}
+                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished || (isGrandPrix && grandPrixPhase !== 'rw_race')}
                   className={cn(
                     "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
                     overtakeActive

@@ -68,7 +68,7 @@ export const TEAM_COLORS = [
 ];
 
 export const RACE_LENGTH = 20;
-export const RACE_WEEK_PRACTICE_LENGTH = 30;
+export const GRAND_PRIX_PRACTICE_LENGTH = 30;
 
 export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   suzuka: 53,
@@ -76,7 +76,8 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   spa: 44,
   silverstone: 52,
   monza: 53,
-  melbourne: 58
+  melbourne: 58,
+  bahrain: 57
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -860,7 +861,7 @@ export function getEasierDifficulty(current: Difficulty): Difficulty {
   return levels[Math.max(levels.indexOf(current) - 1, 0)];
 }
 
-// Dynamic difficulty state for Race Week practice
+// Dynamic difficulty state for Grand Prix practice
 export interface DynamicDifficultyState {
   currentDifficulty: Difficulty;
   rollingScore: number; // resets on level change
