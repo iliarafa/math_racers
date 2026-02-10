@@ -10,9 +10,10 @@ interface GameLayoutProps {
   lockViewport?: boolean;
   darkBackground?: boolean;
   hideGarageButton?: boolean;
+  headerRight?: React.ReactNode;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false, headerRight }: GameLayoutProps) {
   return (
     <div className={cn(
       "text-foreground flex flex-col",
@@ -45,7 +46,7 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            {!hideGarageButton && (
+            {headerRight ? headerRight : !hideGarageButton && (
               <Link href="/garage">
                 <button className="flex items-center justify-center gap-2 text-sm font-medium hover:bg-secondary min-w-11 min-h-11 px-3 rounded-md transition-colors">
                   <Wrench className="w-5 h-5" />

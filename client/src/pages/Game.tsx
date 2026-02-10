@@ -3457,7 +3457,22 @@ export default function Game() {
 
   // Racing phase
   return (
-    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
+    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport headerRight={isPreSeasonTesting ? (
+        <button
+          onClick={() => {
+            const lastEnd = pstStintsRef.current.length > 0
+              ? pstStintsRef.current[pstStintsRef.current.length - 1].endIndex
+              : 0;
+            pstStintsRef.current.push({ startIndex: lastEnd, endIndex: lapResults.length, time: elapsedTime });
+            setPstSessionLog(true);
+          }}
+          className="px-5 py-1.5 bg-black text-white text-sm font-bold rounded-lg border-2 border-white hover:bg-gray-800 transition-colors uppercase tracking-wider"
+          style={{ fontFamily: 'Oxanium, sans-serif' }}
+          data-testid="button-box-header"
+        >
+          BOX
+        </button>
+      ) : undefined}>
       <div className="flex-1 flex flex-col w-full overflow-hidden relative min-h-0">
 
         {/* Pause Overlay */}
@@ -3590,22 +3605,6 @@ export default function Game() {
             )}
           </div>
           <div className="flex items-center gap-3">
-            {isPreSeasonTesting && (
-              <button
-                onClick={() => {
-                  const lastEnd = pstStintsRef.current.length > 0
-                    ? pstStintsRef.current[pstStintsRef.current.length - 1].endIndex
-                    : 0;
-                  pstStintsRef.current.push({ startIndex: lastEnd, endIndex: lapResults.length, time: elapsedTime });
-                  setPstSessionLog(true);
-                }}
-                className="px-5 py-1.5 bg-black text-white text-sm font-bold rounded-lg border-2 border-white hover:bg-gray-800 transition-colors uppercase tracking-wider"
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-                data-testid="button-box"
-              >
-                BOX
-              </button>
-            )}
             {!isPracticeMode && (
               <button
                 onClick={() => setIsPaused(true)}
