@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type MultiplayerRoom, type InsertRoom, multiplayerRooms } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { type User, type InsertUser, type MultiplayerRoom, type InsertRoom, multiplayerRooms, type InsertLeaderboardEntry, type LeaderboardEntry, pstLeaderboard } from "@shared/schema";
+import { eq, desc } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { db, withRetry } from "./db";
 
@@ -11,6 +11,8 @@ export interface IStorage {
   getRoomByCode(code: string): Promise<MultiplayerRoom | undefined>;
   updateRoom(roomCode: string, updates: Partial<MultiplayerRoom>): Promise<MultiplayerRoom | undefined>;
   deleteRoom(roomCode: string): Promise<void>;
+  submitLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
+  getLeaderboard(operation?: string, limit?: number): Promise<LeaderboardEntry[]>;
   getStorageType(): string;
 }
 
@@ -18,6 +20,7 @@ export interface IStorage {
 export class MemoryStorage implements IStorage {
   private rooms = new Map<string, MultiplayerRoom>();
   private users = new Map<string, User>();
+  private leaderboardEntries: LeaderboardEntry[] = [];
 
   getStorageType(): string {
     return "memory";
@@ -79,6 +82,25 @@ export class MemoryStorage implements IStorage {
   async deleteRoom(roomCode: string): Promise<void> {
     this.rooms.delete(roomCode);
   }
+
+  async submitLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
+    const newEntry: LeaderboardEntry = {
+      id: randomUUID(),
+      ...entry,
+      createdAt: new Date(),
+    };
+    this.leaderboardEntries.push(newEntry);
+    this.leaderboardEntries.sort((a, b) => b.score - a.score);
+    return newEntry;
+  }
+
+  async getLeaderboard(operation?: string, limit: number = 50): Promise<LeaderboardEntry[]> {
+    let entries = this.leaderboardEntries;
+    if (operation) {
+      entries = entries.filter(e => e.operation === operation);
+    }
+    return entries.slice(0, limit);
+  }
 }
 
 // Database storage for internet play (requires DATABASE_URL)
@@ -127,6 +149,23 @@ export class DatabaseStorage implements IStorage {
   async deleteRoom(roomCode: string): Promise<void> {
     return withRetry(async () => {
       await db.delete(multiplayerRooms).where(eq(multiplayerRooms.roomCode, roomCode));
+    });
+  }
+
+  async submitLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
+    return withRetry(async () => {
+      const [newEntry] = await db.insert(pstLeaderboard).values(entry).returning();
+      return newEntry;
+    });
+  }
+
+  async getLeaderboard(operation?: string, limit: number = 50): Promise<LeaderboardEntry[]> {
+    return withRetry(async () => {
+      let query = db.select().from(pstLeaderboard);
+      if (operation) {
+        query = query.where(eq(pstLeaderboard.operation, operation)) as typeof query;
+      }
+      return query.orderBy(desc(pstLeaderboard.score)).limit(limit);
     });
   }
 }
@@ -222,6 +261,20 @@ class FallbackStorage implements IStorage {
     return this.withFallback(
       () => this.primaryStorage.deleteRoom(roomCode),
       () => this.fallbackStorage.deleteRoom(roomCode)
+    );
+  }
+
+  async submitLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry> {
+    return this.withFallback(
+      () => this.primaryStorage.submitLeaderboardEntry(entry),
+      () => this.fallbackStorage.submitLeaderboardEntry(entry)
+    );
+  }
+
+  async getLeaderboard(operation?: string, limit?: number): Promise<LeaderboardEntry[]> {
+    return this.withFallback(
+      () => this.primaryStorage.getLeaderboard(operation, limit),
+      () => this.fallbackStorage.getLeaderboard(operation, limit)
     );
   }
 }

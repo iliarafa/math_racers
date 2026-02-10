@@ -5,7 +5,8 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
+import { apiRequest } from "@/lib/queryClient";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -590,7 +591,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, championCircuit, updatePersonalBest, recordLapTime } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, championCircuit, updatePersonalBest, recordLapTime, setPlayerName } = useGameState();
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
   const [botProgress, setBotProgress] = useState(0);
@@ -613,6 +614,18 @@ export default function Game() {
   const [pstSessionLog, setPstSessionLog] = useState(false);
   const pstStintsRef = useRef<Array<{ startIndex: number; endIndex: number; time: number }>>([]); // tracks each stint's lap range and elapsed time
   const [selectedOperation, setSelectedOperation] = useState<string>('Addition');
+  const [showNamePrompt, setShowNamePrompt] = useState(false);
+  const [pendingScoreSubmission, setPendingScoreSubmission] = useState<{
+    playerId: string;
+    operation: string;
+    score: number;
+    totalTime: number;
+    mistakes: number;
+    accuracy: number;
+    difficultyAchieved: string;
+  } | null>(null);
+  const [pstCycleCount, setPstCycleCount] = useState(0);
+  const [nameInput, setNameInput] = useState('');
   // Grand Prix session state
   const [grandPrixPhase, setGrandPrixPhase] = useState<'rw_practice' | 'rw_qualifying' | 'rw_race'>('rw_practice');
   const dynamicDifficultyRef = useRef<DynamicDifficultyState | null>(null);
@@ -896,7 +909,7 @@ export default function Game() {
   // Timer Logic - only runs during racing and not paused
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (gameStatus === 'racing' && !isPaused) {
+    if (gameStatus === 'racing' && !isPaused && !showNamePrompt) {
       if (raceStartTimeRef.current === null) {
         raceStartTimeRef.current = Date.now();
       }
@@ -912,7 +925,7 @@ export default function Game() {
       }
     }
     return () => clearInterval(interval);
-  }, [gameStatus, isPaused]);
+  }, [gameStatus, isPaused, showNamePrompt]);
 
   // Guard: redirect to proper selection if missing driver/circuit
   useEffect(() => {
@@ -1254,6 +1267,39 @@ export default function Game() {
 
       if (newProgress >= raceLength) {
         if (isPracticeMode && !(isGrandPrix && grandPrixPhase === 'rw_practice')) {
+          // PST cycle completion: auto-submit score to leaderboard
+          if (isPreSeasonTesting) {
+            setPstCycleCount(prev => prev + 1);
+            const cycleTime = elapsedTime;
+            const cycleMistakes = mistakes;
+            const achievedDiff = dynamicDifficultyRef.current?.currentDifficulty || 'beginner';
+            const accuracy = Math.max(0, Math.round(((raceLength - cycleMistakes) / raceLength) * 100));
+            const score = calculatePSTScore(cycleTime, cycleMistakes, achievedDiff, raceLength);
+
+            const submission = {
+              playerId: state.playerId,
+              operation: selectedOperation,
+              score,
+              totalTime: cycleTime,
+              mistakes: cycleMistakes,
+              accuracy,
+              difficultyAchieved: achievedDiff,
+            };
+
+            if (!state.playerName) {
+              // Need name first — show prompt and hold submission
+              setPendingScoreSubmission(submission);
+              setShowNamePrompt(true);
+              setNameInput('');
+            } else {
+              // Fire-and-forget submit
+              apiRequest('POST', '/api/leaderboard', {
+                ...submission,
+                playerName: state.playerName,
+              }).catch(() => { /* silent */ });
+            }
+          }
+
           // In practice mode, reset and continue
           setProgress(0);
           setBotProgress(0);
@@ -1550,6 +1596,9 @@ export default function Game() {
     setIsPreSeasonTesting(false);
     setPstSessionLog(false);
     pstStintsRef.current = [];
+    setPstCycleCount(0);
+    setShowNamePrompt(false);
+    setPendingScoreSubmission(null);
   };
 
   // Helper to reset race state and go back to selecting screen (for Grand Prix phase transitions)
@@ -3101,8 +3150,19 @@ export default function Game() {
                 <span className="text-muted-foreground">Mistakes</span>
                 <span className={cn("font-bold", finalMistakes === 0 ? "text-green-600" : "text-red-600")}>{finalMistakes}</span>
               </div>
+              {pstCycleCount > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Cycles Completed</span>
+                  <span className="font-bold text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>{pstCycleCount}</span>
+                </div>
+              )}
             </div>
             <div className="grid gap-3">
+              <Link href="/leaderboard">
+                <button className="w-full bg-yellow-400 text-black h-12 rounded-lg font-bold hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                  View Leaderboard
+                </button>
+              </Link>
               <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
                 <RotateCcw className="w-4 h-4" /> Back to Menu
               </button>
@@ -4019,6 +4079,75 @@ export default function Game() {
         </div>
 
       </div>
+
+      {/* PST Name Prompt Overlay */}
+      {showNamePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
+            <div className="text-center space-y-1">
+              <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
+              <p className="text-sm text-white/50">This will appear on the global leaderboard</p>
+            </div>
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value.slice(0, 20))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && nameInput.trim()) {
+                  const trimmed = nameInput.trim();
+                  setPlayerName(trimmed);
+                  if (pendingScoreSubmission) {
+                    apiRequest('POST', '/api/leaderboard', {
+                      ...pendingScoreSubmission,
+                      playerName: trimmed,
+                    }).catch(() => { /* silent */ });
+                  }
+                  setPendingScoreSubmission(null);
+                  setShowNamePrompt(false);
+                }
+              }}
+              autoFocus
+              maxLength={20}
+              placeholder="Your name..."
+              className="w-full px-4 py-3 bg-black border border-[#444] rounded-xl text-white text-center text-lg focus:outline-none focus:border-yellow-400 transition-colors"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setPendingScoreSubmission(null);
+                  setShowNamePrompt(false);
+                }}
+                className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
+              >
+                Skip
+              </button>
+              <button
+                onClick={() => {
+                  if (nameInput.trim()) {
+                    const trimmed = nameInput.trim();
+                    setPlayerName(trimmed);
+                    if (pendingScoreSubmission) {
+                      apiRequest('POST', '/api/leaderboard', {
+                        ...pendingScoreSubmission,
+                        playerName: trimmed,
+                      }).catch(() => { /* silent */ });
+                    }
+                    setPendingScoreSubmission(null);
+                    setShowNamePrompt(false);
+                  }
+                }}
+                disabled={!nameInput.trim()}
+                className="flex-1 py-3 rounded-xl text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </GameLayout>
   );
 }

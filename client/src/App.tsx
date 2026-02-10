@@ -13,6 +13,7 @@ import ReactionTest from "@/pages/ReactionTest";
 import Multiplayer from "@/pages/Multiplayer";
 import Regulations from "@/pages/Regulations";
 import RacerLog from "@/pages/RacerLog";
+import Leaderboard from "@/pages/Leaderboard";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/multiplayer" component={Multiplayer} />
       <Route path="/regulations" component={Regulations} />
       <Route path="/racer-log" component={RacerLog} />
+      <Route path="/leaderboard" component={Leaderboard} />
       <Route component={NotFound} />
     </Switch>
   );

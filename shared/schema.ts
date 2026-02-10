@@ -50,3 +50,31 @@ export const insertRoomSchema = createInsertSchema(multiplayerRooms).pick({
 
 export type InsertRoom = z.infer<typeof insertRoomSchema>;
 export type MultiplayerRoom = typeof multiplayerRooms.$inferSelect;
+
+// PST Leaderboard schema
+export const pstLeaderboard = pgTable("pst_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  playerId: varchar("player_id").notNull(),
+  playerName: text("player_name").notNull(),
+  operation: varchar("operation", { length: 20 }).notNull(),
+  score: integer("score").notNull(),
+  totalTime: integer("total_time").notNull(),
+  mistakes: integer("mistakes").notNull(),
+  accuracy: integer("accuracy").notNull(),
+  difficultyAchieved: varchar("difficulty_achieved", { length: 20 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertLeaderboardSchema = createInsertSchema(pstLeaderboard).pick({
+  playerId: true,
+  playerName: true,
+  operation: true,
+  score: true,
+  totalTime: true,
+  mistakes: true,
+  accuracy: true,
+  difficultyAchieved: true,
+});
+
+export type InsertLeaderboardEntry = z.infer<typeof insertLeaderboardSchema>;
+export type LeaderboardEntry = typeof pstLeaderboard.$inferSelect;

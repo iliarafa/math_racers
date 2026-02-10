@@ -141,5 +141,60 @@ export async function registerRoutes(
     }
   });
 
+  // Submit a leaderboard entry
+  app.post("/api/leaderboard", async (req, res) => {
+    try {
+      const { playerId, playerName, operation, score, totalTime, mistakes, accuracy, difficultyAchieved } = req.body;
+
+      if (!playerId || !playerName || !operation || score === undefined || totalTime === undefined || mistakes === undefined || accuracy === undefined || !difficultyAchieved) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      const validOperations = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'];
+      if (!validOperations.includes(operation)) {
+        return res.status(400).json({ error: "Invalid operation" });
+      }
+
+      const validDifficulties = ['beginner', 'easy', 'medium', 'hard'];
+      if (!validDifficulties.includes(difficultyAchieved)) {
+        return res.status(400).json({ error: "Invalid difficulty" });
+      }
+
+      if (typeof score !== 'number' || score < 0 || score > 100000) {
+        return res.status(400).json({ error: "Invalid score" });
+      }
+
+      const entry = await storage.submitLeaderboardEntry({
+        playerId,
+        playerName,
+        operation,
+        score: Math.round(score),
+        totalTime,
+        mistakes,
+        accuracy,
+        difficultyAchieved,
+      });
+
+      res.json({ entry });
+    } catch (error) {
+      console.error("Error submitting leaderboard entry:", error);
+      res.status(500).json({ error: "Failed to submit leaderboard entry" });
+    }
+  });
+
+  // Get leaderboard entries
+  app.get("/api/leaderboard", async (req, res) => {
+    try {
+      const operation = req.query.operation as string | undefined;
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+
+      const entries = await storage.getLeaderboard(operation, limit);
+      res.json({ entries });
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+  });
+
   return httpServer;
 }

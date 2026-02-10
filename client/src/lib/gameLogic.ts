@@ -58,6 +58,8 @@ export interface GameState {
   lapHistory: LapEntry[];
   unlockedSeries: 'karting' | 'f3' | 'f2' | 'f1';  // Highest unlocked series (kept for backward compat)
   championedCircuits: { [circuitId: string]: string[] }; // circuitId -> array of championed series
+  playerName: string;
+  playerId: string;
 }
 
 export const TEAM_COLORS = [
@@ -201,6 +203,8 @@ const INITIAL_STATE: GameState = {
   lapHistory: [],
   unlockedSeries: 'karting',
   championedCircuits: {},
+  playerName: '',
+  playerId: '',
 };
 
 // Helper function to check if a series is unlocked (legacy, kept for backward compat)
@@ -345,6 +349,8 @@ export function useGameState() {
           lapHistory: parsed.lapHistory ?? [],
           unlockedSeries: unlockedSeries,
           championedCircuits: championedCircuits,
+          playerName: parsed.playerName ?? '',
+          playerId: parsed.playerId || crypto.randomUUID(),
         };
       }
     } catch (error) {
@@ -498,6 +504,10 @@ export function useGameState() {
     return getSessionLapTimes().slice(0, count);
   };
 
+  const setPlayerName = (name: string) => {
+    setState(prev => ({ ...prev, playerName: name }));
+  };
+
   const getLapHistory = (count: number = 20): LapEntry[] => {
     return state.lapHistory.slice(0, count);
   };
@@ -522,7 +532,8 @@ export function useGameState() {
     resetAllData,
     recordLapTime,
     getTopLapTimes,
-    getLapHistory
+    getLapHistory,
+    setPlayerName
   };
 }
 
@@ -1016,4 +1027,25 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
   const botTime = calculateBotTime(difficulty, effectiveType, num1, num2, isWet);
 
   return { display, answer, botTime, num1, num2, operation: effectiveType };
+}
+
+// Calculate composite PST score
+// score = (lapCount / timeInSeconds) * (correctAnswers / lapCount) * difficultyMultiplier * 1000
+export function calculatePSTScore(
+  totalTimeMs: number,
+  mistakes: number,
+  difficultyAchieved: Difficulty,
+  lapCount: number = 57
+): number {
+  const timeInSeconds = totalTimeMs / 1000;
+  const correctAnswers = lapCount - mistakes;
+  const difficultyMultipliers: Record<Difficulty, number> = {
+    beginner: 1.0,
+    easy: 1.5,
+    medium: 2.0,
+    hard: 3.0,
+  };
+  const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
+  const score = (lapCount / timeInSeconds) * (correctAnswers / lapCount) * multiplier * 1000;
+  return Math.round(score);
 }
