@@ -4,6 +4,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, Trophy } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface LeaderboardEntry {
   id: string;
@@ -80,23 +81,28 @@ export default function Leaderboard() {
           </div>
           <p className="text-xs text-white/40 mb-5 ml-12">Pre-Season Testing — Bahrain — 57-lap cycles</p>
 
-          {/* Operation filter tabs */}
-          <div className="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
-            {OPERATIONS.map(op => (
-              <button
-                key={op}
-                onClick={() => setSelectedOp(op)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-medium uppercase tracking-wider whitespace-nowrap transition-colors",
-                  selectedOp === op
-                    ? "bg-yellow-400 text-black"
-                    : "bg-[#1a1a1a] text-white/50 hover:text-white/80 border border-[#333]"
-                )}
+          {/* Operation filter */}
+          <div className="mb-5">
+            <Select value={selectedOp} onValueChange={setSelectedOp}>
+              <SelectTrigger
+                className="w-48 bg-[#1a1a1a] border-[#333] text-white text-xs font-medium uppercase tracking-wider"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
-                {op}
-              </button>
-            ))}
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1a1a1a] border-[#333]">
+                {OPERATIONS.map(op => (
+                  <SelectItem
+                    key={op}
+                    value={op}
+                    className="text-white text-xs font-medium uppercase tracking-wider focus:bg-yellow-400 focus:text-black"
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  >
+                    {op}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Content */}
