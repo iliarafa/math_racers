@@ -1857,6 +1857,7 @@ export default function Game() {
 
   // Mode Selection Screen — Career vs Grand Prix
   if (gameStatus === 'mode_select') {
+    const isGrandPrixUnlocked = new Date() >= new Date('2026-03-05T17:30:00Z');
     return (
       <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo */}
@@ -1917,14 +1918,19 @@ export default function Game() {
             </motion.button>
             {/* Grand Prix Button */}
             <motion.button
+              disabled={!isGrandPrixUnlocked}
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
                 setGrandPrixSelected(true);
                 setIsGrandPrix(true);
                 setGameStatus('operation_select');
               }}
-              whileTap={{ scale: 0.98 }}
+              whileTap={isGrandPrixUnlocked ? { scale: 0.98 } : undefined}
               className="w-full max-w-xs md:max-w-md py-3 text-center"
+              style={{
+                opacity: isGrandPrixUnlocked ? 1 : 0.3,
+                cursor: isGrandPrixUnlocked ? 'pointer' : 'default',
+              }}
             >
               <span
                 className="block"
@@ -1932,7 +1938,9 @@ export default function Game() {
                   fontFamily: 'Oxanium, sans-serif',
                   fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                   fontWeight: 'bold',
-                  background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
+                  background: isGrandPrixUnlocked
+                    ? 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)'
+                    : 'linear-gradient(90deg, #999 0%, #bbb 45%, #999 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   transition: 'all 0.2s ease',
@@ -1944,7 +1952,9 @@ export default function Game() {
                 className="block mt-1 uppercase tracking-widest"
                 style={{
                   fontSize: '0.65rem',
-                  background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
+                  background: isGrandPrixUnlocked
+                    ? 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)'
+                    : 'linear-gradient(90deg, #999 0%, #bbb 45%, #999 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   opacity: 0.6,
