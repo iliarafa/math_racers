@@ -1177,7 +1177,7 @@ export default function Game() {
       incrementLaps();
       // OVERTAKE energy harvesting: speed-based, faster answers harvest more energy
       // Only in bot race mode, not practice, only when OVERTAKE is not active, and power-ups enabled
-      if (raceMode === 'bot' && !isPracticeMode && !overtakeActive && state.powerUpsEnabled && !(isGrandPrix && grandPrixPhase !== 'rw_race')) {
+      if (raceMode === 'bot' && !overtakeActive && state.powerUpsEnabled && !(isGrandPrix && grandPrixPhase !== 'rw_race')) {
         const energyGain = calculateEnergyHarvest(
           responseTime,
           currentDifficultyRef.current,
@@ -3893,7 +3893,7 @@ export default function Game() {
         {/* Large Keypad with integrated Power-ups row */}
         <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
           {/* Status Messages - floating above keypad */}
-          {((raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
+          {((raceMode === 'bot' && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
             <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
               <div className="flex gap-2 items-center">
                 <AnimatePresence>
@@ -3942,7 +3942,7 @@ export default function Game() {
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-xl">
             {/* Power-ups row - integrated as extended keypad row */}
-            {((raceMode === 'bot' && !isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (
+            {((raceMode === 'bot' && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (
               <>
                 {/* AERO Button - above 7 */}
                 <button
