@@ -748,22 +748,21 @@ export default function Game() {
   // Latch OVERTAKE availability: once within range, stays available until explicitly cleared
   useEffect(() => {
     // Latch ON: once player is behind bot and within 2 sectors, mark available
+    // In practice mode, available whenever there's energy
     if (
       !overtakeAvailable &&
       !overtakeActive &&
       overtakeEnergy > 0 &&
-      botProgress > progress &&
-      (botProgress - progress) <= 2 &&
-      !botFinished &&
+      (isPracticeMode || (botProgress > progress && (botProgress - progress) <= 2 && !botFinished)) &&
       gameStatus === 'racing'
     ) {
       setOvertakeAvailable(true);
     }
-    // Latch OFF: clear if energy gone, bot finished, or race not active
+    // Latch OFF: clear if energy gone, bot finished (not in practice), or race not active
     if (
       overtakeAvailable &&
       !overtakeActive &&
-      (overtakeEnergy <= 0 || botFinished || gameStatus !== 'racing')
+      (overtakeEnergy <= 0 || (!isPracticeMode && botFinished) || gameStatus !== 'racing')
     ) {
       setOvertakeAvailable(false);
     }
@@ -1176,8 +1175,8 @@ export default function Game() {
       incrementStreak();
       incrementLaps();
       // OVERTAKE energy harvesting: speed-based, faster answers harvest more energy
-      // Only in bot race mode, not practice, only when OVERTAKE is not active, and power-ups enabled
-      if (raceMode === 'bot' && !overtakeActive && state.powerUpsEnabled && !(isGrandPrix && grandPrixPhase !== 'rw_race')) {
+      // Only when OVERTAKE is not active and power-ups enabled
+      if ((raceMode === 'bot' || isPracticeMode) && !overtakeActive && state.powerUpsEnabled && !(isGrandPrix && grandPrixPhase !== 'rw_race')) {
         const energyGain = calculateEnergyHarvest(
           responseTime,
           currentDifficultyRef.current,
@@ -3893,7 +3892,7 @@ export default function Game() {
         {/* Large Keypad with integrated Power-ups row */}
         <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
           {/* Status Messages - floating above keypad */}
-          {((raceMode === 'bot' && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
+          {((raceMode === 'bot' && state.powerUpsEnabled) || (isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
             <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
               <div className="flex gap-2 items-center">
                 <AnimatePresence>
@@ -3942,7 +3941,7 @@ export default function Game() {
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-xl">
             {/* Power-ups row - integrated as extended keypad row */}
-            {((raceMode === 'bot' && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (
+            {((raceMode === 'bot' && state.powerUpsEnabled) || (isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (
               <>
                 {/* AERO Button - above 7 */}
                 <button
@@ -3992,11 +3991,11 @@ export default function Game() {
                 <button
                   onPointerDown={(e) => {
                     e.preventDefault();
-                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished || (isGrandPrix && grandPrixPhase !== 'rw_race'))) {
+                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || (!isPracticeMode && botFinished) || (isGrandPrix && grandPrixPhase !== 'rw_race'))) {
                       handleOvertake();
                     }
                   }}
-                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || botFinished || (isGrandPrix && grandPrixPhase !== 'rw_race')}
+                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || (!isPracticeMode && botFinished) || (isGrandPrix && grandPrixPhase !== 'rw_race')}
                   className={cn(
                     "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
                     overtakeActive
