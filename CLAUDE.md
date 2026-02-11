@@ -42,6 +42,8 @@ client/src/
 │   ├── StrategyGuide.tsx # Math reference guide
 │   ├── ReactionTest.tsx # Reaction time mini-game (F1 lights)
 │   ├── Regulations.tsx  # Game rules
+│   ├── Leaderboard.tsx  # PST leaderboard standings
+│   ├── RacerLog.tsx     # Standalone race history log
 │   └── not-found.tsx    # 404 error page
 ├── components/
 │   ├── ui/              # 55 Shadcn/ui components
@@ -49,7 +51,7 @@ client/src/
 │   ├── TrackProgress.tsx
 │   └── ErrorBoundary.tsx # React error boundary
 ├── lib/
-│   ├── gameLogic.ts     # Core game engine (~920 lines)
+│   ├── gameLogic.ts     # Core game engine (~1050 lines)
 │   ├── queryClient.ts   # React Query config
 │   └── utils.ts
 ├── hooks/
@@ -197,7 +199,7 @@ script/build.ts          # Custom build script
 // multiplayerRooms table
 - roomCode: varchar(4) unique  // 4-digit room code
 - hostId, hostName, guestId, guestName
-- circuitId, driverId, weather
+- circuitId, driverId
 - status: "waiting" | "countdown" | "racing" | "finished"
 - questions: jsonb array
 - hostProgress, guestProgress, hostMistakes, guestMistakes

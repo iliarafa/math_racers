@@ -170,8 +170,8 @@ Dynamic weather affects problem difficulty:
 
 1. Clone the repository
 ```bash
-git clone https://github.com/your-repo/f1-math-racer.git
-cd f1-math-racer
+git clone git@github.com:iliarafa/math_racers.git
+cd math_racers
 ```
 
 2. Install dependencies
