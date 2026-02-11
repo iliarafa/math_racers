@@ -1265,30 +1265,7 @@ export default function Game() {
       }
 
       if (newProgress >= raceLength) {
-        if (isPracticeMode && !(isGrandPrix && grandPrixPhase === 'rw_practice') && !isPreSeasonTesting) {
-          // In practice mode, reset and continue (infinite loop)
-          setProgress(0);
-          setBotProgress(0);
-          setLapResults([]);
-          setBotLapResults([]);
-          sectorBestTimesRef.current = []; // Reset sector best times
-          setMistakes(0);
-          setElapsedTime(0);
-          penaltyTimeRef.current = 0;
-          raceStartTimeRef.current = Date.now();
-          setInPurpleMode(false);
-          setQuestionAttempts(0);
-          setCurrentSectorRed(false);
-          setAeroUsedZones(new Set());
-
-          // Generate a fresh question for the next run
-          setTimeout(() => {
-            setFeedback('idle');
-            setAnswer("");
-            setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display, (isGrandPrix || isPreSeasonTesting) ? selectedOperation : undefined));
-            questionStartTimeRef.current = Date.now();
-          }, 600);
-        } else if (isPreSeasonTesting) {
+        if (isPreSeasonTesting) {
           // PST: 100 questions done — submit score to leaderboard and finish
           const achievedDiff = dynamicDifficultyRef.current?.currentDifficulty || 'beginner';
           const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
