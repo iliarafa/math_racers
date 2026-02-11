@@ -1856,7 +1856,6 @@ export default function Game() {
             />
           </Link>
         </div>
-        {/* Section Title */}
         <div className="mt-8 md:mt-24 mb-10 md:mb-24 flex justify-center">
           <h2
             className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black"
@@ -1958,6 +1957,18 @@ export default function Game() {
                 </span>
               )}
             </motion.button>
+            {/* PST — shown inline on iPad */}
+            <motion.button
+              onClick={() => {
+                if (state.soundEnabled) playCarouselClick();
+                setIsPreSeasonTesting(true);
+                setGameStatus('operation_select');
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="hidden md:block w-full max-w-xs md:max-w-md py-3 text-center"
+            >
+              <img src={pstTitle} alt="Pre-Season Testing" className="object-contain mx-auto" style={{ maxWidth: '16rem', width: '100%' }} />
+            </motion.button>
           </div>
         </div>
         {/* Pre-Season Testing + Back — pinned to bottom */}
@@ -1969,7 +1980,7 @@ export default function Game() {
               setGameStatus('operation_select');
             }}
             whileTap={{ scale: 0.98 }}
-            className="w-full max-w-xs md:max-w-md pb-10 text-center"
+            className="md:hidden w-full max-w-xs md:max-w-md pb-10 text-center"
             style={{ marginTop: '-36px' }}
           >
             <img src={pstTitle} alt="Pre-Season Testing" className="object-contain mx-auto" style={{ maxWidth: '16rem', width: '100%' }} />
@@ -2010,7 +2021,7 @@ export default function Game() {
             />
           </Link>
         </div>
-        <div className="flex-1 flex flex-col md:justify-center">
+        <div className="flex-1 flex flex-col md:justify-center md:pb-16">
         {/* Welcome Section */}
         <div className="mt-6 md:mt-0 mb-6 md:mb-6 flex flex-col items-center px-8">
           {isPreSeasonTesting ? (
