@@ -36,7 +36,7 @@ npm run db:push          # Sync Drizzle ORM schema to PostgreSQL
 client/src/
 ├── pages/               # Route components
 │   ├── Welcome.tsx      # Home/landing page
-│   ├── Game.tsx         # Main single-player racing (~2900 lines)
+│   ├── Game.tsx         # Main single-player racing (~4150 lines)
 │   ├── Multiplayer.tsx  # 1v1 multiplayer racing (~1900 lines)
 │   ├── Garage.tsx       # Dashboard (settings, stats, racer log)
 │   ├── StrategyGuide.tsx # Math reference guide
@@ -162,6 +162,35 @@ script/build.ts          # Custom build script
 - Simulation mode: Circuit-specific lap counts (44-78 laps)
 - 2025 F1 driver roster for grid positions
 
+### Game Modes
+
+**Career Mode** (default)
+- Race against bot on any unlocked circuit/series
+- Championship progression: champion circuits to unlock higher series
+- Practice mode: infinite loop of 100 questions, no penalties, no leaderboard
+
+**Grand Prix Mode**
+- Uses Melbourne circuit with player-selected operation
+- Three sequential phases: Practice (30 Qs, dynamic difficulty) → Qualifying (20 Qs, locked difficulty, determines pole) → Race Day (sim-length, pole = 2-sector head start on first correct answer)
+- Difficulty locked after practice phase for the entire weekend
+- Power-ups enabled only during race phase
+- Time-locked: enabled from 2026-03-05T17:30:00Z onwards
+
+**Pre-Season Testing (PST)**
+- Uses Bahrain circuit with player-selected operation
+- Fixed 100-question session; completing all 100 finishes the race and submits score to leaderboard
+- "End Session" before 100 questions navigates home with no leaderboard entry
+- Dynamic difficulty adjusts per-answer based on response time and accuracy
+- Score formula: `(laps / time) * accuracy * difficultyMultiplier * 1000` (max 100,000)
+- Difficulty multipliers: beginner=1.0, easy=1.5, medium=2.0, hard=3.0
+- Session log shows stint-by-stint breakdown during racing
+- Name prompt on first submission (max 20 chars)
+
+### Leaderboard (PST)
+- `POST /api/leaderboard` - Submit entry (playerId, playerName, operation, score, totalTime, mistakes, accuracy, difficultyAchieved)
+- `GET /api/leaderboard?operation=&limit=` - Fetch entries sorted by ranking (default 50, max 100)
+- Validation: score 0-100k, time 1s-1hr, mistakes 0-200, accuracy 0-100%
+
 ## Database Schema
 
 ```typescript
@@ -184,6 +213,8 @@ script/build.ts          # Custom build script
 - `POST /api/rooms/:code/join` - Join room
 - `GET /api/rooms/:code` - Get room details
 - `PUT /api/rooms/:code/update` - Update settings before race
+- `POST /api/leaderboard` - Submit PST score
+- `GET /api/leaderboard` - Fetch leaderboard (query: `operation`, `limit`)
 
 ### WebSocket Events
 **Client → Server:** `join_room`, `start_countdown`, `progress_update`, `race_finished`, `mistake_update`, `toggle_power_ups`, `energy_update`, `activate_overtake`, `deactivate_overtake`, `activate_aero`

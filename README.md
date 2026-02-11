@@ -22,6 +22,21 @@ An interactive, gamified math practice web application. Players solve addition, 
 - Selected series/difficulty carries over from single-player to multiplayer
 - Winner determined by fewer mistakes; ties broken by time
 
+**Grand Prix Mode**
+- Three-phase race weekend on the Melbourne circuit: Practice → Qualifying → Race Day
+- Practice (30 questions) uses dynamic difficulty that adapts to your speed and accuracy
+- Difficulty locks after practice and carries through qualifying and race
+- Win qualifying to earn pole position (2-sector head start on first correct answer in the race)
+- Power-ups enabled during race phase only
+
+**Pre-Season Testing (PST)**
+- 100-question scored benchmark session on the Bahrain circuit
+- Dynamic difficulty adjusts per answer based on response time and accuracy
+- Completing all 100 questions submits your score to the global leaderboard
+- Ending the session early returns home with no leaderboard entry
+- Session log tracks stint-by-stint breakdown with lap-by-lap details
+- Score combines speed, accuracy, and achieved difficulty level (max 100,000)
+
 ### Circuits (Math Operations)
 
 Each circuit is themed after a famous F1 track:

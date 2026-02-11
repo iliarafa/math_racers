@@ -1265,41 +1265,8 @@ export default function Game() {
       }
 
       if (newProgress >= raceLength) {
-        if (isPracticeMode && !(isGrandPrix && grandPrixPhase === 'rw_practice')) {
-          // PST cycle completion: auto-submit score to leaderboard
-          if (isPreSeasonTesting) {
-            setPstCycleCount(prev => prev + 1);
-            const cycleTime = elapsedTime;
-            const cycleMistakes = mistakes;
-            const achievedDiff = dynamicDifficultyRef.current?.currentDifficulty || 'beginner';
-            const accuracy = Math.max(0, Math.round(((raceLength - cycleMistakes) / raceLength) * 100));
-            const score = calculatePSTScore(cycleTime, cycleMistakes, achievedDiff, raceLength);
-
-            const submission = {
-              playerId: state.playerId,
-              operation: selectedOperation,
-              score,
-              totalTime: cycleTime,
-              mistakes: cycleMistakes,
-              accuracy,
-              difficultyAchieved: achievedDiff,
-            };
-
-            if (!state.playerName) {
-              // Need name first — show prompt and hold submission
-              setPendingScoreSubmission(submission);
-              setShowNamePrompt(true);
-              setNameInput('');
-            } else {
-              // Fire-and-forget submit
-              apiRequest('POST', '/api/leaderboard', {
-                ...submission,
-                playerName: state.playerName,
-              }).catch(() => { /* silent */ });
-            }
-          }
-
-          // In practice mode, reset and continue
+        if (isPracticeMode && !(isGrandPrix && grandPrixPhase === 'rw_practice') && !isPreSeasonTesting) {
+          // In practice mode, reset and continue (infinite loop)
           setProgress(0);
           setBotProgress(0);
           setLapResults([]);
@@ -1321,6 +1288,34 @@ export default function Game() {
             setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', 0, question?.display, (isGrandPrix || isPreSeasonTesting) ? selectedOperation : undefined));
             questionStartTimeRef.current = Date.now();
           }, 600);
+        } else if (isPreSeasonTesting) {
+          // PST: 100 questions done — submit score to leaderboard and finish
+          const achievedDiff = dynamicDifficultyRef.current?.currentDifficulty || 'beginner';
+          const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
+          const score = calculatePSTScore(elapsedTime, mistakes, achievedDiff, raceLength);
+
+          const submission = {
+            playerId: state.playerId,
+            operation: selectedOperation,
+            score,
+            totalTime: elapsedTime,
+            mistakes,
+            accuracy,
+            difficultyAchieved: achievedDiff,
+          };
+
+          if (!state.playerName) {
+            setPendingScoreSubmission(submission);
+            setShowNamePrompt(true);
+            setNameInput('');
+          } else {
+            apiRequest('POST', '/api/leaderboard', {
+              ...submission,
+              playerName: state.playerName,
+            }).catch(() => {});
+          }
+
+          finishRace(mistakes);
         } else if (isGrandPrix && grandPrixPhase === 'rw_practice') {
           // Grand Prix practice: lock difficulty and finish (no auto-loop)
           const achievedDifficulty = dynamicDifficultyRef.current?.currentDifficulty || selectedDriver!.difficulty;
