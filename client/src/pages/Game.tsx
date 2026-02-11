@@ -3780,105 +3780,61 @@ export default function Game() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col justify-center px-4 md:px-8 gap-1 mt-12">
-            {/* Bot Progress Bar (only in bot mode) */}
-            {raceMode === 'bot' && (
-              <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">
-                {/* Segmented progress bar showing bot's lap colors */}
-                <div className="absolute inset-0 flex">
-                  {Array.from({ length: raceLength }).map((_, i) => {
-                    const isCompleted = i < botProgress;
-                    const lapData = botLapResults[i];
+          <div className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
+            <div>
+              <div className="grid gap-[2px]" style={{ gridTemplateColumns: `repeat(20, 1fr)` }}>
+                {/* Bot row (only in bot mode) */}
+                {raceMode === 'bot' && Array.from({ length: raceLength }).map((_, i) => {
+                  const isCompleted = i < botProgress;
+                  const lapData = botLapResults[i];
 
-                    let segmentColor = "bg-transparent";
-                    if (isCompleted && lapData) {
-                      segmentColor = lapData.sectorColor === 'purple' ? "bg-purple-500/70" :
-                                     lapData.sectorColor === 'green' ? "bg-green-500/70" :
-                                     "bg-yellow-500/70";
-                    }
+                  let cellColor = "bg-muted";
+                  if (isCompleted && lapData) {
+                    cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500/70" :
+                                lapData.sectorColor === 'green' ? "bg-green-500/70" :
+                                "bg-yellow-500/70";
+                  }
 
-                    return (
-                      <div
-                        key={i}
-                        className={cn(
-                          "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                          segmentColor
-                        )}
-                      />
-                    );
-                  })}
-                </div>
-                {/* Bot car indicator */}
-                <motion.div
-                  className="absolute top-1/2 -translate-y-1/2 z-10"
-                  animate={{ left: `${(botProgress / raceLength) * 100}%` }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  style={{ marginLeft: "-10px" }}
-                >
-                  <div className="w-5 h-3 bg-red-600 rounded-sm flex items-center justify-center">
-                    <div className="w-3 h-1.5 bg-red-400 rounded-sm" />
-                  </div>
-                </motion.div>
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 leading-none text-[9px] text-red-400 font-bold">BOT</span>
-              </div>
-            )}
-
-            {/* Player Progress Bar */}
-            <div className={cn("relative bg-muted rounded-full overflow-hidden", isPracticeMode ? "h-16" : "h-7")}>
-              {/* Progress segments */}
-              <div className="absolute inset-0 flex">
+                  return (
+                    <div
+                      key={`bot-${i}`}
+                      className={cn(
+                        "aspect-square rounded-[2px] transition-colors",
+                        cellColor
+                      )}
+                    />
+                  );
+                })}
+                {/* Player row */}
                 {Array.from({ length: raceLength }).map((_, i) => {
                   const isCompleted = i < progress;
                   const isCurrent = i === progress;
                   const lapData = lapResults[i];
 
-                  // Use stored sectorColor directly
-                  let segmentColor = "bg-transparent";
+                  let cellColor = "bg-muted";
                   if (isCompleted && lapData) {
-                    segmentColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
-                                   lapData.sectorColor === 'green' ? "bg-green-500" :
-                                   lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
-                                   lapData.sectorColor === 'red' ? "bg-red-500" : "bg-transparent";
+                    cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
+                                lapData.sectorColor === 'green' ? "bg-green-500" :
+                                lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
+                                lapData.sectorColor === 'red' ? "bg-red-500" : "bg-muted";
                   } else if (isCurrent) {
-                    segmentColor = currentSectorRed ? "bg-red-500 animate-pulse" : "bg-gray-400/50";
+                    cellColor = currentSectorRed ? "bg-red-500 animate-pulse" : "bg-gray-400/50 animate-pulse";
                   }
 
                   return (
                     <div
-                      key={i}
+                      key={`player-${i}`}
                       className={cn(
-                        "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                        segmentColor
+                        "aspect-square rounded-[2px] transition-colors",
+                        cellColor
                       )}
                     />
                   );
                 })}
               </div>
-
-              {/* Car indicator */}
-              <motion.div
-                className="absolute top-1/2 -translate-y-1/2 z-10"
-                animate={{ left: `${(progress / raceLength) * 100}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                style={{ marginLeft: isPracticeMode ? "-16px" : "-12px" }}
-              >
-                {isPracticeMode ? (
-                  <div className="w-8 h-6 bg-foreground rounded-sm flex items-center justify-center">
-                    <div className="w-5 h-3 bg-primary rounded-sm" />
-                  </div>
-                ) : (
-                  <div className="w-6 h-4 bg-foreground rounded-sm flex items-center justify-center">
-                    <div className="w-4 h-2 bg-primary rounded-sm" />
-                  </div>
-                )}
-              </motion.div>
-              {raceMode === 'bot' && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">YOU</span>
-              )}
             </div>
-
             {/* Progress text */}
-            <div className={cn("flex justify-between text-muted-foreground mt-0.5 px-1", isPracticeMode ? "text-xs" : "text-[11px]")}>
+            <div className="flex justify-between text-muted-foreground mt-0.5 px-1 text-[11px]">
               <span>Lap {progress + 1}/{raceLength}</span>
               <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
             </div>
