@@ -3785,7 +3785,7 @@ export default function Game() {
               {/* Bot row (only in bot mode) */}
               {raceMode === 'bot' && (
                 <div>
-                  <span className="text-[9px] text-muted-foreground font-medium uppercase leading-none">BOT</span>
+                  <span className="text-[9px] text-foreground font-medium uppercase leading-none">BOT</span>
                   <div className="grid gap-[2px] mt-0.5" style={{ gridTemplateColumns: `repeat(20, 1fr)` }}>
                     {Array.from({ length: raceLength }).map((_, i) => {
                       const isCompleted = i < botProgress;
@@ -3841,9 +3841,9 @@ export default function Game() {
               </div>
             </div>
             {/* Progress text */}
-            <div className="flex justify-between text-muted-foreground mt-0.5 px-1 text-[11px]">
+            <div className="flex justify-between text-foreground mt-0.5 px-1 text-[11px]">
               <span>Lap {progress + 1}/{raceLength}</span>
-              <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
+              <span className={cn(mistakes > 0 && "text-red-500")}>Warnings: {mistakes}</span>
             </div>
           </div>
         )}
