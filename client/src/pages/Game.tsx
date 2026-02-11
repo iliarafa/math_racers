@@ -2011,9 +2011,9 @@ export default function Game() {
           </Link>
         </div>
         {/* Welcome Section */}
-        <div className="mt-6 md:mt-24 mb-6 md:mb-16 flex flex-col items-center px-8">
+        <div className="mt-6 md:mt-24 mb-6 md:mb-6 flex flex-col items-center px-8">
           {isPreSeasonTesting ? (
-            <img src={pstTitle} alt="Pre-Season Testing" className="object-contain" style={{ maxWidth: '28rem', width: '100%' }} />
+            <img src={pstTitle} alt="Pre-Season Testing" className="object-contain w-full max-w-[28rem] md:max-w-md" />
           ) : (
           <h2
             className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black text-center"
