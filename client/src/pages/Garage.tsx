@@ -65,15 +65,6 @@ export default function Garage() {
               </div>
             </Link>
 
-            <Link href="/racer-log" className="col-span-1">
-              <div
-                className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex items-center justify-center cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
-                data-testid="button-racer-log"
-              >
-                <span className="text-xs uppercase tracking-widest text-white/70">Racer Log</span>
-              </div>
-            </Link>
-
             <Link href="/leaderboard" className="col-span-1">
               <div
                 className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
@@ -81,6 +72,15 @@ export default function Garage() {
               >
                 <Trophy className="w-8 h-8 text-yellow-400" />
                 <span className="text-xs uppercase tracking-widest text-white/70">Leaderboard</span>
+              </div>
+            </Link>
+
+            <Link href="/racer-log" className="sm:col-span-2">
+              <div
+                className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex items-center justify-center cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
+                data-testid="button-racer-log"
+              >
+                <span className="text-xs uppercase tracking-widest text-white/70">Racer Log</span>
               </div>
             </Link>
 
