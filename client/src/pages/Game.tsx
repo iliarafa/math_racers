@@ -2304,7 +2304,7 @@ export default function Game() {
           </Link>
         </div>
         {/* Tab Toggle — Grand Prix phases, Pre-Season Testing, or normal Race/Practice/Multiplayer */}
-        <div className="mt-8 md:mt-24 mb-6 md:mb-24 flex justify-center">
+        <div className="mt-8 md:mt-24 landscape:md:mt-8 mb-6 md:mb-24 landscape:md:mb-6 flex justify-center">
           {isPreSeasonTesting ? (
             <div className="rounded-full p-1 flex gap-1 bg-gray-200">
               <button
@@ -2423,7 +2423,7 @@ export default function Game() {
         </div>
         {/* Main Content - Hero Card with Side Chevrons */}
         {/* Card area — same position as series buttons list */}
-        <div className="flex items-center justify-center px-8 pb-24 md:pb-32">
+        <div className="flex items-center justify-center px-8 pb-24 md:pb-32 landscape:md:pb-24">
           {isPreSeasonTesting ? (
             /* Pre-Season Testing Card - Bahrain */
             (<div className="flex flex-col items-center">
@@ -2839,7 +2839,7 @@ export default function Game() {
         </div>
         {/* Track Dots Indicator - only show for track selection */}
         {selectedTab !== 'multiplayer' && !isGrandPrix && !isPreSeasonTesting && (
-          <div className="fixed bottom-44 left-0 right-0 flex justify-center gap-2">
+          <div className="fixed bottom-44 landscape:md:bottom-36 left-0 right-0 flex justify-center gap-2">
             {CIRCUITS.map((circuit, index) => {
               const dotLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false);
               return (
