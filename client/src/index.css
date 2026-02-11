@@ -106,3 +106,38 @@ body {
   50% { opacity: 0.5; }
   100% { opacity: 1; }
 }
+
+/* Two-column layout for iPads in landscape */
+@media (orientation: landscape) and (min-height: 700px) and (max-height: 1100px) {
+  .racing-screen {
+    flex-direction: row !important;
+    align-items: stretch;
+  }
+  .landscape-left {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+  }
+  .landscape-right {
+    flex: 1;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 32px !important;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .landscape-right .grid {
+    flex: 1;
+    grid-auto-rows: 1fr;
+    min-height: 0;
+  }
+  .landscape-right .grid > * {
+    height: auto !important;
+    min-height: 0;
+  }
+}

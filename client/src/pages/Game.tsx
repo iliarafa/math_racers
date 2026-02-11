@@ -1112,7 +1112,7 @@ export default function Game() {
           sectorColor = 'yellow';
           speed = 'normal';
         } else {
-          sectorColor = 'red';
+          sectorColor = 'yellow';
           speed = 'slow';
         }
         setInPurpleMode(sectorColor === 'purple');
@@ -3495,7 +3495,7 @@ export default function Game() {
           BOX
         </button>
       ) : undefined}>
-      <div className="flex-1 flex flex-col w-full overflow-hidden relative min-h-0">
+      <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0">
 
         {/* Pause Overlay */}
         {isPaused && (
@@ -3609,6 +3609,7 @@ export default function Game() {
           </div>
         )}
 
+        <div className="landscape-left">
         {/* Mode badge and controls */}
         <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
           <div className="flex items-center gap-2">
@@ -3694,14 +3695,14 @@ export default function Game() {
           {/* Expression and Answer with Penalty Overlay */}
           <div className="relative">
             {/* Expression below timer */}
-            <div className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-2">
+            <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mt-2">
               {question?.display}
             </div>
 
             {/* Answer display below expression */}
             <div
               className={cn(
-                "text-4xl sm:text-5xl md:text-6xl font-bold min-w-[80px] text-center mt-2",
+                "text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold min-w-[80px] text-center mt-2",
                 feedback === 'idle' && "text-muted-foreground/50",
                 feedback === 'correct' && "text-green-600",
                 feedback === 'incorrect' && "text-red-600"
@@ -3747,8 +3748,8 @@ export default function Game() {
         {/* Progress Bar - between result and keypad */}
         {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? (
           /* Sector Grid for all sim/realism mode races */
-          <div className="flex flex-col justify-center px-4 md:px-8 gap-1 mt-2">
-            <div className="mx-auto">
+          <div className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
+            <div>
               <div className={`grid gap-[2px]`} style={{ gridTemplateColumns: `repeat(${raceLength >= 40 ? 20 : 10}, 1fr)` }}>
                 {Array.from({ length: raceLength }).map((_, i) => {
                   const isCompleted = i < progress;
@@ -3769,7 +3770,7 @@ export default function Game() {
                     <div
                       key={i}
                       className={cn(
-                        "w-[14px] h-[14px] rounded-[2px] transition-colors",
+                        "aspect-square rounded-[2px] transition-colors",
                         cellColor
                       )}
                     />
@@ -3889,8 +3890,9 @@ export default function Game() {
           </div>
         )}
 
+        </div>
         {/* Large Keypad with integrated Power-ups row */}
-        <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
+        <div className="landscape-right flex-1 flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11">
           {/* Status Messages - floating above keypad */}
           {((raceMode === 'bot' && state.powerUpsEnabled) || (isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
             <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
@@ -3939,7 +3941,7 @@ export default function Game() {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 w-full max-w-md md:max-w-xl">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 w-full max-w-md md:max-w-xl lg:max-w-2xl">
             {/* Power-ups row - integrated as extended keypad row */}
             {((raceMode === 'bot' && state.powerUpsEnabled) || (isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (
               <>
@@ -3953,7 +3955,7 @@ export default function Game() {
                   }}
                   disabled={!aeroAvailable || aeroActive || isPaused}
                   className={cn(
-                    "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
+                    "h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl font-bold text-lg sm:text-xl lg:text-2xl transition-all active:scale-95 touch-manipulation select-none",
                     aeroActive
                       ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
                       : aeroAvailable && !isPaused
@@ -3967,7 +3969,7 @@ export default function Game() {
                 </button>
 
                 {/* Energy Bar - above 8 */}
-                <div className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary overflow-hidden relative">
+                <div className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary overflow-hidden relative">
                   <motion.div
                     className={cn(
                       "absolute inset-y-0 left-0 rounded-xl transition-all",
@@ -3982,7 +3984,7 @@ export default function Game() {
                       opacity: overtakeActive ? { repeat: Infinity, duration: 0.5 } : { duration: 0 }
                     }}
                   />
-                  <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-black z-10">
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs lg:text-sm font-bold text-black z-10">
                     {overtakeEnergy}%
                   </span>
                 </div>
@@ -3997,7 +3999,7 @@ export default function Game() {
                   }}
                   disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || (!isPracticeMode && botFinished) || (isGrandPrix && grandPrixPhase !== 'rw_race')}
                   className={cn(
-                    "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl font-bold text-lg sm:text-xl transition-all active:scale-95 touch-manipulation select-none",
+                    "h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl font-bold text-lg sm:text-xl lg:text-2xl transition-all active:scale-95 touch-manipulation select-none",
                     overtakeActive
                       ? "bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.7)] animate-pulse"
                       : overtakeAvailable && !isPaused
@@ -4025,7 +4027,7 @@ export default function Game() {
                   }
                 }}
                 disabled={isPaused}
-                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none"
+                className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none"
                 data-testid={`keypad-${num}`}
               >
                 {num}
@@ -4041,7 +4043,7 @@ export default function Game() {
                 }
               }}
               disabled={isPaused}
-              className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50 touch-manipulation select-none"
+              className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50 touch-manipulation select-none"
               data-testid="keypad-delete"
             >
               <Delete className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -4056,7 +4058,7 @@ export default function Game() {
                 }
               }}
               disabled={isPaused}
-              className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none"
+              className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none"
               data-testid="keypad-0"
             >
               0
@@ -4066,7 +4068,7 @@ export default function Game() {
               onClick={() => handleSubmit()}
               disabled={!answer || feedback !== 'idle' || isPaused}
               className={cn(
-                "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none",
+                "h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none",
                 answer && feedback === 'idle' && !isPaused
                   ? "bg-green-600 text-white hover:bg-green-500"
                   : "bg-muted text-muted-foreground"
