@@ -2010,8 +2010,9 @@ export default function Game() {
             />
           </Link>
         </div>
+        <div className="flex-1 flex flex-col md:justify-center">
         {/* Welcome Section */}
-        <div className="mt-6 md:mt-24 mb-6 md:mb-6 flex flex-col items-center px-8">
+        <div className="mt-6 md:mt-0 mb-6 md:mb-6 flex flex-col items-center px-8">
           {isPreSeasonTesting ? (
             <img src={pstTitle} alt="Pre-Season Testing" className="object-contain w-full max-w-[28rem] md:max-w-md" />
           ) : (
@@ -2100,6 +2101,7 @@ export default function Game() {
               </motion.button>
             ))}
           </div>
+        </div>
         </div>
         {/* Back button */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
