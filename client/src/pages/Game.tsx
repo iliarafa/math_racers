@@ -3781,31 +3781,38 @@ export default function Game() {
           </div>
         ) : (
           <div className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
-            <div>
+            <div className="flex flex-col gap-1.5">
+              {/* Bot row (only in bot mode) */}
+              {raceMode === 'bot' && (
+                <div>
+                  <span className="text-[9px] text-muted-foreground font-medium uppercase leading-none">BOT</span>
+                  <div className="grid gap-[2px] mt-0.5" style={{ gridTemplateColumns: `repeat(20, 1fr)` }}>
+                    {Array.from({ length: raceLength }).map((_, i) => {
+                      const isCompleted = i < botProgress;
+                      const lapData = botLapResults[i];
+
+                      let cellColor = "bg-muted";
+                      if (isCompleted && lapData) {
+                        cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500/70" :
+                                    lapData.sectorColor === 'green' ? "bg-green-500/70" :
+                                    "bg-yellow-500/70";
+                      }
+
+                      return (
+                        <div
+                          key={`bot-${i}`}
+                          className={cn(
+                            "aspect-square rounded-[2px] transition-colors",
+                            cellColor
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* Player row */}
               <div className="grid gap-[2px]" style={{ gridTemplateColumns: `repeat(20, 1fr)` }}>
-                {/* Bot row (only in bot mode) */}
-                {raceMode === 'bot' && Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < botProgress;
-                  const lapData = botLapResults[i];
-
-                  let cellColor = "bg-muted";
-                  if (isCompleted && lapData) {
-                    cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500/70" :
-                                lapData.sectorColor === 'green' ? "bg-green-500/70" :
-                                "bg-yellow-500/70";
-                  }
-
-                  return (
-                    <div
-                      key={`bot-${i}`}
-                      className={cn(
-                        "aspect-square rounded-[2px] transition-colors",
-                        cellColor
-                      )}
-                    />
-                  );
-                })}
-                {/* Player row */}
                 {Array.from({ length: raceLength }).map((_, i) => {
                   const isCompleted = i < progress;
                   const isCurrent = i === progress;
