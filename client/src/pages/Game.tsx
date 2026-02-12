@@ -6,7 +6,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
-import { apiRequest } from "@/lib/queryClient";
+import { submitLeaderboardEntry } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
 
@@ -1286,10 +1286,14 @@ export default function Game() {
             setShowNamePrompt(true);
             setNameInput('');
           } else {
-            apiRequest('POST', '/api/leaderboard', {
+            submitLeaderboardEntry({
               ...submission,
               playerName: state.playerName,
-            }).catch(() => {});
+            }).then(() => {
+              console.log('[PST] Leaderboard entry submitted successfully');
+            }).catch((err) => {
+              console.error('[PST] Leaderboard submission failed:', err);
+            });
           }
 
           finishRace(mistakes);
@@ -3154,6 +3158,72 @@ export default function Game() {
             </div>
           </div>
         </div>
+        {showNamePrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
+              <div className="text-center space-y-1">
+                <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
+                <p className="text-sm text-white/50">This will appear on the global leaderboard</p>
+              </div>
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value.slice(0, 20))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && nameInput.trim()) {
+                    const trimmed = nameInput.trim();
+                    setPlayerName(trimmed);
+                    if (pendingScoreSubmission) {
+                      submitLeaderboardEntry({
+                        ...pendingScoreSubmission,
+                        playerName: trimmed,
+                      }).catch(() => { /* silent */ });
+                    }
+                    setPendingScoreSubmission(null);
+                    setShowNamePrompt(false);
+                  }
+                }}
+                autoFocus
+                maxLength={20}
+                placeholder="Your name..."
+                className="w-full px-4 py-3 bg-black border border-[#444] rounded-xl text-white text-center text-lg focus:outline-none focus:border-yellow-400 transition-colors"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setPendingScoreSubmission(null);
+                    setShowNamePrompt(false);
+                  }}
+                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={() => {
+                    if (nameInput.trim()) {
+                      const trimmed = nameInput.trim();
+                      setPlayerName(trimmed);
+                      if (pendingScoreSubmission) {
+                        submitLeaderboardEntry({
+                          ...pendingScoreSubmission,
+                          playerName: trimmed,
+                        }).catch(() => { /* silent */ });
+                      }
+                      setPendingScoreSubmission(null);
+                      setShowNamePrompt(false);
+                    }
+                  }}
+                  disabled={!nameInput.trim()}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </GameLayout>
     );
   }
@@ -4047,7 +4117,7 @@ export default function Game() {
                   const trimmed = nameInput.trim();
                   setPlayerName(trimmed);
                   if (pendingScoreSubmission) {
-                    apiRequest('POST', '/api/leaderboard', {
+                    submitLeaderboardEntry({
                       ...pendingScoreSubmission,
                       playerName: trimmed,
                     }).catch(() => { /* silent */ });
@@ -4078,7 +4148,7 @@ export default function Game() {
                     const trimmed = nameInput.trim();
                     setPlayerName(trimmed);
                     if (pendingScoreSubmission) {
-                      apiRequest('POST', '/api/leaderboard', {
+                      submitLeaderboardEntry({
                         ...pendingScoreSubmission,
                         playerName: trimmed,
                       }).catch(() => { /* silent */ });

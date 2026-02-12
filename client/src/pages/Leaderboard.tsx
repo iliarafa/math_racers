@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
+import { getLeaderboard } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, Trophy } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -45,17 +46,21 @@ export default function Leaderboard() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    const params = new URLSearchParams();
-    if (selectedOp !== 'All') params.set('operation', selectedOp);
-    params.set('limit', '50');
-
-    fetch(`/api/leaderboard?${params.toString()}`)
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
-      })
+    const op = selectedOp !== 'All' ? selectedOp : undefined;
+    getLeaderboard(op, 50)
       .then(data => {
-        setEntries(data.entries || []);
+        setEntries(data.map((e: any) => ({
+          id: e.id,
+          playerId: e.player_id,
+          playerName: e.player_name,
+          operation: e.operation,
+          score: e.score,
+          totalTime: e.total_time,
+          mistakes: e.mistakes,
+          accuracy: e.accuracy,
+          difficultyAchieved: e.difficulty_achieved,
+          createdAt: e.created_at,
+        })));
         setLoading(false);
       })
       .catch(() => {
