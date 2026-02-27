@@ -1982,7 +1982,7 @@ export default function Game() {
                 className="inline-block px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
                 style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
               >
-                Race Now
+                Free Practice
               </span>
             </motion.button>
           </div>
@@ -2002,7 +2002,7 @@ export default function Game() {
               className="inline-block px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
             >
-              Race Now
+              Free Practice
             </span>
           </motion.button>
           <Link href="/">
