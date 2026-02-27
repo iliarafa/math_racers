@@ -3689,7 +3689,7 @@ export default function Game() {
         <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
           <div className="flex items-center gap-2">
             {isPreSeasonTesting ? (
-              <span className="text-xs bg-gray-700 text-white px-2 py-0.5 rounded">TESTING</span>
+              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">FREE PRACTICE</span>
             ) : isGrandPrix && grandPrixPhase === 'rw_practice' ? (
               <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
             ) : isGrandPrix && grandPrixPhase === 'rw_qualifying' ? (
