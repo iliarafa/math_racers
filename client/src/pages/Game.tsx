@@ -2462,10 +2462,10 @@ export default function Game() {
         {/* Card area — same position as series buttons list */}
         <div className="flex items-center justify-center px-8 pb-24 md:pb-32 landscape:md:pb-24">
           {isPreSeasonTesting ? (
-            /* Pre-Season Testing Card - Bahrain */
+            /* Pre-Season Testing Card - Melbourne */
             (<div className="flex flex-col items-center">
               <motion.div
-                key="bahrain-card"
+                key="melbourne-card"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
@@ -2474,19 +2474,19 @@ export default function Game() {
                   backgroundColor: '#f0f0f0',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
                 }}
-                data-testid="hero-card-bahrain"
+                data-testid="hero-card-melbourne"
               >
-                {/* Header - Bahrain & Flag */}
+                {/* Header - Melbourne & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <h2
                     className="text-2xl font-bold uppercase tracking-wider text-gray-900"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
-                    BAHRAIN
+                    MELBOURNE
                   </h2>
                   <img
-                    src={flagBahrain}
-                    alt="Bahrain flag"
+                    src={flagAustralia}
+                    alt="Australian flag"
                     className="h-5 w-7 object-cover rounded-sm"
                   />
                 </div>
@@ -2494,8 +2494,8 @@ export default function Game() {
                 {/* Track Map */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                   <img
-                    src={trackBahrain}
-                    alt="Bahrain circuit"
+                    src={trackMelbourne}
+                    alt="Melbourne circuit"
                     className="h-32 md:h-52 object-contain"
                     style={{ maxWidth: '280px' }}
                   />
