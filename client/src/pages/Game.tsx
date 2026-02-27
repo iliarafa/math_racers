@@ -9,6 +9,8 @@ import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_
 import { submitLeaderboardEntry } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
+import { usePurchase } from "@/hooks/use-purchase";
+import { Paywall } from "@/components/Paywall";
 
 // Import assets
 import tireHard from "@assets/IMG_0385_1768772937370.png";
@@ -42,7 +44,6 @@ import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
-import pstTitle from "@/assets/pst_title.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
@@ -592,6 +593,7 @@ const playAeroActivatedSound = () => {
 
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, championCircuit, updatePersonalBest, recordLapTime, setPlayerName } = useGameState();
+  const { isPremium } = usePurchase();
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
   const [botProgress, setBotProgress] = useState(0);
@@ -704,7 +706,7 @@ export default function Game() {
   const questionStartTimeRef = useRef<number>(Date.now());
   // Track the best time for each sector and who holds it (F1-style competitive timing)
   const [revealedAttempts, setRevealedAttempts] = useState<Set<string>>(new Set());
-  const [gameStatus, setGameStatus] = useState<'mode_select' | 'driver_select' | 'operation_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed'>('mode_select');
+  const [gameStatus, setGameStatus] = useState<'mode_select' | 'driver_select' | 'operation_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>('mode_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -1845,9 +1847,13 @@ export default function Game() {
     setLocation('/multiplayer');
   };
 
+  // Paywall Screen
+  if (gameStatus === 'paywall') {
+    return <Paywall onBack={() => setGameStatus('mode_select')} />;
+  }
+
   // Mode Selection Screen — Career vs Grand Prix
   if (gameStatus === 'mode_select') {
-    const isGrandPrixUnlocked = true;
     return (
       <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo */}
@@ -1875,6 +1881,7 @@ export default function Game() {
             <motion.button
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
+                if (!isPremium) { setGameStatus('paywall'); return; }
                 setGameStatus('driver_select');
               }}
               whileTap={{ scale: 0.98 }}
@@ -1887,7 +1894,7 @@ export default function Game() {
                   fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                   fontWeight: 'bold',
                   color: '#e10600',
-                  opacity: 0.7,
+                  opacity: isPremium ? 0.7 : 0.35,
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -1898,27 +1905,31 @@ export default function Game() {
                 style={{
                   fontSize: '0.65rem',
                   color: '#e10600',
-                  opacity: 0.4,
+                  opacity: isPremium ? 0.4 : 0.2,
                   transition: 'all 0.2s ease',
                 }}
               >
                 Championship
               </span>
+              {!isPremium && (
+                <span
+                  className="block mt-1 uppercase tracking-widest"
+                  style={{ fontSize: '0.55rem', color: '#999', transition: 'all 0.2s ease' }}
+                >
+                  Full version
+                </span>
+              )}
             </motion.button>
             {/* Grand Prix Button */}
             <motion.button
-              disabled={!isGrandPrixUnlocked}
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
+                if (!isPremium) { setGameStatus('paywall'); return; }
                 setIsGrandPrix(true);
                 setGameStatus('operation_select');
               }}
-              whileTap={isGrandPrixUnlocked ? { scale: 0.98 } : undefined}
+              whileTap={{ scale: 0.98 }}
               className="w-full max-w-xs md:max-w-md py-3 text-center"
-              style={{
-                opacity: isGrandPrixUnlocked ? 1 : 0.3,
-                cursor: isGrandPrixUnlocked ? 'pointer' : 'default',
-              }}
             >
               <span
                 className="block"
@@ -1929,6 +1940,7 @@ export default function Game() {
                   background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
+                  opacity: isPremium ? 1 : 0.4,
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -1941,12 +1953,20 @@ export default function Game() {
                   background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
-                  opacity: 0.6,
+                  opacity: isPremium ? 0.6 : 0.25,
                   transition: 'all 0.2s ease',
                 }}
               >
                 Melbourne
               </span>
+              {!isPremium && (
+                <span
+                  className="block mt-1 uppercase tracking-widest"
+                  style={{ fontSize: '0.55rem', color: '#999', transition: 'all 0.2s ease' }}
+                >
+                  Full version
+                </span>
+              )}
             </motion.button>
             {/* PST — shown inline on iPad */}
             <motion.button
@@ -1958,7 +1978,12 @@ export default function Game() {
               whileTap={{ scale: 0.98 }}
               className="hidden md:block w-full max-w-xs md:max-w-md py-3 text-center"
             >
-              <img src={pstTitle} alt="Pre-Season Testing" className="object-contain mx-auto" style={{ maxWidth: '16rem', width: '100%' }} />
+              <span
+                className="inline-block px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+                style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
+              >
+                Race Now
+              </span>
             </motion.button>
           </div>
         </div>
@@ -1971,10 +1996,14 @@ export default function Game() {
               setGameStatus('operation_select');
             }}
             whileTap={{ scale: 0.98 }}
-            className="md:hidden w-full max-w-xs md:max-w-md pb-10 text-center"
-            style={{ marginTop: '-36px' }}
+            className="md:hidden w-full max-w-xs md:max-w-md text-center"
           >
-            <img src={pstTitle} alt="Pre-Season Testing" className="object-contain mx-auto" style={{ maxWidth: '16rem', width: '100%' }} />
+            <span
+              className="inline-block px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+              style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
+            >
+              Race Now
+            </span>
           </motion.button>
           <Link href="/">
             <button
@@ -2016,7 +2045,7 @@ export default function Game() {
         {/* Welcome Section */}
         <div className="mt-6 md:mt-0 mb-6 md:mb-6 flex flex-col items-center px-8">
           {isPreSeasonTesting ? (
-            <img src={pstTitle} alt="Pre-Season Testing" className="object-contain w-full max-w-[28rem] md:max-w-md" />
+            <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Free Practice</h2>
           ) : (
           <h2
             className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black text-center"
@@ -2030,7 +2059,7 @@ export default function Game() {
             style={{ fontFamily: 'Oxanium, sans-serif', fontSize: '0.8rem', maxWidth: '28rem' }}
           >
             {isPreSeasonTesting
-              ? <>Continuous testing. Dynamic difficulty adjustment.<br />Press BOX to enter pits. BACK TO TRACK to race again.<br />Follow your performance in different stints.<br /><br />This is pre-season testing in Bahrain.</>
+              ? <>100 laps of testing. Dynamic difficulty adjustment.<br />Press BOX to enter pits. BACK TO TRACK to race again.<br />Follow your performance in different stints.</>
               : 'Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to Melbourne, Australia.'}
           </p>
           <h3
@@ -2410,14 +2439,18 @@ export default function Game() {
                 Practice
               </button>
               <button
-                onClick={() => { setSelectedTab('multiplayer'); if (state.soundEnabled) playCarouselClick(); }}
+                onClick={() => {
+                  if (state.soundEnabled) playCarouselClick();
+                  if (!isPremium) { setGameStatus('paywall'); return; }
+                  setSelectedTab('multiplayer');
+                }}
                 className={cn(
                   "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
                   selectedTab === 'multiplayer'
                     ? "bg-blue-600 text-white"
                     : "bg-transparent text-gray-600 hover:text-gray-900"
                 )}
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
+                style={{ fontFamily: 'Oxanium, sans-serif', opacity: isPremium ? 1 : 0.5 }}
                 data-testid="button-multiplayer-mode"
               >
                 Multiplayer

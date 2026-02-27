@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy } from "lucide-react";
+import { usePurchase } from "@/hooks/use-purchase";
+import { isNativePlatform } from "@/lib/purchases";
 
 export default function Garage() {
   const { state, toggleSound, toggleSimMode, togglePowerUps, resetAllData } = useGameState();
+  const { restore } = usePurchase();
+  const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
   const handleRetireCar = () => {
     if (confirm("Are you sure you want to retire? This will reset ALL your progress.")) {
@@ -167,7 +172,7 @@ export default function Garage() {
                   </button>
                 </div>
 
-                <div className="pt-3 border-t border-[#333] mt-4">
+                <div className="pt-3 border-t border-[#333] mt-4 flex flex-col gap-3">
                   <button
                     onClick={handleRetireCar}
                     className="text-xs text-red-400/70 hover:text-red-400 transition-colors uppercase tracking-widest"
@@ -175,6 +180,22 @@ export default function Garage() {
                   >
                     Retire from Championship →
                   </button>
+                  {isNativePlatform() && (
+                    <button
+                      onClick={async () => {
+                        setRestoreMessage(null);
+                        const success = await restore();
+                        setRestoreMessage(success ? 'Purchases restored!' : 'No purchases found.');
+                        setTimeout(() => setRestoreMessage(null), 3000);
+                      }}
+                      className="text-xs text-gray-400/70 hover:text-gray-400 transition-colors uppercase tracking-widest"
+                    >
+                      Restore Purchases →
+                    </button>
+                  )}
+                  {restoreMessage && (
+                    <span className="text-xs text-gray-500">{restoreMessage}</span>
+                  )}
                 </div>
               </div>
             </div>

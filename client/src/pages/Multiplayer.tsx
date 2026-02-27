@@ -5,6 +5,8 @@ import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type 
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import { usePurchase } from "@/hooks/use-purchase";
+import { Paywall } from "@/components/Paywall";
 
 // Import assets for track selection
 import weatherSun from "@/assets/weather_sun.png";
@@ -118,6 +120,7 @@ type Weather = 'dry' | 'wet' | 'random';
 
 export default function Multiplayer() {
   const { state, addCoins, addCareerPoints } = useGameState();
+  const { isPremium, isLoading } = usePurchase();
   const [, setLocation] = useLocation();
   
   // Lobby state
@@ -979,6 +982,11 @@ export default function Multiplayer() {
     setLocation("/");
   };
   
+  // Paywall gate for direct /multiplayer navigation
+  if (!isLoading && !isPremium) {
+    return <Paywall onBack={() => setLocation('/')} />;
+  }
+
   // Lobby menu - Access Pass Card Design
   if (gameStatus === "lobby") {
     return (
