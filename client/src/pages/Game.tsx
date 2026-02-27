@@ -1847,7 +1847,7 @@ export default function Game() {
 
   // Mode Selection Screen — Career vs Grand Prix
   if (gameStatus === 'mode_select') {
-    const isGrandPrixUnlocked = new Date() >= new Date('2026-03-05T17:30:00Z');
+    const isGrandPrixUnlocked = true;
     return (
       <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
         {/* App Logo */}
@@ -1947,19 +1947,6 @@ export default function Game() {
               >
                 Melbourne
               </span>
-              {!isGrandPrixUnlocked && (
-                <span
-                  className="block mt-1"
-                  style={{
-                    fontSize: '0.55rem',
-                    fontVariant: 'small-caps',
-                    color: '#e10600',
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  available 3/5
-                </span>
-              )}
             </motion.button>
             {/* PST — shown inline on iPad */}
             <motion.button
