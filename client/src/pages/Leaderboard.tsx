@@ -29,40 +29,6 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   hard: 'F1',
 };
 
-// TODO: REMOVE FAKE DATA — temporary for visual testing
-const FAKE_ENTRIES: LeaderboardEntry[] = [
-  { id: 'f1', playerId: 'p1', playerName: 'Verstappen_33', operation: 'Multiplication', score: 98200, totalTime: 185000, mistakes: 1, accuracy: 99, difficultyAchieved: 'hard', createdAt: '' },
-  { id: 'f2', playerId: 'p2', playerName: 'LandoNorris', operation: 'Addition', score: 95800, totalTime: 192000, mistakes: 2, accuracy: 98, difficultyAchieved: 'hard', createdAt: '' },
-  { id: 'f3', playerId: 'p3', playerName: 'Leclerc_CL16', operation: 'Division', score: 93100, totalTime: 198000, mistakes: 3, accuracy: 97, difficultyAchieved: 'hard', createdAt: '' },
-  { id: 'f4', playerId: 'p4', playerName: 'Oscar_P', operation: 'Subtraction', score: 89400, totalTime: 205000, mistakes: 4, accuracy: 96, difficultyAchieved: 'hard', createdAt: '' },
-  { id: 'f5', playerId: 'p5', playerName: 'Carlos_55', operation: 'Variables', score: 86700, totalTime: 210000, mistakes: 3, accuracy: 97, difficultyAchieved: 'hard', createdAt: '' },
-  { id: 'f6', playerId: 'p6', playerName: 'GeorgeR63', operation: 'Multiplication', score: 82300, totalTime: 218000, mistakes: 5, accuracy: 95, difficultyAchieved: 'medium', createdAt: '' },
-  { id: 'f7', playerId: 'p7', playerName: 'LewisH44', operation: 'Addition', score: 79900, totalTime: 225000, mistakes: 6, accuracy: 94, difficultyAchieved: 'medium', createdAt: '' },
-  { id: 'f8', playerId: 'p8', playerName: 'Alonso_14', operation: 'Division', score: 76500, totalTime: 232000, mistakes: 5, accuracy: 95, difficultyAchieved: 'medium', createdAt: '' },
-  { id: 'f9', playerId: 'p9', playerName: 'Stroll_18', operation: 'Subtraction', score: 72100, totalTime: 240000, mistakes: 7, accuracy: 93, difficultyAchieved: 'medium', createdAt: '' },
-  { id: 'f10', playerId: 'p10', playerName: 'Pierre_G10', operation: 'Variables', score: 69800, totalTime: 248000, mistakes: 8, accuracy: 92, difficultyAchieved: 'medium', createdAt: '' },
-  { id: 'f11', playerId: 'p11', playerName: 'Yuki_TSU', operation: 'Multiplication', score: 66200, totalTime: 255000, mistakes: 9, accuracy: 91, difficultyAchieved: 'medium', createdAt: '' },
-  { id: 'f12', playerId: 'p12', playerName: 'AlexAlbon23', operation: 'Addition', score: 63500, totalTime: 262000, mistakes: 8, accuracy: 92, difficultyAchieved: 'easy', createdAt: '' },
-  { id: 'f13', playerId: 'p13', playerName: 'Hulk_27', operation: 'Division', score: 60100, totalTime: 270000, mistakes: 10, accuracy: 90, difficultyAchieved: 'easy', createdAt: '' },
-  { id: 'f14', playerId: 'p14', playerName: 'Danny_Ric', operation: 'Subtraction', score: 57800, totalTime: 278000, mistakes: 11, accuracy: 89, difficultyAchieved: 'easy', createdAt: '' },
-  { id: 'f15', playerId: 'p15', playerName: 'Ocon_31', operation: 'Variables', score: 54200, totalTime: 285000, mistakes: 10, accuracy: 90, difficultyAchieved: 'easy', createdAt: '' },
-  { id: 'f16', playerId: 'p16', playerName: 'Zhou_24', operation: 'Multiplication', score: 51900, totalTime: 292000, mistakes: 12, accuracy: 88, difficultyAchieved: 'easy', createdAt: '' },
-  { id: 'f17', playerId: 'p17', playerName: 'Bottas_77', operation: 'Addition', score: 48300, totalTime: 300000, mistakes: 13, accuracy: 87, difficultyAchieved: 'easy', createdAt: '' },
-  { id: 'f18', playerId: 'p18', playerName: 'KMag_20', operation: 'Division', score: 45600, totalTime: 308000, mistakes: 14, accuracy: 86, difficultyAchieved: 'easy', createdAt: '' },
-  { id: 'f19', playerId: 'p19', playerName: 'Logan_S2', operation: 'Subtraction', score: 42100, totalTime: 315000, mistakes: 15, accuracy: 85, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f20', playerId: 'p20', playerName: 'NickDeV', operation: 'Variables', score: 39800, totalTime: 322000, mistakes: 14, accuracy: 86, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f21', playerId: 'p21', playerName: 'MathWizKid', operation: 'Multiplication', score: 36500, totalTime: 330000, mistakes: 16, accuracy: 84, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f22', playerId: 'p22', playerName: 'SpeedRacer99', operation: 'Addition', score: 33200, totalTime: 338000, mistakes: 17, accuracy: 83, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f23', playerId: 'p23', playerName: 'TurboCalc', operation: 'Division', score: 30800, totalTime: 345000, mistakes: 18, accuracy: 82, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f24', playerId: 'p24', playerName: 'F1_Fan_2025', operation: 'Subtraction', score: 27500, totalTime: 352000, mistakes: 19, accuracy: 81, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f25', playerId: 'p25', playerName: 'NumberNinja', operation: 'Variables', score: 24100, totalTime: 360000, mistakes: 20, accuracy: 80, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f26', playerId: 'p26', playerName: 'PitStopPro', operation: 'Multiplication', score: 21800, totalTime: 368000, mistakes: 22, accuracy: 78, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f27', playerId: 'p27', playerName: 'GridStartKid', operation: 'Addition', score: 18500, totalTime: 375000, mistakes: 24, accuracy: 76, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f28', playerId: 'p28', playerName: 'CheckerFlag', operation: 'Division', score: 15200, totalTime: 382000, mistakes: 26, accuracy: 74, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f29', playerId: 'p29', playerName: 'RookieRacer', operation: 'Subtraction', score: 12800, totalTime: 390000, mistakes: 28, accuracy: 72, difficultyAchieved: 'beginner', createdAt: '' },
-  { id: 'f30', playerId: 'p30', playerName: 'SlowButSteady', operation: 'Addition', score: 9500, totalTime: 398000, mistakes: 30, accuracy: 70, difficultyAchieved: 'beginner', createdAt: '' },
-];
-
 function formatTime(ms: number) {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
@@ -87,7 +53,7 @@ export default function Leaderboard() {
     const op = selectedOp !== 'All' ? selectedOp : undefined;
     getLeaderboard(op, 50)
       .then(data => {
-        const real = data.map((e: any) => ({
+        setEntries(data.map((e: any) => ({
           id: e.id,
           playerId: e.player_id,
           playerName: e.player_name,
@@ -98,9 +64,7 @@ export default function Leaderboard() {
           accuracy: e.accuracy,
           difficultyAchieved: e.difficulty_achieved,
           createdAt: e.created_at,
-        }));
-        // TODO: REMOVE FAKE DATA — merge fake entries for visual testing
-        setEntries([...real, ...FAKE_ENTRIES].sort((a, b) => b.score - a.score));
+        })));
         setLoading(false);
       })
       .catch(() => {
