@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy } from "lucide-react";
+import { TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy, ChevronRight, ClipboardList } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { isNativePlatform } from "@/lib/purchases";
 
@@ -19,81 +19,104 @@ export default function Garage() {
   };
 
   return (
-    <GameLayout hideGarageButton hideHeader darkBackground lockViewport>
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-black">
+    <GameLayout hideGarageButton hideHeader lockViewport>
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
-          <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-white mb-5 text-center">Garage</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-5 text-center">Garage</h1>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+          <div className="flex flex-col gap-5">
 
-            <Link href="/regulations" className="col-span-1">
-              <div
-                className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
-                data-testid="button-regulations"
-              >
-                <Flag className="w-8 h-8 text-white" />
-                <span className="text-xs uppercase tracking-widest text-white/70">Race Regulations</span>
-              </div>
-            </Link>
-
-            <Link href="/strategy" className="col-span-1">
-              <div
-                className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
-                data-testid="button-strategy-guide"
-              >
-                <TrendingUp className="w-8 h-8 text-yellow-400" />
-                <span className="text-xs uppercase tracking-widest text-white/70">Strategy Guide</span>
-              </div>
-            </Link>
-
-            <Link href="/reaction" className="col-span-1">
-              <div
-                className="h-full border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px] bg-black"
-                data-testid="button-reflex-training"
-              >
-                <div className="flex gap-1">
-                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
-                  <div className="w-3.5 h-3.5 rounded-full bg-red-600" />
+            {/* Navigation group */}
+            <div className="rounded-2xl overflow-hidden">
+              <Link href="/regulations">
+                <div
+                  className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-100 active:scale-[0.99] transition-all"
+                  data-testid="button-regulations"
+                >
+                  <div className="flex items-center gap-3">
+                    <Flag className="w-5 h-5 text-black" />
+                    <span className="text-sm uppercase tracking-widest text-black/80">Race Regulations</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-black/30" />
                 </div>
-                <span className="text-xs uppercase tracking-widest text-white/70">Reflex Training</span>
-              </div>
-            </Link>
+              </Link>
+              <Link href="/strategy">
+                <div
+                  className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-100 active:scale-[0.99] transition-all"
+                  data-testid="button-strategy-guide"
+                >
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="w-5 h-5 text-yellow-400" />
+                    <span className="text-sm uppercase tracking-widest text-black/80">Strategy Guide</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-black/30" />
+                </div>
+              </Link>
+              <Link href="/reaction">
+                <div
+                  className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-100 active:scale-[0.99] transition-all"
+                  data-testid="button-reflex-training"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-0.5 w-5 justify-center">
+                      <div className="w-2 h-2 rounded-full bg-red-600" />
+                      <div className="w-2 h-2 rounded-full bg-red-600" />
+                      <div className="w-2 h-2 rounded-full bg-red-600" />
+                    </div>
+                    <span className="text-sm uppercase tracking-widest text-black/80">Reflex Training</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-black/30" />
+                </div>
+              </Link>
+              <Link href="/leaderboard">
+                <div
+                  className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-100 active:scale-[0.99] transition-all"
+                  data-testid="button-leaderboard"
+                >
+                  <div className="flex items-center gap-3">
+                    <Trophy className="w-5 h-5 text-yellow-400" />
+                    <span className="text-sm uppercase tracking-widest text-black/80">Leaderboard</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-black/30" />
+                </div>
+              </Link>
+              <Link href="/racer-log">
+                <div
+                  className="flex items-center justify-between px-4 py-3.5 cursor-pointer hover:bg-gray-100 active:scale-[0.99] transition-all"
+                  data-testid="button-racer-log"
+                >
+                  <div className="flex items-center gap-3">
+                    <ClipboardList className="w-5 h-5 text-black" />
+                    <span className="text-sm uppercase tracking-widest text-black/80">Racer Log</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-black/30" />
+                </div>
+              </Link>
+            </div>
 
-            <Link href="/leaderboard" className="col-span-1">
-              <div
-                className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
-                data-testid="button-leaderboard"
-              >
-                <Trophy className="w-8 h-8 text-yellow-400" />
-                <span className="text-xs uppercase tracking-widest text-white/70">Leaderboard</span>
-              </div>
-            </Link>
-
+            {/* Pit Console */}
             <div
-              className="sm:col-span-2 bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg"
+              className="rounded-2xl p-4 md:p-6"
               data-testid="card-pit-console"
             >
-              <p className="text-xs uppercase tracking-widest text-white/50 mb-4">Pit Console</p>
+              <p className="text-xs uppercase tracking-widest text-black/50 mb-4">Pit Console</p>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between" data-testid="toggle-sound">
                   <div className="flex items-center gap-3">
                     {state.soundEnabled ? (
-                      <Volume2 className="w-5 h-5 text-white/50" />
+                      <Volume2 className="w-5 h-5 text-black/50" />
                     ) : (
-                      <VolumeX className="w-5 h-5 text-white/50" />
+                      <VolumeX className="w-5 h-5 text-black/50" />
                     )}
-                    <span className="text-sm text-white/80">Sound</span>
+                    <span className="text-sm text-black/80">Sound</span>
                   </div>
                   <button
                     onClick={toggleSound}
                     className={cn(
                       "w-11 h-6 rounded-full transition-colors relative",
-                      state.soundEnabled ? "bg-green-500" : "bg-[#333]"
+                      state.soundEnabled ? "bg-green-500" : "bg-gray-300"
                     )}
                     style={state.soundEnabled ? { backgroundColor: state.teamColor } : {}}
                   >
@@ -108,17 +131,17 @@ export default function Garage() {
 
                 <div className="flex items-center justify-between" data-testid="toggle-sim">
                   <div className="flex items-center gap-3">
-                    <Gauge className="w-5 h-5 text-white/50" />
+                    <Gauge className="w-5 h-5 text-black/50" />
                     <div>
-                      <span className="text-sm text-white/80">Realism Mode</span>
-                      <p className="text-[10px] text-white/40">Full race distance & damage</p>
+                      <span className="text-sm text-black/80">Realism Mode</span>
+                      <p className="text-[10px] text-black/40">Full race distance & damage</p>
                     </div>
                   </div>
                   <button
                     onClick={toggleSimMode}
                     className={cn(
                       "w-11 h-6 rounded-full transition-colors relative",
-                      state.simMode ? "bg-green-500" : "bg-[#333]"
+                      state.simMode ? "bg-green-500" : "bg-gray-300"
                     )}
                     style={state.simMode ? { backgroundColor: state.teamColor } : {}}
                   >
@@ -133,17 +156,17 @@ export default function Garage() {
 
                 <div className="flex items-center justify-between" data-testid="toggle-powerups">
                   <div className="flex items-center gap-3">
-                    <Zap className="w-5 h-5 text-white/50" />
+                    <Zap className="w-5 h-5 text-black/50" />
                     <div>
-                      <span className="text-sm text-white/80">Power-Ups</span>
-                      <p className="text-[10px] text-white/40">Overtake & Active Aero</p>
+                      <span className="text-sm text-black/80">Power-Ups</span>
+                      <p className="text-[10px] text-black/40">Overtake & Active Aero</p>
                     </div>
                   </div>
                   <button
                     onClick={togglePowerUps}
                     className={cn(
                       "w-11 h-6 rounded-full transition-colors relative",
-                      state.powerUpsEnabled ? "bg-green-500" : "bg-[#333]"
+                      state.powerUpsEnabled ? "bg-green-500" : "bg-gray-300"
                     )}
                     style={state.powerUpsEnabled ? { backgroundColor: state.teamColor } : {}}
                   >
@@ -156,7 +179,7 @@ export default function Garage() {
                   </button>
                 </div>
 
-                <div className="pt-3 border-t border-[#333] mt-4 flex flex-col gap-3">
+                <div className="pt-3 mt-4 flex flex-col gap-3">
                   <button
                     onClick={handleRetireCar}
                     className="text-xs text-red-400/70 hover:text-red-400 transition-colors uppercase tracking-widest"
@@ -184,21 +207,12 @@ export default function Garage() {
               </div>
             </div>
 
-            <Link href="/racer-log" className="sm:col-span-2">
-              <div
-                className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex items-center justify-center cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
-                data-testid="button-racer-log"
-              >
-                <span className="text-xs uppercase tracking-widest text-white/70">Racer Log</span>
-              </div>
-            </Link>
-
           </div>
 
           <div className="flex justify-center mt-6 mb-4">
             <Link href="/">
               <button
-                className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
+                className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
                 Back
