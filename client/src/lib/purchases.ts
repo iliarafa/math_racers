@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 
-const REVENUECAT_API_KEY_IOS = 'appl_YOUR_REVENUECAT_API_KEY_HERE';
+const REVENUECAT_API_KEY_IOS = 'appl_GNdLSBXrzRMRwqgDoydsQNCUXmb';
 const ENTITLEMENT_ID = 'premium';
 const LOCAL_STORAGE_KEY = 'math-racer-premium';
 const DEV_LOCK_KEY = 'math-racer-dev-lock';
