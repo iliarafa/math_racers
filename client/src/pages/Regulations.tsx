@@ -1,26 +1,15 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { ChevronLeft } from "lucide-react";
 
 export default function Regulations() {
   const { state } = useGameState();
 
   return (
     <GameLayout darkBackground lockViewport>
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-black">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 bg-black">
         <div className="max-w-2xl md:max-w-3xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <Link href="/garage">
-              <button
-                className="min-w-11 min-h-11 flex items-center justify-center -ml-2 hover:bg-neutral-800 rounded-full transition-colors text-white"
-                data-testid="button-back-to-garage"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-            </Link>
-            <h1 className="text-xl md:text-2xl font-bold text-white">Race Regulations</h1>
-          </div>
+          <h1 className="text-xl md:text-2xl font-bold text-white mb-8">Race Regulations</h1>
 
           <div className="space-y-6 md:space-y-8">
             <section>
@@ -115,17 +104,19 @@ export default function Regulations() {
             </section>
           </div>
 
-          <div className="pt-8">
-            <Link href="/garage">
-              <button
-                className="text-white/50 hover:text-white text-sm transition-colors"
-                data-testid="button-return-garage"
-              >
-                ← Return to Dashboard
-              </button>
-            </Link>
-          </div>
         </div>
+      </div>
+
+      {/* Sticky bottom back button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+        <Link href="/garage">
+          <button
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            Back
+          </button>
+        </Link>
       </div>
     </GameLayout>
   );

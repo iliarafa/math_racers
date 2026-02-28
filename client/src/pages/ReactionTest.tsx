@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, RotateCcw, Zap } from "lucide-react";
+import { RotateCcw, Zap } from "lucide-react";
 
 type GameState = 'idle' | 'sequence' | 'waiting' | 'go' | 'jumpstart' | 'result';
 
@@ -224,16 +224,20 @@ export default function ReactionTest() {
           {getButtonText()}
         </button>
 
+
+      </div>
+
+      {/* Sticky bottom back button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
         <Link href="/garage">
           <button
-            className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2 min-h-11 px-3 text-sm uppercase tracking-wider"
+            className="transition-colors text-sm uppercase tracking-wider text-muted-foreground hover:text-foreground"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
             data-testid="button-back-garage"
           >
             Back
           </button>
         </Link>
-
       </div>
     </GameLayout>
   );

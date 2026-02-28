@@ -2,7 +2,7 @@ import { useState, Fragment } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { ChevronLeft, Grid3X3, Divide, Plus, Minus, Variable } from "lucide-react";
+import { Grid3X3, Divide, Plus, Minus, Variable } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type TabType = "multiplication" | "division" | "addition" | "subtraction" | "variables";
@@ -279,21 +279,11 @@ export default function StrategyGuide() {
 
   return (
     <GameLayout darkBackground lockViewport>
-      <div className="strategy-view bg-black flex-1 overflow-y-auto p-4 md:p-8">
+      <div className="strategy-view bg-black flex-1 overflow-y-auto p-4 md:p-8 pb-20">
         <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex items-center gap-4">
-            <Link href="/garage">
-              <button 
-                className="min-w-11 min-h-11 flex items-center justify-center -ml-2 hover:bg-neutral-800 rounded-full transition-colors text-white" 
-                data-testid="button-back-to-garage"
-              >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-            </Link>
-            <div>
-              <h1 className="text-lg md:text-3xl font-bold tracking-tight text-white font-mono">RACE STRATEGY & DATA</h1>
-              <p className="text-xs text-neutral-400">Your complete math reference guide</p>
-            </div>
+          <div>
+            <h1 className="text-lg md:text-3xl font-bold tracking-tight text-white font-mono">RACE STRATEGY & DATA</h1>
+            <p className="text-xs text-neutral-400">Your complete math reference guide</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -319,18 +309,19 @@ export default function StrategyGuide() {
             {renderContent()}
           </div>
 
-          <div className="pt-6 border-t border-neutral-800">
-            <Link href="/garage">
-              <button 
-                className="flex items-center gap-2 px-4 min-h-11 rounded-lg bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white transition-colors font-mono text-sm"
-                data-testid="button-return-garage"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Return to Garage
-              </button>
-            </Link>
-          </div>
         </div>
+      </div>
+
+      {/* Sticky bottom back button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+        <Link href="/garage">
+          <button
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            Back
+          </button>
+        </Link>
       </div>
 
       <style>{`

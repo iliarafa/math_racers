@@ -1,7 +1,6 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, LapEntry } from "@/lib/gameLogic";
-import { ChevronLeft } from "lucide-react";
 
 const SERIES_ORDER = ['f1', 'f2', 'f3', 'karting'] as const;
 
@@ -50,15 +49,6 @@ export default function RacerLog() {
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-white">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
-          <div className="flex items-center gap-3 mb-6">
-            <Link href="/garage">
-              <button className="min-w-11 min-h-11 flex items-center justify-center -ml-2 hover:bg-black/5 rounded-full transition-colors">
-                <ChevronLeft className="w-6 h-6 text-black" />
-              </button>
-            </Link>
-            <h1 className="text-lg md:text-xl font-bold tracking-widest uppercase text-black">Racer Log</h1>
-          </div>
-
           {!hasEntries ? (
             <p className="text-sm text-black/40 text-center py-12 font-mono">No data recorded.</p>
           ) : (
@@ -99,7 +89,7 @@ export default function RacerLog() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-black/10 py-5 pb-8 px-4 z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-black/10 py-4 px-4 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
         <div className="max-w-2xl md:max-w-4xl mx-auto flex justify-between items-end">
           <div className="text-center flex-1">
             <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>
@@ -119,6 +109,16 @@ export default function RacerLog() {
             </div>
             <div className="text-[10px] uppercase tracking-widest text-black/40 mt-1">Races Won</div>
           </div>
+        </div>
+        <div className="flex justify-center mt-3">
+          <Link href="/garage">
+            <button
+              className="transition-colors text-sm uppercase tracking-wider text-black/40 hover:text-black"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              Back
+            </button>
+          </Link>
         </div>
       </div>
     </GameLayout>

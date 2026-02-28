@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy } from "lucide-react";
+import { TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { isNativePlatform } from "@/lib/purchases";
 
@@ -19,18 +19,9 @@ export default function Garage() {
   };
 
   return (
-    <GameLayout hideGarageButton darkBackground lockViewport>
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-black">
+    <GameLayout hideGarageButton hideHeader darkBackground lockViewport>
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 bg-black">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
-
-          <div className="flex items-center gap-3 mb-5">
-            <Link href="/">
-              <button className="min-w-11 min-h-11 flex items-center justify-center -ml-2 hover:bg-white/10 rounded-full transition-colors text-white" data-testid="button-back">
-                <ChevronLeft className="w-6 h-6 text-white" />
-              </button>
-            </Link>
-            <h1 className="text-lg md:text-xl font-bold tracking-widest uppercase text-white"> Dashboard</h1>
-          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
 
@@ -202,6 +193,18 @@ export default function Garage() {
 
           </div>
         </div>
+      </div>
+
+      {/* Sticky bottom back button */}
+      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+        <Link href="/">
+          <button
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            Back
+          </button>
+        </Link>
       </div>
     </GameLayout>
   );
