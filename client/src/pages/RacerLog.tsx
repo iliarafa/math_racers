@@ -45,7 +45,10 @@ export default function RacerLog() {
   const hasEntries = lapHistory.length > 0;
 
   return (
-    <GameLayout hideGarageButton lockViewport>
+    <GameLayout hideGarageButton lockViewport headerAfterLogo={
+      <span className="-ml-2 md:-ml-3 text-[2.75rem] md:text-[3.5rem] font-bold tracking-wider text-black leading-none"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}>LOG</span>
+    }>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-white">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
@@ -58,7 +61,7 @@ export default function RacerLog() {
                 const label = SERIES_LABELS[key] || 'LEGACY';
                 return (
                   <div key={key}>
-                    <h2 className="text-xs font-bold tracking-widest uppercase text-black/40 mb-3 border-b border-black/10 pb-2">
+                    <h2 className="text-xs font-bold tracking-widest uppercase text-black/40 mb-3 pb-2">
                       {label}
                     </h2>
                     <div className="space-y-0">
@@ -71,7 +74,7 @@ export default function RacerLog() {
                       {entries.map((lap, index) => (
                         <div
                           key={index}
-                          className="grid grid-cols-[2rem_1fr_5.5rem_4.5rem] gap-2 px-2 py-2 border-b border-black/5 last:border-0 text-sm"
+                          className="grid grid-cols-[2rem_1fr_5.5rem_4.5rem] gap-2 px-2 py-2 text-sm"
                         >
                           <span className="text-black/30 font-mono text-xs leading-5">{index + 1}</span>
                           <span className="text-black/80">{lap.trackName}</span>
@@ -89,7 +92,7 @@ export default function RacerLog() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-black/10 py-4 px-4 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+      <div className="fixed bottom-0 left-0 right-0 bg-white py-4 px-4 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
         <div className="max-w-2xl md:max-w-4xl mx-auto flex justify-between items-end">
           <div className="text-center flex-1">
             <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>

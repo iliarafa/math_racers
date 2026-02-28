@@ -11,9 +11,10 @@ interface GameLayoutProps {
   darkBackground?: boolean;
   hideGarageButton?: boolean;
   headerRight?: React.ReactNode;
+  headerAfterLogo?: React.ReactNode;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false, headerRight }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false, headerRight, headerAfterLogo }: GameLayoutProps) {
   return (
     <div className={cn(
       "text-foreground flex flex-col",
@@ -27,7 +28,7 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
       paddingRight: 'env(safe-area-inset-right)'
     }}>
       {!hideHeader && (
-        <header className="border-b border-border py-3 px-3 md:py-4 md:px-6 flex justify-between items-center sticky top-0 z-50 bg-[#ffffff]">
+        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex justify-between items-center sticky top-0 z-50 bg-[#ffffff]", !hideGarageButton && "border-b border-border")}>
           <div className="flex items-center gap-4 md:gap-6">
             <Link href="/">
               <img 
@@ -36,7 +37,7 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
                 className="h-8 md:h-10 w-auto cursor-pointer hover:opacity-70 transition-opacity"
               />
             </Link>
-            
+            {headerAfterLogo}
             {trackName && (
               <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground bg-secondary px-3 py-1 rounded-full">
                 <Flag className="w-3 h-3" />
