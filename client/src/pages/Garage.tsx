@@ -20,8 +20,10 @@ export default function Garage() {
 
   return (
     <GameLayout hideGarageButton hideHeader darkBackground lockViewport>
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 bg-black">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-black">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
+
+          <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-white mb-5 text-center">Garage</h1>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
 
@@ -68,15 +70,6 @@ export default function Garage() {
               >
                 <Trophy className="w-8 h-8 text-yellow-400" />
                 <span className="text-xs uppercase tracking-widest text-white/70">Leaderboard</span>
-              </div>
-            </Link>
-
-            <Link href="/racer-log" className="sm:col-span-2">
-              <div
-                className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex items-center justify-center cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
-                data-testid="button-racer-log"
-              >
-                <span className="text-xs uppercase tracking-widest text-white/70">Racer Log</span>
               </div>
             </Link>
 
@@ -191,20 +184,28 @@ export default function Garage() {
               </div>
             </div>
 
+            <Link href="/racer-log" className="sm:col-span-2">
+              <div
+                className="h-full bg-black border border-[#333] rounded-2xl p-4 md:p-6 shadow-lg flex items-center justify-center cursor-pointer hover:bg-[#1a1a1a] active:scale-[0.98] transition-all min-h-[100px]"
+                data-testid="button-racer-log"
+              >
+                <span className="text-xs uppercase tracking-widest text-white/70">Racer Log</span>
+              </div>
+            </Link>
+
+          </div>
+
+          <div className="flex justify-center mt-6 mb-4">
+            <Link href="/">
+              <button
+                className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+              >
+                Back
+              </button>
+            </Link>
           </div>
         </div>
-      </div>
-
-      {/* Sticky bottom back button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
-        <Link href="/">
-          <button
-            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-          >
-            Back
-          </button>
-        </Link>
       </div>
     </GameLayout>
   );
