@@ -930,7 +930,7 @@ export default function Game() {
 
   // Guard: redirect to proper selection if missing driver/circuit
   useEffect(() => {
-    if (!selectedDriver && gameStatus !== 'mode_select' && gameStatus !== 'driver_select' && gameStatus !== 'operation_select') {
+    if (!selectedDriver && gameStatus !== 'mode_select' && gameStatus !== 'driver_select' && gameStatus !== 'operation_select' && gameStatus !== 'paywall') {
       setGameStatus('mode_select');
     } else if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
       setGameStatus('selecting');

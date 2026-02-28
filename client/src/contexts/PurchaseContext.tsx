@@ -5,6 +5,7 @@ import {
   purchasePremium,
   restorePurchases,
   getPremiumPrice,
+  isNativePlatform,
 } from '@/lib/purchases';
 
 export interface PurchaseContextType {
@@ -24,14 +25,13 @@ export const PurchaseContext = createContext<PurchaseContextType>({
 });
 
 export function PurchaseProvider({ children }: { children: ReactNode }) {
-  const [isPremium, setIsPremium] = useState(true);
+  const [isPremium, setIsPremium] = useState(() => !isNativePlatform());
   const [isLoading, setIsLoading] = useState(true);
   const [priceString, setPriceString] = useState<string | null>(null);
 
   useEffect(() => {
     async function init() {
       try {
-        // Read playerId from game state for RevenueCat user identification
         const raw = localStorage.getItem('f1-math-racer-state');
         const playerId = raw ? JSON.parse(raw).playerId : undefined;
 
@@ -39,11 +39,12 @@ export function PurchaseProvider({ children }: { children: ReactNode }) {
         const status = await checkPremiumStatus();
         setIsPremium(status);
 
-        const price = await getPremiumPrice();
+        const { price } = await getPremiumPrice();
         setPriceString(price);
       } catch {
-        // On error, default to unlocked so users aren't stuck
-        setIsPremium(true);
+        // On native, default to locked so paywall can be tested
+        // On web, default to unlocked so dev isn't blocked
+        setIsPremium(!isNativePlatform());
       } finally {
         setIsLoading(false);
       }
