@@ -1868,7 +1868,7 @@ export default function Game() {
         </div>
         <div className="mt-8 md:mt-24 mb-10 md:mb-24 flex justify-center">
           <h2
-            className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black"
+            className="text-4xl md:text-5xl font-bold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Select Mode
@@ -1891,7 +1891,7 @@ export default function Game() {
                 className="block"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
                   fontWeight: 'bold',
                   color: '#e10600',
                   opacity: isPremium ? 0.7 : 0.35,
@@ -1935,7 +1935,7 @@ export default function Game() {
                 className="block"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
                   fontWeight: 'bold',
                   background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
                   WebkitBackgroundClip: 'text',
@@ -1996,10 +1996,10 @@ export default function Game() {
               setGameStatus('operation_select');
             }}
             whileTap={{ scale: 0.98 }}
-            className="md:hidden w-full max-w-xs md:max-w-md text-center"
+            className="md:hidden w-full text-center"
           >
             <span
-              className="inline-block px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+              className="block py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
             >
               Free Practice
@@ -2045,7 +2045,7 @@ export default function Game() {
         {/* Welcome Section */}
         <div className="mt-6 md:mt-0 mb-6 md:mb-6 flex flex-col items-center px-8">
           {isPreSeasonTesting ? (
-            <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Free Practice</h2>
+            <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-wider text-black text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Free Practice</h2>
           ) : (
           <h2
             className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black text-center"
@@ -2063,7 +2063,7 @@ export default function Game() {
               : 'Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to Melbourne, Australia.'}
           </p>
           <h3
-            className="mt-4 text-xl md:text-2xl font-bold uppercase tracking-wider text-black"
+            className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Select Operation
@@ -2341,10 +2341,10 @@ export default function Game() {
           {isPreSeasonTesting ? (
             <div className="rounded-full p-1 flex gap-1 bg-gray-200">
               <button
-                className="px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all bg-red-600 text-white"
+                className="px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all bg-green-600 text-white"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
-                Pre-Season
+                Free Practice
               </button>
             </div>
           ) : isGrandPrix ? (
