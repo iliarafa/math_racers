@@ -86,10 +86,12 @@ export default function Leaderboard() {
       <div className="fixed inset-0 overflow-y-auto p-4 md:p-8 pb-20 bg-black" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
-          <div className="flex items-center gap-3 mb-5">
-            <Trophy className="w-6 h-6 text-yellow-400" />
-            <h1 className="text-lg md:text-xl font-bold tracking-widest uppercase text-white">Leaderboard</h1>
-            <span className="text-xs text-white/70">Free Practice — 100 laps</span>
+          <div className="mb-5">
+            <div className="flex items-center gap-3">
+              <Trophy className="w-6 h-6 text-yellow-400" />
+              <h1 className="text-lg md:text-xl font-bold tracking-widest uppercase text-white">Leaderboard</h1>
+            </div>
+            <p className="text-xs text-white/70 mt-1 ml-9">Record 100 laps in Free Practice to enter.</p>
           </div>
 
           {/* Filters row */}
