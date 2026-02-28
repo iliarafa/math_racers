@@ -28,12 +28,12 @@ function MultiplicationGrid() {
       
       <div className="overflow-x-auto -mx-2 px-2">
         <div className="grid-container font-mono text-xs md:text-base" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(32px, 1fr))', gap: '2px', minWidth: '340px' }}>
-          <div className="grid-header-corner bg-neutral-800 p-1.5 md:p-2.5 text-center font-bold text-neutral-500">×</div>
+          <div className="grid-header-corner bg-neutral-200 p-1.5 md:p-2.5 text-center font-bold text-neutral-400">×</div>
           {numbers.map(n => (
             <div 
               key={`header-${n}`} 
               className={cn(
-                "grid-header bg-red-900/60 p-1.5 md:p-2.5 text-center font-bold text-red-300 transition-colors",
+                "grid-header bg-red-100 p-1.5 md:p-2.5 text-center font-bold text-red-700 transition-colors",
                 hoveredCell?.col === n && "bg-red-700 text-white"
               )}
             >
@@ -45,7 +45,7 @@ function MultiplicationGrid() {
             <Fragment key={row}>
               <div
                 className={cn(
-                  "grid-header bg-red-900/60 p-1.5 md:p-2.5 text-center font-bold text-red-300 transition-colors",
+                  "grid-header bg-red-100 p-1.5 md:p-2.5 text-center font-bold text-red-700 transition-colors",
                   hoveredCell?.row === row && "bg-red-700 text-white"
                 )}
               >
@@ -60,12 +60,12 @@ function MultiplicationGrid() {
                     onMouseEnter={() => setHoveredCell({ row, col })}
                     onMouseLeave={() => setHoveredCell(null)}
                     className={cn(
-                      "p-1.5 md:p-2.5 text-center transition-all cursor-pointer border border-neutral-700",
-                      isIntersection 
-                        ? "bg-yellow-500 text-black font-bold scale-110 z-10 shadow-lg shadow-yellow-500/50" 
-                        : isHighlighted 
-                          ? "bg-neutral-700 text-white" 
-                          : "bg-neutral-900 text-neutral-300 hover:bg-neutral-800"
+                      "p-1.5 md:p-2.5 text-center transition-all cursor-pointer border border-neutral-200",
+                      isIntersection
+                        ? "bg-yellow-400 text-black font-bold scale-110 z-10 shadow-lg shadow-yellow-400/50"
+                        : isHighlighted
+                          ? "bg-neutral-200 text-black"
+                          : "bg-neutral-50 text-neutral-700 hover:bg-neutral-100"
                     )}
                     data-testid={`grid-cell-${row}-${col}`}
                   >
@@ -100,7 +100,7 @@ function DivisionContent() {
       <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         {factFamilies.map((family, i) => (
           <div key={i} className="tech-card-glow">
-            <div className="text-xs text-neutral-500 mb-2 font-mono">FACT FAMILY #{i + 1}</div>
+            <div className="text-xs text-neutral-400 mb-2 font-mono">FACT FAMILY #{i + 1}</div>
             <div className="grid grid-cols-2 gap-2 text-sm font-mono">
               <div className="text-green-400">{family.mult1}</div>
               <div className="text-green-400">{family.mult2}</div>
@@ -113,7 +113,7 @@ function DivisionContent() {
       
       <div className="tech-card mt-6">
         <h4 className="text-md font-mono font-bold mb-2 text-purple-400">QUICK TIP</h4>
-        <p className="text-sm text-neutral-300">
+        <p className="text-sm text-neutral-600">
           Think of division as "How many times does this number fit into that number?"<br/>
           Example: 12 ÷ 4 = ? means "How many 4s fit into 12?" Answer: 3
         </p>
@@ -145,10 +145,10 @@ function AdditionContent() {
             <div className="space-y-1">
               {bond.pairs.map(([a, b], j) => (
                 <div key={j} className="flex justify-center items-center gap-2 text-sm font-mono">
-                  <span className="text-blue-300 w-8 text-right">{a}</span>
-                  <span className="text-neutral-500">+</span>
-                  <span className="text-orange-300 w-8">{b}</span>
-                  <span className="text-neutral-500">=</span>
+                  <span className="text-blue-600 w-8 text-right">{a}</span>
+                  <span className="text-neutral-400">+</span>
+                  <span className="text-orange-600 w-8">{b}</span>
+                  <span className="text-neutral-400">=</span>
                   <span className="text-green-400">{bond.target}</span>
                 </div>
               ))}
@@ -159,7 +159,7 @@ function AdditionContent() {
       
       <div className="tech-card mt-6">
         <h4 className="text-md font-mono font-bold mb-2 text-cyan-400">STRATEGY NOTES</h4>
-        <ul className="text-sm text-neutral-300 space-y-1 list-disc list-inside">
+        <ul className="text-sm text-neutral-600 space-y-1 list-disc list-inside">
           <li>Break big numbers into friendly pairs</li>
           <li>Add 9 by adding 10, then subtract 1</li>
           <li>Double numbers are easy: 6 + 6 = 12, so 6 + 7 = 13</li>
@@ -191,8 +191,8 @@ function SubtractionContent() {
               {ex.problem}
             </div>
             <div className="flex-1">
-              <div className="text-xs text-neutral-500 mb-1 font-mono">STRATEGY</div>
-              <div className="text-sm text-neutral-300">{ex.strategy}</div>
+              <div className="text-xs text-neutral-400 mb-1 font-mono">STRATEGY</div>
+              <div className="text-sm text-neutral-600">{ex.strategy}</div>
             </div>
           </div>
         ))}
@@ -200,7 +200,7 @@ function SubtractionContent() {
       
       <div className="tech-card mt-6">
         <h4 className="text-md font-mono font-bold mb-2 text-pink-400">REMEMBER</h4>
-        <p className="text-sm text-neutral-300">
+        <p className="text-sm text-neutral-600">
           Subtraction tells you the "gap" or "difference" between two numbers.<br/>
           Think: "How far apart are these numbers?"
         </p>
@@ -237,14 +237,14 @@ function VariablesContent() {
                 → {ex.solution}
               </div>
             </div>
-            <p className="text-sm text-neutral-300">{ex.explanation}</p>
+            <p className="text-sm text-neutral-600">{ex.explanation}</p>
           </div>
         ))}
       </div>
       
       <div className="tech-card mt-6">
         <h4 className="text-md font-mono font-bold mb-3 text-yellow-400">RACE ENGINEER TIP</h4>
-        <div className="space-y-2 text-sm text-neutral-300">
+        <div className="space-y-2 text-sm text-neutral-600">
           <p>Think of <span className="text-purple-400 font-mono">x</span> like a missing piece in a puzzle:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>The equation is a balance scale - both sides must be equal</li>
@@ -278,11 +278,11 @@ export default function StrategyGuide() {
   };
 
   return (
-    <GameLayout darkBackground lockViewport>
-      <div className="strategy-view bg-black flex-1 overflow-y-auto p-4 md:p-8 pb-20">
+    <GameLayout lockViewport>
+      <div className="strategy-view bg-white flex-1 overflow-y-auto p-4 md:p-8 pb-20">
         <div className="max-w-4xl mx-auto space-y-6">
           <div>
-            <h1 className="text-lg md:text-3xl font-bold tracking-tight text-white font-mono">RACE STRATEGY & DATA</h1>
+            <h1 className="text-lg md:text-3xl font-bold tracking-tight text-black font-mono">RACE STRATEGY & DATA</h1>
             <p className="text-xs text-neutral-400">Your complete math reference guide</p>
           </div>
 
@@ -294,8 +294,8 @@ export default function StrategyGuide() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 min-h-11 min-w-11 rounded-lg font-mono text-xs md:text-base transition-all",
                   activeTab === tab.id
-                    ? "bg-white text-black shadow-lg shadow-white/20"
-                    : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-white"
+                    ? "bg-black text-white shadow-lg shadow-black/20"
+                    : "bg-neutral-100 text-neutral-400 hover:bg-neutral-200 hover:text-black"
                 )}
                 data-testid={`tab-${tab.id}`}
               >
@@ -313,10 +313,10 @@ export default function StrategyGuide() {
       </div>
 
       {/* Sticky bottom back button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
         <Link href="/garage">
           <button
-            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Back
@@ -330,24 +330,24 @@ export default function StrategyGuide() {
         }
         
         .tech-card {
-          background: linear-gradient(135deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.95));
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: linear-gradient(135deg, rgba(245, 245, 245, 0.9), rgba(250, 250, 250, 0.95));
+          border: 1px solid rgba(0, 0, 0, 0.1);
           border-radius: 8px;
           padding: 16px;
         }
-        
+
         .tech-card-glow {
-          background: linear-gradient(135deg, rgba(30, 30, 30, 0.9), rgba(20, 20, 20, 0.95));
+          background: linear-gradient(135deg, rgba(245, 245, 245, 0.9), rgba(250, 250, 250, 0.95));
           border: 1px solid rgba(100, 100, 255, 0.3);
           border-radius: 8px;
           padding: 16px;
-          box-shadow: 0 0 15px rgba(100, 100, 255, 0.1), inset 0 0 30px rgba(100, 100, 255, 0.03);
+          box-shadow: 0 0 15px rgba(100, 100, 255, 0.08), inset 0 0 30px rgba(100, 100, 255, 0.02);
           transition: all 0.3s ease;
         }
-        
+
         .tech-card-glow:hover {
           border-color: rgba(100, 100, 255, 0.5);
-          box-shadow: 0 0 25px rgba(100, 100, 255, 0.2), inset 0 0 30px rgba(100, 100, 255, 0.05);
+          box-shadow: 0 0 25px rgba(100, 100, 255, 0.15), inset 0 0 30px rgba(100, 100, 255, 0.03);
         }
       `}</style>
     </GameLayout>
