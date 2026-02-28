@@ -45,11 +45,10 @@ export default function RacerLog() {
   const hasEntries = lapHistory.length > 0;
 
   return (
-    <GameLayout hideGarageButton lockViewport headerAfterLogo={
-      <span className="-ml-2 md:-ml-3 text-[2.75rem] md:text-[3.5rem] font-bold tracking-wider text-black leading-none"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}>LOG</span>
-    }>
+    <GameLayout hideGarageButton hideHeader lockViewport>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-white">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-wider text-black text-center mb-6"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}>RACER LOG</h1>
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
           {!hasEntries ? (
