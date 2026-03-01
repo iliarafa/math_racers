@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy, ClipboardList, RotateCcw } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { isNativePlatform } from "@/lib/purchases";
+import garageCar from "@/assets/garage_car.jpeg";
 
 export default function Garage() {
   const { state, toggleSound, toggleSimMode, togglePowerUps, resetAllData } = useGameState();
@@ -20,7 +21,7 @@ export default function Garage() {
 
   return (
     <GameLayout hideGarageButton hideHeader lockViewport>
-      <div className="flex-1 overflow-y-auto p-4 md:p-10 pb-20 bg-white">
+      <div className="flex-1 overflow-y-auto p-6 md:p-10 pb-20 bg-white">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
           <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Garage</h1>
@@ -28,54 +29,10 @@ export default function Garage() {
           <div className="flex flex-col gap-8">
 
             {/* Navigation grid */}
-            <div className="grid grid-cols-3 gap-3">
-              <Link href="/regulations">
-                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-regulations">
-                  <Flag className="w-10 h-10 text-black" />
-                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Regulations</span>
-                </div>
-              </Link>
-              <Link href="/strategy">
-                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-strategy-guide">
-                  <TrendingUp className="w-10 h-10 text-black" />
-                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Strategy</span>
-                </div>
-              </Link>
-              <Link href="/reaction">
-                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-reflex-training">
-                  <div className="flex gap-0.5 h-10 items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                  </div>
-                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Reflex</span>
-                </div>
-              </Link>
-              <Link href="/leaderboard">
-                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-leaderboard">
-                  <Trophy className="w-10 h-10 text-black" />
-                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Leaderboard</span>
-                </div>
-              </Link>
-              <Link href="/racer-log">
-                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-racer-log">
-                  <ClipboardList className="w-10 h-10 text-black" />
-                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Racer Log</span>
-                </div>
-              </Link>
-              <div
-                onClick={handleRetireCar}
-                className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
-                data-testid="button-retire"
-              >
-                <RotateCcw className="w-10 h-10 text-black" />
-                <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Reset</span>
-              </div>
+            <div className="grid grid-cols-3 gap-2">
               <div
                 onClick={toggleSound}
-                className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
                 data-testid="button-sound"
               >
                 {state.soundEnabled ? (
@@ -87,7 +44,7 @@ export default function Garage() {
               </div>
               <div
                 onClick={toggleSimMode}
-                className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
                 data-testid="button-realism"
               >
                 <Gauge className={cn("w-10 h-10", state.simMode ? "text-green-500" : "text-black")} />
@@ -95,12 +52,60 @@ export default function Garage() {
               </div>
               <div
                 onClick={togglePowerUps}
-                className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
                 data-testid="button-powerups"
               >
                 <Zap className={cn("w-10 h-10", state.powerUpsEnabled ? "text-green-500" : "text-black")} />
                 <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Power-Ups</span>
               </div>
+              <Link href="/reaction">
+                <div className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-reflex-training">
+                  <div className="flex gap-0.5 h-10 items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                  </div>
+                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Reflex</span>
+                </div>
+              </Link>
+              <Link href="/racer-log">
+                <div className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-racer-log">
+                  <ClipboardList className="w-10 h-10 text-black" />
+                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Racer Log</span>
+                </div>
+              </Link>
+              <Link href="/leaderboard">
+                <div className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-leaderboard">
+                  <Trophy className="w-10 h-10 text-black" />
+                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Leaderboard</span>
+                </div>
+              </Link>
+              <Link href="/regulations">
+                <div className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-regulations">
+                  <Flag className="w-10 h-10 text-black" />
+                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Regulations</span>
+                </div>
+              </Link>
+              <Link href="/strategy">
+                <div className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-strategy-guide">
+                  <TrendingUp className="w-10 h-10 text-black" />
+                  <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Strategy</span>
+                </div>
+              </Link>
+              <div
+                onClick={handleRetireCar}
+                className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                data-testid="button-retire"
+              >
+                <RotateCcw className="w-10 h-10 text-black" />
+                <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Reset</span>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <img src={garageCar} alt="" className="w-40 opacity-20 select-none pointer-events-none" draggable={false} />
             </div>
 
             {isNativePlatform() && (
