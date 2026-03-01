@@ -20,65 +20,67 @@ export default function Garage() {
 
   return (
     <GameLayout hideGarageButton hideHeader lockViewport>
-      <div className="flex-1 overflow-y-auto p-6 md:p-10 bg-white">
+      <div className="flex-1 overflow-y-auto p-4 md:p-10 pb-20 bg-white">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
-          <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center">Garage</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Garage</h1>
 
           <div className="flex flex-col gap-8">
 
             {/* Navigation grid */}
             <div className="grid grid-cols-3 gap-3">
               <Link href="/regulations">
-                <div className="rounded-xl bg-gray-50 border border-gray-100 p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-regulations">
+                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-regulations">
                   <Flag className="w-10 h-10 text-black" />
                   <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Regulations</span>
                 </div>
               </Link>
               <Link href="/strategy">
-                <div className="rounded-xl bg-gray-50 border border-gray-100 p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-strategy-guide">
-                  <TrendingUp className="w-10 h-10 text-yellow-400" />
+                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-strategy-guide">
+                  <TrendingUp className="w-10 h-10 text-black" />
                   <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Strategy</span>
                 </div>
               </Link>
               <Link href="/reaction">
-                <div className="rounded-xl bg-gray-50 border border-gray-100 p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-reflex-training">
-                  <div className="flex gap-1 w-10 h-10 items-center justify-center">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-600" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-600" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-600" />
+                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-reflex-training">
+                  <div className="flex gap-0.5 h-10 items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
+                    <div className="w-2 h-2 rounded-full bg-red-600" />
                   </div>
                   <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Reflex</span>
                 </div>
               </Link>
               <Link href="/leaderboard">
-                <div className="rounded-xl bg-gray-50 border border-gray-100 p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-leaderboard">
-                  <Trophy className="w-10 h-10 text-yellow-400" />
+                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-leaderboard">
+                  <Trophy className="w-10 h-10 text-black" />
                   <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Leaderboard</span>
                 </div>
               </Link>
               <Link href="/racer-log">
-                <div className="rounded-xl bg-gray-50 border border-gray-100 p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-racer-log">
+                <div className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-racer-log">
                   <ClipboardList className="w-10 h-10 text-black" />
                   <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Racer Log</span>
                 </div>
               </Link>
               <div
                 onClick={handleRetireCar}
-                className="rounded-xl bg-gray-50 border border-gray-100 p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
                 data-testid="button-retire"
               >
-                <RotateCcw className="w-10 h-10 text-red-400" />
+                <RotateCcw className="w-10 h-10 text-black" />
                 <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Reset</span>
               </div>
             </div>
 
             {/* Pit Console */}
             <div
-              className="rounded-2xl p-4 md:p-6"
+              className="rounded-xl p-4 md:p-6"
               data-testid="card-pit-console"
             >
-              <p className="text-xs uppercase tracking-widest text-black/50 mb-4">Pit Console</p>
+              <p className="text-xs uppercase tracking-widest text-black/40 mb-4">Pit Console</p>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between" data-testid="toggle-sound">
@@ -177,17 +179,17 @@ export default function Garage() {
 
           </div>
 
-          <div className="flex justify-center mt-6 mb-4">
-            <Link href="/">
-              <button
-                className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-              >
-                Back
-              </button>
-            </Link>
-          </div>
         </div>
+      </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm py-3 z-50 flex justify-center" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+        <Link href="/">
+          <button
+            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            Back
+          </button>
+        </Link>
       </div>
     </GameLayout>
   );
