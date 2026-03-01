@@ -167,7 +167,7 @@ export default function Garage() {
                       }}
                       className="text-xs text-gray-400/70 hover:text-gray-400 transition-colors uppercase tracking-widest"
                     >
-                      Restore Purchases →
+                      Restore Purchases
                     </button>
                   )}
                   {restoreMessage && (
