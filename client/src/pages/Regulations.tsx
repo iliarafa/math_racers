@@ -1,269 +1,305 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 
+const sections = [
+  {
+    id: "free-practice",
+    label: "Free Practice",
+    title: "Free Practice",
+    description: "Free Practice is available to everyone — no purchase required. Select any math operation and race 100 questions on the Bahrain International Circuit.",
+    details: [
+      "Tap Free Practice on the mode select screen, then pick your operation",
+      "Difficulty adjusts dynamically based on your speed and accuracy",
+      "No penalties — wrong answers don't count against you",
+      "Complete all 100 questions to submit your score to the Leaderboard",
+      "End your session early at any time — only 100-question completions count for the Leaderboard",
+      "Score formula: (laps / time) × accuracy × difficulty multiplier × 1000 (max 100,000)",
+      "Difficulty multipliers: Karting = 1.0, F3 = 1.5, F2 = 2.0, F1 = 3.0",
+      "Name prompt appears on your first Leaderboard submission (max 20 characters)",
+    ],
+  },
+  {
+    id: "circuits",
+    label: "Circuits",
+    title: "Circuits",
+    description: "Each circuit tests a different math operation.",
+    details: [
+      "SPA — Addition",
+      "Monaco — Subtraction",
+      "Monza — Multiplication",
+      "Suzuka — Division",
+      "Silverstone — Variables / Algebra",
+    ],
+  },
+  {
+    id: "series",
+    label: "Series",
+    title: "Series",
+    description: "Four series determine the difficulty of questions.",
+    details: [
+      "Karting (ages 6–8) — numbers 1 to 10",
+      "F3 (ages 8–10) — numbers 10 to 50",
+      "F2 (ages 10–12) — numbers 20 to 100",
+      "F1 (ages 12+) — numbers 50 to 200",
+    ],
+  },
+  {
+    id: "race",
+    label: "Race",
+    title: "Race",
+    description: "Answer 20 math questions correctly to cross the finish line.",
+    details: [
+      "Each correct answer advances you one sector",
+      "In Realism Mode, races use full Grand Prix distances (44–78 laps per circuit)",
+    ],
+  },
+  {
+    id: "track-limits",
+    label: "Track Limits",
+    title: "Track Limits",
+    description: "Each question allows up to 4 attempts.",
+    details: [
+      "Wrong answers show a track limits warning",
+      "4th wrong attempt on the same question results in a crash (DNF)",
+    ],
+  },
+  {
+    id: "sectors",
+    label: "Sectors",
+    title: "Sectors",
+    description: "Answer times are color-coded based on your performance.",
+    details: [],
+    richDetails: [
+      { color: "text-purple-400", label: "Purple", text: "fastest overall" },
+      { color: "text-green-400", label: "Green", text: "quick response" },
+      { color: "text-yellow-400", label: "Yellow", text: "slower response" },
+      { color: "text-red-400", label: "Red", text: "incorrect answer" },
+    ],
+  },
+  {
+    id: "weather",
+    label: "Weather",
+    title: "Weather",
+    description: "Weather conditions affect question difficulty.",
+    details: [],
+    richDetails: [
+      { color: "text-black/70", label: "Dry", text: "standard difficulty" },
+      { color: "text-black/70", label: "Wet", text: "increased difficulty" },
+      { color: "text-black/70", label: "Random", text: "rain probability varies per circuit. In Realism Mode with Random weather, conditions alternate 3 to 5 times during the race" },
+    ],
+  },
+  {
+    id: "overtake",
+    label: "Overtake",
+    title: "Overtake",
+    description: "Build energy by answering correctly. Faster answers charge more energy.",
+    details: [
+      "Activates when behind and within two sectors of your opponent",
+      "2x progress per correct answer while active",
+      "Harder questions while active",
+      "A wrong answer depletes all energy immediately",
+    ],
+  },
+  {
+    id: "active-aero",
+    label: "Active Aero",
+    title: "Active Aero",
+    description: "Engage AERO in designated zones for sector boosts.",
+    details: [
+      "Two activation zones in Standard Mode",
+      "Five activation zones in Realism Mode",
+    ],
+  },
+  {
+    id: "championship",
+    label: "Championship",
+    title: "Championship",
+    description: "Progress through the series by championing circuits.",
+    details: [
+      "Beat the bot to champion a circuit at your current series",
+      "Championing a circuit unlocks it at the next series",
+      "A new series unlocks when you champion at least one circuit at the previous series",
+      "Progression: Karting → F3 → F2 → F1",
+    ],
+  },
+  {
+    id: "practice-mode",
+    label: "Practice Mode",
+    title: "Practice Mode",
+    description: "A pressure-free environment within Career mode to sharpen your skills on any circuit.",
+    details: [
+      "100-question sessions that loop until you stop",
+      "No track limit penalties or disqualifications",
+      "No series or circuit locks — practice any circuit at any difficulty",
+      "Power-ups still work in practice",
+      "No Leaderboard submission",
+    ],
+  },
+  {
+    id: "realism",
+    label: "Realism",
+    title: "Realism Mode",
+    description: "Full Grand Prix distance with stricter rules.",
+    details: [
+      "Full lap count per circuit (44–78 laps)",
+      "Five AERO zones instead of two",
+    ],
+  },
+  {
+    id: "grand-prix",
+    label: "Grand Prix",
+    title: "Grand Prix",
+    description: "A full race weekend at Melbourne with three sequential phases.",
+    details: [
+      "Select your math operation, then progress through Practice, Qualifying, and Race Day",
+      "Practice (30 questions) — dynamic difficulty adjusts as you go",
+      "Qualifying (20 questions) — difficulty locks at the level reached in Practice and determines pole position",
+      "Race Day (full simulation length) — pole position grants a 2-sector head start on your first correct answer",
+      "Power-ups are only active during Race Day",
+    ],
+  },
+  {
+    id: "leaderboard",
+    label: "Leaderboard",
+    title: "Leaderboard",
+    description: "Compete for the highest score on the Free Practice leaderboard.",
+    details: [
+      "Only Free Practice completions (100 questions) are submitted",
+      "Filter entries by math operation",
+      "Search for players by name",
+    ],
+  },
+  {
+    id: "multiplayer",
+    label: "Multiplayer",
+    title: "Multiplayer",
+    description: "Race 1v1 against another player using 4-digit room codes.",
+    details: [
+      "Host creates a room and shares the code",
+      "Guest joins with the code",
+      "Winner is determined by fewer mistakes, then by faster time",
+      "Power-ups are available in multiplayer",
+    ],
+  },
+  {
+    id: "garage",
+    label: "Garage",
+    title: "Garage",
+    description: "Your dashboard for settings, stats, and navigation. Tap buttons to toggle settings — green icon means active.",
+    details: [
+      "Sound — toggle game audio",
+      "Realism — toggle simulation distances and extra AERO zones",
+      "Power-Ups — toggle OVERTAKE and AERO systems",
+      "Reflex — F1-style reaction time test",
+      "Racer Log — your race history grouped by series",
+      "Leaderboard — Free Practice standings",
+      "Regulations — rules and guide (this page)",
+      "Strategy — math reference guide with tips for each operation",
+      "Reset Career — wipes all progress (requires confirmation)",
+    ],
+  },
+  {
+    id: "reaction-test",
+    label: "Reaction Test",
+    title: "Reaction Test",
+    description: "Test your reflexes with an F1-style 5-light start sequence.",
+    details: [
+      "Wait for the lights to go out, then tap as fast as you can",
+      "Tapping before the green light is a jump start (disqualified)",
+      "Perfect (under 0.2s), Excellent (under 0.3s), Good (under 0.4s), Average (under 0.5s), Slow (over 0.5s)",
+    ],
+  },
+  {
+    id: "strategy-guide",
+    label: "Strategy",
+    title: "Strategy Guide",
+    description: "A math reference guide with tabs for each operation.",
+    details: [
+      "Addition — number bonds and strategies",
+      "Subtraction — counting up and rounding techniques",
+      "Multiplication — interactive times table",
+      "Division — fact families and inverse relationships",
+      "Variables — solving for unknowns with balance method",
+    ],
+  },
+];
+
 export default function Regulations() {
   const { state } = useGameState();
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  const active = sections.find((s) => s.id === expandedSection);
 
   return (
     <GameLayout lockViewport>
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 bg-white">
-        <div className="max-w-2xl md:max-w-3xl mx-auto">
-          <h1 className="text-xl md:text-2xl font-bold text-black mb-8">Race Regulations</h1>
+      <div className="flex-1 overflow-y-auto p-6 md:p-10 pb-20 bg-white">
+        <div className="max-w-2xl md:max-w-4xl mx-auto">
 
-          <div className="space-y-6 md:space-y-8">
+          {!active ? (
+            <>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Regulations</h1>
 
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Free Practice</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Free Practice is available to everyone — no purchase required. Select any math operation and race 100 questions on the Bahrain International Circuit.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Tap Free Practice on the mode select screen, then pick your operation</p>
-                <p>Difficulty adjusts dynamically based on your speed and accuracy</p>
-                <p>No penalties — wrong answers don't count against you</p>
-                <p>Complete all 100 questions to submit your score to the Leaderboard</p>
-                <p>End your session early at any time — only 100-question completions count for the Leaderboard</p>
-                <p>Score formula: (laps / time) × accuracy × difficulty multiplier × 1000 (max 100,000)</p>
-                <p>Difficulty multipliers: Karting = 1.0, F3 = 1.5, F2 = 2.0, F1 = 3.0</p>
-                <p>Name prompt appears on your first Leaderboard submission (max 20 characters)</p>
+              <div className="grid grid-cols-3 gap-2">
+                {sections.map((section) => (
+                  <div
+                    key={section.id}
+                    onClick={() => setExpandedSection(section.id)}
+                    className="rounded-xl border border-black p-4 flex items-center justify-center cursor-pointer active:scale-[0.97] transition-all"
+                  >
+                    <span className="text-xs uppercase tracking-widest text-black text-center leading-tight">{section.label}</span>
+                  </div>
+                ))}
               </div>
-            </section>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>{active.title}</h1>
 
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Circuits</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Each circuit tests a different math operation.
+              <p className="text-black text-sm md:text-base leading-relaxed mb-4">
+                {active.description}
               </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>SPA — Addition</p>
-                <p>Monaco — Subtraction</p>
-                <p>Monza — Multiplication</p>
-                <p>Suzuka — Division</p>
-                <p>Silverstone — Variables / Algebra</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Series</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Four series determine the difficulty of questions.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Karting (ages 6–8) — numbers 1 to 10</p>
-                <p>F3 (ages 8–10) — numbers 10 to 50</p>
-                <p>F2 (ages 10–12) — numbers 20 to 100</p>
-                <p>F1 (ages 12+) — numbers 50 to 200</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Race</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Answer 20 math questions correctly to cross the finish line.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Each correct answer advances you one sector</p>
-                <p>In Realism Mode, races use full Grand Prix distances (44–78 laps per circuit)</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Track Limits</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Each question allows up to 4 attempts.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Wrong answers show a track limits warning</p>
-                <p>4th wrong attempt on the same question results in a crash (DNF)</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Sectors</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Answer times are color-coded based on your performance.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p><span className="text-purple-400">Purple</span> — fastest overall</p>
-                <p><span className="text-green-400">Green</span> — quick response</p>
-                <p><span className="text-yellow-400">Yellow</span> — slower response</p>
-                <p><span className="text-red-400">Red</span> — incorrect answer</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Weather</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Weather conditions affect question difficulty.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p><span className="text-black/70">Dry</span> — standard difficulty</p>
-                <p><span className="text-black/70">Wet</span> — increased difficulty</p>
-                <p><span className="text-black/70">Random</span> — rain probability varies per circuit. In Realism Mode with Random weather, conditions alternate 3 to 5 times during the race</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Overtake</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Build energy by answering correctly. Faster answers charge more energy.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Activates when behind and within two sectors of your opponent</p>
-                <p>2x progress per correct answer while active</p>
-                <p>Harder questions while active</p>
-                <p>A wrong answer depletes all energy immediately</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Active Aero</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Engage AERO in designated zones for sector boosts.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Two activation zones in Standard Mode</p>
-                <p>Five activation zones in Realism Mode</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Championship</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Progress through the series by championing circuits.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Beat the bot to champion a circuit at your current series</p>
-                <p>Championing a circuit unlocks it at the next series</p>
-                <p>A new series unlocks when you champion at least one circuit at the previous series</p>
-                <p>Progression: Karting → F3 → F2 → F1</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Practice Mode</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                A pressure-free environment within Career mode to sharpen your skills on any circuit.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>100-question sessions that loop until you stop</p>
-                <p>No track limit penalties or disqualifications</p>
-                <p>No series or circuit locks — practice any circuit at any difficulty</p>
-                <p>Power-ups still work in practice</p>
-                <p>No Leaderboard submission</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Realism Mode</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Full Grand Prix distance with stricter rules.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Full lap count per circuit (44–78 laps)</p>
-                <p>Five AERO zones instead of two</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Grand Prix</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                A full race weekend at Melbourne with three sequential phases.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Select your math operation, then progress through Practice, Qualifying, and Race Day</p>
-                <p>Practice (30 questions) — dynamic difficulty adjusts as you go</p>
-                <p>Qualifying (20 questions) — difficulty locks at the level reached in Practice and determines pole position</p>
-                <p>Race Day (full simulation length) — pole position grants a 2-sector head start on your first correct answer</p>
-                <p>Power-ups are only active during Race Day</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Leaderboard</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Compete for the highest score on the Free Practice leaderboard.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Only Free Practice completions (100 questions) are submitted</p>
-                <p>Filter entries by math operation</p>
-                <p>Search for players by name</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Multiplayer</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Race 1v1 against another player using 4-digit room codes.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Host creates a room and shares the code</p>
-                <p>Guest joins with the code</p>
-                <p>Winner is determined by fewer mistakes, then by faster time</p>
-                <p>Power-ups are available in multiplayer</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Garage</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Your dashboard for settings, stats, and navigation. Tap buttons to toggle settings — green icon means active.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Sound — toggle game audio</p>
-                <p>Realism — toggle simulation distances and extra AERO zones</p>
-                <p>Power-Ups — toggle OVERTAKE and AERO systems</p>
-                <p>Reflex — F1-style reaction time test</p>
-                <p>Racer Log — your race history grouped by series</p>
-                <p>Leaderboard — Free Practice standings</p>
-                <p>Regulations — rules and guide (this page)</p>
-                <p>Strategy — math reference guide with tips for each operation</p>
-                <p>Reset Career — wipes all progress (requires confirmation)</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Reaction Test</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                Test your reflexes with an F1-style 5-light start sequence.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Wait for the lights to go out, then tap as fast as you can</p>
-                <p>Tapping before the green light is a jump start (disqualified)</p>
-                <p>Perfect (under 0.2s), Excellent (under 0.3s), Good (under 0.4s), Average (under 0.5s), Slow (over 0.5s)</p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-lg md:text-xl font-bold text-black border-b border-black/20 pb-2 mb-3">Strategy Guide</h2>
-              <p className="text-black text-sm md:text-base leading-relaxed mb-2">
-                A math reference guide with tabs for each operation.
-              </p>
-              <div className="text-black/50 text-sm md:text-base space-y-1">
-                <p>Addition — number bonds and strategies</p>
-                <p>Subtraction — counting up and rounding techniques</p>
-                <p>Multiplication — interactive times table</p>
-                <p>Division — fact families and inverse relationships</p>
-                <p>Variables — solving for unknowns with balance method</p>
-              </div>
-            </section>
-
-          </div>
+              {"richDetails" in active && active.richDetails && (
+                <div className="text-black/50 text-sm md:text-base space-y-1 mb-2">
+                  {active.richDetails.map((item, i) => (
+                    <p key={i}><span className={item.color}>{item.label}</span> — {item.text}</p>
+                  ))}
+                </div>
+              )}
+              {active.details.length > 0 && (
+                <div className="text-black/50 text-sm md:text-base space-y-1">
+                  {active.details.map((detail, i) => (
+                    <p key={i}>{detail}</p>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
         </div>
       </div>
 
       {/* Sticky bottom back button */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
-        <Link href="/garage">
+        {active ? (
           <button
+            onClick={() => setExpandedSection(null)}
             className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Back
           </button>
-        </Link>
+        ) : (
+          <Link href="/garage">
+            <button
+              className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              Back
+            </button>
+          </Link>
+        )}
       </div>
     </GameLayout>
   );
