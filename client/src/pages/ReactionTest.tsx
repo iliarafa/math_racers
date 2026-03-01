@@ -174,55 +174,51 @@ export default function ReactionTest() {
         </motion.div>
       );
     }
-    return (
-      <div className="text-muted-foreground text-lg">
-        {gameState === 'idle' && 'Press Start to begin'}
-        {(gameState === 'sequence' || gameState === 'waiting') && 'Wait for lights out...'}
-        {gameState === 'go' && 'GO! GO! GO!'}
-      </div>
-    );
+    return null;
   };
 
   return (
-    <GameLayout trackName="Reflex Training" lockViewport>
+    <GameLayout trackName="Reflex Training" lockViewport hideGarageButton centerHeader>
       <div className="flex-1 flex flex-col items-center justify-center max-w-xl md:max-w-2xl mx-auto w-full px-4 space-y-4 md:space-y-8 overflow-hidden">
         
-        <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
-          <div className="flex gap-2 md:gap-3 justify-center">
-            {lights.map((isOn, index) => (
-              <div
-                key={index}
-                className={cn(
-                  "w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4",
-                  isOn 
-                    ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]" 
-                    : "bg-zinc-800 border-zinc-700"
-                )}
-                data-testid={`light-${index}`}
-              />
-            ))}
+        <div className="flex flex-col items-stretch space-y-4 md:space-y-8">
+          <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
+            <div className="flex gap-2 md:gap-3 justify-center">
+              {lights.map((isOn, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    "w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4",
+                    isOn
+                      ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]"
+                      : "bg-zinc-800 border-zinc-700"
+                  )}
+                  data-testid={`light-${index}`}
+                />
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="h-24 flex items-center justify-center">
-          {getResultDisplay()}
-        </div>
+          <div className="h-24 flex items-center justify-center">
+            {getResultDisplay()}
+          </div>
 
-        <button
-          onClick={gameState === 'jumpstart' || gameState === 'result' ? resetGame : handleLaunch}
-          className={cn(
-            "w-full max-w-xs h-16 md:h-24 rounded-xl font-bold text-xl md:text-3xl transition-all flex items-center justify-center gap-2 md:gap-3",
-            gameState === 'go' && "bg-green-600 text-white hover:bg-green-500 animate-pulse",
-            gameState === 'idle' && "bg-primary text-primary-foreground hover:opacity-90",
-            (gameState === 'sequence' || gameState === 'waiting') && "bg-yellow-600 text-white hover:bg-yellow-500",
-            (gameState === 'jumpstart' || gameState === 'result') && "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-          )}
-          data-testid="button-launch"
-        >
-          {gameState === 'go' && <Zap className="w-6 h-6" />}
-          {(gameState === 'jumpstart' || gameState === 'result') && <RotateCcw className="w-6 h-6" />}
-          {getButtonText()}
-        </button>
+          <button
+            onClick={gameState === 'jumpstart' || gameState === 'result' ? resetGame : handleLaunch}
+            className={cn(
+              "w-full h-16 md:h-24 rounded-xl font-bold text-xl md:text-3xl transition-all flex items-center justify-center gap-2 md:gap-3",
+              gameState === 'go' && "bg-green-600 text-white hover:bg-green-500 animate-pulse",
+              gameState === 'idle' && "bg-green-600 text-white hover:bg-green-500",
+              (gameState === 'sequence' || gameState === 'waiting') && "bg-yellow-600 text-white hover:bg-yellow-500",
+              (gameState === 'jumpstart' || gameState === 'result') && "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            )}
+            data-testid="button-launch"
+          >
+            {gameState === 'go' && <Zap className="w-6 h-6" />}
+            {(gameState === 'jumpstart' || gameState === 'result') && <RotateCcw className="w-6 h-6" />}
+            {getButtonText()}
+          </button>
+        </div>
 
 
       </div>

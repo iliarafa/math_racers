@@ -10,11 +10,12 @@ interface GameLayoutProps {
   lockViewport?: boolean;
   darkBackground?: boolean;
   hideGarageButton?: boolean;
+  centerHeader?: boolean;
   headerRight?: React.ReactNode;
   headerAfterLogo?: React.ReactNode;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false, headerRight, headerAfterLogo }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo }: GameLayoutProps) {
   return (
     <div className={cn(
       "text-foreground flex flex-col",
@@ -28,12 +29,12 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
       paddingRight: 'env(safe-area-inset-right)'
     }}>
       {!hideHeader && (
-        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex justify-between items-center sticky top-0 z-50 bg-[#ffffff]", !hideGarageButton && "border-b border-border")}>
+        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex items-center sticky top-0 z-50 bg-[#ffffff]", centerHeader ? "justify-center" : "justify-between", !hideGarageButton && "border-b border-border")}>
           <div className="flex items-center gap-4 md:gap-6">
             <Link href="/">
-              <img 
-                src={logoImage} 
-                alt="Math Racer" 
+              <img
+                src={logoImage}
+                alt="Math Racer"
                 className="h-8 md:h-10 w-auto cursor-pointer hover:opacity-70 transition-opacity"
               />
             </Link>
@@ -46,16 +47,18 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
             )}
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
-            {headerRight ? headerRight : !hideGarageButton && (
-              <Link href="/garage">
-                <button className="flex items-center justify-center gap-2 text-sm font-medium hover:bg-secondary min-w-11 min-h-11 px-3 rounded-md transition-colors">
-                  <Wrench className="w-5 h-5" />
-                  <span className="hidden sm:inline">Garage</span>
-                </button>
-              </Link>
-            )}
-          </div>
+          {!centerHeader && (
+            <div className="flex items-center gap-2 md:gap-4">
+              {headerRight ? headerRight : !hideGarageButton && (
+                <Link href="/garage">
+                  <button className="flex items-center justify-center gap-2 text-sm font-medium hover:bg-secondary min-w-11 min-h-11 px-3 rounded-md transition-colors">
+                    <Wrench className="w-5 h-5" />
+                    <span className="hidden sm:inline">Garage</span>
+                  </button>
+                </Link>
+              )}
+            </div>
+          )}
         </header>
       )}
       {/* Main Content Area */}
