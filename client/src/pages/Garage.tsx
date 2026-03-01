@@ -73,109 +73,54 @@ export default function Garage() {
                 <RotateCcw className="w-10 h-10 text-black" />
                 <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Reset</span>
               </div>
-            </div>
-
-            {/* Pit Console */}
-            <div
-              className="rounded-xl p-4 md:p-6"
-              data-testid="card-pit-console"
-            >
-              <p className="text-xs uppercase tracking-widest text-black/40 mb-4">Pit Console</p>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between" data-testid="toggle-sound">
-                  <div className="flex items-center gap-3">
-                    {state.soundEnabled ? (
-                      <Volume2 className="w-5 h-5 text-black/50" />
-                    ) : (
-                      <VolumeX className="w-5 h-5 text-black/50" />
-                    )}
-                    <span className="text-sm text-black/80">Sound</span>
-                  </div>
-                  <button
-                    onClick={toggleSound}
-                    className={cn(
-                      "w-11 h-6 rounded-full transition-colors relative",
-                      state.soundEnabled ? "bg-green-500" : "bg-gray-300"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-in-out",
-                        state.soundEnabled ? "left-6" : "left-1"
-                      )}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between" data-testid="toggle-sim">
-                  <div className="flex items-center gap-3">
-                    <Gauge className="w-5 h-5 text-black/50" />
-                    <div>
-                      <span className="text-sm text-black/80">Realism Mode</span>
-                      <p className="text-[10px] text-black/40">Full race distance & damage</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={toggleSimMode}
-                    className={cn(
-                      "w-11 h-6 rounded-full transition-colors relative",
-                      state.simMode ? "bg-green-500" : "bg-gray-300"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-in-out",
-                        state.simMode ? "left-6" : "left-1"
-                      )}
-                    />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between" data-testid="toggle-powerups">
-                  <div className="flex items-center gap-3">
-                    <Zap className="w-5 h-5 text-black/50" />
-                    <div>
-                      <span className="text-sm text-black/80">Power-Ups</span>
-                      <p className="text-[10px] text-black/40">Overtake & Active Aero</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={togglePowerUps}
-                    className={cn(
-                      "w-11 h-6 rounded-full transition-colors relative",
-                      state.powerUpsEnabled ? "bg-green-500" : "bg-gray-300"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200 ease-in-out",
-                        state.powerUpsEnabled ? "left-6" : "left-1"
-                      )}
-                    />
-                  </button>
-                </div>
-
-                <div className="pt-3 mt-4 flex flex-col gap-3">
-                  {isNativePlatform() && (
-                    <button
-                      onClick={async () => {
-                        setRestoreMessage(null);
-                        const success = await restore();
-                        setRestoreMessage(success ? 'Purchases restored!' : 'No purchases found.');
-                        setTimeout(() => setRestoreMessage(null), 3000);
-                      }}
-                      className="text-xs text-gray-400/70 hover:text-gray-400 transition-colors uppercase tracking-widest"
-                    >
-                      Restore Purchases
-                    </button>
-                  )}
-                  {restoreMessage && (
-                    <span className="text-xs text-gray-500">{restoreMessage}</span>
-                  )}
-                </div>
+              <div
+                onClick={toggleSound}
+                className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                data-testid="button-sound"
+              >
+                {state.soundEnabled ? (
+                  <Volume2 className="w-10 h-10 text-green-500" />
+                ) : (
+                  <VolumeX className="w-10 h-10 text-black" />
+                )}
+                <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Sound</span>
+              </div>
+              <div
+                onClick={toggleSimMode}
+                className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                data-testid="button-realism"
+              >
+                <Gauge className={cn("w-10 h-10", state.simMode ? "text-green-500" : "text-black")} />
+                <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Realism</span>
+              </div>
+              <div
+                onClick={togglePowerUps}
+                className="rounded-xl bg-white p-5 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                data-testid="button-powerups"
+              >
+                <Zap className={cn("w-10 h-10", state.powerUpsEnabled ? "text-green-500" : "text-black")} />
+                <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Power-Ups</span>
               </div>
             </div>
+
+            {isNativePlatform() && (
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={async () => {
+                    setRestoreMessage(null);
+                    const success = await restore();
+                    setRestoreMessage(success ? 'Purchases restored!' : 'No purchases found.');
+                    setTimeout(() => setRestoreMessage(null), 3000);
+                  }}
+                  className="text-xs text-gray-400/70 hover:text-gray-400 transition-colors uppercase tracking-widest"
+                >
+                  Restore Purchases
+                </button>
+                {restoreMessage && (
+                  <span className="text-xs text-gray-500">{restoreMessage}</span>
+                )}
+              </div>
+            )}
 
           </div>
 
