@@ -2059,7 +2059,7 @@ export default function Game() {
             style={{ fontFamily: 'Oxanium, sans-serif', fontSize: '0.8rem', maxWidth: '28rem' }}
           >
             {isPreSeasonTesting
-              ? <>100 laps of testing. Dynamic difficulty adjustment.<br />Press BOX to enter pits. BACK TO TRACK to race again.<br />Follow your performance in different stints.</>
+              ? '100 questions with adaptive difficulty and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.'
               : 'Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to Melbourne, Australia.'}
           </p>
           <h3
