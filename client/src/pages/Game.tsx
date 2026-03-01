@@ -2781,7 +2781,7 @@ export default function Game() {
                         <path
                           d={displayCircuit.paths.s1}
                           fill="none"
-                          stroke={state.teamColor || '#ffffff'}
+                          stroke="#ffffff"
                           strokeWidth="4"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -2789,7 +2789,7 @@ export default function Game() {
                         <path
                           d={displayCircuit.paths.s2}
                           fill="none"
-                          stroke={state.teamColor || '#ffffff'}
+                          stroke="#ffffff"
                           strokeWidth="4"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -2797,7 +2797,7 @@ export default function Game() {
                         <path
                           d={displayCircuit.paths.s3}
                           fill="none"
-                          stroke={state.teamColor || '#ffffff'}
+                          stroke="#ffffff"
                           strokeWidth="4"
                           strokeLinecap="round"
                           strokeLinejoin="round"

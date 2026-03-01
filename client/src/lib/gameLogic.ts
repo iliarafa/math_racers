@@ -50,7 +50,7 @@ export interface GameState {
   totalLaps: number;
   careerPoints: number;
   racesWon: number;
-  teamColor: string;
+
   soundEnabled: boolean;
   simMode: boolean;
   powerUpsEnabled: boolean;
@@ -195,7 +195,7 @@ const INITIAL_STATE: GameState = {
   totalLaps: 0,
   careerPoints: 0,
   racesWon: 0,
-  teamColor: '#ff2800',
+
   soundEnabled: true,
   simMode: false,
   powerUpsEnabled: true,
@@ -341,7 +341,7 @@ export function useGameState() {
           totalLaps: parsed.totalLaps ?? 0,
           careerPoints: parsed.careerPoints ?? 0,
           racesWon: parsed.racesWon ?? 0,
-          teamColor: parsed.teamColor ?? '#ff2800',
+
           soundEnabled: parsed.soundEnabled ?? true,
           simMode: parsed.simMode ?? false,
           powerUpsEnabled: parsed.powerUpsEnabled ?? true,
@@ -367,10 +367,6 @@ export function useGameState() {
       // Could show a toast notification here if needed
     }
   }, [state]);
-
-  useEffect(() => {
-    document.documentElement.style.setProperty('--team-color', state.teamColor);
-  }, [state.teamColor]);
 
   // Sync session lap times from sessionStorage on mount (for cross-component sharing)
   useEffect(() => {
@@ -408,10 +404,6 @@ export function useGameState() {
         [type === 'livery' ? 'equippedLivery' : 'equippedTires']: itemId
       }));
     }
-  };
-
-  const setTeamColor = (color: string) => {
-    setState(prev => ({ ...prev, teamColor: color }));
   };
 
   const toggleSound = () => {
@@ -520,7 +512,7 @@ export function useGameState() {
     resetStreak,
     buyItem,
     equipItem,
-    setTeamColor,
+
     toggleSound,
     toggleSimMode,
     togglePowerUps,

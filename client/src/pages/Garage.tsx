@@ -118,7 +118,6 @@ export default function Garage() {
                       "w-11 h-6 rounded-full transition-colors relative",
                       state.soundEnabled ? "bg-green-500" : "bg-gray-300"
                     )}
-                    style={state.soundEnabled ? { backgroundColor: state.teamColor } : {}}
                   >
                     <span
                       className={cn(
@@ -143,7 +142,6 @@ export default function Garage() {
                       "w-11 h-6 rounded-full transition-colors relative",
                       state.simMode ? "bg-green-500" : "bg-gray-300"
                     )}
-                    style={state.simMode ? { backgroundColor: state.teamColor } : {}}
                   >
                     <span
                       className={cn(
@@ -168,7 +166,6 @@ export default function Garage() {
                       "w-11 h-6 rounded-full transition-colors relative",
                       state.powerUpsEnabled ? "bg-green-500" : "bg-gray-300"
                     )}
-                    style={state.powerUpsEnabled ? { backgroundColor: state.teamColor } : {}}
                   >
                     <span
                       className={cn(
