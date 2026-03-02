@@ -22,12 +22,12 @@ function MultiplicationGrid() {
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-mono font-bold mb-2 text-red-400">MULTIPLICATION DATA MATRIX</h3>
-        <p className="text-sm text-neutral-400 mb-4">Hover over any cell to highlight the row and column factors.</p>
+        <h3 className="text-lg font-bold mb-2 text-red-400 text-center">MULTIPLICATION DATA MATRIX</h3>
+        <p className="text-sm text-neutral-400 mb-4 text-center">Hover over any cell to highlight the row and column factors.</p>
       </div>
       
       <div className="overflow-x-auto -mx-2 px-2">
-        <div className="grid-container font-mono text-xs md:text-base" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(32px, 1fr))', gap: '2px', minWidth: '340px' }}>
+        <div className="grid-container text-xs md:text-base" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(32px, 1fr))', gap: '2px', minWidth: '340px' }}>
           <div className="grid-header-corner bg-neutral-200 p-1.5 md:p-2.5 text-center font-bold text-neutral-400">×</div>
           {numbers.map(n => (
             <div 
@@ -93,15 +93,15 @@ function DivisionContent() {
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-mono font-bold mb-2 text-blue-400">PIT STOP STRATEGY: FACT FAMILIES</h3>
-        <p className="text-sm text-neutral-400">Division is the reverse of multiplication. If you know one, you know the other!</p>
+        <h3 className="text-lg font-bold mb-2 text-blue-400 text-center">PIT STOP STRATEGY: FACT FAMILIES</h3>
+        <p className="text-sm text-neutral-400 text-center">Division is the reverse of multiplication. If you know one, you know the other!</p>
       </div>
       
       <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         {factFamilies.map((family, i) => (
           <div key={i} className="tech-card-glow">
-            <div className="text-xs text-neutral-400 mb-2 font-mono">FACT FAMILY #{i + 1}</div>
-            <div className="grid grid-cols-2 gap-2 text-sm font-mono">
+            <div className="text-xs text-neutral-400 mb-2">FACT FAMILY #{i + 1}</div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-green-400">{family.mult1}</div>
               <div className="text-green-400">{family.mult2}</div>
               <div className="text-yellow-400">{family.div1}</div>
@@ -112,7 +112,7 @@ function DivisionContent() {
       </div>
       
       <div className="tech-card mt-6">
-        <h4 className="text-md font-mono font-bold mb-2 text-purple-400">QUICK TIP</h4>
+        <h4 className="text-md font-bold mb-2 text-purple-400 text-center">QUICK TIP</h4>
         <p className="text-sm text-neutral-600">
           Think of division as "How many times does this number fit into that number?"<br/>
           Example: 12 ÷ 4 = ? means "How many 4s fit into 12?" Answer: 3
@@ -132,19 +132,19 @@ function AdditionContent() {
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-mono font-bold mb-2 text-green-400">OVERTAKE MANEUVERS: NUMBER BONDS</h3>
-        <p className="text-sm text-neutral-400">Master these number pairs to add faster than your rivals!</p>
+        <h3 className="text-lg font-bold mb-2 text-green-400 text-center">OVERTAKE MANEUVERS: NUMBER BONDS</h3>
+        <p className="text-sm text-neutral-400 text-center">Master these number pairs to add faster than your rivals!</p>
       </div>
       
       <div className="grid gap-4 md:gap-6 md:grid-cols-3">
         {numberBonds.map((bond, i) => (
           <div key={i} className="tech-card-glow">
             <div className="text-center mb-3">
-              <span className="text-2xl font-bold font-mono text-white bg-green-600 px-4 py-1 rounded">{bond.target}</span>
+              <span className="text-2xl font-bold text-white bg-green-600 px-4 py-1 rounded">{bond.target}</span>
             </div>
             <div className="space-y-1">
               {bond.pairs.map(([a, b], j) => (
-                <div key={j} className="flex justify-center items-center gap-2 text-sm font-mono">
+                <div key={j} className="flex justify-center items-center gap-2 text-sm">
                   <span className="text-blue-600 w-8 text-right">{a}</span>
                   <span className="text-neutral-400">+</span>
                   <span className="text-orange-600 w-8">{b}</span>
@@ -158,7 +158,7 @@ function AdditionContent() {
       </div>
       
       <div className="tech-card mt-6">
-        <h4 className="text-md font-mono font-bold mb-2 text-cyan-400">STRATEGY NOTES</h4>
+        <h4 className="text-md font-bold mb-2 text-cyan-400 text-center">STRATEGY NOTES</h4>
         <ul className="text-sm text-neutral-600 space-y-1 list-disc list-inside">
           <li>Break big numbers into friendly pairs</li>
           <li>Add 9 by adding 10, then subtract 1</li>
@@ -180,18 +180,18 @@ function SubtractionContent() {
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-mono font-bold mb-2 text-orange-400">GAP ANALYSIS: SUBTRACTION STRATEGIES</h3>
-        <p className="text-sm text-neutral-400">Calculate the gap between positions like a race engineer!</p>
+        <h3 className="text-lg font-bold mb-2 text-orange-400 text-center">GAP ANALYSIS: SUBTRACTION STRATEGIES</h3>
+        <p className="text-sm text-neutral-400 text-center">Calculate the gap between positions like a race engineer!</p>
       </div>
       
       <div className="grid gap-4 md:gap-6">
         {examples.map((ex, i) => (
           <div key={i} className="tech-card-glow flex flex-col md:flex-row md:items-center gap-4">
-            <div className="text-xl font-mono font-bold text-white bg-orange-600 px-4 py-2 rounded text-center min-w-[120px]">
+            <div className="text-xl font-bold text-white bg-orange-600 px-4 py-2 rounded text-center min-w-[120px]">
               {ex.problem}
             </div>
             <div className="flex-1">
-              <div className="text-xs text-neutral-400 mb-1 font-mono">STRATEGY</div>
+              <div className="text-xs text-neutral-400 mb-1">STRATEGY</div>
               <div className="text-sm text-neutral-600">{ex.strategy}</div>
             </div>
           </div>
@@ -199,7 +199,7 @@ function SubtractionContent() {
       </div>
       
       <div className="tech-card mt-6">
-        <h4 className="text-md font-mono font-bold mb-2 text-pink-400">REMEMBER</h4>
+        <h4 className="text-md font-bold mb-2 text-pink-400 text-center">REMEMBER</h4>
         <p className="text-sm text-neutral-600">
           Subtraction tells you the "gap" or "difference" between two numbers.<br/>
           Think: "How far apart are these numbers?"
@@ -220,8 +220,8 @@ function VariablesContent() {
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-mono font-bold mb-2 text-purple-400">THE X-FACTOR: SOLVING FOR UNKNOWNS</h3>
-        <p className="text-sm text-neutral-400">
+        <h3 className="text-lg font-bold mb-2 text-purple-400 text-center">THE X-FACTOR: SOLVING FOR UNKNOWNS</h3>
+        <p className="text-sm text-neutral-400 text-center">
           The letter "x" (or any letter) is just a <span className="text-yellow-400">mystery number</span> waiting to be discovered!
         </p>
       </div>
@@ -230,10 +230,10 @@ function VariablesContent() {
         {examples.map((ex, i) => (
           <div key={i} className="tech-card-glow">
             <div className="flex items-center gap-4 mb-3">
-              <div className="text-lg font-mono font-bold text-white bg-purple-600 px-3 py-1 rounded">
+              <div className="text-lg font-bold text-white bg-purple-600 px-3 py-1 rounded">
                 {ex.equation}
               </div>
-              <div className="text-lg font-mono font-bold text-green-400">
+              <div className="text-lg font-bold text-green-400">
                 → {ex.solution}
               </div>
             </div>
@@ -243,9 +243,9 @@ function VariablesContent() {
       </div>
       
       <div className="tech-card mt-6">
-        <h4 className="text-md font-mono font-bold mb-3 text-yellow-400">RACE ENGINEER TIP</h4>
+        <h4 className="text-md font-bold mb-3 text-yellow-400 text-center">RACE ENGINEER TIP</h4>
         <div className="space-y-2 text-sm text-neutral-600">
-          <p>Think of <span className="text-purple-400 font-mono">x</span> like a missing piece in a puzzle:</p>
+          <p>Think of <span className="text-purple-400">x</span> like a missing piece in a puzzle:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>The equation is a balance scale - both sides must be equal</li>
             <li>To find x, do the opposite operation</li>
@@ -281,18 +281,18 @@ export default function StrategyGuide() {
     <GameLayout lockViewport hideHeader>
       <div className="strategy-view bg-white flex-1 overflow-y-auto p-4 md:p-8 pb-20">
         <div className="max-w-4xl mx-auto space-y-6">
-          <div>
-            <h1 className="text-lg md:text-3xl font-bold tracking-tight text-black font-mono">RACE STRATEGY & DATA</h1>
+          <div className="text-center">
+            <h1 className="text-lg md:text-3xl font-bold tracking-tight text-black">RACE STRATEGY & DATA</h1>
             <p className="text-xs text-neutral-400">Your complete math reference guide</p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 min-h-11 min-w-11 rounded-lg font-mono text-xs md:text-base transition-all",
+                  "flex items-center justify-center gap-1.5 px-3 min-h-11 rounded-lg text-xs md:text-base transition-all w-full",
                   activeTab === tab.id
                     ? "bg-black text-white shadow-lg shadow-black/20"
                     : "bg-neutral-100 text-neutral-400 hover:bg-neutral-200 hover:text-black"
@@ -326,7 +326,7 @@ export default function StrategyGuide() {
 
       <style>{`
         .strategy-view {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-family: Oxanium, sans-serif;
         }
         
         .tech-card {
