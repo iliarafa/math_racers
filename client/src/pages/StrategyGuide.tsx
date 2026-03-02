@@ -1,9 +1,10 @@
-import { useState, Fragment } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { Grid3X3, Divide, Plus, Minus, Variable } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 type TabType = "multiplication" | "division" | "addition" | "subtraction" | "variables";
 
@@ -102,10 +103,10 @@ function DivisionContent() {
           <div key={i} className="tech-card-glow">
             <div className="text-xs text-neutral-400 mb-2">FACT FAMILY #{i + 1}</div>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-green-400">{family.mult1}</div>
-              <div className="text-green-400">{family.mult2}</div>
-              <div className="text-yellow-400">{family.div1}</div>
-              <div className="text-yellow-400">{family.div2}</div>
+              <div className="text-green-600">{family.mult1}</div>
+              <div className="text-green-600">{family.mult2}</div>
+              <div className="text-amber-600">{family.div1}</div>
+              <div className="text-amber-600">{family.div2}</div>
             </div>
           </div>
         ))}
@@ -132,25 +133,17 @@ function AdditionContent() {
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-bold mb-2 text-green-400 text-center">OVERTAKE MANEUVERS: NUMBER BONDS</h3>
+        <h3 className="text-lg font-bold mb-2 text-green-600 text-center">OVERTAKE MANEUVERS: NUMBER BONDS</h3>
         <p className="text-sm text-neutral-400 text-center">Master these number pairs to add faster than your rivals!</p>
       </div>
       
-      <div className="grid gap-4 md:gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-3">
         {numberBonds.map((bond, i) => (
-          <div key={i} className="tech-card-glow">
-            <div className="text-center mb-3">
-              <span className="text-2xl font-bold text-white bg-green-600 px-4 py-1 rounded">{bond.target}</span>
-            </div>
-            <div className="space-y-1">
+          <div key={i} className="tech-card-glow text-center">
+            <div className="font-bold text-lg text-neutral-800 mb-2">{bond.target}</div>
+            <div className="space-y-1 text-sm">
               {bond.pairs.map(([a, b], j) => (
-                <div key={j} className="flex justify-center items-center gap-2 text-sm">
-                  <span className="text-blue-600 w-8 text-right">{a}</span>
-                  <span className="text-neutral-400">+</span>
-                  <span className="text-orange-600 w-8">{b}</span>
-                  <span className="text-neutral-400">=</span>
-                  <span className="text-green-400">{bond.target}</span>
-                </div>
+                <div key={j} className="text-neutral-600 tabular-nums">{a} + {b}</div>
               ))}
             </div>
           </div>
@@ -169,37 +162,122 @@ function AdditionContent() {
   );
 }
 
+function StepByStepModal({ problem, steps, onClose }: { problem: string; steps: string[]; onClose: () => void }) {
+  const [displayed, setDisplayed] = useState<string[]>([]);
+  const [cursorLine, setCursorLine] = useState(0);
+
+  useEffect(() => {
+    let stepIdx = 0;
+    let charIdx = 0;
+    const result: string[] = [];
+
+    const interval = setInterval(() => {
+      if (stepIdx >= steps.length) {
+        setCursorLine(-1);
+        clearInterval(interval);
+        return;
+      }
+
+      const currentStep = steps[stepIdx];
+      charIdx++;
+
+      if (charIdx > currentStep.length) {
+        stepIdx++;
+        charIdx = 0;
+        setCursorLine(stepIdx);
+        if (stepIdx >= steps.length) {
+          setCursorLine(-1);
+          clearInterval(interval);
+        }
+        return;
+      }
+
+      result[stepIdx] = currentStep.slice(0, charIdx);
+      setDisplayed([...result]);
+    }, 80);
+
+    return () => clearInterval(interval);
+  }, [steps]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="bg-white rounded-xl p-6 w-full max-w-xs shadow-xl"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="font-bold text-2xl text-neutral-800 text-center mb-4">{problem}</div>
+        <div className="text-base text-neutral-600 space-y-1 text-center min-h-[5rem]">
+          {displayed.map((text, i) => (
+            <div key={i}>
+              {text}
+              {i === cursorLine && <span className="animate-pulse ml-0.5">|</span>}
+            </div>
+          ))}
+          {cursorLine >= 0 && displayed.length === 0 && (
+            <div><span className="animate-pulse">|</span></div>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          className="mt-4 w-full text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+        >
+          Close
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function SubtractionContent() {
+  const [selectedExample, setSelectedExample] = useState<{ problem: string; steps: string[] } | null>(null);
+
   const examples = [
-    { problem: "15 - 7", strategy: "Count up from 7: 7 → 10 (3 steps), 10 → 15 (5 steps). Total: 8" },
-    { problem: "23 - 9", strategy: "Subtract 10, add 1 back: 23 - 10 = 13, then 13 + 1 = 14" },
-    { problem: "50 - 28", strategy: "Round: 50 - 30 = 20, but you subtracted 2 extra, so 20 + 2 = 22" },
-    { problem: "100 - 63", strategy: "Work in parts: 100 - 60 = 40, then 40 - 3 = 37" },
+    { problem: "15 - 7", steps: ["Count up from 7", "7 → 10 = 3 steps", "10 → 15 = 5 steps", "Total: 8"] },
+    { problem: "23 - 9", steps: ["Subtract 10", "23 - 10 = 13", "Add 1 back", "13 + 1 = 14"] },
+    { problem: "50 - 28", steps: ["Round to nearest 10", "50 - 30 = 20", "Add back 2 extra", "20 + 2 = 22"] },
+    { problem: "100 - 63", steps: ["Work in parts", "100 - 60 = 40", "40 - 3 = 37"] },
   ];
 
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-bold mb-2 text-orange-400 text-center">GAP ANALYSIS: SUBTRACTION STRATEGIES</h3>
-        <p className="text-sm text-neutral-400 text-center">Calculate the gap between positions like a race engineer!</p>
+        <h3 className="text-lg font-bold mb-2 text-blue-400 text-center">SUBTRACTION STRATEGIES</h3>
+        <p className="text-sm text-neutral-400 text-center">Tap a problem to see the strategy!</p>
       </div>
-      
-      <div className="grid gap-4 md:gap-6">
+
+      <div className="grid grid-cols-2 gap-3">
         {examples.map((ex, i) => (
-          <div key={i} className="tech-card-glow flex flex-col md:flex-row md:items-center gap-4">
-            <div className="text-xl font-bold text-white bg-orange-600 px-4 py-2 rounded text-center min-w-[120px]">
-              {ex.problem}
-            </div>
-            <div className="flex-1">
-              <div className="text-xs text-neutral-400 mb-1">STRATEGY</div>
-              <div className="text-sm text-neutral-600">{ex.strategy}</div>
-            </div>
+          <div
+            key={i}
+            className="tech-card-glow text-center cursor-pointer active:scale-95 transition-transform"
+            onClick={() => setSelectedExample(ex)}
+          >
+            <div className="font-bold text-lg text-neutral-800">{ex.problem}</div>
           </div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {selectedExample && (
+          <StepByStepModal
+            problem={selectedExample.problem}
+            steps={selectedExample.steps}
+            onClose={() => setSelectedExample(null)}
+          />
+        )}
+      </AnimatePresence>
       
       <div className="tech-card mt-6">
-        <h4 className="text-md font-bold mb-2 text-pink-400 text-center">REMEMBER</h4>
+        <h4 className="text-md font-bold mb-2 text-red-400 text-center">REMEMBER</h4>
         <p className="text-sm text-neutral-600">
           Subtraction tells you the "gap" or "difference" between two numbers.<br/>
           Think: "How far apart are these numbers?"
@@ -222,7 +300,7 @@ function VariablesContent() {
       <div className="tech-card">
         <h3 className="text-lg font-bold mb-2 text-purple-400 text-center">THE X-FACTOR: SOLVING FOR UNKNOWNS</h3>
         <p className="text-sm text-neutral-400 text-center">
-          The letter "x" (or any letter) is just a <span className="text-yellow-400">mystery number</span> waiting to be discovered!
+          The letter "x" (or any letter) is just a <span className="text-amber-600">mystery number</span> waiting to be discovered!
         </p>
       </div>
       
@@ -233,7 +311,7 @@ function VariablesContent() {
               <div className="text-lg font-bold text-white bg-purple-600 px-3 py-1 rounded">
                 {ex.equation}
               </div>
-              <div className="text-lg font-bold text-green-400">
+              <div className="text-lg font-bold text-green-600">
                 → {ex.solution}
               </div>
             </div>
@@ -243,7 +321,7 @@ function VariablesContent() {
       </div>
       
       <div className="tech-card mt-6">
-        <h4 className="text-md font-bold mb-3 text-yellow-400 text-center">RACE ENGINEER TIP</h4>
+        <h4 className="text-md font-bold mb-3 text-amber-600 text-center">RACE ENGINEER TIP</h4>
         <div className="space-y-2 text-sm text-neutral-600">
           <p>Think of <span className="text-purple-400">x</span> like a missing piece in a puzzle:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
