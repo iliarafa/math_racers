@@ -7,51 +7,44 @@ const sections = [
     id: "free-practice",
     label: "Free Practice",
     title: "Free Practice",
-    description: "Free Practice is available to everyone — no purchase required. Select any math operation and race 100 questions on the Bahrain International Circuit.",
+    description: "Free Practice is available to everyone — no purchase required. Select any math operation and race 100 questions.",
     details: [
       "Tap Free Practice on the mode select screen, then pick your operation",
       "Difficulty adjusts dynamically based on your speed and accuracy",
       "No penalties — wrong answers don't count against you",
       "Complete all 100 questions to submit your score to the Leaderboard",
       "End your session early at any time — only 100-question completions count for the Leaderboard",
-      "Score formula: (laps / time) × accuracy × difficulty multiplier × 1000 (max 100,000)",
-      "Difficulty multipliers: Karting = 1.0, F3 = 1.5, F2 = 2.0, F1 = 3.0",
+      "~(laps / time) × accuracy × difficulty multiplier × 1000 (max 100,000)",
       "Name prompt appears on your first Leaderboard submission (max 20 characters)",
     ],
-  },
-  {
-    id: "circuits",
-    label: "Circuits",
-    title: "Circuits",
-    description: "Each circuit tests a different math operation.",
-    details: [
-      "SPA — Addition",
-      "Monaco — Subtraction",
-      "Monza — Multiplication",
-      "Suzuka — Division",
-      "Silverstone — Variables / Algebra",
-    ],
-  },
-  {
-    id: "series",
-    label: "Series",
-    title: "Series",
-    description: "Four series determine the difficulty of questions.",
-    details: [
-      "Karting (ages 6–8) — numbers 1 to 10",
-      "F3 (ages 8–10) — numbers 10 to 50",
-      "F2 (ages 10–12) — numbers 20 to 100",
-      "F1 (ages 12+) — numbers 50 to 200",
-    ],
+    table: {
+      title: "Difficulty multipliers",
+      headers: ["Series", "Multiplier"],
+      rows: [
+        ["Karting", "1.0×"],
+        ["F3", "1.5×"],
+        ["F2", "2.0×"],
+        ["F1", "3.0×"],
+      ],
+    },
   },
   {
     id: "race",
     label: "Race",
     title: "Race",
-    description: "Answer 20 math questions correctly to cross the finish line.",
+    description: "Answer 20 math questions correctly to cross the finish line. In Realism Mode, races use full Grand Prix distances (44–78 laps per circuit).",
     details: [
-      "Each correct answer advances you one sector",
-      "In Realism Mode, races use full Grand Prix distances (44–78 laps per circuit)",
+      "#Circuits",
+      "SPA — Addition",
+      "Monaco — Subtraction",
+      "Monza — Multiplication",
+      "Suzuka — Division",
+      "Silverstone — Variables / Algebra",
+      "#Series",
+      "Karting (ages 6–8) — numbers 1 to 10",
+      "F3 (ages 8–10) — numbers 10 to 50",
+      "F2 (ages 10–12) — numbers 20 to 100",
+      "F1 (ages 12+) — numbers 50 to 200",
     ],
   },
   {
@@ -258,9 +251,54 @@ export default function Regulations() {
                       )}
                       {section.details.length > 0 && (
                         <div className="text-black/50 text-sm md:text-base space-y-1">
-                          {section.details.map((detail, i) => (
-                            <p key={i}>{detail}</p>
-                          ))}
+                          {section.details.map((detail, i) => {
+                            if (detail.startsWith("#")) {
+                              return (
+                                <p key={i} className="font-bold text-black text-sm md:text-base mt-2 first:mt-0">
+                                  {detail.slice(1)}
+                                </p>
+                              );
+                            }
+                            if (detail.startsWith("~")) {
+                              return (
+                                <div key={i} className="bg-black/5 rounded-lg px-3 py-2 font-mono text-xs md:text-sm text-black/70 text-center">
+                                  {detail.slice(1)}
+                                </div>
+                              );
+                            }
+                            const parts = detail.split(" — ");
+                            if (parts.length >= 2) {
+                              return (
+                                <p key={i}>
+                                  <span className="font-bold text-black">{parts[0]}</span>
+                                  {" — "}{parts.slice(1).join(" — ")}
+                                </p>
+                              );
+                            }
+                            return <p key={i}>{detail}</p>;
+                          })}
+                        </div>
+                      )}
+                      {"table" in section && section.table && (
+                        <div className="mt-2">
+                          <p className="text-black text-sm md:text-base font-bold mb-1">{section.table.title}</p>
+                          <table className="w-full text-sm md:text-base border-collapse border border-black/15">
+                            <thead>
+                              <tr className="text-black/50 text-left">
+                                {section.table.headers.map((h: string, i: number) => (
+                                  <th key={i} className="font-normal border border-black/15 px-3 py-1">{h}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {section.table.rows.map((row: string[], i: number) => (
+                                <tr key={i} className="text-black/50">
+                                  <td className="font-bold text-black border border-black/15 px-3 py-1">{row[0]}</td>
+                                  <td className="font-mono border border-black/15 px-3 py-1">{row[1]}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       )}
                     </div>
