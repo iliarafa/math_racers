@@ -260,7 +260,7 @@ function renderArticleContent(article: Article) {
       </p>
 
       {article.richDetails && (
-        <div className="text-black/50 text-sm md:text-base space-y-1.5 mb-2">
+        <div className="text-black/60 text-sm md:text-base space-y-1.5 mb-2">
           {article.richDetails.map((item, i) => (
             <p key={i}>
               <span className={item.color}>{item.label}</span> — {item.text}
@@ -270,7 +270,7 @@ function renderArticleContent(article: Article) {
       )}
 
       {article.details.length > 0 && (
-        <div className="text-black/50 text-sm md:text-base space-y-2">
+        <div className="text-black/60 text-sm md:text-base space-y-2">
           {article.details.map((detail, i) => {
             if (detail.startsWith("#")) {
               return (
@@ -307,7 +307,7 @@ function renderArticleContent(article: Article) {
             <thead>
               <tr className="text-left bg-black/[0.03]">
                 {article.table.headers.map((h, i) => (
-                  <th key={i} className="font-normal text-black/40 text-[10px] uppercase tracking-wider border border-black/10 px-3 py-1.5">
+                  <th key={i} className="font-normal text-black/60 text-[10px] uppercase tracking-wider border border-black/10 px-3 py-1.5">
                     {h}
                   </th>
                 ))}
@@ -315,7 +315,7 @@ function renderArticleContent(article: Article) {
             </thead>
             <tbody>
               {article.table.rows.map((row, i) => (
-                <tr key={i} className="text-black/50">
+                <tr key={i} className="text-black/60">
                   <td className="font-bold text-black border border-black/10 px-3 py-1.5">{row[0]}</td>
                   <td className="font-mono border border-black/10 px-3 py-1.5">{row[1]}</td>
                 </tr>
@@ -357,7 +357,7 @@ export default function Regulations() {
               Technical Regulations
             </h1>
             <p
-              className="text-xs tracking-widest uppercase text-black/40 mt-1"
+              className="text-xs tracking-widest uppercase text-black/60 mt-1"
               style={{ fontFamily: "Oxanium, sans-serif" }}
             >
               2026 Season
@@ -372,7 +372,7 @@ export default function Regulations() {
               <button
                 key={chapter.id}
                 onClick={() => scrollToChapter(chapter.id)}
-                className="block w-full text-left text-xs tracking-wider uppercase text-black/40 active:text-black transition-colors py-1"
+                className="block w-full text-left text-xs tracking-wider uppercase text-black/60 active:text-black transition-colors py-1"
                 style={{ fontFamily: "Oxanium, sans-serif" }}
               >
                 {chapter.numeral}. {chapter.title}
@@ -386,7 +386,7 @@ export default function Regulations() {
               {/* Chapter Heading */}
               <div className="border-t border-black/10 pt-6 mb-4">
                 <p
-                  className="text-[10px] tracking-[0.3em] uppercase text-black/30"
+                  className="text-[10px] tracking-[0.3em] uppercase text-black/50"
                   style={{ fontFamily: "Oxanium, sans-serif" }}
                 >
                   Chapter {chapter.numeral}
@@ -416,7 +416,7 @@ export default function Regulations() {
                           className="text-xs md:text-sm tracking-wider uppercase"
                           style={{ fontFamily: "Oxanium, sans-serif" }}
                         >
-                          <span className="text-black/30">Art. {currentNum}</span>
+                          <span className="text-black/50">Art. {currentNum}</span>
                           <span className="text-black/20 mx-1.5">—</span>
                           <span className="text-black">{article.title}</span>
                         </span>
@@ -454,7 +454,7 @@ export default function Regulations() {
       >
         <Link href="/garage">
           <button
-            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+            className="transition-colors text-sm uppercase tracking-wider text-gray-600 hover:text-black"
             style={{ fontFamily: "Oxanium, sans-serif" }}
           >
             Back
