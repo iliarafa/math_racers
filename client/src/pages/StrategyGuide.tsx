@@ -83,40 +83,50 @@ function MultiplicationGrid() {
 }
 
 function DivisionContent() {
+  const [selectedFamily, setSelectedFamily] = useState<{ product: number; facts: string[] } | null>(null);
+
   const factFamilies = [
-    { mult1: "3 × 4 = 12", mult2: "4 × 3 = 12", div1: "12 ÷ 4 = 3", div2: "12 ÷ 3 = 4" },
-    { mult1: "5 × 6 = 30", mult2: "6 × 5 = 30", div1: "30 ÷ 6 = 5", div2: "30 ÷ 5 = 6" },
-    { mult1: "7 × 8 = 56", mult2: "8 × 7 = 56", div1: "56 ÷ 8 = 7", div2: "56 ÷ 7 = 8" },
-    { mult1: "9 × 4 = 36", mult2: "4 × 9 = 36", div1: "36 ÷ 4 = 9", div2: "36 ÷ 9 = 4" },
-    { mult1: "6 × 7 = 42", mult2: "7 × 6 = 42", div1: "42 ÷ 7 = 6", div2: "42 ÷ 6 = 7" },
+    { product: 12, facts: ["3 × 4 = 12", "4 × 3 = 12", "12 ÷ 4 = 3", "12 ÷ 3 = 4"] },
+    { product: 30, facts: ["5 × 6 = 30", "6 × 5 = 30", "30 ÷ 6 = 5", "30 ÷ 5 = 6"] },
+    { product: 56, facts: ["7 × 8 = 56", "8 × 7 = 56", "56 ÷ 8 = 7", "56 ÷ 7 = 8"] },
+    { product: 36, facts: ["9 × 4 = 36", "4 × 9 = 36", "36 ÷ 4 = 9", "36 ÷ 9 = 4"] },
+    { product: 42, facts: ["6 × 7 = 42", "7 × 6 = 42", "42 ÷ 7 = 6", "42 ÷ 6 = 7"] },
   ];
 
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-bold mb-2 text-blue-400 text-center">PIT STOP STRATEGY: FACT FAMILIES</h3>
-        <p className="text-sm text-neutral-400 text-center">Division is the reverse of multiplication. If you know one, you know the other!</p>
+        <h3 className="text-lg font-bold mb-2 text-blue-400 text-center">FACT FAMILIES</h3>
+        <p className="text-sm text-neutral-400 text-center">Tap a number to see its fact family!</p>
       </div>
-      
-      <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+
+      <div className="grid grid-cols-3 gap-3">
         {factFamilies.map((family, i) => (
-          <div key={i} className="tech-card-glow">
-            <div className="text-xs text-neutral-400 mb-2">FACT FAMILY #{i + 1}</div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="text-green-600">{family.mult1}</div>
-              <div className="text-green-600">{family.mult2}</div>
-              <div className="text-amber-600">{family.div1}</div>
-              <div className="text-amber-600">{family.div2}</div>
-            </div>
+          <div
+            key={i}
+            className="tech-card-glow text-center cursor-pointer active:scale-95 transition-transform"
+            onClick={() => setSelectedFamily(family)}
+          >
+            <div className="font-bold text-lg text-neutral-800">{family.product}</div>
           </div>
         ))}
       </div>
-      
+
+      <AnimatePresence>
+        {selectedFamily && (
+          <StepByStepModal
+            problem={String(selectedFamily.product)}
+            steps={selectedFamily.facts}
+            onClose={() => setSelectedFamily(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="tech-card mt-6">
         <h4 className="text-md font-bold mb-2 text-purple-400 text-center">QUICK TIP</h4>
         <p className="text-sm text-neutral-600">
-          Think of division as "How many times does this number fit into that number?"<br/>
-          Example: 12 ÷ 4 = ? means "How many 4s fit into 12?" Answer: 3
+          Division is the reverse of multiplication.<br/>
+          12 ÷ 4 = ? means "How many 4s fit into 12?"
         </p>
       </div>
     </div>
@@ -133,7 +143,7 @@ function AdditionContent() {
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-bold mb-2 text-green-600 text-center">OVERTAKE MANEUVERS: NUMBER BONDS</h3>
+        <h3 className="text-lg font-bold mb-2 text-green-600 text-center">NUMBER BONDS</h3>
         <p className="text-sm text-neutral-400 text-center">Master these number pairs to add faster than your rivals!</p>
       </div>
       
@@ -288,47 +298,51 @@ function SubtractionContent() {
 }
 
 function VariablesContent() {
+  const [selectedExample, setSelectedExample] = useState<{ equation: string; steps: string[] } | null>(null);
+
   const examples = [
-    { equation: "x + 2 = 5", solution: "x = 3", explanation: "What number plus 2 equals 5? The mystery number is 3!" },
-    { equation: "x - 4 = 10", solution: "x = 14", explanation: "What number minus 4 equals 10? It must be 14!" },
-    { equation: "3 × x = 12", solution: "x = 4", explanation: "3 times what number equals 12? The answer is 4!" },
-    { equation: "x ÷ 2 = 6", solution: "x = 12", explanation: "What number divided by 2 equals 6? It's 12!" },
+    { equation: "x + 2 = 5", steps: ["What plus 2 equals 5?", "Do the opposite: 5 - 2", "x = 3"] },
+    { equation: "x - 4 = 10", steps: ["What minus 4 equals 10?", "Do the opposite: 10 + 4", "x = 14"] },
+    { equation: "3 × x = 12", steps: ["3 times what equals 12?", "Do the opposite: 12 ÷ 3", "x = 4"] },
+    { equation: "x ÷ 2 = 6", steps: ["What divided by 2 equals 6?", "Do the opposite: 6 × 2", "x = 12"] },
   ];
 
   return (
     <div className="space-y-4">
       <div className="tech-card">
-        <h3 className="text-lg font-bold mb-2 text-purple-400 text-center">THE X-FACTOR: SOLVING FOR UNKNOWNS</h3>
-        <p className="text-sm text-neutral-400 text-center">
-          The letter "x" (or any letter) is just a <span className="text-amber-600">mystery number</span> waiting to be discovered!
-        </p>
+        <h3 className="text-lg font-bold mb-2 text-purple-400 text-center">SOLVING FOR X</h3>
+        <p className="text-sm text-neutral-400 text-center">Tap an equation to solve it step by step!</p>
       </div>
-      
-      <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+
+      <div className="grid grid-cols-2 gap-3">
         {examples.map((ex, i) => (
-          <div key={i} className="tech-card-glow">
-            <div className="flex items-center gap-4 mb-3">
-              <div className="text-lg font-bold text-white bg-purple-600 px-3 py-1 rounded">
-                {ex.equation}
-              </div>
-              <div className="text-lg font-bold text-green-600">
-                → {ex.solution}
-              </div>
-            </div>
-            <p className="text-sm text-neutral-600">{ex.explanation}</p>
+          <div
+            key={i}
+            className="tech-card-glow text-center cursor-pointer active:scale-95 transition-transform"
+            onClick={() => setSelectedExample(ex)}
+          >
+            <div className="font-bold text-lg text-neutral-800">{ex.equation}</div>
           </div>
         ))}
       </div>
-      
+
+      <AnimatePresence>
+        {selectedExample && (
+          <StepByStepModal
+            problem={selectedExample.equation}
+            steps={selectedExample.steps}
+            onClose={() => setSelectedExample(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="tech-card mt-6">
-        <h4 className="text-md font-bold mb-3 text-amber-600 text-center">RACE ENGINEER TIP</h4>
+        <h4 className="text-md font-bold mb-3 text-amber-600 text-center">REMEMBER</h4>
         <div className="space-y-2 text-sm text-neutral-600">
-          <p>Think of <span className="text-purple-400">x</span> like a missing piece in a puzzle:</p>
+          <p>To find x, do the <span className="font-bold">opposite</span> operation:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
-            <li>The equation is a balance scale - both sides must be equal</li>
-            <li>To find x, do the opposite operation</li>
-            <li>If x + 2 = 5, do 5 - 2 to find x</li>
-            <li>If 3 × x = 12, do 12 ÷ 3 to find x</li>
+            <li>Addition and Subtraction</li>
+            <li>Multiplication and Division</li>
           </ul>
         </div>
       </div>
