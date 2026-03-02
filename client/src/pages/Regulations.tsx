@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState } from "@/lib/gameLogic";
 
 const sections = [
   {
@@ -226,82 +225,29 @@ const sections = [
   },
 ];
 
-const categories = [
-  {
-    id: "race",
-    label: "Race",
-    sectionIds: ["race", "track-limits", "sectors", "circuits", "series", "overtake", "active-aero", "realism", "practice-mode", "weather"],
-  },
-];
-
-const categorizedSectionIds = new Set(categories.flatMap((c) => c.sectionIds));
-const standaloneSections = sections.filter((s) => !categorizedSectionIds.has(s.id));
-
 export default function Regulations() {
-  const { state } = useGameState();
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-
-  const active = sections.find((s) => s.id === expandedSection);
-  const activeCategory = categories.find((c) => c.id === expandedCategory);
-
-  // Three views: grid (no category, no section), category sub-items, or detail
-  const view = active ? "detail" : activeCategory ? "category" : "grid";
-
-  const handleBack = () => {
-    if (active) {
-      // Detail → grid (standalone section)
-      setExpandedSection(null);
-    } else if (activeCategory) {
-      // Category → grid
-      setExpandedCategory(null);
-    }
-  };
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
     <GameLayout lockViewport hideHeader>
       <div className="flex-1 overflow-y-auto p-6 md:p-10 pb-20 bg-white">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
-          {view === "grid" && (
-            <>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Regulations</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Regulations</h1>
 
-              <div className="grid grid-cols-3 gap-2">
-                {categories.map((cat) => (
+          <div className="divide-y divide-black/10">
+            {sections.map((section) => {
+              const isOpen = expandedId === section.id;
+              return (
+                <div key={section.id} className="py-4">
                   <div
-                    key={cat.id}
-                    onClick={() => setExpandedCategory(cat.id)}
-                    className="rounded-xl border border-black p-4 flex items-center justify-center cursor-pointer active:scale-[0.97] transition-all relative"
+                    onClick={() => setExpandedId(isOpen ? null : section.id)}
+                    className="cursor-pointer active:opacity-60 transition-opacity"
                   >
-                    <span className="text-xs uppercase tracking-widest text-black text-center leading-tight">{cat.label}</span>
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-black/30 text-[10px]">›</span>
+                    <span className="text-xs uppercase tracking-widest text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>{section.label}</span>
                   </div>
-                ))}
-                {standaloneSections.map((section) => (
-                  <div
-                    key={section.id}
-                    onClick={() => setExpandedSection(section.id)}
-                    className="rounded-xl border border-black p-4 flex items-center justify-center cursor-pointer active:scale-[0.97] transition-all"
-                  >
-                    <span className="text-xs uppercase tracking-widest text-black text-center leading-tight">{section.label}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {view === "category" && activeCategory && (
-            <>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>{activeCategory.label}</h1>
-
-              <div className="space-y-8">
-                {activeCategory.sectionIds.map((sId) => {
-                  const section = sections.find((s) => s.id === sId);
-                  if (!section) return null;
-                  return (
-                    <div key={section.id}>
-                      <h2 className="text-sm md:text-base font-bold uppercase tracking-widest text-black mb-2" style={{ fontFamily: 'Oxanium, sans-serif' }}>{section.title}</h2>
+                  {isOpen && (
+                    <div className="mt-3">
                       <p className="text-black text-sm md:text-base leading-relaxed mb-2">{section.description}</p>
                       {"richDetails" in section && section.richDetails && (
                         <div className="text-black/50 text-sm md:text-base space-y-1 mb-2">
@@ -318,59 +264,25 @@ export default function Regulations() {
                         </div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          {view === "detail" && active && (
-            <>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-widest uppercase text-black mb-8 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>{active.title}</h1>
-
-              <p className="text-black text-sm md:text-base leading-relaxed mb-4">
-                {active.description}
-              </p>
-              {"richDetails" in active && active.richDetails && (
-                <div className="text-black/50 text-sm md:text-base space-y-1 mb-2">
-                  {active.richDetails.map((item, i) => (
-                    <p key={i}><span className={item.color}>{item.label}</span> — {item.text}</p>
-                  ))}
+                  )}
                 </div>
-              )}
-              {active.details.length > 0 && (
-                <div className="text-black/50 text-sm md:text-base space-y-1">
-                  {active.details.map((detail, i) => (
-                    <p key={i}>{detail}</p>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+              );
+            })}
+          </div>
 
         </div>
       </div>
 
       {/* Sticky bottom back button */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
-        {view !== "grid" ? (
+        <Link href="/garage">
           <button
-            onClick={handleBack}
             className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Back
           </button>
-        ) : (
-          <Link href="/garage">
-            <button
-              className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-            >
-              Back
-            </button>
-          </Link>
-        )}
+        </Link>
       </div>
     </GameLayout>
   );
