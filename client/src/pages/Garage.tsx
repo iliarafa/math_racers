@@ -10,7 +10,7 @@ import garageCar from "@/assets/garage_car.jpeg";
 
 export default function Garage() {
   const { state, toggleSound, toggleSimMode, togglePowerUps, resetAllData } = useGameState();
-  const { restore } = usePurchase();
+  const { isPremium, restore } = usePurchase();
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
   const handleRetireCar = () => {
@@ -43,8 +43,8 @@ export default function Garage() {
                 <span className="text-xs uppercase tracking-widest text-black/70 text-center leading-tight">Sound</span>
               </div>
               <div
-                onClick={toggleSimMode}
-                className="rounded-xl bg-white p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                onClick={isPremium ? toggleSimMode : undefined}
+                className={cn("rounded-xl bg-white p-4 flex flex-col items-center gap-3 transition-all", isPremium ? "cursor-pointer active:scale-[0.97]" : "opacity-40")}
                 data-testid="button-realism"
               >
                 <Gauge className={cn("w-10 h-10", state.simMode ? "text-green-500" : "text-black")} />
