@@ -8,7 +8,7 @@ import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
 import { submitLeaderboardEntry } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Globe, Share2 } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2 } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 
@@ -649,7 +649,7 @@ export default function Game() {
     return getRaceLength(selectedCircuit.id, !isPracticeMode && effectiveSimMode);
   })();
   const botFinished = botProgress >= raceLength;
-  const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'multiplayer' | 'rw_practice' | 'rw_qualifying' | 'rw_race' | 'testing'>('race');
+  const [selectedTab, setSelectedTab] = useState<'race' | 'practice' | 'rw_practice' | 'rw_qualifying' | 'rw_race' | 'testing'>('race');
   const [isPaused, setIsPaused] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
   const [answer, setAnswer] = useState("");
@@ -1840,13 +1840,6 @@ export default function Game() {
     }
   }, [botFinished, overtakeActive]);
 
-  const handleMultiplayerSelect = () => {
-    setSelectedDriver(null);
-    setSelectedCircuit(null);
-    setGameStatus('mode_select');
-    setLocation('/multiplayer');
-  };
-
   // Paywall Screen
   if (gameStatus === 'paywall') {
     return <Paywall onBack={() => setGameStatus('mode_select')} />;
@@ -1958,6 +1951,49 @@ export default function Game() {
                 }}
               >
                 Melbourne
+              </span>
+              {!isPremium && (
+                <span
+                  className="block mt-1 uppercase tracking-widest"
+                  style={{ fontSize: '0.55rem', color: '#999', transition: 'all 0.2s ease' }}
+                >
+                  Full version
+                </span>
+              )}
+            </motion.button>
+            {/* Multiplayer Button */}
+            <motion.button
+              onClick={() => {
+                if (state.soundEnabled) playCarouselClick();
+                if (!isPremium) { setGameStatus('paywall'); return; }
+                setLocation('/multiplayer');
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full max-w-xs md:max-w-md py-3 text-center"
+            >
+              <span
+                className="block"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
+                  fontWeight: 'bold',
+                  color: '#f59e0b',
+                  opacity: isPremium ? 0.7 : 0.35,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                MULTIPLAYER
+              </span>
+              <span
+                className="block mt-1 uppercase tracking-widest"
+                style={{
+                  fontSize: '0.65rem',
+                  color: '#b45309',
+                  opacity: isPremium ? 0.6 : 0.2,
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                LAN / 1v1
               </span>
               {!isPremium && (
                 <span
@@ -2336,7 +2372,7 @@ export default function Game() {
             />
           </Link>
         </div>
-        {/* Tab Toggle — Grand Prix phases, Pre-Season Testing, or normal Race/Practice/Multiplayer */}
+        {/* Tab Toggle — Grand Prix phases, Pre-Season Testing, or normal Race/Practice */}
         <div className="mt-8 md:mt-24 landscape:md:mt-8 mb-6 md:mb-24 landscape:md:mb-6 flex justify-center">
           {isPreSeasonTesting ? (
             <div className="rounded-full p-1 flex gap-1 bg-gray-200">
@@ -2438,23 +2474,6 @@ export default function Game() {
               >
                 Practice
               </button>
-              <button
-                onClick={() => {
-                  if (state.soundEnabled) playCarouselClick();
-                  if (!isPremium) { setGameStatus('paywall'); return; }
-                  setSelectedTab('multiplayer');
-                }}
-                className={cn(
-                  "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
-                  selectedTab === 'multiplayer'
-                    ? "bg-blue-600 text-white"
-                    : "bg-transparent text-gray-600 hover:text-gray-900"
-                )}
-                style={{ fontFamily: 'Oxanium, sans-serif', opacity: isPremium ? 1 : 0.5 }}
-                data-testid="button-multiplayer-mode"
-              >
-                Multiplayer
-              </button>
             </div>
           )}
         </div>
@@ -2550,64 +2569,6 @@ export default function Game() {
                     <img src={weatherRandom} alt="Random" className="w-8 h-8" />
                     <span className="text-[9px] text-gray-500 uppercase tracking-wide">Random</span>
                   </button>
-                </div>
-              </motion.div>
-            </div>)
-          ) : selectedTab === 'multiplayer' ? (
-            /* Multiplayer Card */
-            (<div className="flex flex-col items-center">
-              <motion.div
-                key="multiplayer-card"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
-                style={{
-                  backgroundColor: '#f0f0f0',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
-                }}
-                data-testid="hero-card-multiplayer"
-              >
-                {/* Header */}
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <h2 
-                    className="text-2xl font-bold uppercase tracking-wider text-gray-900"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    VS Mode
-                  </h2>
-                  <Globe className="w-6 h-6 text-blue-600" />
-                </div>
-
-                {/* VS Graphic */}
-                <div className="flex-1 flex items-center justify-center py-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-blue-600 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>P1</span>
-                    </div>
-                    <span className="text-3xl font-bold text-gray-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>VS</span>
-                    <div className="w-20 h-20 rounded-full bg-red-600 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>P2</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Info */}
-                <div className="text-center mb-4">
-                  <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Real-Time Racing</div>
-                  <div 
-                    className="text-lg font-bold uppercase text-gray-900"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    Head to Head
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="text-center pt-2 border-t border-gray-300">
-                  <p className="text-xs text-gray-500 mt-3">
-                    Create or join a room to race against a friend in real-time
-                  </p>
                 </div>
               </motion.div>
             </div>)
@@ -2875,7 +2836,7 @@ export default function Game() {
           )}
         </div>
         {/* Track Dots Indicator - only show for track selection */}
-        {selectedTab !== 'multiplayer' && !isGrandPrix && !isPreSeasonTesting && (
+        {!isGrandPrix && !isPreSeasonTesting && (
           <div className="fixed bottom-44 landscape:md:bottom-36 left-0 right-0 flex justify-center gap-2">
             {CIRCUITS.map((circuit, index) => {
               const dotLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false);
@@ -2900,7 +2861,7 @@ export default function Game() {
           <motion.button
             whileHover={!isCircuitLocked ? { scale: 1.02 } : undefined}
             whileTap={!isCircuitLocked ? { scale: 0.98 } : undefined}
-            onClick={() => { if (isCircuitLocked) return; if (state.soundEnabled) playCarouselClick(); selectedTab === 'multiplayer' ? setLocation('/multiplayer') : handleStartRace(); }}
+            onClick={() => { if (isCircuitLocked) return; if (state.soundEnabled) playCarouselClick(); handleStartRace(); }}
             className={cn(
               "w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white",
               isCircuitLocked && "opacity-40 cursor-not-allowed"
@@ -2908,22 +2869,19 @@ export default function Game() {
             style={{
               fontFamily: 'Oxanium, sans-serif',
               backgroundColor: isCircuitLocked ? '#999999'
-                : selectedTab === 'multiplayer' ? '#2563eb'
                 : selectedTab === 'testing' ? '#16a34a'
                 : selectedTab === 'rw_practice' ? '#16a34a'
                 : selectedTab === 'rw_qualifying' ? '#f59e0b'
                 : selectedTab === 'rw_race' ? '#dc2626'
                 : '#16a34a',
               animation: isCircuitLocked ? 'none'
-                : selectedTab === 'multiplayer' ? 'pulse-blue 2s infinite'
                 : selectedTab === 'rw_qualifying' ? 'pulse-amber 2s infinite'
                 : selectedTab === 'rw_race' ? 'pulse-red 2s infinite'
                 : 'pulse-green 2s infinite'
             }}
             data-testid="button-start-race"
           >
-            {selectedTab === 'multiplayer' ? 'Enter Lobby'
-              : selectedTab === 'testing' ? 'Go to Track'
+            {selectedTab === 'testing' ? 'Go to Track'
               : selectedTab === 'rw_practice' ? 'Start Practice'
               : selectedTab === 'rw_qualifying' ? 'Start Qualifying'
               : selectedTab === 'rw_race' ? 'Start Race'
