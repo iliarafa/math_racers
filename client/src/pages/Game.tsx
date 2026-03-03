@@ -46,6 +46,8 @@ import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
+import garageCar from "@/assets/garage_car.jpeg";
+import trackIllustration from "@/assets/track_illustration.jpeg";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -1886,7 +1888,7 @@ export default function Game() {
                   fontFamily: 'Oxanium, sans-serif',
                   fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
                   fontWeight: 'bold',
-                  color: '#e10600',
+                  color: '#0928B5',
                   opacity: isPremium ? 0.7 : 0.35,
                   transition: 'all 0.2s ease',
                 }}
@@ -1897,7 +1899,7 @@ export default function Game() {
                 className="block mt-1 uppercase tracking-widest"
                 style={{
                   fontSize: '0.65rem',
-                  color: '#e10600',
+                  color: '#0928B5',
                   opacity: isPremium ? 0.4 : 0.2,
                   transition: 'all 0.2s ease',
                 }}
@@ -1963,12 +1965,6 @@ export default function Game() {
             </motion.button>
             {/* Multiplayer Button */}
             <motion.button
-              onClick={() => {
-                if (state.soundEnabled) playCarouselClick();
-                if (!isPremium) { setGameStatus('paywall'); return; }
-                setLocation('/multiplayer');
-              }}
-              whileTap={{ scale: 0.98 }}
               className="w-full max-w-xs md:max-w-md py-3 text-center"
             >
               <span
@@ -1977,8 +1973,8 @@ export default function Game() {
                   fontFamily: 'Oxanium, sans-serif',
                   fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
                   fontWeight: 'bold',
-                  color: '#f59e0b',
-                  opacity: isPremium ? 0.7 : 0.35,
+                  color: '#E31010',
+                  opacity: isPremium ? 1 : 0.35,
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -1988,21 +1984,13 @@ export default function Game() {
                 className="block mt-1 uppercase tracking-widest"
                 style={{
                   fontSize: '0.65rem',
-                  color: '#b45309',
-                  opacity: isPremium ? 0.6 : 0.2,
+                  color: '#E31010',
+                  opacity: 0.6,
                   transition: 'all 0.2s ease',
                 }}
               >
-                LAN / 1v1
+                COMING SOON
               </span>
-              {!isPremium && (
-                <span
-                  className="block mt-1 uppercase tracking-widest"
-                  style={{ fontSize: '0.55rem', color: '#999', transition: 'all 0.2s ease' }}
-                >
-                  Full version
-                </span>
-              )}
             </motion.button>
             {/* PST — shown inline on iPad */}
             <motion.button
@@ -2023,6 +2011,11 @@ export default function Game() {
             </motion.button>
           </div>
         </div>
+
+        <div className="flex-1 flex items-center justify-center pb-40">
+          <img src={garageCar} alt="" className="w-40 opacity-25 select-none pointer-events-none" draggable={false} />
+        </div>
+
         {/* Pre-Season Testing + Back — pinned to bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
           <motion.button
@@ -2170,8 +2163,17 @@ export default function Game() {
           </div>
         </div>
         </div>
+        {/* Track illustration */}
+        <div className="flex-1 flex items-center justify-center px-8 overflow-hidden">
+          <img
+            src={trackIllustration}
+            alt=""
+            className="max-w-xs md:max-w-md w-full object-contain"
+            style={{ opacity: 0.5 }}
+          />
+        </div>
         {/* Back button */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+        <div className="px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
           <button
             onClick={() => {
               if (state.soundEnabled) playCarouselClick();
@@ -2180,7 +2182,7 @@ export default function Game() {
               setGameStatus('mode_select');
             }}
             className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
+            style={{ fontFamily: 'Oxanium, sans-serif', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             Back
           </button>

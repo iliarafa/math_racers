@@ -117,6 +117,14 @@ const playBeep = (frequency: number = 800, duration: number = 150) => {
 type GameStatus = "lobby" | "waiting" | "track_select" | "countdown" | "racing" | "finished";
 type Weather = 'dry' | 'wet' | 'random';
 
+const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
+  "spa": 0.60,
+  "silverstone": 0.50,
+  "suzuka": 0.42,
+  "monaco": 0.25,
+  "monza": 0.20,
+};
+
 
 export default function Multiplayer() {
   const { state, addCoins, addCareerPoints } = useGameState();
@@ -144,6 +152,7 @@ export default function Multiplayer() {
     return (savedId && DRIVERS.find(d => d.id === savedId)) || DRIVERS[0];
   });
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
+  const [isWetRace, setIsWetRace] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -186,12 +195,13 @@ export default function Multiplayer() {
   // UI feedback states (matching single-player)
   const [showPenalty, setShowPenalty] = useState(false);
   const [showBlackWhiteFlag, setShowBlackWhiteFlag] = useState(false);
-  const [showFiveSecPenalty, setShowFiveSecPenalty] = useState(false);
+  const [showPenaltyText, setShowPenaltyText] = useState<string | null>(null);
   const [showBoostMessage, setShowBoostMessage] = useState<string | null>(null);
   const [showAeroMessage, setShowAeroMessage] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
-  const playerIdRef = useRef<string>(Math.random().toString(36).substring(7));
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+  const playerIdRef = useRef<string>(crypto.randomUUID());
   const raceStartTimeRef = useRef<number | null>(null);
   const questionStartTimeRef = useRef<number>(Date.now());
   const isHostRef = useRef<boolean>(false);
@@ -200,6 +210,24 @@ export default function Multiplayer() {
   const prevCountdownRef = useRef<number | null>(null);
   
   const raceLength = selectedCircuit ? getRaceLength(selectedCircuit.id, state.simMode) : 20;
+
+  // Safe setTimeout that auto-cleans on unmount
+  const safeTimeout = useCallback((fn: () => void, ms: number) => {
+    const id = setTimeout(() => {
+      timersRef.current.delete(id);
+      fn();
+    }, ms);
+    timersRef.current.add(id);
+    return id;
+  }, []);
+
+  // Clear all pending timers on unmount
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(clearTimeout);
+      timersRef.current.clear();
+    };
+  }, []);
 
   // Keep soundEnabledRef in sync
   useEffect(() => {
@@ -221,32 +249,44 @@ export default function Multiplayer() {
     }
   }, [countdownValue, gameStatus]);
 
+  const [connectionLost, setConnectionLost] = useState(false);
+  const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+
+  // Ref to always hold the latest WS message handler (avoids stale closures)
+  const handleMessageRef = useRef<(message: any) => void>(() => {});
+
   // WebSocket connection
-  const connectWebSocket = useCallback((code: string, host: boolean) => {
+  const connectWebSocket = useCallback((code: string, host: boolean, name: string) => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
-    
+
     ws.onopen = () => {
+      setConnectionLost(false);
       ws.send(JSON.stringify({
         type: "join_room",
         roomCode: code,
         playerId: playerIdRef.current,
-        isHost: host
+        isHost: host,
+        playerName: name
       }));
     };
-    
+
     ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      handleWebSocketMessage(message);
+      try {
+        const message = JSON.parse(event.data);
+        handleMessageRef.current(message);
+      } catch (e) {
+        // Malformed message from server
+      }
     };
-    
+
     ws.onclose = () => {
-      // WebSocket disconnected
+      setConnectionLost(true);
     };
-    
+
     wsRef.current = ws;
   }, []);
-  
+
   const handleWebSocketMessage = (message: any) => {
     switch (message.type) {
       case "joined":
@@ -257,10 +297,17 @@ export default function Multiplayer() {
         if (message.powerUpsEnabled !== undefined) {
           setPowerUpsEnabled(message.powerUpsEnabled);
         }
+        // Host gets guest's name, guest gets host's name (if not already set from REST)
+        if (isHostRef.current && message.guestName) {
+          setOpponentName(message.guestName);
+        } else if (!isHostRef.current && message.hostName && !opponentName) {
+          setOpponentName(message.hostName);
+        }
         break;
       case "player_disconnected":
         setError("Opponent disconnected");
         setRoomReady(false);
+        setOpponentDisconnected(true);
         break;
       case "countdown_start":
         // Update circuit/driver for guest based on host selection
@@ -295,6 +342,7 @@ export default function Multiplayer() {
           playBeep(1200, 200);
         }
         setGameStatus("racing");
+        setOpponentDisconnected(false);
         raceStartTimeRef.current = Date.now();
         questionStartTimeRef.current = Date.now();
         penaltyTimeRef.current = 0;
@@ -380,7 +428,7 @@ export default function Multiplayer() {
         setOvertakeStartEnergy(message.energy);
         setOvertakeEndTime(Date.now() + message.duration);
         setShowBoostMessage("2X BOOST ACTIVE");
-        setTimeout(() => setShowBoostMessage(null), 2000);
+        safeTimeout(() => setShowBoostMessage(null), 2000);
         break;
       case "opponent_overtake_activated":
         // Opponent activated overtake - no effect on us, just informational
@@ -404,11 +452,16 @@ export default function Multiplayer() {
           return newSet;
         });
         setShowAeroMessage("AERO ACTIVE");
-        setTimeout(() => setShowAeroMessage(null), 2000);
+        safeTimeout(() => setShowAeroMessage(null), 2000);
         break;
     }
   };
   
+  // Keep WS message handler ref in sync to avoid stale closures
+  useEffect(() => {
+    handleMessageRef.current = handleWebSocketMessage;
+  });
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -462,23 +515,12 @@ export default function Multiplayer() {
     if (overtakeActive && selectedCircuit && selectedDriver) {
       // Generate a harder question for the current position
       const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
-      const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty);
+      const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace);
       setOvertakeQuestion(harderQ);
     } else {
       setOvertakeQuestion(null);
     }
-  }, [overtakeActive, selectedCircuit, selectedDriver]);
-  
-  // Generate questions when circuit is selected
-  useEffect(() => {
-    if (selectedCircuit && selectedDriver && isHost) {
-      const newQuestions: Question[] = [];
-      for (let i = 0; i < raceLength; i++) {
-        newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
-      }
-      setQuestions(newQuestions);
-    }
-  }, [selectedCircuit, selectedDriver, isHost, raceLength]);
+  }, [overtakeActive, selectedCircuit, selectedDriver, isWetRace]);
   
   const createRoom = async () => {
     if (!playerName.trim()) {
@@ -521,7 +563,7 @@ export default function Multiplayer() {
       setIsHost(true);
       isHostRef.current = true;
       setGameStatus("waiting");
-      connectWebSocket(data.roomCode, true);
+      connectWebSocket(data.roomCode, true, playerName);
     } catch (err) {
       setError("Failed to create room");
     }
@@ -564,7 +606,7 @@ export default function Multiplayer() {
       setIsHost(false);
       isHostRef.current = false;
       setGameStatus("waiting");
-      connectWebSocket(joinCode.toUpperCase(), false);
+      connectWebSocket(joinCode.toUpperCase(), false, playerName);
     } catch (err) {
       setError("Failed to join room");
     }
@@ -573,15 +615,23 @@ export default function Multiplayer() {
   const startRace = async () => {
     if (!wsRef.current || !selectedCircuit || !selectedDriver) return;
 
-    // Generate questions based on selected circuit
+    // Resolve weather for question generation
+    let wetRace = selectedWeather === 'wet';
+    if (selectedWeather === 'random') {
+      const rainProbability = CIRCUIT_RAIN_PROBABILITY[selectedCircuit.id] || 0.5;
+      wetRace = Math.random() < rainProbability;
+    }
+    setIsWetRace(wetRace);
+
+    // Generate questions based on selected circuit with weather modifier
     const newQuestions: Question[] = [];
     for (let i = 0; i < raceLength; i++) {
-      newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty));
+      newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty, wetRace));
     }
     setQuestions(newQuestions);
 
     // Generate AERO zones if power-ups enabled
-    const zones = powerUpsEnabled ? getAeroZones(raceLength, false) : [];
+    const zones = powerUpsEnabled ? getAeroZones(raceLength, state.simMode) : [];
     setAeroZones(zones);
 
     // Update room with selected circuit and questions, then start countdown
@@ -606,7 +656,8 @@ export default function Multiplayer() {
         weather: selectedWeather,
         powerUpsEnabled,
         questions: newQuestions.map(q => ({ display: q.display, answer: q.answer })),
-        raceLength
+        raceLength,
+        aeroZones: zones
       }));
     } catch (err) {
       console.error("Failed to update room:", err);
@@ -807,7 +858,7 @@ export default function Multiplayer() {
           }));
         }
       } else {
-        setTimeout(() => {
+        safeTimeout(() => {
           setFeedback("idle");
           setAnswer("");
           setCurrentQuestionIndex(prev => prev + 1);
@@ -816,7 +867,7 @@ export default function Multiplayer() {
           // Generate new harder question if overtake still active
           if (overtakeActive && selectedCircuit && selectedDriver) {
             const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
-            const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty);
+            const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace);
             setOvertakeQuestion(harderQ);
           }
         }, 400);
@@ -834,7 +885,7 @@ export default function Multiplayer() {
       if (newMistakes >= 3) {
         setShowBlackWhiteFlag(true);
       }
-      setTimeout(() => { setShowPenalty(false); }, 1500);
+      safeTimeout(() => { setShowPenalty(false); }, 1500);
 
       // Reset AERO active state on wrong answer
       if (aeroActive) {
@@ -870,9 +921,9 @@ export default function Multiplayer() {
           const cyclePosition = (newMistakes - 4) % 2; // 0 for +5, 1 for +10
           const penalty = cyclePosition === 0 ? 5000 : 10000;
           penaltyTimeRef.current += penalty;
-          // Show +5s penalty flash
-          setShowFiveSecPenalty(true);
-          setTimeout(() => setShowFiveSecPenalty(false), 1000);
+          // Show penalty flash with actual value
+          setShowPenaltyText(`+${penalty / 1000}s`);
+          safeTimeout(() => setShowPenaltyText(null), 1000);
         }
 
         // Check for crash when mistakes exceed 50% of laps
@@ -905,7 +956,7 @@ export default function Multiplayer() {
         }
         
         // Clear answer but keep same question - don't reset questionStartTimeRef
-        setTimeout(() => {
+        safeTimeout(() => {
           setFeedback("idle");
           setAnswer("");
         }, 600);
@@ -939,7 +990,7 @@ export default function Multiplayer() {
             }));
           }
         } else {
-          setTimeout(() => {
+          safeTimeout(() => {
             setFeedback("idle");
             setAnswer("");
             setCurrentQuestionIndex(prev => prev + 1);
@@ -1180,6 +1231,10 @@ export default function Multiplayer() {
           </div>
           
           <p className="text-muted-foreground">Share this code with your opponent</p>
+
+          {connectionLost && (
+            <p className="text-red-500 font-medium text-sm animate-pulse">Connection lost. Try leaving and rejoining.</p>
+          )}
 
           {/* Power-ups Toggle - always visible for host to configure */}
           <div className="bg-secondary rounded-xl p-4">
@@ -1498,6 +1553,12 @@ export default function Multiplayer() {
           {/* Header */}
           <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
             <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">MULTIPLAYER</span>
+            {connectionLost && (
+              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded animate-pulse">DISCONNECTED</span>
+            )}
+            {opponentDisconnected && !connectionLost && (
+              <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded">OPP LEFT</span>
+            )}
           </div>
 
           {/* Main content - compact header zone */}
@@ -1554,9 +1615,9 @@ export default function Multiplayer() {
                 {answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
               </div>
 
-              {/* +5s Penalty Flash Overlay */}
+              {/* Penalty Flash Overlay */}
               <AnimatePresence>
-                {showFiveSecPenalty && (
+                {showPenaltyText && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: [1, 0.2, 1, 0.2, 1], scale: 1 }}
@@ -1568,7 +1629,7 @@ export default function Multiplayer() {
                       className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600"
                       style={{ fontFamily: 'Oxanium, sans-serif' }}
                     >
-                      +5s
+                      {showPenaltyText}
                     </span>
                   </motion.div>
                 )}

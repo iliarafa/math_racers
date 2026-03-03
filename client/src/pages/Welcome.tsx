@@ -56,6 +56,17 @@ export default function Welcome() {
         </div>
 
         <div className="flex flex-col items-center gap-8 md:gap-12 w-full max-w-md">
+          <Link href="/garage">
+            <button
+              onClick={() => { if (state.soundEnabled) playClickSound(); }}
+              className="w-48 py-4 bg-white text-black text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-gray-100 transition-colors md:w-60 md:py-5 md:text-3xl"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+              data-testid="button-garage"
+            >
+              GARAGE
+            </button>
+          </Link>
+
           <Link href="/game">
             <button
               onClick={() => { if (state.soundEnabled) playClickSound(); }}
@@ -64,17 +75,6 @@ export default function Welcome() {
               data-testid="button-start-race"
             >
               RACE
-            </button>
-          </Link>
-
-          <Link href="/garage">
-            <button
-              onClick={() => { if (state.soundEnabled) playClickSound(); }}
-              className="w-48 py-4 bg-black text-white text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-gray-800 transition-colors md:w-60 md:py-5 md:text-3xl"
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-              data-testid="button-garage"
-            >
-              GARAGE
             </button>
           </Link>
         </div>

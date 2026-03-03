@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
@@ -7,11 +7,34 @@ import { TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy, ClipboardList, 
 import { usePurchase } from "@/hooks/use-purchase";
 import { isNativePlatform } from "@/lib/purchases";
 import garageCar from "@/assets/garage_car.jpeg";
+import garageSound from "@/assets/garsound.m4a";
 
 export default function Garage() {
   const { state, toggleSound, toggleSimMode, togglePowerUps, resetAllData } = useGameState();
   const { isPremium, restore } = usePurchase();
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio(garageSound);
+    audio.loop = true;
+    audioRef.current = audio;
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      audioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (state.soundEnabled) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  }, [state.soundEnabled]);
 
   const handleRetireCar = () => {
     if (confirm("Are you sure you want to retire? This will reset ALL your progress.")) {

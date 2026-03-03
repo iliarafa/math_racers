@@ -7,6 +7,8 @@ interface GameRoom {
   guestWs: WebSocket | null;
   hostId: string;
   guestId: string | null;
+  hostName: string;
+  guestName: string | null;
   hostProgress: number;
   guestProgress: number;
   hostMistakes: number;
@@ -116,7 +118,7 @@ function handleMessage(ws: WebSocket, message: any) {
       handleJoinRoom(ws, message);
       break;
     case "start_countdown":
-      handleStartCountdown(message.roomCode, message.circuitId, message.driverId, message.weather, message.powerUpsEnabled, message.questions, message.raceLength);
+      handleStartCountdown(message.roomCode, message.circuitId, message.driverId, message.weather, message.powerUpsEnabled, message.questions, message.raceLength, message.aeroZones);
       break;
     case "progress_update":
       handleProgressUpdate(ws, message);
@@ -145,8 +147,8 @@ function handleMessage(ws: WebSocket, message: any) {
   }
 }
 
-function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: string; isHost: boolean }) {
-  const { roomCode, playerId, isHost } = message;
+function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: string; isHost: boolean; playerName?: string }) {
+  const { roomCode, playerId, isHost, playerName } = message;
 
   if (!rooms.has(roomCode)) {
     rooms.set(roomCode, {
@@ -154,6 +156,8 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
       guestWs: null,
       hostId: "",
       guestId: null,
+      hostName: "",
+      guestName: null,
       hostProgress: 0,
       guestProgress: 0,
       hostMistakes: 0,
@@ -189,9 +193,11 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
   if (isHost) {
     room.hostWs = ws;
     room.hostId = playerId;
+    if (playerName) room.hostName = playerName;
   } else {
     room.guestWs = ws;
     room.guestId = playerId;
+    if (playerName) room.guestName = playerName;
   }
 
   clientToRoom.set(ws, { roomCode, playerId });
@@ -199,11 +205,11 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
   ws.send(JSON.stringify({ type: "joined", roomCode, isHost }));
 
   if (room.hostWs && room.guestWs) {
-    broadcastToRoom(roomCode, { type: "room_ready", powerUpsEnabled: room.powerUpsEnabled });
+    broadcastToRoom(roomCode, { type: "room_ready", powerUpsEnabled: room.powerUpsEnabled, guestName: room.guestName, hostName: room.hostName });
   }
 }
 
-function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: string, weather?: string, powerUpsEnabled?: boolean, questions?: any[], raceLength?: number) {
+function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: string, weather?: string, powerUpsEnabled?: boolean, questions?: any[], raceLength?: number, clientAeroZones?: number[]) {
   const room = rooms.get(roomCode);
   if (!room) return;
 
@@ -238,12 +244,16 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
   room.guestSectorColors = [];
   room.sectorBestTimes = [];
 
-  // Generate AERO zones (2 zones at 25% and 65% of race length)
+  // Use client-sent AERO zones (respects sim mode), fallback to default 2 zones
   if (room.powerUpsEnabled) {
-    room.aeroZones = [
-      Math.floor(room.raceLength * 0.25),
-      Math.floor(room.raceLength * 0.65)
-    ];
+    if (clientAeroZones && Array.isArray(clientAeroZones) && clientAeroZones.length > 0) {
+      room.aeroZones = clientAeroZones.map(z => Math.floor(Number(z))).filter(z => z >= 0 && z < room.raceLength);
+    } else {
+      room.aeroZones = [
+        Math.floor(room.raceLength * 0.25),
+        Math.floor(room.raceLength * 0.65)
+      ];
+    }
   } else {
     room.aeroZones = [];
   }
@@ -624,6 +634,8 @@ export function createRoom(roomCode: string, hostId: string, raceLength: number 
     guestWs: null,
     hostId,
     guestId: null,
+    hostName: "",
+    guestName: null,
     hostProgress: 0,
     guestProgress: 0,
     hostMistakes: 0,
