@@ -147,7 +147,7 @@ const createGrandPrixCircuit = (op: string): Circuit => ({
 
 const createBahrainCircuit = (op: string): Circuit => ({
   id: 'bahrain',
-  name: 'BAHRAIN',
+  name: CURRENT_GRAND_PRIX.name,
   type: op,
   description: 'Pre-Season Testing',
   mapUrl: '',
