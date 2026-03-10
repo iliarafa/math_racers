@@ -1249,7 +1249,7 @@ export default function Game() {
 
       // When aero/overtake was active and we gained 2 sectors, add a bonus entry
       const actualGain = newProgress - progress; // Handles capping at raceLength
-      if (hasBonus && actualGain === 2) {
+      if (actualGain === 2) {
         // Bonus sector wasn't individually timed, so compute its color properly
         const bonusSectorIndex = progress + 1;
         const bonusBest = sectorBestTimesRef.current[bonusSectorIndex];
