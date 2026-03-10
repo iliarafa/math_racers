@@ -51,3 +51,60 @@ export async function getLeaderboard(operation?: string, limit = 50) {
   if (error) throw error;
   return data ?? [];
 }
+
+// Grand Prix Leaderboard
+
+export interface GPLeaderboardSubmission {
+  playerId: string;
+  playerName: string;
+  circuitId: string;
+  circuitName: string;
+  operation: string;
+  totalTime: number;
+  mistakes: number;
+  accuracy: number;
+  difficultyAchieved: string;
+  polePosition: boolean;
+}
+
+export async function submitGPLeaderboardEntry(entry: GPLeaderboardSubmission) {
+  const { data, error } = await supabase
+    .from("gp_leaderboard")
+    .insert({
+      player_id: entry.playerId,
+      player_name: entry.playerName,
+      circuit_id: entry.circuitId,
+      circuit_name: entry.circuitName,
+      operation: entry.operation,
+      total_time: entry.totalTime,
+      mistakes: entry.mistakes,
+      accuracy: entry.accuracy,
+      difficulty_achieved: entry.difficultyAchieved,
+      pole_position: entry.polePosition,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getGPLeaderboard(circuitId?: string, operation?: string, limit = 50) {
+  let query = supabase
+    .from("gp_leaderboard")
+    .select("*")
+    .order("mistakes", { ascending: true })
+    .order("total_time", { ascending: true })
+    .limit(Math.min(limit, 100));
+
+  if (circuitId) {
+    query = query.eq("circuit_id", circuitId);
+  }
+  if (operation) {
+    query = query.eq("operation", operation);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}

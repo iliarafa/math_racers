@@ -78,3 +78,35 @@ export const insertLeaderboardSchema = createInsertSchema(pstLeaderboard).pick({
 
 export type InsertLeaderboardEntry = z.infer<typeof insertLeaderboardSchema>;
 export type LeaderboardEntry = typeof pstLeaderboard.$inferSelect;
+
+// Grand Prix Leaderboard schema
+export const gpLeaderboard = pgTable("gp_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  playerId: varchar("player_id").notNull(),
+  playerName: text("player_name").notNull(),
+  circuitId: varchar("circuit_id", { length: 20 }).notNull(),
+  circuitName: varchar("circuit_name", { length: 50 }).notNull(),
+  operation: varchar("operation", { length: 20 }).notNull(),
+  totalTime: integer("total_time").notNull(),
+  mistakes: integer("mistakes").notNull(),
+  accuracy: integer("accuracy").notNull(),
+  difficultyAchieved: varchar("difficulty_achieved", { length: 20 }).notNull(),
+  polePosition: boolean("pole_position").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertGPLeaderboardSchema = createInsertSchema(gpLeaderboard).pick({
+  playerId: true,
+  playerName: true,
+  circuitId: true,
+  circuitName: true,
+  operation: true,
+  totalTime: true,
+  mistakes: true,
+  accuracy: true,
+  difficultyAchieved: true,
+  polePosition: true,
+});
+
+export type InsertGPLeaderboardEntry = z.infer<typeof insertGPLeaderboardSchema>;
+export type GPLeaderboardEntry = typeof gpLeaderboard.$inferSelect;

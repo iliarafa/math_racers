@@ -6,9 +6,9 @@ import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
-import { submitLeaderboardEntry } from "@/lib/supabase";
+import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2 } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2, Trophy } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 
@@ -646,6 +646,7 @@ export default function Game() {
     accuracy: number;
     difficultyAchieved: string;
   } | null>(null);
+  const [pendingGPSubmission, setPendingGPSubmission] = useState<Omit<GPLeaderboardSubmission, 'playerName'> | null>(null);
   const [pstCycleCount, setPstCycleCount] = useState(0);
   const [nameInput, setNameInput] = useState('');
   // Grand Prix session state
@@ -1324,6 +1325,37 @@ export default function Game() {
           const achievedDifficulty = dynamicDifficultyRef.current?.currentDifficulty || selectedDriver!.difficulty;
           setGrandPrixLockedDifficulty(achievedDifficulty);
           setGrandPrixPracticeCompleted(true);
+          finishRace(mistakes);
+        } else if (isGrandPrix && grandPrixPhase === 'rw_race') {
+          // Grand Prix race: submit to GP leaderboard and finish
+          const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
+          const gpSubmission = {
+            playerId: state.playerId,
+            circuitId: CURRENT_GRAND_PRIX.circuitId,
+            circuitName: CURRENT_GRAND_PRIX.name,
+            operation: selectedOperation,
+            totalTime: elapsedTime,
+            mistakes,
+            accuracy,
+            difficultyAchieved: grandPrixLockedDifficulty || 'beginner',
+            polePosition: grandPrixPolePosition,
+          };
+
+          if (!state.playerName?.trim()) {
+            setPendingGPSubmission(gpSubmission);
+            setShowNamePrompt(true);
+            setNameInput('');
+          } else {
+            submitGPLeaderboardEntry({
+              ...gpSubmission,
+              playerName: state.playerName.trim(),
+            }).then(() => {
+              console.log('[GP] Leaderboard entry submitted successfully');
+            }).catch((err) => {
+              console.error('[GP] Leaderboard submission failed:', err);
+            });
+          }
+
           finishRace(mistakes);
         } else {
           finishRace(mistakes);
@@ -2180,6 +2212,18 @@ export default function Game() {
             ))}
           </div>
         </div>
+        {!isPreSeasonTesting && (
+          <div className="flex justify-center mt-4">
+            <Link href="/gp-leaderboard">
+              <button
+                className="flex items-center gap-2 transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+              >
+                <Trophy className="w-4 h-4" /> Leaderboard
+              </button>
+            </Link>
+          </div>
+        )}
         </div>
         {/* Track illustration */}
         <div className="flex-1 flex items-center justify-center px-8 overflow-hidden">
@@ -3177,7 +3221,14 @@ export default function Game() {
                         playerName: trimmed,
                       }).catch(() => { /* silent */ });
                     }
+                    if (pendingGPSubmission) {
+                      submitGPLeaderboardEntry({
+                        ...pendingGPSubmission,
+                        playerName: trimmed,
+                      }).catch(() => { /* silent */ });
+                    }
                     setPendingScoreSubmission(null);
+                    setPendingGPSubmission(null);
                     setShowNamePrompt(false);
                   }
                 }}
@@ -3191,6 +3242,7 @@ export default function Game() {
                 <button
                   onClick={() => {
                     setPendingScoreSubmission(null);
+                    setPendingGPSubmission(null);
                     setShowNamePrompt(false);
                   }}
                   className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
@@ -3208,7 +3260,14 @@ export default function Game() {
                           playerName: trimmed,
                         }).catch(() => { /* silent */ });
                       }
+                      if (pendingGPSubmission) {
+                        submitGPLeaderboardEntry({
+                          ...pendingGPSubmission,
+                          playerName: trimmed,
+                        }).catch(() => { /* silent */ });
+                      }
                       setPendingScoreSubmission(null);
+                      setPendingGPSubmission(null);
                       setShowNamePrompt(false);
                     }
                   }}
@@ -3526,6 +3585,74 @@ export default function Game() {
             </div>
           )}
         </div>
+
+        {/* GP Name Prompt Overlay */}
+        {showNamePrompt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
+              <div className="text-center space-y-1">
+                <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
+                <p className="text-sm text-white/50">This will appear on the Grand Prix leaderboard</p>
+              </div>
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value.slice(0, 20))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && nameInput.trim()) {
+                    const trimmed = nameInput.trim();
+                    setPlayerName(trimmed);
+                    if (pendingGPSubmission) {
+                      submitGPLeaderboardEntry({
+                        ...pendingGPSubmission,
+                        playerName: trimmed,
+                      }).catch(() => { /* silent */ });
+                    }
+                    setPendingGPSubmission(null);
+                    setShowNamePrompt(false);
+                  }
+                }}
+                autoFocus
+                maxLength={20}
+                placeholder="Your name..."
+                className="w-full px-4 py-3 bg-black border border-[#444] rounded-xl text-white text-center text-lg focus:outline-none focus:border-yellow-400 transition-colors"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setPendingGPSubmission(null);
+                    setShowNamePrompt(false);
+                  }}
+                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={() => {
+                    if (nameInput.trim()) {
+                      const trimmed = nameInput.trim();
+                      setPlayerName(trimmed);
+                      if (pendingGPSubmission) {
+                        submitGPLeaderboardEntry({
+                          ...pendingGPSubmission,
+                          playerName: trimmed,
+                        }).catch(() => { /* silent */ });
+                      }
+                      setPendingGPSubmission(null);
+                      setShowNamePrompt(false);
+                    }
+                  }}
+                  disabled={!nameInput.trim()}
+                  className="flex-1 py-3 rounded-xl text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </GameLayout>
     );
   }
@@ -4098,7 +4225,7 @@ export default function Game() {
 
       </div>
 
-      {/* PST Name Prompt Overlay */}
+      {/* Name Prompt Overlay */}
       {showNamePrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
@@ -4120,7 +4247,14 @@ export default function Game() {
                       playerName: trimmed,
                     }).catch(() => { /* silent */ });
                   }
+                  if (pendingGPSubmission) {
+                    submitGPLeaderboardEntry({
+                      ...pendingGPSubmission,
+                      playerName: trimmed,
+                    }).catch(() => { /* silent */ });
+                  }
                   setPendingScoreSubmission(null);
+                  setPendingGPSubmission(null);
                   setShowNamePrompt(false);
                 }
               }}
@@ -4134,6 +4268,7 @@ export default function Game() {
               <button
                 onClick={() => {
                   setPendingScoreSubmission(null);
+                  setPendingGPSubmission(null);
                   setShowNamePrompt(false);
                 }}
                 className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
@@ -4151,7 +4286,14 @@ export default function Game() {
                         playerName: trimmed,
                       }).catch(() => { /* silent */ });
                     }
+                    if (pendingGPSubmission) {
+                      submitGPLeaderboardEntry({
+                        ...pendingGPSubmission,
+                        playerName: trimmed,
+                      }).catch(() => { /* silent */ });
+                    }
                     setPendingScoreSubmission(null);
+                    setPendingGPSubmission(null);
                     setShowNamePrompt(false);
                   }
                 }}
