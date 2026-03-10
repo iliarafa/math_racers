@@ -25,6 +25,7 @@ import flagMonaco from "@/assets/flag_monaco.png";
 import flagJapan from "@/assets/flag_japan.png";
 import flagUK from "@/assets/flag_uk.png";
 import flagAustralia from "@/assets/flag_australia.png";
+import flagChina from "@/assets/flag_china.png";
 import flagBahrain from "@/assets/flag_bahrain.jpeg";
 import trackLimitsFlag from "@/assets/track-limits-flag.png";
 import trackMonza from "@/assets/track_monza.png";
@@ -33,6 +34,7 @@ import trackMonaco from "@/assets/track_monaco.png";
 import trackSuzuka from "@/assets/track_suzuka.png";
 import trackSilverstone from "@/assets/track_silverstone.png";
 import trackMelbourne from "@/assets/track_melbourne.png";
+import trackChina from "@/assets/track_china.png";
 import circuitMonzaRed from "@/assets/circuit_monza_red.png";
 import circuitMonzaBlack from "@/assets/circuit_monza_black.png";
 import circuitSuzukaRed from "@/assets/circuit_suzuka_red.png";
@@ -49,13 +51,29 @@ import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageCar from "@/assets/garage_car.jpeg";
 import trackIllustration from "@/assets/track_illustration.jpeg";
 
+// ── Grand Prix Circuit Config ──────────────────────────────────────
+// Change these fields each week to follow the F1 calendar.
+// Also add the new track/flag assets as imports above and update
+// SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
+const CURRENT_GRAND_PRIX = {
+  circuitId: 'china',
+  name: 'SHANGHAI',
+  country: 'China',
+  trackImage: trackChina,
+  flagImage: flagChina,
+  rainProbability: 0.20,
+  simLapCount: 56,
+  gradient: 'linear-gradient(90deg, #CC0000 0%, #DD0000 50%, #FFD700 100%)',
+};
+// ───────────────────────────────────────────────────────────────────
+
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
   "spa": flagBelgium,
   "monaco": flagMonaco,
   "suzuka": flagJapan,
   "silverstone": flagUK,
-  "melbourne": flagAustralia,
+  [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.flagImage,
   "bahrain": flagBahrain,
 };
 
@@ -65,7 +83,7 @@ const TRACK_IMAGES: { [circuitId: string]: string } = {
   "monaco": trackMonaco,
   "suzuka": trackSuzuka,
   "silverstone": trackSilverstone,
-  "melbourne": trackMelbourne,
+  [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.trackImage,
 };
 
 const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } } = {
@@ -118,9 +136,9 @@ const RandomDiceIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const createMelbourneCircuit = (op: string): Circuit => ({
-  id: 'melbourne',
-  name: 'MELBOURNE',
+const createGrandPrixCircuit = (op: string): Circuit => ({
+  id: CURRENT_GRAND_PRIX.circuitId,
+  name: CURRENT_GRAND_PRIX.name,
   type: op,
   description: 'Grand Prix',
   mapUrl: '',
@@ -160,7 +178,7 @@ const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
   "monaco": 0.25,     // Monaco: 20-30% -> 25%
   "monza": 0.20,      // Monza: 15-25% -> 20%
   "bahrain": 0.05,    // Bahrain: Very rare rain -> 5%
-  "melbourne": 0.15,  // Melbourne: Rare rain -> 15%
+  [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.rainProbability,
 };
 
 // Weather Carousel Component
@@ -943,7 +961,7 @@ export default function Game() {
   useEffect(() => {
     if (gameStatus === 'selecting' && !selectedCircuit) {
       if (isGrandPrix) {
-        setSelectedCircuit(createMelbourneCircuit(selectedOperation));
+        setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
       } else if (isPreSeasonTesting) {
         setSelectedCircuit(createBahrainCircuit(selectedOperation));
       } else {
@@ -984,7 +1002,7 @@ export default function Game() {
     setSelectedDriver(driver);
     localStorage.setItem('lastSelectedDriverId', driver.id);
     if (isGrandPrix) {
-      setSelectedCircuit(createMelbourneCircuit(selectedOperation));
+      setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
     } else if (isPreSeasonTesting) {
       setSelectedCircuit(createBahrainCircuit(selectedOperation));
     }
@@ -1932,7 +1950,7 @@ export default function Game() {
                   fontFamily: 'Oxanium, sans-serif',
                   fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
                   fontWeight: 'bold',
-                  background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
+                  background: CURRENT_GRAND_PRIX.gradient,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   opacity: isPremium ? 1 : 0.4,
@@ -1945,14 +1963,14 @@ export default function Game() {
                 className="block mt-1 uppercase tracking-widest"
                 style={{
                   fontSize: '0.65rem',
-                  background: 'linear-gradient(90deg, #0000CC 0%, #8888CC 45%, #CC0000 100%)',
+                  background: CURRENT_GRAND_PRIX.gradient,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   opacity: isPremium ? 0.6 : 0.25,
                   transition: 'all 0.2s ease',
                 }}
               >
-                Melbourne
+                {CURRENT_GRAND_PRIX.name}
               </span>
               {!isPremium && (
                 <span
@@ -2089,7 +2107,7 @@ export default function Game() {
           >
             {isPreSeasonTesting
               ? '100 questions with adaptive difficulty and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.'
-              : 'Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to Melbourne, Australia.'}
+              : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to ${CURRENT_GRAND_PRIX.name}, ${CURRENT_GRAND_PRIX.country}.`}
           </p>
           <h3
             className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-black"
@@ -2116,7 +2134,7 @@ export default function Game() {
                     setSelectedTab('testing');
                     dynamicDifficultyRef.current = null;
                   } else {
-                    setSelectedCircuit(createMelbourneCircuit(op.type));
+                    setSelectedCircuit(createGrandPrixCircuit(op.type));
                     setGrandPrixPhase('rw_practice');
                     setGrandPrixLockedDifficulty(null);
                     setGrandPrixPolePosition(false);
@@ -2483,10 +2501,10 @@ export default function Game() {
         {/* Card area — same position as series buttons list */}
         <div className="flex items-center justify-center px-8 pb-24 md:pb-32 landscape:md:pb-24">
           {isPreSeasonTesting ? (
-            /* Pre-Season Testing Card - Melbourne */
+            /* Pre-Season Testing Card */
             (<div className="flex flex-col items-center">
               <motion.div
-                key="melbourne-card"
+                key={`pst-${CURRENT_GRAND_PRIX.circuitId}-card`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
@@ -2495,28 +2513,28 @@ export default function Game() {
                   backgroundColor: '#f0f0f0',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
                 }}
-                data-testid="hero-card-melbourne"
+                data-testid={`hero-card-pst-${CURRENT_GRAND_PRIX.circuitId}`}
               >
-                {/* Header - Melbourne & Flag */}
+                {/* Header - Circuit & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <h2
                     className="text-2xl font-bold uppercase tracking-wider text-gray-900"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
-                    MELBOURNE
+                    {CURRENT_GRAND_PRIX.name}
                   </h2>
                   <img
-                    src={flagAustralia}
-                    alt="Australian flag"
-                    className="h-5 w-7 object-cover rounded-sm"
+                    src={CURRENT_GRAND_PRIX.flagImage}
+                    alt={`${CURRENT_GRAND_PRIX.country} flag`}
+                    className="h-5 w-7 object-cover rounded-sm relative -top-0.5"
                   />
                 </div>
 
                 {/* Track Map */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                   <img
-                    src={trackMelbourne}
-                    alt="Melbourne circuit"
+                    src={CURRENT_GRAND_PRIX.trackImage}
+                    alt={`${CURRENT_GRAND_PRIX.name} circuit`}
                     className="h-32 md:h-52 object-contain"
                     style={{ maxWidth: '280px' }}
                   />
@@ -2575,10 +2593,10 @@ export default function Game() {
               </motion.div>
             </div>)
           ) : isGrandPrix ? (
-            /* Grand Prix Card - Melbourne */
+            /* Grand Prix Card */
             (<div className="flex flex-col items-center">
               <motion.div
-                key="melbourne-card"
+                key={`${CURRENT_GRAND_PRIX.circuitId}-card`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
@@ -2587,28 +2605,28 @@ export default function Game() {
                   backgroundColor: '#f0f0f0',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
                 }}
-                data-testid="hero-card-melbourne"
+                data-testid={`hero-card-${CURRENT_GRAND_PRIX.circuitId}`}
               >
-                {/* Header - Melbourne & Flag */}
+                {/* Header - Circuit & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <h2
                     className="text-2xl font-bold uppercase tracking-wider text-gray-900"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
-                    MELBOURNE
+                    {CURRENT_GRAND_PRIX.name}
                   </h2>
                   <img
-                    src={flagAustralia}
-                    alt="Australia flag"
-                    className="h-5 w-7 object-cover rounded-sm"
+                    src={CURRENT_GRAND_PRIX.flagImage}
+                    alt={`${CURRENT_GRAND_PRIX.country} flag`}
+                    className="h-5 w-7 object-cover rounded-sm relative -top-0.5"
                   />
                 </div>
 
                 {/* Track Map */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                   <img
-                    src={trackMelbourne}
-                    alt="Melbourne circuit"
+                    src={CURRENT_GRAND_PRIX.trackImage}
+                    alt={`${CURRENT_GRAND_PRIX.name} circuit`}
                     className="h-32 md:h-52 object-contain"
                     style={{ maxWidth: '280px' }}
                   />

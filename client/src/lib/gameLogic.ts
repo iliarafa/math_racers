@@ -79,6 +79,7 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   silverstone: 52,
   monza: 53,
   melbourne: 58,
+  china: 56,
   bahrain: 57
 };
 
