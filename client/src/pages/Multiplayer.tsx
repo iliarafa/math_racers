@@ -1035,7 +1035,7 @@ export default function Multiplayer() {
   
   // Paywall gate for direct /multiplayer navigation
   if (!isLoading && !isPremium) {
-    return <Paywall onBack={() => setLocation('/')} />;
+    return <Paywall onBack={() => setLocation('/')} onPurchaseSuccess={() => setLocation('/')} />;
   }
 
   // Lobby menu - Access Pass Card Design

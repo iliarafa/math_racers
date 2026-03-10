@@ -1862,7 +1862,7 @@ export default function Game() {
 
   // Paywall Screen
   if (gameStatus === 'paywall') {
-    return <Paywall onBack={() => setGameStatus('mode_select')} />;
+    return <Paywall onBack={() => setGameStatus('mode_select')} onPurchaseSuccess={() => setGameStatus('mode_select')} />;
   }
 
   // Mode Selection Screen — Career vs Grand Prix
