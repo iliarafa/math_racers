@@ -80,7 +80,8 @@ export async function restorePurchases(): Promise<boolean> {
     const isPremium = typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined';
     localStorage.setItem(LOCAL_STORAGE_KEY, isPremium ? 'true' : 'false');
     return isPremium;
-  } catch {
+  } catch (e) {
+    console.error('[RC] ❌ restorePurchases failed:', e);
     return false;
   }
 }

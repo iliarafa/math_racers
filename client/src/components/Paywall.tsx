@@ -26,7 +26,12 @@ export function Paywall({ onBack, onPurchaseSuccess }: PaywallProps) {
   const handleRestore = async () => {
     setRestoring(true);
     try {
-      await restore();
+      const success = await restore();
+      if (success) {
+        onPurchaseSuccess?.();
+      } else {
+        alert('No previous purchases found.');
+      }
     } finally {
       setRestoring(false);
     }
