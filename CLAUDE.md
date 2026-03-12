@@ -176,7 +176,6 @@ script/build.ts          # Custom build script
 - Three sequential phases: Practice (30 Qs, dynamic difficulty) → Qualifying (20 Qs, locked difficulty, determines pole) → Race Day (sim-length, pole = 2-sector head start on first correct answer)
 - Difficulty locked after practice phase for the entire weekend
 - Power-ups enabled only during race phase
-- Time-locked: enabled from 2026-03-05T17:30:00Z onwards
 
 **Pre-Season Testing (PST)**
 - Uses Bahrain circuit with player-selected operation

@@ -8,7 +8,10 @@
       "Bash(xxd:*)",
       "Bash(npm run check:*)",
       "Bash(npx cap sync ios)",
-      "Bash(npx cap open ios)"
+      "Bash(npx cap open ios)",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_navigate"
     ]
   }
 }

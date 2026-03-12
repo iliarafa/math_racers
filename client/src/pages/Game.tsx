@@ -56,14 +56,14 @@ import trackIllustration from "@/assets/track_illustration.jpeg";
 // Also add the new track/flag assets as imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 const CURRENT_GRAND_PRIX = {
-  circuitId: 'china',
-  name: 'SHANGHAI',
-  country: 'China',
-  trackImage: trackChina,
-  flagImage: flagChina,
-  rainProbability: 0.20,
-  simLapCount: 56,
-  gradient: 'linear-gradient(90deg, #CC0000 0%, #DD0000 50%, #FFD700 100%)',
+  circuitId: 'suzuka',
+  name: 'SUZUKA',
+  country: 'Japan',
+  trackImage: trackSuzuka,
+  flagImage: flagJapan,
+  rainProbability: 0.42,
+  simLapCount: 53,
+  gradient: 'linear-gradient(90deg, #FFFFFF 0%, #BC002D 50%, #BC002D 100%)',
 };
 // ───────────────────────────────────────────────────────────────────
 
