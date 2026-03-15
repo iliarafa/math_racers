@@ -1022,6 +1022,24 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
   return { display, answer, botTime, num1, num2, operation: effectiveType };
 }
 
+export function generateWrongAnswers(correctAnswer: number, count: number): number[] {
+  const results: number[] = [];
+  const maxRange = correctAnswer <= 5 ? 3 : correctAnswer <= 20 ? 5 : Math.min(Math.ceil(correctAnswer * 0.3), 20);
+
+  for (let i = 0; i < count; i++) {
+    let attempts = 0;
+    let wrong: number;
+    do {
+      const offset = Math.floor(Math.random() * maxRange) + 1;
+      wrong = correctAnswer + (Math.random() < 0.5 ? offset : -offset);
+      if (wrong < 1) wrong = correctAnswer + offset;
+      attempts++;
+    } while ((wrong === correctAnswer || results.includes(wrong) || wrong < 1) && attempts < 20);
+    results.push(wrong);
+  }
+  return results;
+}
+
 // Calculate composite PST score
 // score = (lapCount / timeInSeconds) * (correctAnswers / lapCount) * difficultyMultiplier * 1000
 export function calculatePSTScore(

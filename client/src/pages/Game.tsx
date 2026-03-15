@@ -1921,7 +1921,7 @@ export default function Game() {
         </div>
         {/* Mode Buttons */}
         <div className="flex flex-col items-center px-8">
-          <div className="flex flex-col items-center gap-3 md:gap-5">
+          <div className="flex flex-col items-center gap-1 md:gap-3">
             {/* Career Button */}
             <motion.button
               onClick={() => {
@@ -1936,7 +1936,7 @@ export default function Game() {
                 className="block"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
+                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                   fontWeight: 'bold',
                   color: '#0928B5',
                   opacity: isPremium ? 0.7 : 0.35,
@@ -1980,7 +1980,7 @@ export default function Game() {
                 className="block"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
+                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                   fontWeight: 'bold',
                   background: CURRENT_GRAND_PRIX.gradient,
                   WebkitBackgroundClip: 'text',
@@ -2021,7 +2021,7 @@ export default function Game() {
                 className="block"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
+                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
                   fontWeight: 'bold',
                   color: '#E31010',
                   opacity: isPremium ? 1 : 0.35,
@@ -2042,7 +2042,35 @@ export default function Game() {
                 COMING SOON
               </span>
             </motion.button>
-            {/* PST — shown inline on iPad */}
+            {/* Sim Racing Button */}
+            <Link href="/lane-racer">
+              <motion.button
+                onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full max-w-xs md:max-w-md py-3 text-center"
+              >
+                <span
+                  className="block"
+                  style={{
+                    fontFamily: 'Oxanium, sans-serif',
+                    fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                    fontWeight: 'bold',
+                    color: '#000000',
+                    opacity: 0.7,
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  SIM RACING
+                </span>
+                <span
+                  className="block mt-1 uppercase tracking-widest"
+                  style={{ fontSize: '0.65rem', color: '#000000', opacity: 0.4, transition: 'all 0.2s ease' }}
+                >
+                  Arcade Mode
+                </span>
+              </motion.button>
+            </Link>
+            {/* Free Practice Button */}
             <motion.button
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
@@ -2050,44 +2078,38 @@ export default function Game() {
                 setGameStatus('operation_select');
               }}
               whileTap={{ scale: 0.98 }}
-              className="hidden md:block w-full max-w-xs md:max-w-md py-3 text-center"
+              className="w-full max-w-xs md:max-w-md py-3 text-center"
             >
               <span
-                className="inline-block px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
-                style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
+                className="block"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
+                  fontWeight: 'bold',
+                  color: '#16a34a',
+                  opacity: 0.7,
+                  transition: 'all 0.2s ease',
+                }}
               >
-                Free Practice
+                FREE PRACTICE
+              </span>
+              <span
+                className="block mt-1 uppercase tracking-widest"
+                style={{ fontSize: '0.65rem', color: '#16a34a', opacity: 0.4, transition: 'all 0.2s ease' }}
+              >
+                Round 3 / Suzuka
               </span>
             </motion.button>
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center pb-40">
-          <img src={garageCar} alt="" className="w-40 opacity-25 select-none pointer-events-none" draggable={false} />
-        </div>
-
-        {/* Pre-Season Testing + Back — pinned to bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
-          <motion.button
-            onClick={() => {
-              if (state.soundEnabled) playCarouselClick();
-              setIsPreSeasonTesting(true);
-              setGameStatus('operation_select');
-            }}
-            whileTap={{ scale: 0.98 }}
-            className="md:hidden w-full text-center"
-          >
-            <span
-              className="block py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
-              style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
-            >
-              Free Practice
-            </span>
-          </motion.button>
+        {/* Car + Back — pinned to bottom */}
+        <div className="fixed bottom-6 left-0 right-0 flex flex-col items-center" style={{ backgroundColor: '#ffffff', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <img src={garageCar} alt="" className="w-28 opacity-25 select-none pointer-events-none" draggable={false} />
           <Link href="/">
             <button
               onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-              className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+              className="mt-1 transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
             >
               Back

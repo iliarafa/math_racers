@@ -16,6 +16,7 @@ import Regulations from "@/pages/Regulations";
 import RacerLog from "@/pages/RacerLog";
 import Leaderboard from "@/pages/Leaderboard";
 import GPLeaderboard from "@/pages/GPLeaderboard";
+import LaneRacer from "@/pages/LaneRacer";
 
 function Router() {
   return (
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/racer-log" component={RacerLog} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/gp-leaderboard" component={GPLeaderboard} />
+      <Route path="/lane-racer" component={LaneRacer} />
       <Route component={NotFound} />
     </Switch>
   );
