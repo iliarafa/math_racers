@@ -12,18 +12,20 @@ interface AnswerToken {
   isCorrect: boolean;
 }
 
+interface KerbSegment {
+  yStart: number; // virtual Y position (in total scroll space)
+  length: number; // length in px
+  side: 'left' | 'right' | 'both';
+}
+
 interface EngineState {
   carLane: number; // 0, 1, 2
   carLaneVisual: number; // smooth interpolation
   speed: number;
-  baseSpeed: number;
   roadOffset: number;
+  totalScroll: number;
   tokens: AnswerToken[];
   questionsAnswered: number;
-  isPenalty: boolean;
-  penaltyFrames: number;
-  recoveryFrames: number;
-  prepenaltySpeed: number;
   flashFrames: number; // correct answer flash
   paused: boolean;
 }
@@ -34,13 +36,10 @@ const TOKEN_WIDTH = 70;
 const TOKEN_HEIGHT = 50;
 const LANE_TRANSITION_MS = 150;
 const BASE_SPEED = 3;
-const MAX_SPEED = 4;
-const SPEED_RAMP_PER_5 = 0.1;
-const PENALTY_FRAMES = 60;
-const RECOVERY_FRAMES = 30;
-const PENALTY_FACTOR = 0.4;
+const MAX_SPEED = 12;
+const SPEED_INCREMENT = 0.25;
+const WRONG_SPEED_DROP = 0.5;
 const CAR_HITBOX_HALF = 20;
-const SPAWN_THRESHOLD = 0.3; // spawn next set when previous passes 30% of canvas
 
 export class LaneRacerEngine {
   private canvas: HTMLCanvasElement;
@@ -53,6 +52,8 @@ export class LaneRacerEngine {
   private laneTransitionFrom: number = 0;
   private totalQuestions: number;
   private waitingForTokens: boolean = true;
+  private kerbs: KerbSegment[] = [];
+  private nextKerbY: number = 0;
 
   constructor(canvas: HTMLCanvasElement, callbacks: LaneRacerCallbacks, totalQuestions: number) {
     this.canvas = canvas;
@@ -63,17 +64,30 @@ export class LaneRacerEngine {
       carLane: 1,
       carLaneVisual: 1,
       speed: BASE_SPEED,
-      baseSpeed: BASE_SPEED,
       roadOffset: 0,
+      totalScroll: 0,
       tokens: [],
       questionsAnswered: 0,
-      isPenalty: false,
-      penaltyFrames: 0,
-      recoveryFrames: 0,
-      prepenaltySpeed: BASE_SPEED,
       flashFrames: 0,
       paused: false,
     };
+    this.generateInitialKerbs();
+  }
+
+  private generateInitialKerbs() {
+    this.nextKerbY = -200;
+    for (let i = 0; i < 8; i++) {
+      this.spawnNextKerb();
+    }
+  }
+
+  private spawnNextKerb() {
+    const gap = 300 + Math.random() * 400;
+    const length = 80 + Math.random() * 100;
+    const r = Math.random();
+    const side: 'left' | 'right' | 'both' = r < 0.4 ? 'left' : r < 0.8 ? 'right' : 'both';
+    this.kerbs.push({ yStart: this.nextKerbY, length, side });
+    this.nextKerbY += length + gap;
   }
 
   start() {
@@ -157,24 +171,16 @@ export class LaneRacerEngine {
     const s = this.state;
     const h = this.canvas.height;
 
-    // Update speed penalty/recovery
-    if (s.isPenalty) {
-      s.penaltyFrames -= dt;
-      if (s.penaltyFrames <= 0) {
-        s.isPenalty = false;
-        s.recoveryFrames = RECOVERY_FRAMES;
-      }
-    } else if (s.recoveryFrames > 0) {
-      s.recoveryFrames -= dt;
-      const t = 1 - s.recoveryFrames / RECOVERY_FRAMES;
-      s.speed = s.prepenaltySpeed * PENALTY_FACTOR + (s.baseSpeed - s.prepenaltySpeed * PENALTY_FACTOR) * t;
-      if (s.recoveryFrames <= 0) {
-        s.speed = s.baseSpeed;
-      }
-    }
-
     // Update road scroll
-    s.roadOffset = (s.roadOffset + s.speed * dt) % 40;
+    const scrollAmount = s.speed * dt;
+    s.roadOffset = (s.roadOffset + scrollAmount) % 40;
+    s.totalScroll += scrollAmount;
+
+    // Remove kerbs that scrolled off bottom, spawn new ones ahead
+    this.kerbs = this.kerbs.filter(k => k.yStart + k.length > s.totalScroll - h);
+    while (this.nextKerbY < s.totalScroll + h * 2) {
+      this.spawnNextKerb();
+    }
 
     // Lane transition interpolation
     const transitionProgress = Math.min((timestamp - this.laneTransitionStart) / LANE_TRANSITION_MS, 1);
@@ -214,14 +220,14 @@ export class LaneRacerEngine {
 
     if (token.isCorrect) {
       s.flashFrames = 15;
+      s.speed = Math.min(s.speed + SPEED_INCREMENT, MAX_SPEED);
       this.callbacks.onCorrect();
     } else {
-      this.applyPenalty();
+      s.speed = Math.max(s.speed * WRONG_SPEED_DROP, BASE_SPEED);
       this.callbacks.onWrong();
     }
 
     s.tokens = [];
-    this.updateBaseSpeed();
 
     if (s.questionsAnswered >= this.totalQuestions) {
       this.callbacks.onFinished();
@@ -233,32 +239,15 @@ export class LaneRacerEngine {
   private resolveMiss() {
     const s = this.state;
     s.questionsAnswered++;
-    this.applyPenalty();
+    s.speed = Math.max(s.speed * WRONG_SPEED_DROP, BASE_SPEED);
     this.callbacks.onMiss();
 
     s.tokens = [];
-    this.updateBaseSpeed();
 
     if (s.questionsAnswered >= this.totalQuestions) {
       this.callbacks.onFinished();
     } else {
       this.waitingForTokens = true;
-    }
-  }
-
-  private applyPenalty() {
-    const s = this.state;
-    s.isPenalty = true;
-    s.prepenaltySpeed = s.baseSpeed;
-    s.speed = s.baseSpeed * PENALTY_FACTOR;
-    s.penaltyFrames = PENALTY_FRAMES;
-  }
-
-  private updateBaseSpeed() {
-    const ramps = Math.floor(this.state.questionsAnswered / 5);
-    this.state.baseSpeed = Math.min(BASE_SPEED + ramps * SPEED_RAMP_PER_5, MAX_SPEED);
-    if (!this.state.isPenalty) {
-      this.state.speed = this.state.baseSpeed;
     }
   }
 
@@ -278,10 +267,32 @@ export class LaneRacerEngine {
     const roadRight = roadLeft + roadWidth;
     const laneWidth = roadWidth / 3;
 
-    // Road edges
+    // Kerbs (random corner segments)
+    const kerbWidth = 8;
+    const kerbBlock = 14;
+    for (const kerb of this.kerbs) {
+      // Convert virtual Y to screen Y
+      const screenYStart = h - (kerb.yStart - s.totalScroll + h);
+      const screenYEnd = screenYStart + kerb.length;
+      if (screenYEnd < 0 || screenYStart > h) continue;
+
+      for (let by = Math.max(0, screenYStart); by < Math.min(h, screenYEnd); by += kerbBlock) {
+        const blockIdx = Math.floor((by - screenYStart) / kerbBlock);
+        ctx.fillStyle = blockIdx % 2 === 0 ? '#e10600' : '#ffffff';
+        const blockH = Math.min(kerbBlock, screenYEnd - by);
+        if (kerb.side === 'left' || kerb.side === 'both') {
+          ctx.fillRect(roadLeft - kerbWidth, by, kerbWidth, blockH);
+        }
+        if (kerb.side === 'right' || kerb.side === 'both') {
+          ctx.fillRect(roadRight, by, kerbWidth, blockH);
+        }
+      }
+    }
+
+    // Road edges (thin black line over kerbs)
     ctx.fillStyle = 'black';
-    ctx.fillRect(roadLeft - 2, 0, 3, h);
-    ctx.fillRect(roadRight - 1, 0, 3, h);
+    ctx.fillRect(roadLeft - 1, 0, 2, h);
+    ctx.fillRect(roadRight - 1, 0, 2, h);
 
     // Lane dividers (dashed)
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';

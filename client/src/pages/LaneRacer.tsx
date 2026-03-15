@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LENGTH } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LENGTH, SIM_LAP_COUNTS } from "@/lib/gameLogic";
 import type { Difficulty } from "@/lib/gameLogic";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
@@ -76,6 +76,7 @@ export default function LaneRacer() {
   const [lights, setLights] = useState<boolean[]>([false, false, false, false, false]);
   const [totalTime, setTotalTime] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [raceLength, setRaceLength] = useState(RACE_LENGTH);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<LaneRacerEngine | null>(null);
@@ -114,6 +115,8 @@ export default function LaneRacer() {
 
   // Start the game
   const startGame = () => {
+    const length = SIM_LAP_COUNTS[selectedCircuit.id] || RACE_LENGTH;
+    setRaceLength(length);
     setGameStatus('countdown');
     setLights([false, false, false, false, false]);
     setQuestionNum(0);
@@ -165,7 +168,7 @@ export default function LaneRacer() {
       onWrong: handleWrong,
       onMiss: handleMiss,
       onFinished: handleFinished,
-    }, RACE_LENGTH);
+    }, raceLength);
 
     engineRef.current = engine;
     startTimeRef.current = Date.now();
@@ -177,7 +180,7 @@ export default function LaneRacer() {
       engineRef.current = null;
       window.removeEventListener('resize', resize);
     };
-  }, [gameStatus, handleCorrect, handleWrong, handleMiss, handleFinished]);
+  }, [gameStatus, raceLength, handleCorrect, handleWrong, handleMiss, handleFinished]);
 
   // Spawn questions when engine needs them
   useEffect(() => {
@@ -448,7 +451,7 @@ export default function LaneRacer() {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     const timeStr = `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
-    const mistakes = RACE_LENGTH - correctCount;
+    const mistakes = raceLength - correctCount;
 
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
@@ -476,7 +479,7 @@ export default function LaneRacer() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Correct</span>
-                <span className="font-bold">{correctCount} / {RACE_LENGTH}</span>
+                <span className="font-bold">{correctCount} / {raceLength}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Mistakes</span>
@@ -530,7 +533,7 @@ export default function LaneRacer() {
         {/* HUD overlay */}
         <div className="flex justify-between items-center px-3 py-2">
           <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
-            Q {questionNum}/{RACE_LENGTH}
+            Q {questionNum}/{raceLength}
           </div>
           <div className="text-xs font-bold font-mono" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
             {Math.floor(elapsedSeconds / 60)}:{String(elapsedSeconds % 60).padStart(2, '0')}
