@@ -303,111 +303,112 @@ export default function LaneRacer() {
 
     return (
       <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
-        {/* Logo */}
-        <div className="pb-2 md:pb-4 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
-          <Link href="/"><img src={logoImage} alt="F1 Math Racer" className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity" /></Link>
+        {/* Header: Back + Logo */}
+        <div className="relative flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '8px' }}>
+          <Link href="/game">
+            <button className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors" style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
+              <ChevronLeft size={24} />
+            </button>
+          </Link>
+          <img src={logoImage} alt="F1 Math Racer" className="h-8 md:h-12 object-contain" />
         </div>
 
-        {/* Main content — vertically centered between logo and bottom buttons */}
-        <div className="flex-1 flex flex-col justify-center pb-28">
-          {/* Title */}
-          <div className="mb-5 md:mb-6 flex flex-col items-center px-8">
-            <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Sim Racing</h2>
-          </div>
-
-          {/* Series Carousel — horizontal row */}
-          <div className="flex justify-center gap-4 md:gap-6 px-6 mb-6 md:mb-8">
-            {DIFFICULTY_OPTIONS.map(d => {
-              const isSelected = selectedDifficulty === d.value;
-              const color = seriesColors[d.value] || '#000';
-              return (
-                <motion.button
-                  key={d.value}
-                  onClick={() => setSelectedDifficulty(d.value)}
-                  whileTap={{ scale: 0.95 }}
-                  className="text-center"
-                >
-                  <span className="block font-bold uppercase tracking-wider" style={{
-                    fontFamily: 'Oxanium, sans-serif',
-                    fontSize: window.innerWidth >= 768 ? '1.2rem' : '0.95rem',
-                    color,
-                    opacity: isSelected ? 1 : 0.35,
-                    transition: 'all 0.2s ease',
-                  }}>{d.label.toUpperCase()}</span>
-                </motion.button>
-              );
-            })}
-          </div>
-
-          {/* Track Hero Card */}
-          <div className="flex items-center justify-center px-4">
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={goToPrev} className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900">
-            <ChevronLeft className="w-12 h-12" />
-          </motion.button>
-
+        {/* Main content — evenly distributed */}
+        <div className="flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          {/* Title + Series */}
           <div className="flex flex-col items-center">
-            <div className="md:hidden text-center text-[10px] text-gray-400 uppercase tracking-widest pb-3">Swipe to choose track</div>
-            <motion.div
-              key={displayCircuit.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-              className="w-[320px] md:w-[460px] rounded-[20px] p-4 md:p-6 flex flex-col select-none"
-              style={{ backgroundColor: '#f0f0f0', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', touchAction: 'none' }}
-              onTouchStart={handleSwipeStart}
-              onTouchEnd={handleSwipeEnd}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-center gap-3 mb-3">
-                <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-gray-900" style={{ fontFamily: 'Oxanium, sans-serif' }}>{displayCircuit.name}</h2>
-                {FLAG_IMAGES[displayCircuit.id] && (
-                  <img src={FLAG_IMAGES[displayCircuit.id]} alt="flag" className="h-5 w-7 object-cover rounded-sm" />
-                )}
-              </div>
-
-              {/* Circuit Map */}
-              <div className="flex-1 flex items-center justify-center py-2 md:py-4">
-                {CIRCUIT_MAP_IMAGES[displayCircuit.id] && (
-                  <img src={CIRCUIT_MAP_IMAGES[displayCircuit.id]} alt={`${displayCircuit.name} circuit`} className="h-28 md:h-44 object-contain" style={{ maxWidth: '260px' }} />
-                )}
-              </div>
-
-              {/* Math Type */}
-              <div className="text-center mt-1">
-                <div className="text-xs uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
-                <div className="text-base font-bold uppercase text-gray-900" style={{ fontFamily: 'Oxanium, sans-serif' }}>{displayCircuit.type}</div>
-              </div>
-            </motion.div>
-
-            {/* Dot Indicators */}
-            <div className="flex justify-center gap-2 mt-4">
-              {CIRCUIT_OPTIONS.map((c, i) => (
-                <button
-                  key={c.id}
-                  onClick={() => { setCurrentCircuitIndex(i); setSelectedCircuit(CIRCUIT_OPTIONS[i]); }}
-                  className={`w-2 h-2 rounded-full transition-all ${currentCircuitIndex === i ? 'bg-gray-900' : 'bg-gray-400'}`}
-                />
-              ))}
+            <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-black text-center mb-2" style={{ fontFamily: 'Oxanium, sans-serif' }}>Sim Racing</h2>
+            <div className="flex justify-center">
+              {DIFFICULTY_OPTIONS.map(d => {
+                const isSelected = selectedDifficulty === d.value;
+                const color = seriesColors[d.value] || '#000';
+                return (
+                  <motion.button
+                    key={d.value}
+                    onClick={() => setSelectedDifficulty(d.value)}
+                    whileTap={{ scale: 0.95 }}
+                    className="text-center"
+                    style={{ minWidth: '60px' }}
+                  >
+                    <span className="block font-bold uppercase tracking-wider" style={{
+                      fontFamily: 'Oxanium, sans-serif',
+                      fontSize: window.innerWidth >= 768 ? '1.2rem' : '0.95rem',
+                      color,
+                      opacity: isSelected ? 1 : 0.35,
+                      transition: 'all 0.2s ease',
+                    }}>{d.label.toUpperCase()}</span>
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
 
-          <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={goToNext} className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900">
-            <ChevronRight className="w-12 h-12" />
-          </motion.button>
-        </div>
-        </div>
+          {/* Track Hero Card */}
+          <div className="flex items-center justify-center">
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={goToPrev} className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900">
+              <ChevronLeft className="w-12 h-12" />
+            </motion.button>
 
-        {/* Fixed Bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff', paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <motion.button
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-            onClick={startGame}
-            className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
-            style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a', animation: 'pulse-green 2s infinite' }}
-          >Start</motion.button>
-          <Link href="/game">
-            <button className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>Back</button>
-          </Link>
+            <div className="flex flex-col items-center">
+              <div className="md:hidden text-center text-[10px] text-gray-400 uppercase tracking-widest pb-2">Swipe to choose track</div>
+              <motion.div
+                key={displayCircuit.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                className="w-[320px] md:w-[460px] rounded-[20px] pt-5 pb-5 px-4 md:pt-6 md:pb-6 md:px-6 flex flex-col select-none"
+                style={{ backgroundColor: '#f0f0f0', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', touchAction: 'none' }}
+                onTouchStart={handleSwipeStart}
+                onTouchEnd={handleSwipeEnd}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-gray-900 leading-none" style={{ fontFamily: 'Oxanium, sans-serif' }}>{displayCircuit.name}</h2>
+                  {FLAG_IMAGES[displayCircuit.id] && (
+                    <img src={FLAG_IMAGES[displayCircuit.id]} alt="flag" className="h-5 w-7 object-cover rounded-sm flex-shrink-0" />
+                  )}
+                </div>
+
+                {/* Circuit Map */}
+                <div className="flex items-center justify-center py-5 md:py-6">
+                  {CIRCUIT_MAP_IMAGES[displayCircuit.id] && (
+                    <img src={CIRCUIT_MAP_IMAGES[displayCircuit.id]} alt={`${displayCircuit.name} circuit`} className="h-36 md:h-48 object-contain" style={{ maxWidth: '280px' }} />
+                  )}
+                </div>
+
+                {/* Math Type */}
+                <div className="text-center mt-2">
+                  <div className="text-xs uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
+                  <div className="text-base font-bold uppercase text-gray-900" style={{ fontFamily: 'Oxanium, sans-serif' }}>{displayCircuit.type}</div>
+                </div>
+              </motion.div>
+
+              {/* Dot Indicators */}
+              <div className="flex justify-center gap-2 mt-3">
+                {CIRCUIT_OPTIONS.map((c, i) => (
+                  <button
+                    key={c.id}
+                    onClick={() => { setCurrentCircuitIndex(i); setSelectedCircuit(CIRCUIT_OPTIONS[i]); }}
+                    className={`w-2 h-2 rounded-full transition-all ${currentCircuitIndex === i ? 'bg-gray-900' : 'bg-gray-400'}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={goToNext} className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900">
+              <ChevronRight className="w-12 h-12" />
+            </motion.button>
+          </div>
+
+          {/* Start Button */}
+          <div className="w-full px-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              onClick={startGame}
+              className="w-full max-w-sm md:max-w-md mx-auto py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white block"
+              style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a', animation: 'pulse-green 2s infinite' }}
+            >Start</motion.button>
+          </div>
         </div>
 
         <style>{`
