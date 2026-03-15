@@ -370,7 +370,7 @@ export default function StrategyGuide() {
   };
 
   return (
-    <GameLayout lockViewport hideHeader>
+    <GameLayout lockViewport backHref="/garage">
       <div className="strategy-view bg-white flex-1 overflow-y-auto p-4 md:p-8 pb-20">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="text-center">
@@ -404,17 +404,6 @@ export default function StrategyGuide() {
         </div>
       </div>
 
-      {/* Sticky bottom back button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
-        <Link href="/garage">
-          <button
-            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-          >
-            Back
-          </button>
-        </Link>
-      </div>
 
       <style>{`
         .strategy-view {

@@ -344,7 +344,7 @@ export default function Regulations() {
   let articleNum = 0;
 
   return (
-    <GameLayout lockViewport hideHeader>
+    <GameLayout lockViewport backHref="/garage">
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-10 pb-20 bg-white">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
@@ -447,20 +447,6 @@ export default function Regulations() {
         </div>
       </div>
 
-      {/* Sticky bottom back button */}
-      <div
-        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm flex justify-center py-3 z-50"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
-      >
-        <Link href="/garage">
-          <button
-            className="transition-colors text-sm uppercase tracking-wider text-gray-600 hover:text-black"
-            style={{ fontFamily: "Oxanium, sans-serif" }}
-          >
-            Back
-          </button>
-        </Link>
-      </div>
     </GameLayout>
   );
 }

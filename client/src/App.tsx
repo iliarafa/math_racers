@@ -17,11 +17,13 @@ import RacerLog from "@/pages/RacerLog";
 import Leaderboard from "@/pages/Leaderboard";
 import GPLeaderboard from "@/pages/GPLeaderboard";
 import LaneRacer from "@/pages/LaneRacer";
+import Hub from "@/pages/Hub";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Welcome} />
+      <Route path="/hub" component={Hub} />
       <Route path="/game" component={Game} />
       <Route path="/garage" component={Garage} />
       <Route path="/strategy" component={StrategyGuide} />

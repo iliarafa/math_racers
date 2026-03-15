@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Wrench, Flag } from "lucide-react";
+import { Wrench, Flag, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
@@ -13,9 +13,10 @@ interface GameLayoutProps {
   centerHeader?: boolean;
   headerRight?: React.ReactNode;
   headerAfterLogo?: React.ReactNode;
+  backHref?: string;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref }: GameLayoutProps) {
   return (
     <div className={cn(
       "text-foreground flex flex-col",
@@ -29,8 +30,22 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
       paddingRight: 'env(safe-area-inset-right)'
     }}>
       {!hideHeader && (
-        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex items-center sticky top-0 z-50 bg-[#ffffff]", centerHeader ? "justify-center" : "justify-between", !hideGarageButton && "border-b border-border")}>
+        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex items-center sticky top-0 z-50 bg-[#ffffff]", centerHeader ? "justify-center relative" : "justify-between", !hideGarageButton && "border-b border-border")}>
+          {backHref && centerHeader && (
+            <Link href={backHref}>
+              <button className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors">
+                <ChevronLeft size={24} />
+              </button>
+            </Link>
+          )}
           <div className="flex items-center gap-4 md:gap-6">
+            {backHref && !centerHeader && (
+              <Link href={backHref}>
+                <button className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors">
+                  <ChevronLeft size={24} />
+                </button>
+              </Link>
+            )}
             <Link href="/">
               <img
                 src={logoImage}

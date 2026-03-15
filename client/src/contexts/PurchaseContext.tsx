@@ -25,31 +25,13 @@ export const PurchaseContext = createContext<PurchaseContextType>({
 });
 
 export function PurchaseProvider({ children }: { children: ReactNode }) {
-  const [isPremium, setIsPremium] = useState(() => !isNativePlatform());
+  const [isPremium, setIsPremium] = useState(true); // TODO: revert to () => !isNativePlatform()
   const [isLoading, setIsLoading] = useState(true);
   const [priceString, setPriceString] = useState<string | null>(null);
 
+  // TODO: revert this useEffect to restore purchase checking
   useEffect(() => {
-    async function init() {
-      try {
-        const raw = localStorage.getItem('f1-math-racer-state');
-        const playerId = raw ? JSON.parse(raw).playerId : undefined;
-
-        await initializePurchases(playerId);
-        const status = await checkPremiumStatus();
-        setIsPremium(status);
-
-        const { price } = await getPremiumPrice();
-        setPriceString(price);
-      } catch {
-        // On native, default to locked so paywall can be tested
-        // On web, default to unlocked so dev isn't blocked
-        setIsPremium(!isNativePlatform());
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    init();
+    setIsLoading(false);
   }, []);
 
   const purchase = useCallback(async (): Promise<boolean> => {

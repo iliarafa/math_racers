@@ -36,52 +36,34 @@ export default function Welcome() {
   const { state } = useGameState();
 
   return (
-    <GameLayout hideHeader lockViewport>
-      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-16 px-4 overflow-hidden">
-        
-        <div className="space-y-12 max-w-2xl flex flex-col items-center">
-          <img 
-            src={logoImage} 
-            alt="Math Racer" 
-            className="w-auto max-w-[80%] md:max-w-[55%]"
+    <Link href="/hub" className="contents">
+      <div
+        className="fixed inset-0 flex flex-col items-center justify-center bg-white overflow-hidden cursor-pointer"
+        style={{ fontFamily: 'Oxanium, sans-serif' }}
+        onClick={() => { if (state.soundEnabled) playClickSound(); }}
+      >
+        <div className="flex flex-col items-center" style={{ marginTop: '5vh' }}>
+          <img
+            src={logoImage}
+            alt="Math Racer"
+            className="w-[65%] max-w-[380px] md:max-w-[420px] mb-8"
             data-testid="img-logo"
           />
           <img
             src={heroImage}
             alt="Math Racers"
-            className="w-auto max-w-[85%] md:max-w-[65%]"
+            className="w-[65%] max-w-[380px] md:max-w-[420px]"
             style={{ filter: 'saturate(0.8) brightness(0.92)' }}
             data-testid="img-hero"
           />
+          <span
+            className="mt-10 text-sm uppercase tracking-[0.2em] text-gray-400 animate-pulse"
+            data-testid="button-start"
+          >
+            Tap to start
+          </span>
         </div>
-
-        <div className="flex flex-col items-center gap-8 md:gap-12 w-full max-w-md">
-          <Link href="/garage">
-            <button
-              onClick={() => { if (state.soundEnabled) playClickSound(); }}
-              className="w-48 py-4 bg-white text-black text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-gray-100 transition-colors md:w-60 md:py-5 md:text-3xl"
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-              data-testid="button-garage"
-            >
-              GARAGE
-            </button>
-          </Link>
-
-          <Link href="/game">
-            <button
-              onClick={() => { if (state.soundEnabled) playClickSound(); }}
-              className="w-48 py-4 bg-red-600 text-white text-2xl font-bold uppercase tracking-wider rounded-2xl cursor-pointer hover:bg-red-700 transition-colors md:w-60 md:py-5 md:text-3xl"
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-              data-testid="button-start-race"
-            >
-              RACE
-            </button>
-          </Link>
-        </div>
-
-        
-
       </div>
-    </GameLayout>
+    </Link>
   );
 }
