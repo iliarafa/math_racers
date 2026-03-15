@@ -1,3 +1,5 @@
+import { TEAM_SVGS, type TeamId } from './carSvgs';
+
 export interface LaneRacerCallbacks {
   onCorrect: () => void;
   onWrong: () => void;
@@ -30,8 +32,20 @@ interface EngineState {
   paused: boolean;
 }
 
-const CAR_WIDTH = 30;
-const CAR_HEIGHT = 50;
+const CAR_WIDTH = 40;
+const CAR_HEIGHT = 80;
+
+function createCarImage(svgString: string): HTMLImageElement {
+  const img = new Image();
+  const blob = new Blob([svgString], { type: 'image/svg+xml' });
+  img.src = URL.createObjectURL(blob);
+  return img;
+}
+
+const carImages: Record<string, HTMLImageElement> = {};
+for (const [teamId, svg] of Object.entries(TEAM_SVGS)) {
+  carImages[teamId] = createCarImage(svg);
+}
 const TOKEN_WIDTH = 70;
 const TOKEN_HEIGHT = 50;
 const LANE_TRANSITION_MS = 150;
@@ -54,12 +68,14 @@ export class LaneRacerEngine {
   private waitingForTokens: boolean = true;
   private kerbs: KerbSegment[] = [];
   private nextKerbY: number = 0;
+  private carImage: HTMLImageElement;
 
-  constructor(canvas: HTMLCanvasElement, callbacks: LaneRacerCallbacks, totalQuestions: number) {
+  constructor(canvas: HTMLCanvasElement, callbacks: LaneRacerCallbacks, totalQuestions: number, teamId: TeamId = 'mercedes') {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
     this.callbacks = callbacks;
     this.totalQuestions = totalQuestions;
+    this.carImage = carImages[teamId] || carImages['mercedes'];
     this.state = {
       carLane: 1,
       carLaneVisual: 1,
@@ -367,36 +383,8 @@ export class LaneRacerEngine {
 
   private drawCar(x: number, y: number) {
     const ctx = this.ctx;
-    ctx.save();
-    // Rotate 180° around car center so front wing faces up
-    ctx.translate(x + CAR_WIDTH / 2, y + CAR_HEIGHT / 2);
-    ctx.rotate(Math.PI);
-    ctx.translate(-(x + CAR_WIDTH / 2), -(y + CAR_HEIGHT / 2));
-
-    ctx.fillStyle = 'black';
-
-    // Rear wing
-    ctx.fillRect(x + 2, y, CAR_WIDTH - 4, 5);
-    // Wing pillars
-    ctx.fillRect(x + 12, y + 5, 6, 3);
-    // Body
-    ctx.fillRect(x + 6, y + 8, CAR_WIDTH - 12, 22);
-    // Left tire
-    ctx.fillRect(x, y + 10, 6, 16);
-    // Right tire
-    ctx.fillRect(x + CAR_WIDTH - 6, y + 10, 6, 16);
-    // Cockpit
-    ctx.fillStyle = '#555';
-    ctx.fillRect(x + 10, y + 12, 10, 8);
-    ctx.fillStyle = 'black';
-    // Nose
-    ctx.fillRect(x + 8, y + 30, CAR_WIDTH - 16, 10);
-    // Front wing
-    ctx.fillRect(x + 2, y + 40, CAR_WIDTH - 4, 4);
-    // Front wing endplates
-    ctx.fillRect(x, y + 38, 5, 8);
-    ctx.fillRect(x + CAR_WIDTH - 5, y + 38, 5, 8);
-
-    ctx.restore();
+    if (this.carImage.complete && this.carImage.naturalWidth > 0) {
+      ctx.drawImage(this.carImage, x, y, CAR_WIDTH, CAR_HEIGHT);
+    }
   }
 }

@@ -6,6 +6,7 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LENGTH, SIM_LAP_COUNTS } from "@/lib/gameLogic";
 import type { Difficulty } from "@/lib/gameLogic";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
+import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import flagItaly from "@/assets/flag_italy.png";
 import flagBelgium from "@/assets/flag_belgium.png";
@@ -33,6 +34,12 @@ const DIFFICULTY_OPTIONS: { label: string; value: Difficulty }[] = [
   { label: 'F2', value: 'medium' },
   { label: 'F1', value: 'hard' },
 ];
+
+// Precompute blob URLs for team car previews (module-level, created once)
+const TEAM_PREVIEW_URLS: Record<string, string> = {};
+for (const team of TEAMS) {
+  TEAM_PREVIEW_URLS[team.id] = URL.createObjectURL(new Blob([TEAM_SVGS[team.id]], { type: 'image/svg+xml' }));
+}
 
 const CIRCUIT_OPTIONS = CIRCUITS.map(c => ({
   id: c.id,
@@ -70,6 +77,10 @@ export default function LaneRacer() {
   const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[0]);
   const [currentCircuitIndex, setCurrentCircuitIndex] = useState(0);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('beginner');
+  const [selectedTeam, setSelectedTeam] = useState<TeamId>(() => {
+    const saved = localStorage.getItem('lastSelectedTeam');
+    return (saved && TEAMS.some(t => t.id === saved) ? saved : 'mercedes') as TeamId;
+  });
   const [questionDisplay, setQuestionDisplay] = useState('');
   const [questionNum, setQuestionNum] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
@@ -168,7 +179,7 @@ export default function LaneRacer() {
       onWrong: handleWrong,
       onMiss: handleMiss,
       onFinished: handleFinished,
-    }, raceLength);
+    }, raceLength, selectedTeam);
 
     engineRef.current = engine;
     startTimeRef.current = Date.now();
@@ -341,6 +352,35 @@ export default function LaneRacer() {
                 );
               })}
             </div>
+          </div>
+
+          {/* Team Selector */}
+          <div className="flex justify-center gap-4">
+            {TEAMS.map(team => {
+              const isSelected = selectedTeam === team.id;
+              return (
+                <motion.button
+                  key={team.id}
+                  onClick={() => {
+                    setSelectedTeam(team.id);
+                    localStorage.setItem('lastSelectedTeam', team.id);
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex flex-col items-center"
+                  style={{ opacity: isSelected ? 1 : 0.35, transition: 'all 0.2s ease' }}
+                >
+                  <img src={TEAM_PREVIEW_URLS[team.id]} alt={team.name} className="w-8 h-16 md:w-10 md:h-20 object-contain" />
+                  <span className="block font-bold uppercase tracking-wider mt-1" style={{
+                    fontFamily: 'Oxanium, sans-serif',
+                    fontSize: '0.6rem',
+                    color: isSelected ? team.color : '#999',
+                  }}>{team.name}</span>
+                  {isSelected && (
+                    <div className="w-6 h-0.5 mt-1 rounded-full" style={{ backgroundColor: team.color }} />
+                  )}
+                </motion.button>
+              );
+            })}
           </div>
 
           {/* Track Hero Card */}
