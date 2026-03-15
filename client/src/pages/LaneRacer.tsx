@@ -75,7 +75,7 @@ export default function LaneRacer() {
   const [correctCount, setCorrectCount] = useState(0);
   const [lights, setLights] = useState<boolean[]>([false, false, false, false, false]);
   const [totalTime, setTotalTime] = useState(0);
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
   const [raceLength, setRaceLength] = useState(RACE_LENGTH);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -269,13 +269,13 @@ export default function LaneRacer() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [gameStatus]);
 
-  // Live timer
+  // Live timer (centisecond precision)
   useEffect(() => {
     if (gameStatus !== 'racing') return;
-    setElapsedSeconds(0);
+    setElapsedMs(0);
     const interval = setInterval(() => {
-      setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
-    }, 1000);
+      setElapsedMs(Date.now() - startTimeRef.current);
+    }, 16);
     return () => clearInterval(interval);
   }, [gameStatus]);
 
@@ -535,8 +535,8 @@ export default function LaneRacer() {
           <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
             Q {questionNum}/{raceLength}
           </div>
-          <div className="text-xs font-bold font-mono" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
-            {Math.floor(elapsedSeconds / 60)}:{String(elapsedSeconds % 60).padStart(2, '0')}
+          <div className="text-2xl font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
+            {Math.floor(elapsedMs / 60000)}:{String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0')}.{String(elapsedMs % 1000).padStart(3, '0')}
           </div>
           <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
             ✓ {correctCount}
