@@ -43,7 +43,7 @@ export default function Garage() {
   };
 
   return (
-    <GameLayout hideGarageButton hideHeader lockViewport>
+    <GameLayout hideGarageButton lockViewport backHref="/hub">
       <div className="flex-1 overflow-y-auto p-6 md:p-10 pb-20 bg-white">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
@@ -153,16 +153,6 @@ export default function Garage() {
           </div>
 
         </div>
-      </div>
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm py-3 z-50 flex justify-center" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
-        <Link href="/">
-          <button
-            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-          >
-            Back
-          </button>
-        </Link>
       </div>
     </GameLayout>
   );

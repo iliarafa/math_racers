@@ -98,7 +98,7 @@ export default function GPLeaderboard() {
   const hasMore = !searchQuery && filteredEntries.length > INITIAL_COUNT;
 
   return (
-    <GameLayout hideGarageButton lockViewport hideHeader>
+    <GameLayout hideGarageButton lockViewport backHref="/garage">
       <div className="fixed inset-0 overflow-y-auto p-4 md:p-8 pb-20 bg-white" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
@@ -287,16 +287,6 @@ export default function GPLeaderboard() {
         </div>
       </div>
 
-      {/* Sticky bottom back button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
-        <button
-          onClick={() => window.history.back()}
-          className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-          style={{ fontFamily: 'Oxanium, sans-serif' }}
-        >
-          Back
-        </button>
-      </div>
     </GameLayout>
   );
 }

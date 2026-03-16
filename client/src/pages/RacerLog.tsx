@@ -45,7 +45,7 @@ export default function RacerLog() {
   const hasEntries = lapHistory.length > 0;
 
   return (
-    <GameLayout hideGarageButton hideHeader lockViewport>
+    <GameLayout hideGarageButton lockViewport backHref="/garage">
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-white">
         <h1 className="text-2xl md:text-3xl font-bold tracking-wider text-black text-center mb-6"
             style={{ fontFamily: 'Oxanium, sans-serif' }}>RACER LOG</h1>
@@ -111,16 +111,6 @@ export default function RacerLog() {
             </div>
             <div className="text-[10px] uppercase tracking-widest text-black/40 mt-1">Races Won</div>
           </div>
-        </div>
-        <div className="flex justify-center mt-3">
-          <Link href="/garage">
-            <button
-              className="transition-colors text-sm uppercase tracking-wider text-black/40 hover:text-black"
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-            >
-              Back
-            </button>
-          </Link>
         </div>
       </div>
     </GameLayout>

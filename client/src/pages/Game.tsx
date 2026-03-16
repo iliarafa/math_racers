@@ -1899,30 +1899,66 @@ export default function Game() {
 
   // Mode Selection Screen — Career vs Grand Prix
   if (gameStatus === 'mode_select') {
+    const modeCardStyle: React.CSSProperties = {
+      backgroundColor: '#FFFFFF',
+      border: '1px solid #E9ECEF',
+      borderRadius: '12px',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+      padding: '16px 20px',
+      width: '100%',
+      textAlign: 'left' as const,
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    };
+    const modeTitleStyle: React.CSSProperties = {
+      fontFamily: 'Oxanium, sans-serif',
+      fontSize: window.innerWidth >= 768 ? '1.4rem' : '1.15rem',
+      fontWeight: 'bold',
+      color: '#212529',
+    };
+    const modeSubStyle: React.CSSProperties = {
+      fontFamily: 'Oxanium, sans-serif',
+      fontSize: '0.75rem',
+      color: '#6C757D',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.08em',
+      marginTop: '4px',
+    };
+
     return (
       <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
-        {/* App Logo */}
-        <div className="pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
-          <Link href="/">
-            <img
-              src={logoImage}
-              alt="F1 Math Racer"
-              className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
-            />
+        {/* Header: Back + Logo */}
+        <div className="relative flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
+          <Link href="/hub">
+            <button
+              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
+              className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors"
+              style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
+            >
+              <ChevronLeft size={24} />
+            </button>
           </Link>
+          <img
+            src={logoImage}
+            alt="F1 Math Racer"
+            className="h-8 md:h-12 object-contain"
+          />
         </div>
-        <div className="mt-8 md:mt-24 mb-10 md:mb-24 flex justify-center">
+
+        {/* Title */}
+        <div className="mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
           <h2
-            className="text-4xl md:text-5xl font-bold uppercase tracking-wider text-black"
+            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Select Mode
           </h2>
         </div>
-        {/* Mode Buttons */}
-        <div className="flex flex-col items-center px-8">
-          <div className="flex flex-col items-center gap-3 md:gap-5">
-            {/* Career Button */}
+
+        {/* Mode Cards */}
+        <div className="flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+          <div className="flex flex-col w-full max-w-sm gap-4">
+            {/* Career Card */}
             <motion.button
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
@@ -1930,42 +1966,18 @@ export default function Game() {
                 setGameStatus('driver_select');
               }}
               whileTap={{ scale: 0.98 }}
-              className="w-full max-w-xs md:max-w-md py-3 text-center"
+              style={modeCardStyle}
             >
-              <span
-                className="block"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
-                  fontWeight: 'bold',
-                  color: '#0928B5',
-                  opacity: isPremium ? 0.7 : 0.35,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                CAREER
-              </span>
-              <span
-                className="block mt-1 uppercase tracking-widest"
-                style={{
-                  fontSize: '0.65rem',
-                  color: '#0928B5',
-                  opacity: isPremium ? 0.4 : 0.2,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Championship
-              </span>
+              <span className="block" style={modeTitleStyle}>CAREER</span>
+              <span className="block" style={modeSubStyle}>CHAMPIONSHIP</span>
               {!isPremium && (
-                <span
-                  className="block mt-1 uppercase tracking-widest"
-                  style={{ fontSize: '0.55rem', color: '#999', transition: 'all 0.2s ease' }}
-                >
+                <span className="block" style={{ ...modeSubStyle, fontSize: '0.65rem', color: '#999', marginTop: '6px' }}>
                   Full version
                 </span>
               )}
             </motion.button>
-            {/* Grand Prix Button */}
+
+            {/* Grand Prix Card */}
             <motion.button
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
@@ -1974,75 +1986,30 @@ export default function Game() {
                 setGameStatus('operation_select');
               }}
               whileTap={{ scale: 0.98 }}
-              className="w-full max-w-xs md:max-w-md py-3 text-center"
+              style={modeCardStyle}
             >
-              <span
-                className="block"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
-                  fontWeight: 'bold',
-                  background: CURRENT_GRAND_PRIX.gradient,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  opacity: isPremium ? 1 : 0.4,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                GRAND PRIX
-              </span>
-              <span
-                className="block mt-1 uppercase tracking-widest"
-                style={{
-                  fontSize: '0.65rem',
-                  background: CURRENT_GRAND_PRIX.gradient,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  opacity: isPremium ? 0.6 : 0.25,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                {CURRENT_GRAND_PRIX.name}
-              </span>
+              <span className="block" style={modeTitleStyle}>GRAND PRIX</span>
+              <span className="block" style={modeSubStyle}>{CURRENT_GRAND_PRIX.name}</span>
               {!isPremium && (
-                <span
-                  className="block mt-1 uppercase tracking-widest"
-                  style={{ fontSize: '0.55rem', color: '#999', transition: 'all 0.2s ease' }}
-                >
+                <span className="block" style={{ ...modeSubStyle, fontSize: '0.65rem', color: '#999', marginTop: '6px' }}>
                   Full version
                 </span>
               )}
             </motion.button>
-            {/* Multiplayer Button */}
-            <motion.button
-              className="w-full max-w-xs md:max-w-md py-3 text-center"
-            >
-              <span
-                className="block"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  fontSize: window.innerWidth >= 768 ? '2.6rem' : '1.9rem',
-                  fontWeight: 'bold',
-                  color: '#E31010',
-                  opacity: isPremium ? 1 : 0.35,
-                  transition: 'all 0.2s ease',
-                }}
+
+            {/* Sim Racing Card */}
+            <Link href="/lane-racer">
+              <motion.button
+                onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
+                whileTap={{ scale: 0.98 }}
+                style={modeCardStyle}
               >
-                MULTIPLAYER
-              </span>
-              <span
-                className="block mt-1 uppercase tracking-widest"
-                style={{
-                  fontSize: '0.65rem',
-                  color: '#E31010',
-                  opacity: 0.6,
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                COMING SOON
-              </span>
-            </motion.button>
-            {/* PST — shown inline on iPad */}
+                <span className="block" style={modeTitleStyle}>SIM RACING</span>
+                <span className="block" style={modeSubStyle}>ARCADE MODE</span>
+              </motion.button>
+            </Link>
+
+            {/* Free Practice Card */}
             <motion.button
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
@@ -2050,49 +2017,12 @@ export default function Game() {
                 setGameStatus('operation_select');
               }}
               whileTap={{ scale: 0.98 }}
-              className="hidden md:block w-full max-w-xs md:max-w-md py-3 text-center"
+              style={modeCardStyle}
             >
-              <span
-                className="inline-block px-8 py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
-                style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
-              >
-                Free Practice
-              </span>
+              <span className="block" style={modeTitleStyle}>FREE PRACTICE</span>
+              <span className="block" style={modeSubStyle}>ROUND 3 / SUZUKA</span>
             </motion.button>
           </div>
-        </div>
-
-        <div className="flex-1 flex items-center justify-center pb-40">
-          <img src={garageCar} alt="" className="w-40 opacity-25 select-none pointer-events-none" draggable={false} />
-        </div>
-
-        {/* Pre-Season Testing + Back — pinned to bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
-          <motion.button
-            onClick={() => {
-              if (state.soundEnabled) playCarouselClick();
-              setIsPreSeasonTesting(true);
-              setGameStatus('operation_select');
-            }}
-            whileTap={{ scale: 0.98 }}
-            className="md:hidden w-full text-center"
-          >
-            <span
-              className="block py-3 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
-              style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
-            >
-              Free Practice
-            </span>
-          </motion.button>
-          <Link href="/">
-            <button
-              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-              className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-            >
-              Back
-            </button>
-          </Link>
         </div>
       </div>
     );
@@ -2262,80 +2192,99 @@ export default function Game() {
       { id: 'karting', name: 'KARTING', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting'), color: '#006B3F' },
     ];
 
+    const seriesCardStyle: React.CSSProperties = {
+      backgroundColor: '#FFFFFF',
+      border: '1px solid #E9ECEF',
+      borderRadius: '12px',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+      padding: '16px 20px',
+      width: '100%',
+      textAlign: 'left' as const,
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+    };
+    const seriesTitleStyle: React.CSSProperties = {
+      fontFamily: 'Oxanium, sans-serif',
+      fontSize: window.innerWidth >= 768 ? '1.4rem' : '1.15rem',
+      fontWeight: 'bold',
+      color: '#212529',
+    };
+    const seriesSubStyle: React.CSSProperties = {
+      fontFamily: 'Oxanium, sans-serif',
+      fontSize: '0.75rem',
+      color: '#6C757D',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.08em',
+      marginTop: '4px',
+    };
+
     return (
       <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
-        {/* App Logo */}
-        <div className="pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
-          <Link href="/">
-            <img
-              src={logoImage}
-              alt="F1 Math Racer"
-              className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
-            />
-          </Link>
+        {/* Header: Back + Logo */}
+        <div className="relative flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
+          <button
+            onClick={() => {
+              if (state.soundEnabled) playCarouselClick();
+              setGameStatus('mode_select');
+            }}
+            className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors"
+            style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
+            data-testid="button-back-menu"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <img
+            src={logoImage}
+            alt="F1 Math Racer"
+            className="h-8 md:h-12 object-contain"
+          />
         </div>
-        {/* Section Title — same position as pill toggle on track selection */}
-        <div className="mt-8 md:mt-24 mb-10 md:mb-24 flex justify-center">
+
+        {/* Title */}
+        <div className="mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
           <h2
-            className="text-3xl md:text-4xl font-bold uppercase tracking-wider text-black"
+            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-black"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Select Series
           </h2>
         </div>
-        {/* Series Selection */}
-        <div className="flex flex-col items-center px-8">
-          <div className="flex flex-col items-center gap-3 md:gap-5">
-          {seriesOptions.map((series) => {
-            const isSelected = selectedDriver?.id === series.id;
-            const isUnlocked = isPracticeMode || isSeriesAvailable(series.id, state.championedCircuits);
 
-            return (
-              <motion.button
-                key={series.id}
-                onClick={() => {
-                  if (!isUnlocked) return;
-                  setSelectedDriver(series.driver || null);
-                  if (state.soundEnabled) playCarouselClick();
-                }}
-                whileTap={isUnlocked ? { scale: 0.98 } : undefined}
-                className={cn(
-                  "w-full max-w-xs md:max-w-md py-3 text-center",
-                  !isUnlocked && "cursor-not-allowed"
-                )}
-                data-testid={`level-${series.id}`}
-              >
-                <span
-                  className="block"
-                  style={{
-                    fontFamily: 'Oxanium, sans-serif',
-                    fontSize: window.innerWidth >= 768 ? '2.2rem' : '1.5rem',
-                    fontWeight: 'bold',
-                    color: isUnlocked ? series.color : '#cccccc',
-                    opacity: isSelected ? 1 : (isUnlocked ? 0.4 : 0.3),
-                    transition: 'all 0.2s ease',
+        {/* Series Cards */}
+        <div className="flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
+          <div className="flex flex-col w-full max-w-sm gap-4">
+            {seriesOptions.map((series) => {
+              const isSelected = selectedDriver?.id === series.id;
+              const isUnlocked = isPracticeMode || isSeriesAvailable(series.id, state.championedCircuits);
+
+              return (
+                <motion.button
+                  key={series.id}
+                  onClick={() => {
+                    if (!isUnlocked) return;
+                    setSelectedDriver(series.driver || null);
+                    if (state.soundEnabled) playCarouselClick();
                   }}
-                >
-                  {series.name}
-                </span>
-                <span
-                  className="block mt-1 uppercase tracking-widest"
+                  whileTap={isUnlocked ? { scale: 0.98 } : undefined}
                   style={{
-                    fontSize: '0.65rem',
-                    color: isUnlocked ? series.color : '#cccccc',
-                    opacity: isSelected ? 0.6 : (isUnlocked ? 0.3 : 0.2),
-                    transition: 'all 0.2s ease',
+                    ...seriesCardStyle,
+                    ...(isSelected ? { border: '2px solid #212529' } : {}),
+                    ...(!isUnlocked ? { opacity: 0.5, cursor: 'default' } : {}),
                   }}
+                  data-testid={`level-${series.id}`}
                 >
-                  {isUnlocked ? series.description : 'Win to unlock'}
-                </span>
-              </motion.button>
-            );
-          })}
+                  <span className="block" style={seriesTitleStyle}>{series.name}</span>
+                  <span className="block" style={seriesSubStyle}>
+                    {isUnlocked ? series.description.toUpperCase() : 'WIN TO UNLOCK'}
+                  </span>
+                </motion.button>
+              );
+            })}
           </div>
         </div>
-        {/* Confirm Strategy Button - Fixed Bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+
+        {/* Confirm Button - Fixed Bottom */}
+        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center" style={{ backgroundColor: '#ffffff', paddingBottom: 'env(safe-area-inset-bottom)' }}>
           {selectedDriver && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
@@ -2357,17 +2306,6 @@ export default function Game() {
               Select Track
             </motion.button>
           )}
-          <button
-            onClick={() => {
-              if (state.soundEnabled) playCarouselClick();
-              setGameStatus('mode_select');
-            }}
-            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-            data-testid="button-back-menu"
-          >
-            Back
-          </button>
         </div>
         <style>{`
           @keyframes pulse-green {
@@ -2577,7 +2515,7 @@ export default function Game() {
                 {/* Track Map */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                   <img
-                    src={CURRENT_GRAND_PRIX.trackImage}
+                    src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
                     alt={`${CURRENT_GRAND_PRIX.name} circuit`}
                     className="h-32 md:h-52 object-contain"
                     style={{ maxWidth: '280px' }}
@@ -2669,7 +2607,7 @@ export default function Game() {
                 {/* Track Map */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                   <img
-                    src={CURRENT_GRAND_PRIX.trackImage}
+                    src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
                     alt={`${CURRENT_GRAND_PRIX.name} circuit`}
                     className="h-32 md:h-52 object-contain"
                     style={{ maxWidth: '280px' }}

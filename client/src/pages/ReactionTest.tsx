@@ -178,7 +178,7 @@ export default function ReactionTest() {
   };
 
   return (
-    <GameLayout trackName="Reflex Training" lockViewport hideGarageButton centerHeader>
+    <GameLayout trackName="Reflex Training" lockViewport hideGarageButton centerHeader backHref="/garage">
       <div className="flex-1 flex flex-col items-center justify-center max-w-xl md:max-w-2xl mx-auto w-full px-4 space-y-4 md:space-y-8 overflow-hidden">
         
         <div className="flex flex-col items-stretch space-y-4 md:space-y-8">
@@ -223,18 +223,6 @@ export default function ReactionTest() {
 
       </div>
 
-      {/* Sticky bottom back button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm flex justify-center py-3 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
-        <Link href="/garage">
-          <button
-            className="transition-colors text-sm uppercase tracking-wider text-muted-foreground hover:text-foreground"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-            data-testid="button-back-garage"
-          >
-            Back
-          </button>
-        </Link>
-      </div>
     </GameLayout>
   );
 }
