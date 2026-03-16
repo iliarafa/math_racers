@@ -1,8 +1,8 @@
 export const TEAMS = [
-  { id: 'mercedes', name: 'Mercedes', color: '#00d2be' },
-  { id: 'ferrari', name: 'Ferrari', color: '#d40000' },
-  { id: 'mclaren', name: 'McLaren', color: '#ff8000' },
-  { id: 'redbull', name: 'Red Bull', color: '#1b2f52' },
+  { id: 'mercedes', name: 'Silver Arrows Racing', color: '#00d2be' },
+  { id: 'ferrari', name: 'Scuderia Racing', color: '#d40000' },
+  { id: 'mclaren', name: 'Papaya Racing', color: '#ff8000' },
+  { id: 'redbull', name: 'Red Bulls', color: '#1b2f52' },
 ] as const;
 
 export type TeamId = typeof TEAMS[number]['id'];

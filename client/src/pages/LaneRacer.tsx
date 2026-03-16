@@ -356,7 +356,7 @@ export default function LaneRacer() {
           </div>
 
           {/* Team Selector */}
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-8 -my-2">
             {TEAMS.map(team => {
               const isSelected = selectedTeam === team.id;
               return (
@@ -370,12 +370,7 @@ export default function LaneRacer() {
                   className="flex flex-col items-center"
                   style={{ opacity: isSelected ? 1 : 0.35, transition: 'all 0.2s ease' }}
                 >
-                  <img src={TEAM_PREVIEW_URLS[team.id]} alt={team.name} className="w-8 h-16 md:w-10 md:h-20 object-contain" />
-                  <span className="block font-bold uppercase tracking-wider mt-1" style={{
-                    fontFamily: 'Oxanium, sans-serif',
-                    fontSize: '0.6rem',
-                    color: isSelected ? team.color : '#999',
-                  }}>{team.name}</span>
+                  <img src={TEAM_PREVIEW_URLS[team.id]} alt={team.id} className="w-8 h-16 md:w-10 md:h-20 object-contain" />
                   {isSelected && (
                     <div className="w-6 h-0.5 mt-1 rounded-full" style={{ backgroundColor: team.color }} />
                   )}

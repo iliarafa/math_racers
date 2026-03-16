@@ -63,10 +63,10 @@ export interface GameState {
 }
 
 export const TEAM_COLORS = [
-  { id: 'ferrari', name: 'Ferrari', hex: '#ff2800' },
-  { id: 'mclaren', name: 'McLaren', hex: '#ff8000' },
-  { id: 'redbull', name: 'Red Bull', hex: '#0600ef' },
-  { id: 'mercedes', name: 'Mercedes', hex: '#00d2be' },
+  { id: 'ferrari', name: 'Scuderia Racing', hex: '#ff2800' },
+  { id: 'mclaren', name: 'Papaya Racing', hex: '#ff8000' },
+  { id: 'redbull', name: 'Red Bulls', hex: '#0600ef' },
+  { id: 'mercedes', name: 'Silver Arrows Racing', hex: '#00d2be' },
 ];
 
 export const RACE_LENGTH = 20;
@@ -101,28 +101,6 @@ export const POSITION_POINTS: Record<number, number> = {
   1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1
 };
 
-export const DRIVERS_2025 = [
-  "Lando Norris",        // 1st - World Champion (0-1 mistakes)
-  "Max Verstappen",      // 2nd
-  "Oscar Piastri",       // 3rd
-  "George Russell",      // 4th
-  "Charles Leclerc",     // 5th
-  "Lewis Hamilton",      // 6th
-  "Kimi Antonelli",      // 7th
-  "Alexander Albon",     // 8th
-  "Carlos Sainz",        // 9th
-  "Fernando Alonso",     // 10th
-  "Yuki Tsunoda",        // 11th
-  "Pierre Gasly",        // 12th
-  "Nico Hulkenberg",     // 13th
-  "Esteban Ocon",        // 14th
-  "Lance Stroll",        // 15th
-  "Liam Lawson",         // 16th
-  "Franco Colapinto",    // 17th
-  "Oliver Bearman",      // 18th
-  "Gabriel Bortoleto",   // 19th
-  "Isack Hadjar"         // 20th
-];
 
 export const CIRCUITS: Circuit[] = [
   {
@@ -294,8 +272,8 @@ function migrateChampionedCircuits(unlockedSeries: string): { [circuitId: string
 }
 
 export const SHOP_ITEMS = [
-  { id: 'red-livery', name: 'Ferrari Red', type: 'livery', cost: 0, color: 'bg-red-600' },
-  { id: 'blue-livery', name: 'Alpine Blue', type: 'livery', cost: 100, color: 'bg-blue-600' },
+  { id: 'red-livery', name: 'Scuderia Red', type: 'livery', cost: 0, color: 'bg-red-600' },
+  { id: 'blue-livery', name: 'Racing Blue', type: 'livery', cost: 100, color: 'bg-blue-600' },
   { id: 'orange-livery', name: 'Papaya Orange', type: 'livery', cost: 200, color: 'bg-orange-500' },
   { id: 'silver-livery', name: 'Silver Arrow', type: 'livery', cost: 300, color: 'bg-slate-400' },
   { id: 'hard-tires', name: 'Hard Tires (White)', type: 'tires', cost: 0, color: 'border-white' },

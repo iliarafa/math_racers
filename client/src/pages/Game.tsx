@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, DRIVERS_2025, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2, Trophy } from "lucide-react";
@@ -1527,7 +1527,6 @@ export default function Game() {
       } else {
         position = 1 + mistakeCount;
       }
-      if (position > DRIVERS_2025.length) position = DRIVERS_2025.length;
       addCareerPoints(POSITION_POINTS[position] ?? 0);
     }
     // Update personal best time and record session lap time (only in race mode, not practice)
@@ -1545,18 +1544,15 @@ export default function Game() {
   const getRaceResult = () => {
     let position: number;
     if (raceMode === 'bot' && !botFinished) {
-      // Player finished before bot — P1
       position = 1;
     } else {
-      // Finished behind bot: P2 baseline, +1 per mistake beyond 1
       if (finalMistakes <= 1) {
         position = 2;
       } else {
-        position = 1 + finalMistakes; // 2 mistakes = P3, 3 = P4, etc.
+        position = Math.min(1 + finalMistakes, 20);
       }
     }
-    if (position > DRIVERS_2025.length) position = DRIVERS_2025.length;
-    return { position, driverName: DRIVERS_2025[position - 1] };
+    return { position };
   };
 
   const restartRace = () => {
