@@ -69,6 +69,7 @@ export class LaneRacerEngine {
   private kerbs: KerbSegment[] = [];
   private nextKerbY: number = 0;
   private carImage: HTMLImageElement;
+  private asphaltPattern: CanvasPattern | null = null;
 
   constructor(canvas: HTMLCanvasElement, callbacks: LaneRacerCallbacks, totalQuestions: number, teamId: TeamId = 'mercedes') {
     this.canvas = canvas;
@@ -88,6 +89,27 @@ export class LaneRacerEngine {
       paused: false,
     };
     this.generateInitialKerbs();
+    this.createAsphaltPattern();
+  }
+
+  private createAsphaltPattern() {
+    const size = 64;
+    const offscreen = document.createElement('canvas');
+    offscreen.width = size;
+    offscreen.height = size;
+    const octx = offscreen.getContext('2d')!;
+    // Base asphalt color
+    octx.fillStyle = '#3a3a3a';
+    octx.fillRect(0, 0, size, size);
+    // Random grain dots
+    for (let i = 0; i < 120; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      const brightness = 45 + Math.floor(Math.random() * 30);
+      octx.fillStyle = `rgb(${brightness},${brightness},${brightness})`;
+      octx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
+    }
+    this.asphaltPattern = this.ctx.createPattern(offscreen, 'repeat');
   }
 
   private generateInitialKerbs() {
@@ -212,7 +234,7 @@ export class LaneRacerEngine {
     }
 
     // Check collisions
-    const carY = h * 0.85;
+    const carY = h * 0.82;
     for (const token of s.tokens) {
       const tokenCenterY = token.y + TOKEN_HEIGHT / 2;
       if (
@@ -273,21 +295,40 @@ export class LaneRacerEngine {
     const h = this.canvas.height;
     const s = this.state;
 
-    // Clear
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, w, h);
-
     // Road dimensions
     const roadWidth = w * 0.6;
     const roadLeft = (w - roadWidth) / 2;
     const roadRight = roadLeft + roadWidth;
     const laneWidth = roadWidth / 3;
 
+    // Green runoff / grass background
+    ctx.fillStyle = '#2d5a27';
+    ctx.fillRect(0, 0, w, h);
+
+    // Scrolling grass texture stripes
+    ctx.fillStyle = '#265222';
+    for (let y = (s.roadOffset * 0.5) % 20 - 20; y < h; y += 20) {
+      ctx.fillRect(0, y, roadLeft - 10, 6);
+      ctx.fillRect(roadRight + 10, y, w - roadRight - 10, 6);
+    }
+
+    // Asphalt road surface with scrolling texture
+    ctx.save();
+    if (this.asphaltPattern) {
+      ctx.translate(0, s.roadOffset);
+      ctx.fillStyle = this.asphaltPattern;
+      ctx.fillRect(roadLeft, -s.roadOffset, roadWidth, h + 64);
+      ctx.translate(0, -s.roadOffset);
+    } else {
+      ctx.fillStyle = '#3a3a3a';
+      ctx.fillRect(roadLeft, 0, roadWidth, h);
+    }
+    ctx.restore();
+
     // Kerbs (random corner segments)
     const kerbWidth = 8;
     const kerbBlock = 14;
     for (const kerb of this.kerbs) {
-      // Convert virtual Y to screen Y
       const screenYStart = h - (kerb.yStart - s.totalScroll + h);
       const screenYEnd = screenYStart + kerb.length;
       if (screenYEnd < 0 || screenYStart > h) continue;
@@ -305,13 +346,13 @@ export class LaneRacerEngine {
       }
     }
 
-    // Road edges (thin black line over kerbs)
-    ctx.fillStyle = 'black';
+    // Road edges (white lines)
+    ctx.fillStyle = 'white';
     ctx.fillRect(roadLeft - 1, 0, 2, h);
     ctx.fillRect(roadRight - 1, 0, 2, h);
 
-    // Lane dividers (dashed)
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+    // Lane dividers (white dashed)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.lineWidth = 2;
     ctx.setLineDash([8, 16]);
     const divider1 = roadLeft + laneWidth;
@@ -326,10 +367,8 @@ export class LaneRacerEngine {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const center = w / 2;
-
-    // Scrolling road marks (horizontal dashes across road for speed feel)
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.06)';
+    // Scrolling road marks (subtle horizontal lines for speed feel)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
     ctx.lineWidth = 1;
     for (let y = s.roadOffset - 40; y < h; y += 40) {
       ctx.beginPath();
@@ -360,7 +399,7 @@ export class LaneRacerEngine {
 
     // Car
     const carX = roadLeft + s.carLaneVisual * laneWidth + (laneWidth - CAR_WIDTH) / 2;
-    const carY = h * 0.85 - CAR_HEIGHT / 2;
+    const carY = h * 0.82 - CAR_HEIGHT / 2;
     this.drawCar(carX, carY);
 
     // Correct flash

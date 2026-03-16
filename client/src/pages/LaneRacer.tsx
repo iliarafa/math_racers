@@ -92,6 +92,7 @@ export default function LaneRacer() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<LaneRacerEngine | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef(0);
   const prevDisplayRef = useRef<string | undefined>(undefined);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -162,13 +163,13 @@ export default function LaneRacer() {
     if (gameStatus !== 'racing' || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
-    const container = containerRef.current;
+    const wrapper = canvasWrapperRef.current;
 
-    // Size canvas
+    // Size canvas to fill the wrapper (below question bar + HUD)
     const resize = () => {
-      if (!container) return;
-      const w = Math.min(container.clientWidth, 500);
-      const h = container.clientHeight - 56; // minus question bar
+      if (!wrapper) return;
+      const w = Math.min(wrapper.clientWidth, 500);
+      const h = wrapper.clientHeight;
       canvas.width = w;
       canvas.height = Math.max(h, 300);
     };
@@ -396,13 +397,13 @@ export default function LaneRacer() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="w-[320px] md:w-[460px] rounded-[20px] pt-5 pb-5 px-4 md:pt-6 md:pb-6 md:px-6 flex flex-col select-none"
+                className="w-[280px] md:w-[460px] rounded-[20px] pt-3 pb-3 px-4 md:pt-6 md:pb-6 md:px-6 flex flex-col select-none"
                 style={{ backgroundColor: '#f0f0f0', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', touchAction: 'none' }}
                 onTouchStart={handleSwipeStart}
                 onTouchEnd={handleSwipeEnd}
               >
                 {/* Header */}
-                <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
                   <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-gray-900 leading-none" style={{ fontFamily: 'Oxanium, sans-serif' }}>{displayCircuit.name}</h2>
                   {FLAG_IMAGES[displayCircuit.id] && (
                     <img src={FLAG_IMAGES[displayCircuit.id]} alt="flag" className="h-5 w-7 object-cover rounded-sm flex-shrink-0" />
@@ -410,14 +411,14 @@ export default function LaneRacer() {
                 </div>
 
                 {/* Circuit Map */}
-                <div className="flex items-center justify-center py-5 md:py-6">
+                <div className="flex items-center justify-center py-3 md:py-6">
                   {CIRCUIT_MAP_IMAGES[displayCircuit.id] && (
-                    <img src={CIRCUIT_MAP_IMAGES[displayCircuit.id]} alt={`${displayCircuit.name} circuit`} className="h-36 md:h-48 object-contain" style={{ maxWidth: '280px' }} />
+                    <img src={CIRCUIT_MAP_IMAGES[displayCircuit.id]} alt={`${displayCircuit.name} circuit`} className="h-28 md:h-48 object-contain" style={{ maxWidth: '280px' }} />
                   )}
                 </div>
 
                 {/* Math Type */}
-                <div className="text-center mt-2">
+                <div className="text-center mt-1">
                   <div className="text-xs uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
                   <div className="text-base font-bold uppercase text-gray-900" style={{ fontFamily: 'Oxanium, sans-serif' }}>{displayCircuit.type}</div>
                 </div>
@@ -555,7 +556,7 @@ export default function LaneRacer() {
   // Racing screen
   return (
     <GameLayout lockViewport hideHeader>
-      <div ref={containerRef} className="h-full flex flex-col bg-white relative">
+      <div ref={containerRef} className="fixed inset-0 flex flex-col bg-white" style={{ zIndex: 50 }}>
         {/* Question bar — top */}
         <div
           className="w-full text-center py-4 font-bold"
@@ -585,10 +586,10 @@ export default function LaneRacer() {
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 flex items-center justify-center overflow-hidden">
+        <div ref={canvasWrapperRef} className="flex-1 overflow-hidden">
           <canvas
             ref={canvasRef}
-            style={{ imageRendering: 'pixelated', display: 'block', maxWidth: '500px', width: '100%' }}
+            style={{ imageRendering: 'pixelated', display: 'block', width: '100%', height: '100%' }}
           />
         </div>
       </div>
