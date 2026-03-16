@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useGameState } from "@/lib/gameLogic";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
+import backgroundVideo from "@assets/background.mp4";
 
 let audioContext: AudioContext | null = null;
 
@@ -32,10 +33,11 @@ const playClickSound = () => {
 };
 
 const hubCardStyle: React.CSSProperties = {
-  backgroundColor: '#FFFFFF',
-  border: '1px solid #E9ECEF',
+  backgroundColor: 'rgba(255,255,255,0.12)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+  border: '1px solid rgba(255,255,255,0.2)',
   borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
   padding: '20px 24px',
   width: '100%',
   textAlign: 'left' as const,
@@ -47,13 +49,13 @@ const hubTitleStyle: React.CSSProperties = {
   fontFamily: 'Oxanium, sans-serif',
   fontSize: '1.3rem',
   fontWeight: 'bold',
-  color: '#212529',
+  color: '#FFFFFF',
 };
 
 const hubSubStyle: React.CSSProperties = {
   fontFamily: 'Oxanium, sans-serif',
   fontSize: '0.8rem',
-  color: '#6C757D',
+  color: 'rgba(255,255,255,0.65)',
   textTransform: 'uppercase' as const,
   letterSpacing: '0.08em',
   marginTop: '4px',
@@ -63,9 +65,20 @@ export default function Hub() {
   const { state } = useGameState();
 
   return (
-    <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+    <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover opacity-40"
+      >
+        <source src={backgroundVideo} type="video/mp4" />
+      </video>
+
       {/* Logo */}
-      <div className="flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 24px)', paddingBottom: '16px' }}>
+      <div className="flex justify-center relative z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 24px)', paddingBottom: '16px' }}>
         <Link href="/">
           <img
             src={logoImage}
@@ -76,7 +89,7 @@ export default function Hub() {
       </div>
 
       {/* Hub Cards */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         <div className="flex flex-col w-full max-w-sm gap-5">
           {/* Solo */}
           <Link href="/game">
@@ -85,16 +98,22 @@ export default function Hub() {
               whileTap={{ scale: 0.98 }}
               style={hubCardStyle}
             >
-              <span className="block" style={hubTitleStyle}>SOLO</span>
+              <span className="block" style={hubTitleStyle}>SINGLE PLAYER</span>
               <span className="block" style={hubSubStyle}>RACE AGAINST THE AI</span>
             </motion.button>
           </Link>
 
-          {/* Multiplayer (disabled) */}
-          <div style={{ ...hubCardStyle, opacity: 0.5, cursor: 'default' }}>
-            <span className="block" style={hubTitleStyle}>MULTIPLAYER</span>
-            <span className="block" style={hubSubStyle}>COMING SOON</span>
-          </div>
+          {/* Multiplayer */}
+          <Link href="/multiplayer">
+            <motion.button
+              onClick={() => { if (state.soundEnabled) playClickSound(); }}
+              whileTap={{ scale: 0.98 }}
+              style={hubCardStyle}
+            >
+              <span className="block" style={hubTitleStyle}>MULTIPLAYER</span>
+              <span className="block" style={hubSubStyle}>1v1 ONLINE RACING</span>
+            </motion.button>
+          </Link>
 
           {/* Garage */}
           <Link href="/garage">
