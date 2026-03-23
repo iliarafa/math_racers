@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { PurchaseProvider } from "@/contexts/PurchaseContext";
 import { useGameState } from "@/lib/gameLogic";
-import laneRacerMusic from "@assets/laneracer.mp3";
+import laneRacerMusic from "@assets/laneracer3.mp3";
 import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/Welcome";
 import Game from "@/pages/Game";
