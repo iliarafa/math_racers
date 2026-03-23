@@ -411,7 +411,7 @@ export class LaneRacerEngine {
       // Checkmark
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = 'black';
+      ctx.fillStyle = '#22c55e';
       ctx.font = 'bold 48px "Courier New", monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';

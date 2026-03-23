@@ -302,7 +302,7 @@ export default function LaneRacer() {
 
   // Setup — single page with series + track selection
   if (gameStatus === 'setup') {
-    const seriesColors: Record<string, string> = { beginner: '#006B3F', easy: '#000000', medium: '#00a0dc', hard: '#e10600' };
+    const seriesColors: Record<string, string> = { beginner: '#22c55e', easy: '#000000', medium: '#00a0dc', hard: '#e10600' };
     const levelDisplayNames: Record<string, string> = { beginner: 'KARTING', easy: 'FORMULA 3', medium: 'FORMULA 2', hard: 'FORMULA 1' };
     const displayCircuit = CIRCUIT_OPTIONS[currentCircuitIndex];
     const goToNext = () => {
@@ -637,7 +637,20 @@ export default function LaneRacer() {
   return (
     <GameLayout lockViewport hideHeader>
       <div ref={containerRef} className="fixed inset-0 flex flex-col bg-white" style={{ zIndex: 50 }}>
-        {/* Question bar — top */}
+        {/* HUD — top */}
+        <div className="flex justify-between items-center px-3 py-2" style={{ background: 'black', paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
+          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
+            Q {questionNum}/{raceLength}
+          </div>
+          <div className="text-2xl font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
+            {Math.floor(elapsedMs / 60000)}:{String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0')}.{String(elapsedMs % 1000).padStart(3, '0')}
+          </div>
+          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: '#22c55e' }}>
+            ✓ {correctCount}
+          </div>
+        </div>
+
+        {/* Question bar */}
         <div
           className="w-full text-center py-4 font-bold"
           style={{
@@ -646,23 +659,9 @@ export default function LaneRacer() {
             background: 'black',
             color: 'white',
             minHeight: '80px',
-            paddingTop: 'calc(env(safe-area-inset-top) + 12px)',
           }}
         >
           {questionDisplay || ''}
-        </div>
-
-        {/* HUD overlay */}
-        <div className="flex justify-between items-center px-3 py-2">
-          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
-            Q {questionNum}/{raceLength}
-          </div>
-          <div className="text-2xl font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
-            {Math.floor(elapsedMs / 60000)}:{String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0')}.{String(elapsedMs % 1000).padStart(3, '0')}
-          </div>
-          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'black' }}>
-            ✓ {correctCount}
-          </div>
         </div>
 
         {/* Canvas */}

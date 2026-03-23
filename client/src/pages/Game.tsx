@@ -2202,10 +2202,11 @@ export default function Game() {
     ];
 
     const seriesCardStyle: React.CSSProperties = {
-      backgroundColor: '#FFFFFF',
-      border: '1px solid #E9ECEF',
+      backgroundColor: 'rgba(255,255,255,0.12)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      border: '1px solid rgba(255,255,255,0.2)',
       borderRadius: '12px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
       padding: '16px 20px',
       width: '100%',
       textAlign: 'left' as const,
@@ -2216,27 +2217,38 @@ export default function Game() {
       fontFamily: 'Oxanium, sans-serif',
       fontSize: window.innerWidth >= 768 ? '1.4rem' : '1.15rem',
       fontWeight: 'bold',
-      color: '#212529',
+      color: '#FFFFFF',
     };
     const seriesSubStyle: React.CSSProperties = {
       fontFamily: 'Oxanium, sans-serif',
       fontSize: '0.75rem',
-      color: '#6C757D',
+      color: 'rgba(255,255,255,0.65)',
       textTransform: 'uppercase' as const,
       letterSpacing: '0.08em',
       marginTop: '4px',
     };
 
     return (
-      <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+      <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+        {/* Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-40"
+        >
+          <source src={backgroundVideo} type="video/mp4" />
+        </video>
+
         {/* Header: Back + Logo */}
-        <div className="relative flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
+        <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
           <button
             onClick={() => {
               if (state.soundEnabled) playCarouselClick();
               setGameStatus('mode_select');
             }}
-            className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors"
+            className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
             style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
             data-testid="button-back-menu"
           >
@@ -2250,9 +2262,9 @@ export default function Game() {
         </div>
 
         {/* Title */}
-        <div className="mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
+        <div className="relative z-10 mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
           <h2
-            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-black"
+            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Select Series
@@ -2260,7 +2272,7 @@ export default function Game() {
         </div>
 
         {/* Series Cards */}
-        <div className="flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
+        <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
           <div className="flex flex-col w-full max-w-sm gap-4">
             {seriesOptions.map((series) => {
               const isSelected = selectedDriver?.id === series.id;
@@ -2277,7 +2289,7 @@ export default function Game() {
                   whileTap={isUnlocked ? { scale: 0.98 } : undefined}
                   style={{
                     ...seriesCardStyle,
-                    ...(isSelected ? { border: '2px solid #212529' } : {}),
+                    ...(isSelected ? { border: '2px solid rgba(255,255,255,0.8)' } : {}),
                     ...(!isUnlocked ? { opacity: 0.5, cursor: 'default' } : {}),
                   }}
                   data-testid={`level-${series.id}`}
@@ -2293,7 +2305,7 @@ export default function Game() {
         </div>
 
         {/* Confirm Button - Fixed Bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center" style={{ backgroundColor: '#ffffff', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center z-10" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           {selectedDriver && (
             <motion.button
               initial={{ opacity: 0, y: 20 }}
