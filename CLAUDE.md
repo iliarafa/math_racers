@@ -10,9 +10,9 @@ F1 Math Racer: Grand Prix - A gamified math practice web application for childre
 
 ```bash
 # Development
-npm run dev              # Start backend server (port 3000)
+npm run dev              # Start backend server (port 8081)
 npm run dev:client       # Start Vite dev server (frontend only, port 5000)
-npm run dev:open         # Backend + auto open browser (port 3000)
+npm run dev:open         # Backend + auto open browser (port 8081)
 npm run check            # TypeScript type checking
 
 # Production
@@ -22,6 +22,11 @@ npm run start            # Run production server
 # Database
 npm run db:push          # Sync Drizzle ORM schema to PostgreSQL
 ```
+
+## Dev Workflow
+
+- **At session start:** Run `npm run dev` in the background to start the dev server on port 8081. Keep it running for the entire session.
+- **After frontend edits:** The browser auto-opens `http://localhost:8081` via a hook on Edit/Write to `client/` files so the user can visually verify changes.
 
 ## Architecture
 

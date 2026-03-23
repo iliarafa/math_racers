@@ -5,13 +5,40 @@
       "Bash(git commit:*)",
       "Bash(git pull:*)",
       "Bash(npm run dev:open:*)",
+      "Bash(npm run dev:*)",
       "Bash(xxd:*)",
       "Bash(npm run check:*)",
       "Bash(npx cap sync ios)",
       "Bash(npx cap open ios)",
+      "Bash(open http://localhost:8081*)",
       "mcp__plugin_playwright_playwright__browser_take_screenshot",
       "mcp__plugin_playwright_playwright__browser_click",
-      "mcp__plugin_playwright_playwright__browser_navigate"
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "Bash(/Users/iliasrafailidis/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.2/scripts/start-server.sh --project-dir /Users/iliasrafailidis/development/math_racers)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q '\"file_path\".*client/'; then open http://localhost:8081; fi",
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q '\"file_path\".*client/'; then open http://localhost:8081; fi",
+            "async": true
+          }
+        ]
+      }
     ]
   }
 }

@@ -50,6 +50,7 @@ import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageCar from "@/assets/garage_car.jpeg";
 import trackIllustration from "@/assets/track_illustration.jpeg";
+import backgroundVideo from "@assets/background2.mp4";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
@@ -1896,10 +1897,11 @@ export default function Game() {
   // Mode Selection Screen — Career vs Grand Prix
   if (gameStatus === 'mode_select') {
     const modeCardStyle: React.CSSProperties = {
-      backgroundColor: '#FFFFFF',
-      border: '1px solid #E9ECEF',
+      backgroundColor: 'rgba(255,255,255,0.12)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      border: '1px solid rgba(255,255,255,0.2)',
       borderRadius: '12px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
       padding: '16px 20px',
       width: '100%',
       textAlign: 'left' as const,
@@ -1910,25 +1912,36 @@ export default function Game() {
       fontFamily: 'Oxanium, sans-serif',
       fontSize: window.innerWidth >= 768 ? '1.4rem' : '1.15rem',
       fontWeight: 'bold',
-      color: '#212529',
+      color: '#FFFFFF',
     };
     const modeSubStyle: React.CSSProperties = {
       fontFamily: 'Oxanium, sans-serif',
       fontSize: '0.75rem',
-      color: '#6C757D',
+      color: 'rgba(255,255,255,0.65)',
       textTransform: 'uppercase' as const,
       letterSpacing: '0.08em',
       marginTop: '4px',
     };
 
     return (
-      <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+      <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+        {/* Background Video */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover opacity-40"
+        >
+          <source src={backgroundVideo} type="video/mp4" />
+        </video>
+
         {/* Header: Back + Logo */}
-        <div className="relative flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
+        <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
           <Link href="/hub">
             <button
               onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-              className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors"
+              className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
               style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
             >
               <ChevronLeft size={24} />
@@ -1942,9 +1955,9 @@ export default function Game() {
         </div>
 
         {/* Title */}
-        <div className="mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
+        <div className="relative z-10 mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
           <h2
-            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-black"
+            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Select Mode
@@ -1952,7 +1965,7 @@ export default function Game() {
         </div>
 
         {/* Mode Cards */}
-        <div className="flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+        <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
           <div className="flex flex-col w-full max-w-sm gap-4">
             {/* Career Card */}
             <motion.button

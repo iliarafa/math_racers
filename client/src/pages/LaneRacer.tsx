@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
-import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import backgroundVideo from "@assets/background2.mp4";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LENGTH, SIM_LAP_COUNTS } from "@/lib/gameLogic";
 import type { Difficulty } from "@/lib/gameLogic";
@@ -77,6 +78,12 @@ export default function LaneRacer() {
   const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[0]);
   const [currentCircuitIndex, setCurrentCircuitIndex] = useState(0);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('beginner');
+  const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+  const [currentTeamIndex, setCurrentTeamIndex] = useState(() => {
+    const saved = localStorage.getItem('lastSelectedTeam');
+    const idx = TEAMS.findIndex(t => t.id === saved);
+    return idx >= 0 ? idx : 0;
+  });
   const [selectedTeam, setSelectedTeam] = useState<TeamId>(() => {
     const saved = localStorage.getItem('lastSelectedTeam');
     return (saved && TEAMS.some(t => t.id === saved) ? saved : 'mercedes') as TeamId;
@@ -97,6 +104,8 @@ export default function LaneRacer() {
   const prevDisplayRef = useRef<string | undefined>(undefined);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const swipeStartXRef = useRef<number | null>(null);
+  const teamSwipeStartXRef = useRef<number | null>(null);
+  const levelSwipeStartXRef = useRef<number | null>(null);
 
   const spawnQuestion = useCallback(() => {
     const q = generateQuestion(selectedCircuit.id, selectedDifficulty, false, 0, prevDisplayRef.current);
@@ -294,6 +303,7 @@ export default function LaneRacer() {
   // Setup — single page with series + track selection
   if (gameStatus === 'setup') {
     const seriesColors: Record<string, string> = { beginner: '#006B3F', easy: '#000000', medium: '#00a0dc', hard: '#e10600' };
+    const levelDisplayNames: Record<string, string> = { beginner: 'KARTING', easy: 'FORMULA 3', medium: 'FORMULA 2', hard: 'FORMULA 1' };
     const displayCircuit = CIRCUIT_OPTIONS[currentCircuitIndex];
     const goToNext = () => {
       const next = (currentCircuitIndex + 1) % CIRCUIT_OPTIONS.length;
@@ -314,127 +324,202 @@ export default function LaneRacer() {
     };
 
     return (
-      <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+      <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+        {/* Background Video */}
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-40">
+          <source src={backgroundVideo} type="video/mp4" />
+        </video>
+
         {/* Header: Back + Logo */}
-        <div className="relative flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '8px' }}>
+        <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '8px' }}>
           <Link href="/game">
-            <button className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors" style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
+            <button className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors" style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
               <ChevronLeft size={24} />
             </button>
           </Link>
           <img src={logoImage} alt="F1 Math Racer" className="h-8 md:h-12 object-contain" />
         </div>
 
-        {/* Main content — evenly distributed */}
-        <div className="flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          {/* Title + Series */}
-          <div className="flex flex-col items-center">
-            <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-black text-center mb-2" style={{ fontFamily: 'Oxanium, sans-serif' }}>Sim Racing</h2>
-            <div className="flex justify-center">
-              {DIFFICULTY_OPTIONS.map(d => {
-                const isSelected = selectedDifficulty === d.value;
-                const color = seriesColors[d.value] || '#000';
-                return (
-                  <motion.button
-                    key={d.value}
-                    onClick={() => setSelectedDifficulty(d.value)}
-                    whileTap={{ scale: 0.95 }}
-                    className="text-center"
-                    style={{ minWidth: '60px' }}
-                  >
-                    <span className="block font-bold uppercase tracking-wider" style={{
-                      fontFamily: 'Oxanium, sans-serif',
-                      fontSize: window.innerWidth >= 768 ? '1.2rem' : '0.95rem',
-                      color,
-                      opacity: isSelected ? 1 : 0.35,
-                      transition: 'all 0.2s ease',
-                    }}>{d.label.toUpperCase()}</span>
-                  </motion.button>
-                );
-              })}
-            </div>
+        {/* Main content */}
+        <div className="relative z-10 flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <div className="text-center">
+            <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Sim Racing</h2>
+            <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Scroll to configure</div>
           </div>
 
-          {/* Team Selector */}
-          <div className="flex justify-center gap-8 -my-2">
-            {TEAMS.map(team => {
-              const isSelected = selectedTeam === team.id;
-              return (
-                <motion.button
-                  key={team.id}
-                  onClick={() => {
-                    setSelectedTeam(team.id);
-                    localStorage.setItem('lastSelectedTeam', team.id);
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex flex-col items-center"
-                  style={{ opacity: isSelected ? 1 : 0.35, transition: 'all 0.2s ease' }}
-                >
-                  <img src={TEAM_PREVIEW_URLS[team.id]} alt={team.id} className="w-8 h-16 md:w-10 md:h-20 object-contain" />
-                  {isSelected && (
-                    <div className="w-6 h-0.5 mt-1 rounded-full" style={{ backgroundColor: team.color }} />
-                  )}
-                </motion.button>
-              );
-            })}
-          </div>
+          {/* Combination Lock — 3 drums in glassmorphism card */}
+          {(() => {
+            const drumItemH = 80;
+            const getIdx = (current: number, offset: number, length: number) => ((current + offset) % length + length) % length;
 
-          {/* Track Hero Card */}
-          <div className="flex items-center justify-center">
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={goToPrev} className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900">
-              <ChevronLeft className="w-12 h-12" />
-            </motion.button>
+            const goToNextLevel = () => { const n = (currentLevelIndex + 1) % DIFFICULTY_OPTIONS.length; setCurrentLevelIndex(n); setSelectedDifficulty(DIFFICULTY_OPTIONS[n].value); };
+            const goToPrevLevel = () => { const n = (currentLevelIndex - 1 + DIFFICULTY_OPTIONS.length) % DIFFICULTY_OPTIONS.length; setCurrentLevelIndex(n); setSelectedDifficulty(DIFFICULTY_OPTIONS[n].value); };
+            const goToNextTeam = () => { const n = (currentTeamIndex + 1) % TEAMS.length; setCurrentTeamIndex(n); setSelectedTeam(TEAMS[n].id); localStorage.setItem('lastSelectedTeam', TEAMS[n].id); };
+            const goToPrevTeam = () => { const n = (currentTeamIndex - 1 + TEAMS.length) % TEAMS.length; setCurrentTeamIndex(n); setSelectedTeam(TEAMS[n].id); localStorage.setItem('lastSelectedTeam', TEAMS[n].id); };
+            const goToNextTrack = () => { const n = (currentCircuitIndex + 1) % CIRCUIT_OPTIONS.length; setCurrentCircuitIndex(n); setSelectedCircuit(CIRCUIT_OPTIONS[n]); };
+            const goToPrevTrack = () => { const n = (currentCircuitIndex - 1 + CIRCUIT_OPTIONS.length) % CIRCUIT_OPTIONS.length; setCurrentCircuitIndex(n); setSelectedCircuit(CIRCUIT_OPTIONS[n]); };
 
-            <div className="flex flex-col items-center">
-              <div className="md:hidden text-center text-[10px] text-gray-400 uppercase tracking-widest pb-2">Swipe to choose track</div>
-              <motion.div
-                key={displayCircuit.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                className="w-[280px] md:w-[460px] rounded-[20px] pt-3 pb-3 px-4 md:pt-6 md:pb-6 md:px-6 flex flex-col select-none"
-                style={{ backgroundColor: '#f0f0f0', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', touchAction: 'none' }}
-                onTouchStart={handleSwipeStart}
-                onTouchEnd={handleSwipeEnd}
+            const makeSwipeHandlers = (ref: React.MutableRefObject<number | null>, onNext: () => void, onPrev: () => void) => ({
+              onTouchStart: (e: React.TouchEvent) => { ref.current = e.touches[0].clientY; },
+              onTouchEnd: (e: React.TouchEvent) => {
+                if (ref.current === null) return;
+                const diff = ref.current - e.changedTouches[0].clientY;
+                if (Math.abs(diff) > 30) { diff > 0 ? onNext() : onPrev(); }
+                ref.current = null;
+              },
+            });
+
+            const levelSwipe = makeSwipeHandlers(levelSwipeStartXRef, goToNextLevel, goToPrevLevel);
+            const teamSwipe = makeSwipeHandlers(teamSwipeStartXRef, goToNextTeam, goToPrevTeam);
+            const trackSwipe = makeSwipeHandlers(swipeStartXRef, goToNextTrack, goToPrevTrack);
+
+            const drumStyle: React.CSSProperties = {
+              height: drumItemH * 3,
+              overflow: 'hidden',
+              touchAction: 'none',
+              position: 'relative',
+            };
+
+            const activeHighlight: React.CSSProperties = {
+              position: 'absolute',
+              top: drumItemH,
+              left: 4,
+              right: 4,
+              height: drumItemH,
+              border: '1.5px solid rgba(0, 210, 190, 0.6)',
+              borderRadius: '10px',
+              pointerEvents: 'none',
+              zIndex: 1,
+            };
+
+            return (
+              <div
+                className="w-full max-w-sm rounded-2xl px-3 py-4"
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                }}
               >
-                {/* Header */}
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <h2 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-gray-900 leading-none" style={{ fontFamily: 'Oxanium, sans-serif' }}>{displayCircuit.name}</h2>
-                  {FLAG_IMAGES[displayCircuit.id] && (
-                    <img src={FLAG_IMAGES[displayCircuit.id]} alt="flag" className="h-5 w-7 object-cover rounded-sm flex-shrink-0" />
-                  )}
-                </div>
+                <div className="flex justify-center gap-2">
+                  {/* LEVEL Drum */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Level</div>
+                    <div style={drumStyle} className="w-full" {...levelSwipe}>
+                      <div style={activeHighlight} />
+                      {[-1, 0, 1].map(offset => {
+                        const idx = getIdx(currentLevelIndex, offset, DIFFICULTY_OPTIONS.length);
+                        const level = DIFFICULTY_OPTIONS[idx];
+                        const isActive = offset === 0;
+                        return (
+                          <motion.div
+                            key={`level-${currentLevelIndex}-${offset}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: isActive ? 1 : 0.3, y: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex flex-col items-center justify-center cursor-pointer"
+                            style={{ height: drumItemH }}
+                            onClick={() => { if (offset === -1) goToPrevLevel(); else if (offset === 1) goToNextLevel(); }}
+                          >
+                            {offset === -1 && <ChevronUp size={14} className="text-white/30 mb-1" />}
+                            <span className="font-bold uppercase tracking-wider text-center" style={{
+                              fontFamily: 'Oxanium, sans-serif',
+                              fontSize: isActive ? '0.85rem' : '0.7rem',
+                              color: isActive ? (seriesColors[level.value] || '#fff') : 'rgba(255,255,255,0.5)',
+                            }}>
+                              {levelDisplayNames[level.value]}
+                            </span>
+                            {offset === 1 && <ChevronDown size={14} className="text-white/30 mt-1" />}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                {/* Circuit Map */}
-                <div className="flex items-center justify-center py-3 md:py-6">
-                  {CIRCUIT_MAP_IMAGES[displayCircuit.id] && (
-                    <img src={CIRCUIT_MAP_IMAGES[displayCircuit.id]} alt={`${displayCircuit.name} circuit`} className="h-28 md:h-48 object-contain" style={{ maxWidth: '280px' }} />
-                  )}
-                </div>
+                  {/* Vertical divider */}
+                  <div className="w-px self-stretch" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }} />
 
-                {/* Math Type */}
-                <div className="text-center mt-1">
-                  <div className="text-xs uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
-                  <div className="text-base font-bold uppercase text-gray-900" style={{ fontFamily: 'Oxanium, sans-serif' }}>{displayCircuit.type}</div>
-                </div>
-              </motion.div>
+                  {/* TEAM Drum */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
+                    <div style={drumStyle} className="w-full" {...teamSwipe}>
+                      <div style={activeHighlight} />
+                      {[-1, 0, 1].map(offset => {
+                        const idx = getIdx(currentTeamIndex, offset, TEAMS.length);
+                        const team = TEAMS[idx];
+                        const isActive = offset === 0;
+                        return (
+                          <motion.div
+                            key={`team-${currentTeamIndex}-${offset}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: isActive ? 1 : 0.3, y: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex flex-col items-center justify-center cursor-pointer"
+                            style={{ height: drumItemH }}
+                            onClick={() => { if (offset === -1) goToPrevTeam(); else if (offset === 1) goToNextTeam(); }}
+                          >
+                            {offset === -1 && <ChevronUp size={14} className="text-white/30 mb-1" />}
+                            <img
+                              src={TEAM_PREVIEW_URLS[team.id]}
+                              alt={team.name}
+                              className="w-12 h-12 object-contain"
+                              style={{ transform: 'rotate(90deg)' }}
+                            />
+                            {offset === 1 && <ChevronDown size={14} className="text-white/30 mt-1" />}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-              {/* Dot Indicators */}
-              <div className="flex justify-center gap-2 mt-3">
-                {CIRCUIT_OPTIONS.map((c, i) => (
-                  <button
-                    key={c.id}
-                    onClick={() => { setCurrentCircuitIndex(i); setSelectedCircuit(CIRCUIT_OPTIONS[i]); }}
-                    className={`w-2 h-2 rounded-full transition-all ${currentCircuitIndex === i ? 'bg-gray-900' : 'bg-gray-400'}`}
-                  />
-                ))}
+                  {/* Vertical divider */}
+                  <div className="w-px self-stretch" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }} />
+
+                  {/* TRACK Drum */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
+                    <div style={drumStyle} className="w-full" {...trackSwipe}>
+                      <div style={activeHighlight} />
+                      {[-1, 0, 1].map(offset => {
+                        const idx = getIdx(currentCircuitIndex, offset, CIRCUIT_OPTIONS.length);
+                        const circuit = CIRCUIT_OPTIONS[idx];
+                        const isActive = offset === 0;
+                        return (
+                          <motion.div
+                            key={`track-${currentCircuitIndex}-${offset}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: isActive ? 1 : 0.3, y: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex flex-col items-center justify-center cursor-pointer"
+                            style={{ height: drumItemH }}
+                            onClick={() => { if (offset === -1) goToPrevTrack(); else if (offset === 1) goToNextTrack(); }}
+                          >
+                            {offset === -1 && <ChevronUp size={14} className="text-white/30 mb-1" />}
+                            {CIRCUIT_MAP_IMAGES[circuit.id] && (
+                              <img
+                                src={CIRCUIT_MAP_IMAGES[circuit.id]}
+                                alt={circuit.name}
+                                className="h-8 md:h-10 object-contain"
+                                style={{ filter: 'invert(1)', opacity: isActive ? 1 : 0.5 }}
+                              />
+                            )}
+                            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider mt-1" style={{
+                              fontFamily: 'Oxanium, sans-serif',
+                              color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                            }}>
+                              {circuit.name}
+                            </span>
+                            {offset === 1 && <ChevronDown size={14} className="text-white/30 mt-1" />}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={goToNext} className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900">
-              <ChevronRight className="w-12 h-12" />
-            </motion.button>
-          </div>
+            );
+          })()}
 
           {/* Start Button */}
           <div className="w-full px-4">
