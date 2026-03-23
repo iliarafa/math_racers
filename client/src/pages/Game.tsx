@@ -2013,7 +2013,7 @@ export default function Game() {
                 whileTap={{ scale: 0.98 }}
                 style={modeCardStyle}
               >
-                <span className="block" style={modeTitleStyle}>SIM RACING</span>
+                <span className="block" style={modeTitleStyle}>LANE RACER</span>
                 <span className="block" style={modeSubStyle}>ARCADE MODE</span>
               </motion.button>
             </Link>

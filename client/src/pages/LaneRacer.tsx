@@ -343,7 +343,7 @@ export default function LaneRacer() {
         {/* Main content */}
         <div className="relative z-10 flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="text-center">
-            <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Sim Racing</h2>
+            <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Lane Racer</h2>
             <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Scroll to configure</div>
           </div>
 
