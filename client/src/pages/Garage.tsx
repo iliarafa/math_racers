@@ -49,7 +49,7 @@ export default function Garage() {
         loop
         muted
         playsInline
-        className="absolute inset-0 w-full h-full object-cover opacity-30"
+        className="absolute inset-0 w-full h-full object-cover opacity-30 scale-150"
       >
         <source src={garageBackground} type="video/mp4" />
       </video>
