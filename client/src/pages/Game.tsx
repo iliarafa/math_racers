@@ -51,6 +51,7 @@ import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageCar from "@/assets/garage_car.jpeg";
 import trackIllustration from "@/assets/track_illustration.jpeg";
 import backgroundVideo from "@assets/background2.mp4";
+import chooseTrackVideo from "@assets/choose_TRACK.mp4";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
@@ -2384,9 +2385,13 @@ export default function Game() {
     };
 
     return (
-      <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
+      <div className="min-h-screen flex flex-col transition-colors duration-300 relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+        {/* Background Video */}
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-30">
+          <source src={chooseTrackVideo} type="video/mp4" />
+        </video>
         {/* App Logo — same position as driver select */}
-        <div className="pb-4 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
+        <div className="pb-4 flex justify-center relative z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
           <Link href="/">
             <img
               src={logoImage}
@@ -2396,7 +2401,7 @@ export default function Game() {
           </Link>
         </div>
         {/* Tab Toggle — Grand Prix phases, Pre-Season Testing, or normal Race/Practice */}
-        <div className="mt-8 md:mt-24 landscape:md:mt-8 mb-6 md:mb-24 landscape:md:mb-6 flex justify-center">
+        <div className="mt-8 md:mt-24 landscape:md:mt-8 mb-6 md:mb-24 landscape:md:mb-6 flex justify-center relative z-10">
           {isPreSeasonTesting ? (
             <div className="rounded-full p-1 flex gap-1 bg-gray-200">
               <button
@@ -2470,14 +2475,14 @@ export default function Game() {
               </button>
             </div>
           ) : (
-            <div className="rounded-full p-1 flex gap-1 bg-gray-200">
+            <div className="rounded-full p-1 flex gap-1 bg-white/10">
               <button
                 onClick={() => { setSelectedTab('race'); setIsPracticeMode(false); setRaceMode('bot'); if (state.soundEnabled) playCarouselClick(); }}
                 className={cn(
                   "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
                   selectedTab === 'race'
                     ? "bg-red-600 text-white"
-                    : "bg-transparent text-gray-600 hover:text-gray-900"
+                    : "bg-transparent text-white/50 hover:text-white"
                 )}
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-race-mode"
@@ -2490,7 +2495,7 @@ export default function Game() {
                   "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
                   selectedTab === 'practice'
                     ? "bg-green-600 text-white"
-                    : "bg-transparent text-gray-600 hover:text-gray-900"
+                    : "bg-transparent text-white/50 hover:text-white"
                 )}
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-practice-mode"
@@ -2502,7 +2507,7 @@ export default function Game() {
         </div>
         {/* Main Content - Hero Card with Side Chevrons */}
         {/* Card area — same position as series buttons list */}
-        <div className="flex items-center justify-center px-8 pb-24 md:pb-32 landscape:md:pb-24">
+        <div className="flex items-center justify-center px-8 pb-24 md:pb-32 landscape:md:pb-24 relative z-10">
           {isPreSeasonTesting ? (
             /* Pre-Season Testing Card */
             (<div className="flex flex-col items-center">
@@ -2695,7 +2700,7 @@ export default function Game() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={goToPrevCircuit}
-                className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900"
+                className="hidden md:flex p-3 transition-colors text-white/40 hover:text-white"
                 data-testid="circuit-prev"
               >
                 <ChevronLeft className="w-12 h-12" />
@@ -2703,7 +2708,7 @@ export default function Game() {
               {/* Card wrapper with swipe hint */}
               <div className="flex flex-col items-center">
                 {/* Swipe hint - mobile only */}
-                <div className="md:hidden text-center text-[10px] text-gray-400 uppercase tracking-widest pb-3">
+                <div className="md:hidden text-center text-[10px] text-white/40 uppercase tracking-widest pb-3">
                   Swipe to choose track
                 </div>
 
@@ -2850,7 +2855,7 @@ export default function Game() {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={goToNextCircuit}
-                className="hidden md:flex p-3 transition-colors text-gray-400 hover:text-gray-900"
+                className="hidden md:flex p-3 transition-colors text-white/40 hover:text-white"
                 data-testid="circuit-next"
               >
                 <ChevronRight className="w-12 h-12" />
@@ -2860,7 +2865,7 @@ export default function Game() {
         </div>
         {/* Track Dots Indicator - only show for track selection */}
         {!isGrandPrix && !isPreSeasonTesting && (
-          <div className="fixed bottom-44 landscape:md:bottom-36 left-0 right-0 flex justify-center gap-2">
+          <div className="fixed bottom-44 landscape:md:bottom-36 left-0 right-0 flex justify-center gap-2 z-10">
             {CIRCUITS.map((circuit, index) => {
               const dotLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false);
               return (
@@ -2870,8 +2875,8 @@ export default function Game() {
                   className={cn(
                     "w-2 h-2 rounded-full transition-all",
                     currentCircuitIndex === index
-                      ? (dotLocked ? "bg-gray-400" : "bg-gray-900")
-                      : (dotLocked ? "bg-gray-200" : "bg-gray-400")
+                      ? (dotLocked ? "bg-gray-500" : "bg-white")
+                      : (dotLocked ? "bg-gray-700" : "bg-gray-500")
                   )}
                   data-testid={`circuit-dot-${circuit.id}`}
                 />
@@ -2880,7 +2885,7 @@ export default function Game() {
           </div>
         )}
         {/* Start Engine Button - Fixed Bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300" style={{ backgroundColor: '#ffffff' }}>
+        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300 z-10" style={{ backgroundColor: 'transparent' }}>
           <motion.button
             whileHover={!isCircuitLocked ? { scale: 1.02 } : undefined}
             whileTap={!isCircuitLocked ? { scale: 0.98 } : undefined}
@@ -2932,7 +2937,7 @@ export default function Game() {
                 setGameStatus("driver_select");
               }
             }}
-            className="transition-colors text-sm uppercase tracking-wider text-gray-500 hover:text-gray-900"
+            className="transition-colors text-sm uppercase tracking-wider text-white/50 hover:text-white"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
             data-testid="button-back-menu"
           >

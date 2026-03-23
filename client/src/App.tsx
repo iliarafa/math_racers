@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { PurchaseProvider } from "@/contexts/PurchaseContext";
 import { useGameState } from "@/lib/gameLogic";
+import { Volume2, VolumeX } from "lucide-react";
 import laneRacerMusic from "@assets/laneracer3.mp3";
 import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/Welcome";
@@ -46,7 +47,7 @@ const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/reaction', '/regulatio
 
 function MenuMusic() {
   const [location] = useLocation();
-  const { state } = useGameState();
+  const { state, toggleSound } = useGameState();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [userInteracted, setUserInteracted] = useState(false);
 
@@ -75,7 +76,19 @@ function MenuMusic() {
     }
   }, [location, state.soundEnabled, userInteracted]);
 
-  return null;
+  return (
+    <button
+      onClick={toggleSound}
+      className="fixed z-50 p-2 opacity-30 hover:opacity-60 transition-opacity"
+      style={{ top: 'calc(env(safe-area-inset-top) + 14px)', right: '16px' }}
+    >
+      {state.soundEnabled ? (
+        <Volume2 className="w-5 h-5 text-white" />
+      ) : (
+        <VolumeX className="w-5 h-5 text-white" />
+      )}
+    </button>
+  );
 }
 
 function App() {
