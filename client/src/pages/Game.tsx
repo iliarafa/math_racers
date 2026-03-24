@@ -850,6 +850,12 @@ export default function Game() {
     }
   }, []);
 
+  // Notify App.tsx when entering/leaving race states (hides video & pauses music)
+  useEffect(() => {
+    const isRacing = gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing';
+    window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: isRacing } }));
+  }, [gameStatus]);
+
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
@@ -2038,9 +2044,9 @@ export default function Game() {
     ];
 
     return (
-      <div className="h-screen flex flex-col" style={{ backgroundColor: '#ffffff' }}>
+      <div className="h-screen flex flex-col">
         {/* App Logo */}
-        <div className="pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
+        <div className="relative z-10 pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
           <Link href="/">
             <img
               src={logoImage}
@@ -2049,21 +2055,21 @@ export default function Game() {
             />
           </Link>
         </div>
-        <div className="flex-1 flex flex-col md:justify-center md:pb-16">
+        <div className="relative z-10 flex-1 flex flex-col md:justify-center md:pb-16">
         {/* Welcome Section */}
         <div className="mt-6 md:mt-0 mb-6 md:mb-6 flex flex-col items-center px-8">
           {isPreSeasonTesting ? (
-            <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-wider text-black text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Free Practice</h2>
+            <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-wider text-white text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Free Practice</h2>
           ) : (
           <h2
-            className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-black text-center"
+            className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-white text-center"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             {'Welcome to Grand Prix!'}
           </h2>
           )}
           <p
-            className="mt-3 text-center text-gray-500"
+            className="mt-3 text-center text-white/60"
             style={{ fontFamily: 'Oxanium, sans-serif', fontSize: '0.8rem', maxWidth: '28rem' }}
           >
             {isPreSeasonTesting
@@ -2071,7 +2077,7 @@ export default function Game() {
               : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to ${CURRENT_GRAND_PRIX.name}, ${CURRENT_GRAND_PRIX.country}.`}
           </p>
           <h3
-            className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-black"
+            className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-white"
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             Select Operation
@@ -2112,7 +2118,13 @@ export default function Game() {
                 }}
                 whileTap={{ scale: 0.95 }}
                 whileHover={{ scale: 1.02 }}
-                className={`h-20 md:h-24 rounded-xl bg-gray-100 flex flex-col items-center justify-center${index === operationItems.length - 1 ? ' col-span-2' : ''}`}
+                className={`h-20 md:h-24 rounded-xl flex flex-col items-center justify-center${index === operationItems.length - 1 ? ' col-span-2' : ''}`}
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                }}
               >
                 <span
                   className="block"
@@ -2120,8 +2132,8 @@ export default function Game() {
                     fontFamily: 'Oxanium, sans-serif',
                     fontSize: window.innerWidth >= 768 ? '2rem' : '1.4rem',
                     fontWeight: 'bold',
-                    color: '#000000',
-                    opacity: 0.7,
+                    color: '#FFFFFF',
+                    opacity: 0.85,
                   }}
                 >
                   {op.symbol}
@@ -2131,8 +2143,8 @@ export default function Game() {
                   style={{
                     fontFamily: 'Oxanium, sans-serif',
                     fontSize: '0.6rem',
-                    color: '#000000',
-                    opacity: 0.4,
+                    color: '#FFFFFF',
+                    opacity: 0.5,
                   }}
                 >
                   {op.label}
@@ -2145,7 +2157,7 @@ export default function Game() {
           <div className="flex justify-center mt-4">
             <Link href="/gp-leaderboard">
               <button
-                className="flex items-center gap-2 transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+                className="flex items-center gap-2 transition-colors text-sm uppercase tracking-wider text-white/50 hover:text-white"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
                 <Trophy className="w-4 h-4" /> Leaderboard
@@ -2154,17 +2166,8 @@ export default function Game() {
           </div>
         )}
         </div>
-        {/* Track illustration */}
-        <div className="flex-1 flex items-center justify-center px-8 overflow-hidden">
-          <img
-            src={trackIllustration}
-            alt=""
-            className="max-w-xs md:max-w-md w-full object-contain"
-            style={{ opacity: 0.5 }}
-          />
-        </div>
         {/* Back button */}
-        <div className="px-8 py-4 flex flex-col items-center gap-3" style={{ backgroundColor: '#ffffff' }}>
+        <div className="relative z-10 px-8 py-4 flex flex-col items-center gap-3">
           <button
             onClick={() => {
               if (state.soundEnabled) playCarouselClick();
@@ -2172,7 +2175,7 @@ export default function Game() {
               setIsPreSeasonTesting(false);
               setGameStatus('mode_select');
             }}
-            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-black"
+            className="transition-colors text-sm uppercase tracking-wider text-white/50 hover:text-white"
             style={{ fontFamily: 'Oxanium, sans-serif', paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             Back

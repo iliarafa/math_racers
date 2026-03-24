@@ -49,7 +49,15 @@ const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
 
 function PersistentVideo() {
   const [location] = useLocation();
-  const visible = VIDEO_ROUTES.includes(location);
+  const [isRacing, setIsRacing] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => setIsRacing((e as CustomEvent).detail.racing);
+    window.addEventListener('racingStateChange', handler);
+    return () => window.removeEventListener('racingStateChange', handler);
+  }, []);
+
+  const visible = VIDEO_ROUTES.includes(location) && !isRacing;
 
   return (
     <div className={`fixed inset-0 z-0 bg-black ${visible ? '' : 'hidden'}`}>
@@ -71,6 +79,13 @@ function MenuMusic() {
   const { state, toggleSound } = useGameState();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [userInteracted, setUserInteracted] = useState(false);
+  const [isRacing, setIsRacing] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => setIsRacing((e as CustomEvent).detail.racing);
+    window.addEventListener('racingStateChange', handler);
+    return () => window.removeEventListener('racingStateChange', handler);
+  }, []);
 
   useEffect(() => {
     const audio = new Audio(laneRacerMusic);
@@ -90,12 +105,12 @@ function MenuMusic() {
     const audio = audioRef.current;
     if (!audio) return;
     const isMenu = MENU_ROUTES.includes(location);
-    if (isMenu && state.soundEnabled && userInteracted) {
+    if (isMenu && state.soundEnabled && userInteracted && !isRacing) {
       audio.play().catch(() => {});
     } else {
       audio.pause();
     }
-  }, [location, state.soundEnabled, userInteracted]);
+  }, [location, state.soundEnabled, userInteracted, isRacing]);
 
   return (
     <button

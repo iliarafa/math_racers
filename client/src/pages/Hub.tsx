@@ -37,7 +37,7 @@ const hubCardStyle: React.CSSProperties = {
   WebkitBackdropFilter: 'blur(12px)',
   border: '1px solid rgba(255,255,255,0.2)',
   borderRadius: '12px',
-  padding: '20px 24px',
+  padding: '16px 20px',
   width: '100%',
   textAlign: 'left' as const,
   cursor: 'pointer',
@@ -46,14 +46,14 @@ const hubCardStyle: React.CSSProperties = {
 
 const hubTitleStyle: React.CSSProperties = {
   fontFamily: 'Oxanium, sans-serif',
-  fontSize: '1.3rem',
+  fontSize: window.innerWidth >= 768 ? '1.4rem' : '1.15rem',
   fontWeight: 'bold',
   color: '#FFFFFF',
 };
 
 const hubSubStyle: React.CSSProperties = {
   fontFamily: 'Oxanium, sans-serif',
-  fontSize: '0.8rem',
+  fontSize: '0.75rem',
   color: 'rgba(255,255,255,0.65)',
   textTransform: 'uppercase' as const,
   letterSpacing: '0.08em',
@@ -67,7 +67,7 @@ export default function Hub() {
     <div className="h-screen flex flex-col relative overflow-hidden">
 
       {/* Logo */}
-      <div className="flex justify-center relative z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 24px)', paddingBottom: '16px' }}>
+      <div className="flex justify-center relative z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
         <Link href="/">
           <img
             src={logoImage}
@@ -77,9 +77,19 @@ export default function Hub() {
         </Link>
       </div>
 
+      {/* Title */}
+      <div className="relative z-10 mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
+        <h2
+          className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
+          style={{ fontFamily: 'Oxanium, sans-serif' }}
+        >
+          Paddock
+        </h2>
+      </div>
+
       {/* Hub Cards */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 relative z-10" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
-        <div className="flex flex-col w-full max-w-sm gap-5">
+      <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+        <div className="flex flex-col w-full max-w-sm gap-4">
           {/* Solo */}
           <Link href="/game">
             <motion.button
