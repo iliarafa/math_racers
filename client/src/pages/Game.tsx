@@ -854,6 +854,9 @@ export default function Game() {
   useEffect(() => {
     const isRacing = gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing';
     window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: isRacing } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: false } }));
+    };
   }, [gameStatus]);
 
   // Countdown sequence: 5 lights, then immediately start racing
@@ -2955,9 +2958,9 @@ export default function Game() {
   // Countdown screen with F1 starting lights
   if (gameStatus === 'countdown') {
     return (
-      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideHeader>
         <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden pb-16">
-          
+
           {/* F1 Starting Lights */}
           <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
             <div className="flex gap-2 md:gap-3 justify-center">
@@ -2988,9 +2991,9 @@ export default function Game() {
   // GO state - lights out, green indicator
   if (gameStatus === 'go') {
     return (
-      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideHeader>
         <div className="flex-1 flex flex-col items-center justify-center gap-8 overflow-hidden pb-16">
-          
+
           {/* Green GO indicator */}
           <motion.div
             initial={{ scale: 0.5, opacity: 0 }}
@@ -3605,7 +3608,7 @@ export default function Game() {
 
   // Racing phase
   return (
-    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport headerRight={(isPracticeMode && !isGrandPrix) ? (
+    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideGarageButton headerRight={(isPracticeMode && !isGrandPrix) ? (
         <button
           onClick={() => {
             const lastEnd = pstStintsRef.current.length > 0
