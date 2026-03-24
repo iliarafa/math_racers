@@ -50,7 +50,6 @@ import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageCar from "@/assets/garage_car.jpeg";
 import trackIllustration from "@/assets/track_illustration.jpeg";
-import backgroundVideo from "@assets/background2.mp4";
 import chooseTrackVideo from "@assets/choose_TRACK.mp4";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
@@ -1925,17 +1924,7 @@ export default function Game() {
     };
 
     return (
-      <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
-        {/* Background Video */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-40"
-        >
-          <source src={backgroundVideo} type="video/mp4" />
-        </video>
+      <div className="h-screen flex flex-col relative overflow-hidden">
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
@@ -2230,17 +2219,7 @@ export default function Game() {
     };
 
     return (
-      <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
-        {/* Background Video */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-40"
-        >
-          <source src={backgroundVideo} type="video/mp4" />
-        </video>
+      <div className="h-screen flex flex-col relative overflow-hidden">
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>

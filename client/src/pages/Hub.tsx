@@ -2,7 +2,6 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useGameState } from "@/lib/gameLogic";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
-import backgroundVideo from "@assets/background.mp4";
 
 let audioContext: AudioContext | null = null;
 
@@ -65,17 +64,7 @@ export default function Hub() {
   const { state } = useGameState();
 
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
-      {/* Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover opacity-40"
-      >
-        <source src={backgroundVideo} type="video/mp4" />
-      </video>
+    <div className="h-screen flex flex-col relative overflow-hidden">
 
       {/* Logo */}
       <div className="flex justify-center relative z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 24px)', paddingBottom: '16px' }}>

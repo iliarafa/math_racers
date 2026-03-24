@@ -9,6 +9,7 @@ import { PurchaseProvider } from "@/contexts/PurchaseContext";
 import { useGameState } from "@/lib/gameLogic";
 import { Volume2, VolumeX } from "lucide-react";
 import laneRacerMusic from "@assets/laneracer3.mp3";
+import backgroundVideo from "@assets/background.mp4";
 import NotFound from "@/pages/not-found";
 import Welcome from "@/pages/Welcome";
 import Game from "@/pages/Game";
@@ -44,6 +45,26 @@ function Router() {
 }
 
 const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/reaction', '/regulations', '/racer-log', '/leaderboard', '/gp-leaderboard', '/lane-racer', '/multiplayer'];
+const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
+
+function PersistentVideo() {
+  const [location] = useLocation();
+  const visible = VIDEO_ROUTES.includes(location);
+
+  return (
+    <div className={`fixed inset-0 z-0 bg-black ${visible ? '' : 'hidden'}`}>
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full h-full object-cover opacity-40"
+      >
+        <source src={backgroundVideo} type="video/mp4" />
+      </video>
+    </div>
+  );
+}
 
 function MenuMusic() {
   const [location] = useLocation();
@@ -99,6 +120,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <MenuMusic />
+            <PersistentVideo />
             <Router />
           </TooltipProvider>
         </PurchaseProvider>

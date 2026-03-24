@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
-import backgroundVideo from "@assets/background2.mp4";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LENGTH, SIM_LAP_COUNTS } from "@/lib/gameLogic";
 import type { Difficulty } from "@/lib/gameLogic";
@@ -324,11 +323,7 @@ export default function LaneRacer() {
     };
 
     return (
-      <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
-        {/* Background Video */}
-        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-40">
-          <source src={backgroundVideo} type="video/mp4" />
-        </video>
+      <div className="h-screen flex flex-col relative overflow-hidden">
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '8px' }}>
