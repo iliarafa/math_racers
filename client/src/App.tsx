@@ -50,6 +50,7 @@ const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
 function PersistentVideo() {
   const [location] = useLocation();
   const [isRacing, setIsRacing] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const handler = (e: Event) => setIsRacing((e as CustomEvent).detail.racing);
@@ -59,9 +60,16 @@ function PersistentVideo() {
 
   const visible = VIDEO_ROUTES.includes(location) && !isRacing;
 
+  useEffect(() => {
+    if (visible && videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  }, [visible]);
+
   return (
     <div className={`fixed inset-0 z-0 bg-black ${visible ? '' : 'hidden'}`}>
       <video
+        ref={videoRef}
         autoPlay
         loop
         muted
