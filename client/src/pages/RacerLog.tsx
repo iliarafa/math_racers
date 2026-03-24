@@ -45,14 +45,14 @@ export default function RacerLog() {
   const hasEntries = lapHistory.length > 0;
 
   return (
-    <GameLayout hideGarageButton lockViewport backHref="/garage">
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 bg-white">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-wider text-black text-center mb-6"
+    <GameLayout hideGarageButton lockViewport backHref="/garage" darkBackground>
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-wider text-white text-center mb-6"
             style={{ fontFamily: 'Oxanium, sans-serif' }}>RACER LOG</h1>
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
           {!hasEntries ? (
-            <p className="text-sm text-black/40 text-center py-12 font-mono">No data recorded.</p>
+            <p className="text-sm text-white/40 text-center py-12 font-mono">No data recorded.</p>
           ) : (
             <div className="space-y-8">
               {orderedKeys.map(key => {
@@ -60,11 +60,11 @@ export default function RacerLog() {
                 const label = SERIES_LABELS[key] || 'LEGACY';
                 return (
                   <div key={key}>
-                    <h2 className="text-xs font-bold tracking-widest uppercase text-black/40 mb-3 pb-2">
+                    <h2 className="text-xs font-bold tracking-widest uppercase text-white/40 mb-3 pb-2">
                       {label}
                     </h2>
                     <div className="space-y-0">
-                      <div className="grid grid-cols-[2rem_1fr_5.5rem_4.5rem] gap-2 px-2 pb-1 text-[10px] uppercase tracking-widest text-black/30 font-mono">
+                      <div className="grid grid-cols-[2rem_1fr_5.5rem_4.5rem] gap-2 px-2 pb-1 text-[10px] uppercase tracking-widest text-white/30 font-mono">
                         <span>#</span>
                         <span>Circuit</span>
                         <span className="text-right">Time</span>
@@ -75,10 +75,10 @@ export default function RacerLog() {
                           key={index}
                           className="grid grid-cols-[2rem_1fr_5.5rem_4.5rem] gap-2 px-2 py-2 text-sm"
                         >
-                          <span className="text-black/30 font-mono text-xs leading-5">{index + 1}</span>
-                          <span className="text-black/80">{lap.trackName}</span>
-                          <span className="text-black font-mono text-xs text-right leading-5">{formatTime(lap.time)}</span>
-                          <span className="text-black/40 font-mono text-xs text-right leading-5">{formatDate(lap.timestamp)}</span>
+                          <span className="text-white/30 font-mono text-xs leading-5">{index + 1}</span>
+                          <span className="text-white/80">{lap.trackName}</span>
+                          <span className="text-white font-mono text-xs text-right leading-5">{formatTime(lap.time)}</span>
+                          <span className="text-white/40 font-mono text-xs text-right leading-5">{formatDate(lap.timestamp)}</span>
                         </div>
                       ))}
                     </div>
@@ -91,25 +91,25 @@ export default function RacerLog() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-white py-4 px-4 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
+      <div className="fixed bottom-0 left-0 right-0 bg-neutral-700/90 backdrop-blur-sm py-4 px-4 z-50" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}>
         <div className="max-w-2xl md:max-w-4xl mx-auto flex justify-between items-end">
           <div className="text-center flex-1">
-            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+            <div className="text-2xl md:text-3xl text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               {state.totalLaps}
             </div>
-            <div className="text-[10px] uppercase tracking-widest text-black/40 mt-1">Total Laps</div>
+            <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Total Laps</div>
           </div>
           <div className="text-center flex-1">
-            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+            <div className="text-2xl md:text-3xl text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               {state.careerPoints}
             </div>
-            <div className="text-[10px] uppercase tracking-widest text-black/40 mt-1">Career Pts</div>
+            <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Career Pts</div>
           </div>
           <div className="text-center flex-1">
-            <div className="text-2xl md:text-3xl text-black" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+            <div className="text-2xl md:text-3xl text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               {state.racesWon}
             </div>
-            <div className="text-[10px] uppercase tracking-widest text-black/40 mt-1">Races Won</div>
+            <div className="text-[10px] uppercase tracking-widest text-white/40 mt-1">Races Won</div>
           </div>
         </div>
       </div>

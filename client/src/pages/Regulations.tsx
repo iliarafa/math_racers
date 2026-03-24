@@ -70,9 +70,9 @@ const chapters: Chapter[] = [
         description: "Weather conditions affect question difficulty.",
         details: [],
         richDetails: [
-          { color: "text-black/70", label: "Dry", text: "standard difficulty" },
-          { color: "text-black/70", label: "Wet", text: "increased difficulty" },
-          { color: "text-black/70", label: "Random", text: "rain probability varies per circuit. In Realism Mode with Random weather, conditions alternate 3 to 5 times during the race" },
+          { color: "text-white/70", label: "Dry", text: "standard difficulty" },
+          { color: "text-white/70", label: "Wet", text: "increased difficulty" },
+          { color: "text-white/70", label: "Random", text: "rain probability varies per circuit. In Realism Mode with Random weather, conditions alternate 3 to 5 times during the race" },
         ],
       },
     ],
@@ -255,12 +255,12 @@ const chapters: Chapter[] = [
 function renderArticleContent(article: Article) {
   return (
     <>
-      <p className="text-sm md:text-base leading-relaxed text-black/80 mb-3">
+      <p className="text-sm md:text-base leading-relaxed text-white/80 mb-3">
         {article.description}
       </p>
 
       {article.richDetails && (
-        <div className="text-black/60 text-sm md:text-base space-y-1.5 mb-2">
+        <div className="text-white/60 text-sm md:text-base space-y-1.5 mb-2">
           {article.richDetails.map((item, i) => (
             <p key={i}>
               <span className={item.color}>{item.label}</span> — {item.text}
@@ -270,18 +270,18 @@ function renderArticleContent(article: Article) {
       )}
 
       {article.details.length > 0 && (
-        <div className="text-black/60 text-sm md:text-base space-y-2">
+        <div className="text-white/60 text-sm md:text-base space-y-2">
           {article.details.map((detail, i) => {
             if (detail.startsWith("#")) {
               return (
-                <p key={i} className="font-bold text-black text-xs uppercase tracking-wider mt-4 first:mt-0">
+                <p key={i} className="font-bold text-white text-xs uppercase tracking-wider mt-4 first:mt-0">
                   {detail.slice(1)}
                 </p>
               );
             }
             if (detail.startsWith("~")) {
               return (
-                <div key={i} className="bg-black/[0.03] border border-black/10 rounded-md px-3 py-2 font-mono text-xs md:text-sm text-black/60 text-center my-1">
+                <div key={i} className="bg-white/5 border border-white/10 rounded-md px-3 py-2 font-mono text-xs md:text-sm text-white/60 text-center my-1">
                   {detail.slice(1)}
                 </div>
               );
@@ -290,7 +290,7 @@ function renderArticleContent(article: Article) {
             if (parts.length >= 2) {
               return (
                 <p key={i}>
-                  <span className="font-bold text-black">{parts[0]}</span>
+                  <span className="font-bold text-white">{parts[0]}</span>
                   {" — "}{parts.slice(1).join(" — ")}
                 </p>
               );
@@ -302,12 +302,12 @@ function renderArticleContent(article: Article) {
 
       {article.table && (
         <div className="mt-3">
-          <p className="text-black text-sm md:text-base font-bold mb-1">{article.table.title}</p>
-          <table className="w-full text-sm md:text-base border-collapse border border-black/10">
+          <p className="text-white text-sm md:text-base font-bold mb-1">{article.table.title}</p>
+          <table className="w-full text-sm md:text-base border-collapse border border-white/10">
             <thead>
-              <tr className="text-left bg-black/[0.03]">
+              <tr className="text-left bg-white/5">
                 {article.table.headers.map((h, i) => (
-                  <th key={i} className="font-normal text-black/60 text-[10px] uppercase tracking-wider border border-black/10 px-3 py-1.5">
+                  <th key={i} className="font-normal text-white/60 text-[10px] uppercase tracking-wider border border-white/10 px-3 py-1.5">
                     {h}
                   </th>
                 ))}
@@ -315,9 +315,9 @@ function renderArticleContent(article: Article) {
             </thead>
             <tbody>
               {article.table.rows.map((row, i) => (
-                <tr key={i} className="text-black/60">
-                  <td className="font-bold text-black border border-black/10 px-3 py-1.5">{row[0]}</td>
-                  <td className="font-mono border border-black/10 px-3 py-1.5">{row[1]}</td>
+                <tr key={i} className="text-white/60">
+                  <td className="font-bold text-white border border-white/10 px-3 py-1.5">{row[0]}</td>
+                  <td className="font-mono border border-white/10 px-3 py-1.5">{row[1]}</td>
                 </tr>
               ))}
             </tbody>
@@ -344,27 +344,27 @@ export default function Regulations() {
   let articleNum = 0;
 
   return (
-    <GameLayout lockViewport backHref="/garage">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-10 pb-20 bg-white">
+    <GameLayout lockViewport backHref="/garage" darkBackground>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-10 pb-20">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 
           {/* Title Block */}
           <div className="text-center mb-6">
             <h1
-              className="text-xl md:text-2xl font-bold tracking-[0.25em] uppercase text-black"
+              className="text-xl md:text-2xl font-bold tracking-[0.25em] uppercase text-white"
               style={{ fontFamily: "Oxanium, sans-serif" }}
             >
               Technical Regulations
             </h1>
             <p
-              className="text-xs tracking-widest uppercase text-black/60 mt-1"
+              className="text-xs tracking-widest uppercase text-white/60 mt-1"
               style={{ fontFamily: "Oxanium, sans-serif" }}
             >
               2026 Season
             </p>
           </div>
 
-          <div className="border-t border-black/10 mb-6" />
+          <div className="border-t border-white/10 mb-6" />
 
           {/* Table of Contents */}
           <div className="mb-8 space-y-1.5">
@@ -372,7 +372,7 @@ export default function Regulations() {
               <button
                 key={chapter.id}
                 onClick={() => scrollToChapter(chapter.id)}
-                className="block w-full text-left text-xs tracking-wider uppercase text-black/60 active:text-black transition-colors py-1"
+                className="block w-full text-left text-xs tracking-wider uppercase text-white/60 active:text-white transition-colors py-1"
                 style={{ fontFamily: "Oxanium, sans-serif" }}
               >
                 {chapter.numeral}. {chapter.title}
@@ -384,15 +384,15 @@ export default function Regulations() {
           {chapters.map((chapter) => (
             <div key={chapter.id} id={chapter.id} className="mt-10 first:mt-0">
               {/* Chapter Heading */}
-              <div className="border-t border-black/10 pt-6 mb-4">
+              <div className="border-t border-white/10 pt-6 mb-4">
                 <p
-                  className="text-[10px] tracking-[0.3em] uppercase text-black/50"
+                  className="text-[10px] tracking-[0.3em] uppercase text-white/50"
                   style={{ fontFamily: "Oxanium, sans-serif" }}
                 >
                   Chapter {chapter.numeral}
                 </p>
                 <p
-                  className="text-sm md:text-base tracking-widest uppercase font-bold text-black"
+                  className="text-sm md:text-base tracking-widest uppercase font-bold text-white"
                   style={{ fontFamily: "Oxanium, sans-serif" }}
                 >
                   {chapter.title}
@@ -400,7 +400,7 @@ export default function Regulations() {
               </div>
 
               {/* Articles */}
-              <div className="divide-y divide-black/[0.06]">
+              <div className="divide-y divide-white/[0.06]">
                 {chapter.articles.map((article) => {
                   articleNum++;
                   const currentNum = articleNum;
@@ -416,9 +416,9 @@ export default function Regulations() {
                           className="text-xs md:text-sm tracking-wider uppercase"
                           style={{ fontFamily: "Oxanium, sans-serif" }}
                         >
-                          <span className="text-black/50">Art. {currentNum}</span>
-                          <span className="text-black/20 mx-1.5">—</span>
-                          <span className="text-black">{article.title}</span>
+                          <span className="text-white/50">Art. {currentNum}</span>
+                          <span className="text-white/20 mx-1.5">—</span>
+                          <span className="text-white">{article.title}</span>
                         </span>
                       </div>
 

@@ -24,17 +24,17 @@ function MultiplicationGrid() {
     <div className="space-y-4">
       <div className="tech-card">
         <h3 className="text-lg font-bold mb-2 text-red-400 text-center">MULTIPLICATION DATA MATRIX</h3>
-        <p className="text-sm text-neutral-400 mb-4 text-center">Hover over any cell to highlight the row and column factors.</p>
+        <p className="text-sm text-white/40 mb-4 text-center">Hover over any cell to highlight the row and column factors.</p>
       </div>
       
       <div className="overflow-x-auto -mx-2 px-2">
         <div className="grid-container text-xs md:text-base" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, minmax(32px, 1fr))', gap: '2px', minWidth: '340px' }}>
-          <div className="grid-header-corner bg-neutral-200 p-1.5 md:p-2.5 text-center font-bold text-neutral-400">×</div>
+          <div className="grid-header-corner bg-white/10 p-1.5 md:p-2.5 text-center font-bold text-white/40">×</div>
           {numbers.map(n => (
             <div 
               key={`header-${n}`} 
               className={cn(
-                "grid-header bg-red-100 p-1.5 md:p-2.5 text-center font-bold text-red-700 transition-colors",
+                "grid-header bg-red-900/30 p-1.5 md:p-2.5 text-center font-bold text-red-400 transition-colors",
                 hoveredCell?.col === n && "bg-red-700 text-white"
               )}
             >
@@ -46,7 +46,7 @@ function MultiplicationGrid() {
             <Fragment key={row}>
               <div
                 className={cn(
-                  "grid-header bg-red-100 p-1.5 md:p-2.5 text-center font-bold text-red-700 transition-colors",
+                  "grid-header bg-red-900/30 p-1.5 md:p-2.5 text-center font-bold text-red-400 transition-colors",
                   hoveredCell?.row === row && "bg-red-700 text-white"
                 )}
               >
@@ -61,12 +61,12 @@ function MultiplicationGrid() {
                     onMouseEnter={() => setHoveredCell({ row, col })}
                     onMouseLeave={() => setHoveredCell(null)}
                     className={cn(
-                      "p-1.5 md:p-2.5 text-center transition-all cursor-pointer border border-neutral-200",
+                      "p-1.5 md:p-2.5 text-center transition-all cursor-pointer border border-white/10",
                       isIntersection
                         ? "bg-yellow-400 text-black font-bold scale-110 z-10 shadow-lg shadow-yellow-400/50"
                         : isHighlighted
-                          ? "bg-neutral-200 text-black"
-                          : "bg-neutral-50 text-neutral-700 hover:bg-neutral-100"
+                          ? "bg-white/15 text-white"
+                          : "bg-white/5 text-white/70 hover:bg-white/10"
                     )}
                     data-testid={`grid-cell-${row}-${col}`}
                   >
@@ -97,7 +97,7 @@ function DivisionContent() {
     <div className="space-y-4">
       <div className="tech-card">
         <h3 className="text-lg font-bold mb-2 text-blue-400 text-center">FACT FAMILIES</h3>
-        <p className="text-sm text-neutral-400 text-center">Tap a number to see its fact family!</p>
+        <p className="text-sm text-white/40 text-center">Tap a number to see its fact family!</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3">
@@ -107,7 +107,7 @@ function DivisionContent() {
             className="tech-card-glow text-center cursor-pointer active:scale-95 transition-transform"
             onClick={() => setSelectedFamily(family)}
           >
-            <div className="font-bold text-lg text-neutral-800">{family.product}</div>
+            <div className="font-bold text-lg text-white">{family.product}</div>
           </div>
         ))}
       </div>
@@ -124,7 +124,7 @@ function DivisionContent() {
 
       <div className="tech-card mt-6">
         <h4 className="text-md font-bold mb-2 text-purple-400 text-center">QUICK TIP</h4>
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-white/60">
           Division is the reverse of multiplication.<br/>
           12 ÷ 4 = ? means "How many 4s fit into 12?"
         </p>
@@ -144,16 +144,16 @@ function AdditionContent() {
     <div className="space-y-4">
       <div className="tech-card">
         <h3 className="text-lg font-bold mb-2 text-green-600 text-center">NUMBER BONDS</h3>
-        <p className="text-sm text-neutral-400 text-center">Master these number pairs to add faster than your rivals!</p>
+        <p className="text-sm text-white/40 text-center">Master these number pairs to add faster than your rivals!</p>
       </div>
       
       <div className="grid grid-cols-3 gap-3">
         {numberBonds.map((bond, i) => (
           <div key={i} className="tech-card-glow text-center">
-            <div className="font-bold text-lg text-neutral-800 mb-2">{bond.target}</div>
+            <div className="font-bold text-lg text-white mb-2">{bond.target}</div>
             <div className="space-y-1 text-sm">
               {bond.pairs.map(([a, b], j) => (
-                <div key={j} className="text-neutral-600 tabular-nums">{a} + {b}</div>
+                <div key={j} className="text-white/60 tabular-nums">{a} + {b}</div>
               ))}
             </div>
           </div>
@@ -162,7 +162,7 @@ function AdditionContent() {
       
       <div className="tech-card mt-6">
         <h4 className="text-md font-bold mb-2 text-cyan-400 text-center">STRATEGY NOTES</h4>
-        <ul className="text-sm text-neutral-600 space-y-1 list-disc list-inside">
+        <ul className="text-sm text-white/60 space-y-1 list-disc list-inside">
           <li>Break big numbers into friendly pairs</li>
           <li>Add 9 by adding 10, then subtract 1</li>
           <li>Double numbers are easy: 6 + 6 = 12, so 6 + 7 = 13</li>
@@ -218,14 +218,14 @@ function StepByStepModal({ problem, steps, onClose }: { problem: string; steps: 
       onClick={onClose}
     >
       <motion.div
-        className="bg-white rounded-xl p-6 w-full max-w-xs shadow-xl"
+        className="bg-neutral-900 border border-white/20 rounded-xl p-6 w-full max-w-xs shadow-xl"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="font-bold text-2xl text-neutral-800 text-center mb-4">{problem}</div>
-        <div className="text-base text-neutral-600 space-y-1 text-center min-h-[5rem]">
+        <div className="font-bold text-2xl text-white text-center mb-4">{problem}</div>
+        <div className="text-base text-white/60 space-y-1 text-center min-h-[5rem]">
           {displayed.map((text, i) => (
             <div key={i}>
               {text}
@@ -238,7 +238,7 @@ function StepByStepModal({ problem, steps, onClose }: { problem: string; steps: 
         </div>
         <button
           onClick={onClose}
-          className="mt-4 w-full text-sm text-neutral-400 hover:text-neutral-600 transition-colors"
+          className="mt-4 w-full text-sm text-white/40 hover:text-white/60 transition-colors"
         >
           Close
         </button>
@@ -261,7 +261,7 @@ function SubtractionContent() {
     <div className="space-y-4">
       <div className="tech-card">
         <h3 className="text-lg font-bold mb-2 text-blue-400 text-center">SUBTRACTION STRATEGIES</h3>
-        <p className="text-sm text-neutral-400 text-center">Tap a problem to see the strategy!</p>
+        <p className="text-sm text-white/40 text-center">Tap a problem to see the strategy!</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -271,7 +271,7 @@ function SubtractionContent() {
             className="tech-card-glow text-center cursor-pointer active:scale-95 transition-transform"
             onClick={() => setSelectedExample(ex)}
           >
-            <div className="font-bold text-lg text-neutral-800">{ex.problem}</div>
+            <div className="font-bold text-lg text-white">{ex.problem}</div>
           </div>
         ))}
       </div>
@@ -288,7 +288,7 @@ function SubtractionContent() {
       
       <div className="tech-card mt-6">
         <h4 className="text-md font-bold mb-2 text-red-400 text-center">REMEMBER</h4>
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-white/60">
           Subtraction tells you the "gap" or "difference" between two numbers.<br/>
           Think: "How far apart are these numbers?"
         </p>
@@ -311,7 +311,7 @@ function VariablesContent() {
     <div className="space-y-4">
       <div className="tech-card">
         <h3 className="text-lg font-bold mb-2 text-purple-400 text-center">SOLVING FOR X</h3>
-        <p className="text-sm text-neutral-400 text-center">Tap an equation to solve it step by step!</p>
+        <p className="text-sm text-white/40 text-center">Tap an equation to solve it step by step!</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -321,7 +321,7 @@ function VariablesContent() {
             className="tech-card-glow text-center cursor-pointer active:scale-95 transition-transform"
             onClick={() => setSelectedExample(ex)}
           >
-            <div className="font-bold text-lg text-neutral-800">{ex.equation}</div>
+            <div className="font-bold text-lg text-white">{ex.equation}</div>
           </div>
         ))}
       </div>
@@ -338,7 +338,7 @@ function VariablesContent() {
 
       <div className="tech-card mt-6">
         <h4 className="text-md font-bold mb-3 text-amber-600 text-center">REMEMBER</h4>
-        <div className="space-y-2 text-sm text-neutral-600">
+        <div className="space-y-2 text-sm text-white/60">
           <p>To find x, do the <span className="font-bold">opposite</span> operation:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>Addition and Subtraction</li>
@@ -370,12 +370,12 @@ export default function StrategyGuide() {
   };
 
   return (
-    <GameLayout lockViewport backHref="/garage">
-      <div className="strategy-view bg-white flex-1 overflow-y-auto p-4 md:p-8 pb-20">
+    <GameLayout lockViewport backHref="/garage" darkBackground>
+      <div className="strategy-view flex-1 overflow-y-auto p-4 md:p-8 pb-20">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="text-center">
-            <h1 className="text-lg md:text-3xl font-bold tracking-tight text-black">RACE STRATEGY & DATA</h1>
-            <p className="text-xs text-neutral-400">Your complete math reference guide</p>
+            <h1 className="text-lg md:text-3xl font-bold tracking-tight text-white">RACE STRATEGY & DATA</h1>
+            <p className="text-xs text-white/50">Your complete math reference guide</p>
           </div>
 
           <div className="grid grid-cols-5 gap-2">
@@ -386,8 +386,8 @@ export default function StrategyGuide() {
                 className={cn(
                   "flex items-center justify-center gap-1.5 px-3 min-h-11 rounded-lg text-xs md:text-base transition-all w-full",
                   activeTab === tab.id
-                    ? "bg-black text-white shadow-lg shadow-black/20"
-                    : "bg-neutral-100 text-neutral-400 hover:bg-neutral-200 hover:text-black"
+                    ? "bg-white/20 text-white shadow-lg shadow-black/20"
+                    : "bg-white/5 text-white/40 hover:bg-white/10 hover:text-white"
                 )}
                 data-testid={`tab-${tab.id}`}
               >
@@ -411,24 +411,24 @@ export default function StrategyGuide() {
         }
         
         .tech-card {
-          background: linear-gradient(135deg, rgba(245, 245, 245, 0.9), rgba(250, 250, 250, 0.95));
-          border: 1px solid rgba(0, 0, 0, 0.1);
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+          border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 8px;
           padding: 16px;
         }
 
         .tech-card-glow {
-          background: linear-gradient(135deg, rgba(245, 245, 245, 0.9), rgba(250, 250, 250, 0.95));
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
           border: 1px solid rgba(100, 100, 255, 0.3);
           border-radius: 8px;
           padding: 16px;
-          box-shadow: 0 0 15px rgba(100, 100, 255, 0.08), inset 0 0 30px rgba(100, 100, 255, 0.02);
+          box-shadow: 0 0 15px rgba(100, 100, 255, 0.15), inset 0 0 30px rgba(100, 100, 255, 0.05);
           transition: all 0.3s ease;
         }
 
         .tech-card-glow:hover {
           border-color: rgba(100, 100, 255, 0.5);
-          box-shadow: 0 0 25px rgba(100, 100, 255, 0.15), inset 0 0 30px rgba(100, 100, 255, 0.03);
+          box-shadow: 0 0 25px rgba(100, 100, 255, 0.25), inset 0 0 30px rgba(100, 100, 255, 0.08);
         }
       `}</style>
     </GameLayout>

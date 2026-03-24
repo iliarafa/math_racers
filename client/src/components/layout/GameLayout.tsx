@@ -21,7 +21,7 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
     <div className={cn(
       "text-foreground flex flex-col",
       lockViewport ? "h-screen overflow-hidden" : "min-h-screen",
-      darkBackground ? "bg-black" : "bg-background"
+      darkBackground ? "bg-neutral-800" : "bg-background"
     )} style={{ 
       fontFamily: 'Oxanium, sans-serif',
       paddingTop: 'env(safe-area-inset-top)',
@@ -30,10 +30,10 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
       paddingRight: 'env(safe-area-inset-right)'
     }}>
       {!hideHeader && (
-        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex items-center sticky top-0 z-50 bg-[#ffffff]", centerHeader ? "justify-center relative" : "justify-between", !hideGarageButton && "border-b border-border")}>
+        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex items-center sticky top-0 z-50", darkBackground ? "bg-neutral-800/80 backdrop-blur-sm" : "bg-[#ffffff]", centerHeader ? "justify-center relative" : "justify-between", !hideGarageButton && (darkBackground ? "border-b border-white/10" : "border-b border-border"))}>
           {backHref && centerHeader && (
             <Link href={backHref}>
-              <button className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors">
+              <button className={cn("absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 transition-colors", darkBackground ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-black")}>
                 <ChevronLeft size={24} />
               </button>
             </Link>
@@ -41,7 +41,7 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
           <div className="flex items-center gap-4 md:gap-6">
             {backHref && !centerHeader && (
               <Link href={backHref}>
-                <button className="flex items-center justify-center w-10 h-10 text-gray-500 hover:text-black transition-colors">
+                <button className={cn("flex items-center justify-center w-10 h-10 transition-colors", darkBackground ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-black")}>
                   <ChevronLeft size={24} />
                 </button>
               </Link>
@@ -66,7 +66,7 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
             <div className="flex items-center gap-2 md:gap-4">
               {headerRight ? headerRight : !hideGarageButton && (
                 <Link href="/garage">
-                  <button className="flex items-center justify-center gap-2 text-sm font-medium hover:bg-secondary min-w-11 min-h-11 px-3 rounded-md transition-colors">
+                  <button className={cn("flex items-center justify-center gap-2 text-sm font-medium min-w-11 min-h-11 px-3 rounded-md transition-colors", darkBackground ? "text-white/60 hover:text-white hover:bg-white/10" : "hover:bg-secondary")}>
                     <Wrench className="w-5 h-5" />
                     <span className="hidden sm:inline">Garage</span>
                   </button>
@@ -80,7 +80,7 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
       <main className={cn(
         "flex-1 flex flex-col max-w-5xl md:max-w-6xl mx-auto w-full min-h-0",
         lockViewport ? "p-0" : "p-6 md:p-10",
-        darkBackground && "bg-black"
+        darkBackground && "bg-neutral-800"
       )}>
         {children}
       </main>
