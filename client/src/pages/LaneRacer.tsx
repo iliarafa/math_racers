@@ -166,6 +166,15 @@ export default function LaneRacer() {
     return () => timeouts.forEach(clearTimeout);
   }, [gameStatus, state.soundEnabled]);
 
+  // Notify App.tsx when entering/leaving race states (hides video & pauses music)
+  useEffect(() => {
+    const isRacing = gameStatus === 'countdown' || gameStatus === 'racing' || gameStatus === 'finished';
+    window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: isRacing } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: false } }));
+    };
+  }, [gameStatus]);
+
   // Initialize engine when racing starts
   useEffect(() => {
     if (gameStatus !== 'racing' || !canvasRef.current) return;
@@ -571,40 +580,40 @@ export default function LaneRacer() {
     const mistakes = raceLength - correctCount;
 
     return (
-      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
+      <GameLayout trackName={selectedCircuit?.name || ""} lockViewport darkBackground>
         <div className="flex-1 flex flex-col items-center justify-start max-w-xl mx-auto w-full overflow-y-auto p-4">
           <div className="rounded-xl p-6 w-full text-center space-y-6">
 
             <div className="space-y-2">
-              <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Race Result</div>
-              <div className="text-6xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+              <div className="text-sm font-medium text-white/50 uppercase tracking-widest">Race Result</div>
+              <div className="text-6xl font-bold tracking-tighter text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                 {accuracy}%
               </div>
-              <div className="text-xl font-medium">
+              <div className="text-xl font-medium text-white/80">
                 {accuracy === 100 ? 'Perfect Race' : accuracy >= 80 ? 'Podium Finish' : accuracy >= 50 ? 'Points Finish' : 'Did Not Score'}
               </div>
             </div>
 
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Circuit</span>
-                <span className="font-bold">{selectedCircuit?.name}</span>
+                <span className="text-white/50">Circuit</span>
+                <span className="font-bold text-white">{selectedCircuit?.name}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Total Time</span>
-                <span className="font-bold font-mono">{timeStr}</span>
+                <span className="text-white/50">Total Time</span>
+                <span className="font-bold font-mono text-white">{timeStr}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Correct</span>
-                <span className="font-bold">{correctCount} / {raceLength}</span>
+                <span className="text-white/50">Correct</span>
+                <span className="font-bold text-white">{correctCount} / {raceLength}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Mistakes</span>
-                <span className={`font-bold ${mistakes === 0 ? 'text-green-600' : 'text-red-600'}`}>{mistakes}</span>
+                <span className="text-white/50">Mistakes</span>
+                <span className={`font-bold ${mistakes === 0 ? 'text-green-400' : 'text-red-400'}`}>{mistakes}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Accuracy</span>
-                <span className="font-bold">{accuracy}%</span>
+                <span className="text-white/50">Accuracy</span>
+                <span className="font-bold text-white">{accuracy}%</span>
               </div>
             </div>
 
@@ -616,7 +625,7 @@ export default function LaneRacer() {
                 Race Again
               </button>
               <Link href="/game">
-                <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
+                <button className="w-full bg-white/10 text-white h-12 rounded-lg font-medium hover:bg-white/20 transition-all flex items-center justify-center gap-2">
                   Main Menu
                 </button>
               </Link>
