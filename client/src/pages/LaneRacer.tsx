@@ -185,10 +185,13 @@ export default function LaneRacer() {
     // Size canvas to fill the wrapper (below question bar + HUD)
     const resize = () => {
       if (!wrapper) return;
-      const w = Math.min(wrapper.clientWidth, 500);
+      const isTablet = Math.min(window.screen.width, window.screen.height) >= 700;
+      const w = isTablet ? wrapper.clientWidth : Math.min(wrapper.clientWidth, 500);
       const h = wrapper.clientHeight;
       canvas.width = w;
       canvas.height = Math.max(h, 300);
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${Math.max(h, 300)}px`;
     };
     resize();
 
@@ -672,7 +675,7 @@ export default function LaneRacer() {
         <div ref={canvasWrapperRef} className="flex-1 overflow-hidden">
           <canvas
             ref={canvasRef}
-            style={{ imageRendering: 'pixelated', display: 'block', width: '100%', height: '100%' }}
+            style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
           />
         </div>
       </div>

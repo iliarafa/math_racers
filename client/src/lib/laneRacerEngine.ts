@@ -207,10 +207,14 @@ export class LaneRacerEngine {
 
   private update(dt: number, timestamp: number) {
     const s = this.state;
+    const w = this.canvas.width;
     const h = this.canvas.height;
 
+    // Scale speed to canvas size (reference: iPhone ~667px height)
+    const scale = h / 667;
+
     // Update road scroll
-    const scrollAmount = s.speed * dt;
+    const scrollAmount = s.speed * dt * scale;
     s.roadOffset = (s.roadOffset + scrollAmount) % 40;
     s.totalScroll += scrollAmount;
 
@@ -230,15 +234,19 @@ export class LaneRacerEngine {
 
     // Move tokens down
     for (const token of s.tokens) {
-      token.y += s.speed * dt;
+      token.y += s.speed * dt * scale;
     }
 
-    // Check collisions
+    // Check collisions (proportional sizes)
+    const collRoadWidth = w * 0.6;
+    const collLaneWidth = collRoadWidth / 3;
+    const collTokenH = Math.round(collLaneWidth * 0.7 * 0.71);
+    const collHitboxHalf = Math.round(collLaneWidth * 0.2);
     const carY = h * 0.82;
     for (const token of s.tokens) {
-      const tokenCenterY = token.y + TOKEN_HEIGHT / 2;
+      const tokenCenterY = token.y + collTokenH / 2;
       if (
-        Math.abs(tokenCenterY - carY) < CAR_HITBOX_HALF &&
+        Math.abs(tokenCenterY - carY) < collHitboxHalf &&
         token.lane === s.carLane
       ) {
         this.resolveAnswer(token);
@@ -300,6 +308,13 @@ export class LaneRacerEngine {
     const roadLeft = (w - roadWidth) / 2;
     const roadRight = roadLeft + roadWidth;
     const laneWidth = roadWidth / 3;
+
+    // Proportional sizes (matched to iPhone ratios)
+    const tokenW = Math.round(laneWidth * 0.7);
+    const tokenH = Math.round(tokenW * 0.71);
+    const carW = Math.round(laneWidth * 0.4);
+    const carH = carW * 2;
+    const fontSize = Math.round(tokenW * 0.4);
 
     // Green runoff / grass background
     ctx.fillStyle = '#2d5a27';
@@ -379,28 +394,28 @@ export class LaneRacerEngine {
 
     // Answer tokens
     for (const token of s.tokens) {
-      const tokenX = roadLeft + token.lane * laneWidth + (laneWidth - TOKEN_WIDTH) / 2;
+      const tokenX = roadLeft + token.lane * laneWidth + (laneWidth - tokenW) / 2;
       const tokenY = token.y;
 
       // Token box
       ctx.fillStyle = 'white';
-      ctx.fillRect(tokenX, tokenY, TOKEN_WIDTH, TOKEN_HEIGHT);
+      ctx.fillRect(tokenX, tokenY, tokenW, tokenH);
       ctx.strokeStyle = 'black';
       ctx.lineWidth = 2;
-      ctx.strokeRect(tokenX, tokenY, TOKEN_WIDTH, TOKEN_HEIGHT);
+      ctx.strokeRect(tokenX, tokenY, tokenW, tokenH);
 
       // Token text
       ctx.fillStyle = 'black';
-      ctx.font = 'bold 28px Oxanium, sans-serif';
+      ctx.font = `bold ${fontSize}px Oxanium, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(String(token.value), tokenX + TOKEN_WIDTH / 2, tokenY + TOKEN_HEIGHT / 2);
+      ctx.fillText(String(token.value), tokenX + tokenW / 2, tokenY + tokenH / 2);
     }
 
     // Car
-    const carX = roadLeft + s.carLaneVisual * laneWidth + (laneWidth - CAR_WIDTH) / 2;
-    const carY = h * 0.82 - CAR_HEIGHT / 2;
-    this.drawCar(carX, carY);
+    const carX = roadLeft + s.carLaneVisual * laneWidth + (laneWidth - carW) / 2;
+    const carY2 = h * 0.82 - carH / 2;
+    this.drawCar(carX, carY2, carW, carH);
 
     // Correct flash
     if (s.flashFrames > 0) {
@@ -420,10 +435,10 @@ export class LaneRacerEngine {
     }
   }
 
-  private drawCar(x: number, y: number) {
+  private drawCar(x: number, y: number, w: number = CAR_WIDTH, h: number = CAR_HEIGHT) {
     const ctx = this.ctx;
     if (this.carImage.complete && this.carImage.naturalWidth > 0) {
-      ctx.drawImage(this.carImage, x, y, CAR_WIDTH, CAR_HEIGHT);
+      ctx.drawImage(this.carImage, x, y, w, h);
     }
   }
 }
