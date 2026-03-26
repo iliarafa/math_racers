@@ -58,10 +58,10 @@ const chapters: Chapter[] = [
         description: "Answer times are color-coded based on your performance.",
         details: [],
         richDetails: [
-          { color: "text-purple-400", label: "Purple", text: "fastest overall" },
-          { color: "text-green-400", label: "Green", text: "quick response" },
-          { color: "text-yellow-400", label: "Yellow", text: "slower response" },
-          { color: "text-red-400", label: "Red", text: "incorrect answer" },
+          { color: "text-purple-400", label: "Purple", text: "personal best for that sector (race) or faster than half the expected time (practice)" },
+          { color: "text-green-400", label: "Green", text: "correct and faster than the target time" },
+          { color: "text-yellow-400", label: "Yellow", text: "correct but slower than the target time" },
+          { color: "text-red-400", label: "Red", text: "required a retry on that question" },
         ],
       },
       {
@@ -71,7 +71,7 @@ const chapters: Chapter[] = [
         details: [],
         richDetails: [
           { color: "text-white/70", label: "Dry", text: "standard difficulty" },
-          { color: "text-white/70", label: "Wet", text: "increased difficulty" },
+          { color: "text-white/70", label: "Wet", text: "bumps questions half a difficulty level harder" },
           { color: "text-white/70", label: "Random", text: "rain probability varies per circuit. In Realism Mode with Random weather, conditions alternate 3 to 5 times during the race" },
         ],
       },
@@ -87,19 +87,25 @@ const chapters: Chapter[] = [
         title: "Overtake",
         description: "Build energy by answering correctly. Faster answers charge more energy.",
         details: [
-          "Activates when behind and within two sectors of your opponent",
-          "2x progress per correct answer while active",
-          "Harder questions while active",
+          "Activates when behind and within two sectors of your opponent (always available in Practice)",
+          "2× progress per correct answer while active",
+          "Questions are 1.5× harder (half a difficulty level)",
+          "In wet weather, the difficulty boost stacks — wet + OVERTAKE = full difficulty level up",
+          "Energy drains over time once activated (100% energy = 5 seconds)",
+          "Tap again to deactivate early and preserve remaining energy",
           "A wrong answer depletes all energy immediately",
+          "Disabled once your opponent finishes the race",
         ],
       },
       {
         id: "active-aero",
         title: "Active Aero",
-        description: "Engage AERO in designated zones for sector boosts.",
+        description: "Engage AERO in designated zones for a 2× sector boost per correct answer.",
         details: [
-          "Two activation zones in Standard Mode",
-          "Five activation zones in Realism Mode",
+          "Two activation zones in Standard Mode (at 25% and 65% of race)",
+          "Five activation zones in Realism Mode (at 15%, 30%, 50%, 70%, 85%)",
+          "Each zone lasts for 3 questions",
+          "A wrong answer while AERO is active deactivates it",
         ],
       },
     ],
@@ -162,7 +168,7 @@ const chapters: Chapter[] = [
           "No penalties — wrong answers don't count against you.",
           "Your mission — complete all 100 questions to submit your score to the Leaderboard.",
           "BOX — click to exit to the pits and log your current stint. Go back to the track to start a new one.",
-          "~(laps / time) × accuracy × difficulty multiplier × 1000 (max 100,000)",
+          "~(questions / time) × accuracy × difficulty multiplier × 1000 (max 100,000)",
         ],
         table: {
           title: "Difficulty multipliers",
@@ -189,18 +195,23 @@ const chapters: Chapter[] = [
         details: [
           "Host creates a room and shares the code",
           "Guest joins with the code",
+          "Both players race the same set of questions",
+          "Real-time progress visible during the race",
+          "Host can toggle power-ups on or off before starting",
           "Winner is determined by fewer mistakes, then by faster time",
-          "Power-ups are available in multiplayer",
         ],
       },
       {
         id: "leaderboard",
         title: "Leaderboard",
-        description: "Compete for the highest score on the Free Practice leaderboard.",
+        description: "Compete for the highest scores on the Free Practice and Grand Prix leaderboards.",
         details: [
-          "Only Free Practice completions (100 questions) are submitted",
+          "#Free Practice",
+          "Complete all 100 questions to submit your score",
           "Filter entries by math operation",
           "Search for players by name",
+          "#Grand Prix",
+          "Race Day completions are submitted to the Grand Prix leaderboard",
         ],
       },
     ],
@@ -303,7 +314,7 @@ function renderArticleContent(article: Article) {
       {article.table && (
         <div className="mt-3">
           <p className="text-white text-sm md:text-base font-bold mb-1">{article.table.title}</p>
-          <table className="w-full text-sm md:text-base border-collapse border border-white/10">
+          <table className="w-full text-sm md:text-base border-collapse">
             <thead>
               <tr className="text-left bg-white/5">
                 {article.table.headers.map((h, i) => (
@@ -345,26 +356,24 @@ export default function Regulations() {
 
   return (
     <GameLayout lockViewport backHref="/garage" darkBackground>
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-10 pb-20">
+      {/* Fixed Title Block */}
+      <div className="shrink-0 px-6 md:px-10 pt-6 pb-4 text-center">
+        <h1
+          className="text-xl md:text-2xl font-bold tracking-[0.25em] uppercase text-white"
+          style={{ fontFamily: "Oxanium, sans-serif" }}
+        >
+          Technical Regulations
+        </h1>
+        <p
+          className="text-xs tracking-widest uppercase text-white/60 mt-1"
+          style={{ fontFamily: "Oxanium, sans-serif" }}
+        >
+          2026 Season
+        </p>
+      </div>
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 md:px-10 pb-20">
         <div className="max-w-2xl md:max-w-4xl mx-auto">
-
-          {/* Title Block */}
-          <div className="text-center mb-6">
-            <h1
-              className="text-xl md:text-2xl font-bold tracking-[0.25em] uppercase text-white"
-              style={{ fontFamily: "Oxanium, sans-serif" }}
-            >
-              Technical Regulations
-            </h1>
-            <p
-              className="text-xs tracking-widest uppercase text-white/60 mt-1"
-              style={{ fontFamily: "Oxanium, sans-serif" }}
-            >
-              2026 Season
-            </p>
-          </div>
-
-          <div className="border-t border-white/10 mb-6" />
 
           {/* Table of Contents */}
           <div className="mb-8 space-y-1.5">
@@ -384,7 +393,7 @@ export default function Regulations() {
           {chapters.map((chapter) => (
             <div key={chapter.id} id={chapter.id} className="mt-10 first:mt-0">
               {/* Chapter Heading */}
-              <div className="border-t border-white/10 pt-6 mb-4">
+              <div className="pt-6 mb-4">
                 <p
                   className="text-[10px] tracking-[0.3em] uppercase text-white/50"
                   style={{ fontFamily: "Oxanium, sans-serif" }}
@@ -392,7 +401,7 @@ export default function Regulations() {
                   Chapter {chapter.numeral}
                 </p>
                 <p
-                  className="text-sm md:text-base tracking-widest uppercase font-bold text-white"
+                  className="text-lg md:text-xl tracking-widest uppercase font-bold text-white"
                   style={{ fontFamily: "Oxanium, sans-serif" }}
                 >
                   {chapter.title}
@@ -400,7 +409,7 @@ export default function Regulations() {
               </div>
 
               {/* Articles */}
-              <div className="divide-y divide-white/[0.06]">
+              <div className="">
                 {chapter.articles.map((article) => {
                   articleNum++;
                   const currentNum = articleNum;
