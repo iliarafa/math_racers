@@ -68,7 +68,6 @@ Each circuit is themed after a famous F1 track:
 **ACTIVE AERO System (DRS Zones)**
 - Appears at specific race points (2 zones in standard, 5 in Realism Mode)
 - Grants 2x sector boost (advance 2 sectors on correct answer)
-- Harder question while AERO is active (bumps to next difficulty level)
 - Each zone usable once per race
 
 ### Bot Opponent AI
@@ -194,7 +193,7 @@ npm run db:push
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`
+The app will be available at `http://localhost:8081`
 
 ### iOS Build (Capacitor)
 

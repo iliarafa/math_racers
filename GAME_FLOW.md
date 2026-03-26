@@ -85,13 +85,13 @@ driver_select → selecting → countdown → go → racing → finished | crash
 
 ## Circuits & Math Operations
 
-| Circuit | ID | Operation | DRS Zones | Sim Laps |
-|---------|-----|-----------|-----------|----------|
-| Monza | `monza` | Multiplication | 2, 8 | 53 |
-| Spa | `spa` | Addition | 2, 8 | 44 |
-| Monaco | `monaco` | Subtraction | 0, 5 | 78 |
-| Suzuka | `suzuka` | Division | 0, 7 | 53 |
-| Silverstone | `silverstone` | Variables | 3, 7 | 52 |
+| Circuit | ID | Operation | Sim Laps |
+|---------|-----|-----------|----------|
+| Monza | `monza` | Multiplication | 53 |
+| Spa | `spa` | Addition | 44 |
+| Monaco | `monaco` | Subtraction | 78 |
+| Suzuka | `suzuka` | Division | 53 |
+| Silverstone | `silverstone` | Variables | 52 |
 
 ---
 
@@ -107,18 +107,22 @@ driver_select → selecting → countdown → go → racing → finished | crash
 
 ## Sector Color System (Performance Feedback)
 
-### Calibration Phase (Questions 1-5)
-- All correct answers show **green**
-- Tracks response times to calculate median as personal reference
-
-### Post-Calibration (Questions 6+)
+### Practice Mode
 
 | Color | Condition |
 |-------|-----------|
-| Purple | Response time < bot's time for that question |
-| Green | Response time ≤ personal reference time |
-| Yellow | Response time > personal reference time |
-| Red | Incorrect answer |
+| Purple | Faster than 50% of bot's expected time |
+| Green | Faster than bot's expected time |
+| Yellow | Correct but slower than bot's expected time |
+
+### Race Mode (F1-style competitive)
+
+| Color | Condition |
+|-------|-----------|
+| Purple | Personal best for that sector (only one driver holds purple per sector) |
+| Green | Correct, within 1.5× of the best time for that sector |
+| Yellow | Correct but slower than 1.5× of best |
+| Red | Required a retry on that question |
 
 ---
 
@@ -190,7 +194,6 @@ Difficulty boosts interpolate toward the next difficulty level and stack:
 | Dry | 0.0 | Base difficulty |
 | Wet | 0.5 | 1.5x harder (halfway to next level) |
 | OVERTAKE active | 0.5 | 1.5x harder |
-| AERO active | Next level | Full next difficulty (via `getHarderDifficulty`) |
 | Wet + OVERTAKE | 1.0 (capped) | 2x harder (full next difficulty level) |
 
 ### Circuit Rain Probabilities
@@ -210,15 +213,21 @@ Difficulty boosts interpolate toward the next difficulty level and stack:
 | Event | Reward |
 |-------|--------|
 | Correct answer | 10 coins |
-| Correct answer in DRS zone | 20 coins |
+| Multiplayer win | 100 coins |
 
-### Career Points
-| Series | Points | In DRS Zone |
-|--------|--------|-------------|
-| Karting | 1 | 2 |
-| F3 | 1 | 2 |
-| F2 | 2 | 4 |
-| F1 | 3 | 6 |
+### Career Points (F1-style position points)
+| Position | Points |
+|----------|--------|
+| P1 | 25 |
+| P2 | 18 |
+| P3 | 15 |
+| P4 | 12 |
+| P5 | 10 |
+| P6 | 8 |
+| P7 | 6 |
+| P8 | 4 |
+| P9 | 2 |
+| P10 | 1 |
 
 ### Special Rewards
 - **Beat the bot:** Confetti animation + races won counter + circuit championed at current series
@@ -231,9 +240,8 @@ Difficulty boosts interpolate toward the next difficulty level and stack:
 | Condition | Finishing Position |
 |-----------|-------------------|
 | Beat the bot (finished before bot) | P1 |
-| 0 mistakes (bot already finished) | P1 |
-| 1-2 mistakes | P2 |
-| 3+ mistakes | Position = mistake count (capped at P20) |
+| Lost to bot, 0 mistakes | P1 |
+| Lost to bot, N mistakes | Position = 1 + N (capped at P20) |
 
 Position maps to 2025 F1 driver standings (P1 = Lando Norris, P2 = Max Verstappen, etc.)
 
