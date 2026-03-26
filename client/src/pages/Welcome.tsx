@@ -46,13 +46,13 @@ export default function Welcome() {
           <img
             src={logoImage}
             alt="Math Racer"
-            className="w-[65%] max-w-[380px] md:max-w-[420px] mb-8"
+            className="w-[65%] max-w-[380px] md:max-w-[520px] mb-8"
             data-testid="img-logo"
           />
           <img
             src={heroImage}
             alt="Math Racers"
-            className="w-[65%] max-w-[380px] md:max-w-[420px]"
+            className="w-[65%] max-w-[380px] md:max-w-[520px]"
             style={{ filter: 'saturate(0.8) brightness(0.92)' }}
             data-testid="img-hero"
           />

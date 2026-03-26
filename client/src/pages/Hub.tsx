@@ -89,7 +89,7 @@ export default function Hub() {
 
       {/* Hub Cards */}
       <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
-        <div className="flex flex-col w-full max-w-sm gap-4">
+        <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
           {/* Solo */}
           <Link href="/game">
             <motion.button

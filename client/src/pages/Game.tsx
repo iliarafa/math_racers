@@ -1965,7 +1965,7 @@ export default function Game() {
 
         {/* Mode Cards */}
         <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
-          <div className="flex flex-col w-full max-w-sm gap-4">
+          <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
             {/* Career Card */}
             <motion.button
               onClick={() => {
@@ -2259,7 +2259,7 @@ export default function Game() {
 
         {/* Series Cards */}
         <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
-          <div className="flex flex-col w-full max-w-sm gap-4">
+          <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
             {seriesOptions.map((series) => {
               const isSelected = selectedDriver?.id === series.id;
               const isUnlocked = isPracticeMode || isSeriesAvailable(series.id, state.championedCircuits);
@@ -2302,7 +2302,7 @@ export default function Game() {
                 if (state.soundEnabled) playCarouselClick();
                 handleDriverSelect(selectedDriver!);
               }}
-              className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+              className="w-full max-w-sm md:max-w-lg py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
               style={{
                 fontFamily: 'Oxanium, sans-serif',
                 backgroundColor: '#22c55e',
@@ -2876,7 +2876,7 @@ export default function Game() {
             whileTap={!isCircuitLocked ? { scale: 0.98 } : undefined}
             onClick={() => { if (isCircuitLocked) return; if (state.soundEnabled) playCarouselClick(); handleStartRace(); }}
             className={cn(
-              "w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white",
+              "w-full max-w-sm md:max-w-lg py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white",
               isCircuitLocked && "opacity-40 cursor-not-allowed"
             )}
             style={{
