@@ -2501,17 +2501,18 @@ export default function Game() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none backdrop-blur-xl"
                 style={{
-                  backgroundColor: '#f0f0f0',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
                 }}
                 data-testid={`hero-card-pst-${CURRENT_GRAND_PRIX.circuitId}`}
               >
                 {/* Header - Circuit & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <h2
-                    className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+                    className="text-2xl font-bold uppercase tracking-wider text-white"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     {CURRENT_GRAND_PRIX.name}
@@ -2529,15 +2530,15 @@ export default function Game() {
                     src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
                     alt={`${CURRENT_GRAND_PRIX.name} circuit`}
                     className="h-32 md:h-52 object-contain"
-                    style={{ maxWidth: '280px' }}
+                    style={{ maxWidth: '280px', filter: 'invert(1)' }}
                   />
                 </div>
 
                 {/* Operation — static display */}
                 <div className="text-center mb-2 md:mb-4">
-                  <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
+                  <div className="text-sm uppercase tracking-wider mb-1 text-white/50">Math Type</div>
                   <div
-                    className="text-lg font-bold uppercase text-gray-900"
+                    className="text-lg font-bold uppercase text-white"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     {selectedOperation}
@@ -2545,7 +2546,7 @@ export default function Game() {
                 </div>
 
                 {/* Weather Toggle */}
-                <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+                <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
                   <button
                     onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
@@ -2555,8 +2556,8 @@ export default function Game() {
                         : "bg-transparent hover:bg-white/5"
                     )}
                   >
-                    <img src={weatherSun} alt="Dry" className="w-8 h-8" />
-                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Dry</span>
+                    <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(5) hue-rotate(15deg)' : undefined }} />
+                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
                   </button>
                   <button
                     onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
@@ -2567,8 +2568,8 @@ export default function Game() {
                         : "bg-transparent hover:bg-white/5"
                     )}
                   >
-                    <img src={weatherRain} alt="Wet" className="w-8 h-8" />
-                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Wet</span>
+                    <img src={weatherRain} alt="Wet" className="w-8 h-8" style={{ filter: selectedWeather === 'wet' ? 'invert(1) sepia(1) saturate(5) hue-rotate(190deg)' : undefined }} />
+                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Wet</span>
                   </button>
                   <button
                     onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
@@ -2579,8 +2580,8 @@ export default function Game() {
                         : "bg-transparent hover:bg-white/5"
                     )}
                   >
-                    <img src={weatherRandom} alt="Random" className="w-8 h-8" />
-                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Random</span>
+                    <img src={weatherRandom} alt="Random" className="w-8 h-8" style={{ filter: selectedWeather === 'random' ? 'invert(1) sepia(1) saturate(5) hue-rotate(250deg)' : undefined }} />
+                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Random</span>
                   </button>
                 </div>
               </motion.div>
@@ -2593,17 +2594,18 @@ export default function Game() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
-                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none"
+                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none backdrop-blur-xl"
                 style={{
-                  backgroundColor: '#f0f0f0',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
                 }}
                 data-testid={`hero-card-${CURRENT_GRAND_PRIX.circuitId}`}
               >
                 {/* Header - Circuit & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
                   <h2
-                    className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+                    className="text-2xl font-bold uppercase tracking-wider text-white"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     {CURRENT_GRAND_PRIX.name}
@@ -2621,15 +2623,15 @@ export default function Game() {
                     src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
                     alt={`${CURRENT_GRAND_PRIX.name} circuit`}
                     className="h-32 md:h-52 object-contain"
-                    style={{ maxWidth: '280px' }}
+                    style={{ maxWidth: '280px', filter: 'invert(1)' }}
                   />
                 </div>
 
                 {/* Operation — static display (chosen on operation_select screen) */}
                 <div className="text-center mb-2 md:mb-4">
-                  <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
+                  <div className="text-sm uppercase tracking-wider mb-1 text-white/50">Math Type</div>
                   <div
-                    className="text-lg font-bold uppercase text-gray-900"
+                    className="text-lg font-bold uppercase text-white"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     {selectedOperation}
@@ -2637,7 +2639,7 @@ export default function Game() {
                 </div>
 
                 {/* Weather Toggle */}
-                <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+                <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
                   <button
                     onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
@@ -2647,8 +2649,8 @@ export default function Game() {
                         : "bg-transparent hover:bg-white/5"
                     )}
                   >
-                    <img src={weatherSun} alt="Dry" className="w-8 h-8" />
-                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Dry</span>
+                    <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(5) hue-rotate(15deg)' : undefined }} />
+                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
                   </button>
                   <button
                     onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
@@ -2659,8 +2661,8 @@ export default function Game() {
                         : "bg-transparent hover:bg-white/5"
                     )}
                   >
-                    <img src={weatherRain} alt="Wet" className="w-8 h-8" />
-                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Wet</span>
+                    <img src={weatherRain} alt="Wet" className="w-8 h-8" style={{ filter: selectedWeather === 'wet' ? 'invert(1) sepia(1) saturate(5) hue-rotate(190deg)' : undefined }} />
+                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Wet</span>
                   </button>
                   <button
                     onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
@@ -2671,8 +2673,8 @@ export default function Game() {
                         : "bg-transparent hover:bg-white/5"
                     )}
                   >
-                    <img src={weatherRandom} alt="Random" className="w-8 h-8" />
-                    <span className="text-[9px] text-gray-500 uppercase tracking-wide">Random</span>
+                    <img src={weatherRandom} alt="Random" className="w-8 h-8" style={{ filter: selectedWeather === 'random' ? 'invert(1) sepia(1) saturate(5) hue-rotate(250deg)' : undefined }} />
+                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Random</span>
                   </button>
                 </div>
               </motion.div>
@@ -2703,10 +2705,11 @@ export default function Game() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2 }}
-                  className="w-[350px] md:w-[500px] rounded-[20px] p-4 md:p-6 flex flex-col transition-colors duration-300 select-none relative"
-                  style={{ 
-                    backgroundColor: '#f0f0f0',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+                  className="w-[350px] md:w-[500px] rounded-[20px] p-4 md:p-6 flex flex-col transition-colors duration-300 select-none relative backdrop-blur-xl"
+                  style={{
+                    backgroundColor: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
                     touchAction: 'none'
                   }}
                   onTouchStart={handleTouchStart}
@@ -2716,16 +2719,16 @@ export default function Game() {
                 >
                   {/* Locked overlay */}
                   {isCircuitLocked && selectedDriver && (
-                    <div className="absolute inset-0 rounded-[20px] bg-white/70 z-10 flex items-center justify-center p-6">
-                      <p className="text-center text-red-600 text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    <div className="absolute inset-0 rounded-[20px] bg-black/60 z-10 flex items-center justify-center p-6">
+                      <p className="text-center text-red-400 text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                         Champion {getNextRequiredSeriesLabel(displayCircuit.id, selectedDriver.id, state.championedCircuits)} to unlock {displayCircuit.type}
                       </p>
                     </div>
                   )}
                   {/* Header - Circuit Name & Flag */}
                   <div className="flex items-center justify-center gap-3 mb-4">
-                    <h2 
-                      className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+                    <h2
+                      className="text-2xl font-bold uppercase tracking-wider text-white"
                       style={{ fontFamily: 'Oxanium, sans-serif' }}
                     >
                       {displayCircuit.name}
@@ -2740,11 +2743,11 @@ export default function Game() {
                   {/* Track Map */}
                   <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                     {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
-                      <img 
-                        src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black} 
+                      <img
+                        src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black}
                         alt={`${displayCircuit.name} circuit`}
                         className="h-32 md:h-52 object-contain"
-                        style={{ maxWidth: '280px' }}
+                        style={{ maxWidth: '280px', filter: 'invert(1)' }}
                       />
                     ) : (
                       <svg 
@@ -2782,9 +2785,9 @@ export default function Game() {
 
                   {/* Info - Math Type */}
                   <div className="text-center mb-2 md:mb-4">
-                    <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
-                    <div 
-                      className="text-lg font-bold uppercase text-gray-900"
+                    <div className="text-sm uppercase tracking-wider mb-1 text-white/50">Math Type</div>
+                    <div
+                      className="text-lg font-bold uppercase text-white"
                       style={{ fontFamily: 'Oxanium, sans-serif' }}
                     >
                       {displayCircuit.type}
@@ -2792,45 +2795,45 @@ export default function Game() {
                   </div>
 
                   {/* Weather Toggle */}
-                  <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+                  <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
                     <button
                       onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                       className={cn(
                         "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                        selectedWeather === 'dry' 
-                          ? "bg-yellow-500/20 ring-2 ring-yellow-500" 
+                        selectedWeather === 'dry'
+                          ? "bg-yellow-500/20 ring-2 ring-yellow-500"
                           : "bg-transparent hover:bg-white/5"
                       )}
                       data-testid="weather-dry"
                     >
-                      <img src={weatherSun} alt="Dry" className="w-8 h-8" />
-                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Dry</span>
+                      <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(5) hue-rotate(15deg)' : undefined }} />
+                      <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
                     </button>
                     <button
                       onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
                       className={cn(
                         "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                        selectedWeather === 'wet' 
-                          ? "bg-blue-500/20 ring-2 ring-blue-500" 
+                        selectedWeather === 'wet'
+                          ? "bg-blue-500/20 ring-2 ring-blue-500"
                           : "bg-transparent hover:bg-white/5"
                       )}
                       data-testid="weather-wet"
                     >
-                      <img src={weatherRain} alt="Wet" className="w-8 h-8" />
-                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Wet</span>
+                      <img src={weatherRain} alt="Wet" className="w-8 h-8" style={{ filter: selectedWeather === 'wet' ? 'invert(1) sepia(1) saturate(5) hue-rotate(190deg)' : undefined }} />
+                      <span className="text-[9px] text-white/50 uppercase tracking-wide">Wet</span>
                     </button>
                     <button
                       onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
                       className={cn(
                         "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                        selectedWeather === 'random' 
-                          ? "bg-purple-500/20 ring-2 ring-purple-500" 
+                        selectedWeather === 'random'
+                          ? "bg-purple-500/20 ring-2 ring-purple-500"
                           : "bg-transparent hover:bg-white/5"
                       )}
                       data-testid="weather-random"
                     >
-                      <img src={weatherRandom} alt="Random" className="w-8 h-8" />
-                      <span className="text-[9px] text-gray-500 uppercase tracking-wide">Random</span>
+                      <img src={weatherRandom} alt="Random" className="w-8 h-8" style={{ filter: selectedWeather === 'random' ? 'invert(1) sepia(1) saturate(5) hue-rotate(250deg)' : undefined }} />
+                      <span className="text-[9px] text-white/50 uppercase tracking-wide">Random</span>
                     </button>
                   </div>
                 </motion.div>
