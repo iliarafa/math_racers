@@ -2556,7 +2556,7 @@ export default function Game() {
                         : "bg-transparent hover:bg-white/5"
                     )}
                   >
-                    <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(5) hue-rotate(15deg)' : undefined }} />
+                    <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(10) hue-rotate(3deg) brightness(0.95)' : undefined }} />
                     <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
                   </button>
                   <button
@@ -2649,7 +2649,7 @@ export default function Game() {
                         : "bg-transparent hover:bg-white/5"
                     )}
                   >
-                    <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(5) hue-rotate(15deg)' : undefined }} />
+                    <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(10) hue-rotate(3deg) brightness(0.95)' : undefined }} />
                     <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
                   </button>
                   <button
@@ -2806,7 +2806,7 @@ export default function Game() {
                       )}
                       data-testid="weather-dry"
                     >
-                      <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(5) hue-rotate(15deg)' : undefined }} />
+                      <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(10) hue-rotate(3deg) brightness(0.95)' : undefined }} />
                       <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
                     </button>
                     <button
