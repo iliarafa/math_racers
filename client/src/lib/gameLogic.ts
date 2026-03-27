@@ -1039,3 +1039,23 @@ export function calculatePSTScore(
   const score = (lapCount / timeInSeconds) * (correctAnswers / lapCount) * multiplier * 1000;
   return Math.min(Math.round(score), 100000);
 }
+
+// Calculate Lane Racer score (same formula as PST)
+export function calculateLaneRacerScore(
+  totalTimeMs: number,
+  correctCount: number,
+  raceLength: number,
+  difficultyAchieved: Difficulty
+): number {
+  if (totalTimeMs <= 0 || raceLength <= 0) return 0;
+  const timeInSeconds = totalTimeMs / 1000;
+  const difficultyMultipliers: Record<Difficulty, number> = {
+    beginner: 1.0,
+    easy: 1.5,
+    medium: 2.0,
+    hard: 3.0,
+  };
+  const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
+  const score = (raceLength / timeInSeconds) * (correctCount / raceLength) * multiplier * 1000;
+  return Math.min(Math.round(score), 100000);
+}

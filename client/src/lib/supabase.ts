@@ -108,3 +108,59 @@ export async function getGPLeaderboard(circuitId?: string, operation?: string, l
   if (error) throw error;
   return data ?? [];
 }
+
+// Lane Racer Leaderboard
+
+export interface LaneRacerLeaderboardSubmission {
+  playerId: string;
+  playerName: string;
+  circuitId: string;
+  circuitName: string;
+  operation: string;
+  score: number;
+  totalTime: number;
+  mistakes: number;
+  accuracy: number;
+  difficultyAchieved: string;
+}
+
+export async function submitLaneRacerLeaderboardEntry(entry: LaneRacerLeaderboardSubmission) {
+  const { data, error } = await supabase
+    .from("lane_racer_leaderboard")
+    .insert({
+      player_id: entry.playerId,
+      player_name: entry.playerName,
+      circuit_id: entry.circuitId,
+      circuit_name: entry.circuitName,
+      operation: entry.operation,
+      score: Math.round(entry.score),
+      total_time: entry.totalTime,
+      mistakes: entry.mistakes,
+      accuracy: entry.accuracy,
+      difficulty_achieved: entry.difficultyAchieved,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getLaneRacerLeaderboard(circuitId?: string, operation?: string, limit = 50) {
+  let query = supabase
+    .from("lane_racer_leaderboard")
+    .select("*")
+    .order("score", { ascending: false })
+    .limit(Math.min(limit, 100));
+
+  if (circuitId) {
+    query = query.eq("circuit_id", circuitId);
+  }
+  if (operation) {
+    query = query.eq("operation", operation);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}

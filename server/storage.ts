@@ -1,5 +1,5 @@
-import { type User, type InsertUser, type MultiplayerRoom, type InsertRoom, multiplayerRooms, type InsertLeaderboardEntry, type LeaderboardEntry, pstLeaderboard } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { type User, type InsertUser, type MultiplayerRoom, type InsertRoom, multiplayerRooms, type InsertLeaderboardEntry, type LeaderboardEntry, pstLeaderboard, type InsertLaneRacerLeaderboardEntry, type LaneRacerLeaderboardEntry, laneRacerLeaderboard } from "@shared/schema";
+import { eq, desc, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { db, withRetry } from "./db";
 
@@ -13,6 +13,8 @@ export interface IStorage {
   deleteRoom(roomCode: string): Promise<void>;
   submitLeaderboardEntry(entry: InsertLeaderboardEntry): Promise<LeaderboardEntry>;
   getLeaderboard(operation?: string, limit?: number): Promise<LeaderboardEntry[]>;
+  submitLaneRacerLeaderboardEntry(entry: InsertLaneRacerLeaderboardEntry): Promise<LaneRacerLeaderboardEntry>;
+  getLaneRacerLeaderboard(circuitId?: string, operation?: string, limit?: number): Promise<LaneRacerLeaderboardEntry[]>;
   getStorageType(): string;
 }
 
@@ -21,6 +23,7 @@ export class MemoryStorage implements IStorage {
   private rooms = new Map<string, MultiplayerRoom>();
   private users = new Map<string, User>();
   private leaderboardEntries: LeaderboardEntry[] = [];
+  private laneRacerLeaderboardEntries: LaneRacerLeaderboardEntry[] = [];
 
   getStorageType(): string {
     return "memory";
@@ -101,6 +104,28 @@ export class MemoryStorage implements IStorage {
     }
     return entries.slice(0, limit);
   }
+
+  async submitLaneRacerLeaderboardEntry(entry: InsertLaneRacerLeaderboardEntry): Promise<LaneRacerLeaderboardEntry> {
+    const newEntry: LaneRacerLeaderboardEntry = {
+      id: randomUUID(),
+      ...entry,
+      createdAt: new Date(),
+    };
+    this.laneRacerLeaderboardEntries.push(newEntry);
+    this.laneRacerLeaderboardEntries.sort((a, b) => b.score - a.score);
+    return newEntry;
+  }
+
+  async getLaneRacerLeaderboard(circuitId?: string, operation?: string, limit: number = 50): Promise<LaneRacerLeaderboardEntry[]> {
+    let entries = this.laneRacerLeaderboardEntries;
+    if (circuitId) {
+      entries = entries.filter(e => e.circuitId === circuitId);
+    }
+    if (operation) {
+      entries = entries.filter(e => e.operation === operation);
+    }
+    return entries.slice(0, limit);
+  }
 }
 
 // Database storage for internet play (requires DATABASE_URL)
@@ -166,6 +191,27 @@ export class DatabaseStorage implements IStorage {
         query = query.where(eq(pstLeaderboard.operation, operation)) as typeof query;
       }
       return query.orderBy(desc(pstLeaderboard.score)).limit(limit);
+    });
+  }
+
+  async submitLaneRacerLeaderboardEntry(entry: InsertLaneRacerLeaderboardEntry): Promise<LaneRacerLeaderboardEntry> {
+    return withRetry(async () => {
+      const [newEntry] = await db.insert(laneRacerLeaderboard).values(entry).returning();
+      return newEntry;
+    });
+  }
+
+  async getLaneRacerLeaderboard(circuitId?: string, operation?: string, limit: number = 50): Promise<LaneRacerLeaderboardEntry[]> {
+    return withRetry(async () => {
+      const conditions = [];
+      if (circuitId) conditions.push(eq(laneRacerLeaderboard.circuitId, circuitId));
+      if (operation) conditions.push(eq(laneRacerLeaderboard.operation, operation));
+
+      let query = db.select().from(laneRacerLeaderboard);
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as typeof query;
+      }
+      return query.orderBy(desc(laneRacerLeaderboard.score)).limit(limit);
     });
   }
 }
@@ -275,6 +321,20 @@ class FallbackStorage implements IStorage {
     return this.withFallback(
       () => this.primaryStorage.getLeaderboard(operation, limit),
       () => this.fallbackStorage.getLeaderboard(operation, limit)
+    );
+  }
+
+  async submitLaneRacerLeaderboardEntry(entry: InsertLaneRacerLeaderboardEntry): Promise<LaneRacerLeaderboardEntry> {
+    return this.withFallback(
+      () => this.primaryStorage.submitLaneRacerLeaderboardEntry(entry),
+      () => this.fallbackStorage.submitLaneRacerLeaderboardEntry(entry)
+    );
+  }
+
+  async getLaneRacerLeaderboard(circuitId?: string, operation?: string, limit?: number): Promise<LaneRacerLeaderboardEntry[]> {
+    return this.withFallback(
+      () => this.primaryStorage.getLaneRacerLeaderboard(circuitId, operation, limit),
+      () => this.fallbackStorage.getLaneRacerLeaderboard(circuitId, operation, limit)
     );
   }
 }

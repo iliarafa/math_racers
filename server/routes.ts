@@ -212,5 +212,84 @@ export async function registerRoutes(
     }
   });
 
+  // Submit a Lane Racer leaderboard entry
+  app.post("/api/lane-racer-leaderboard", async (req, res) => {
+    try {
+      const { playerId, playerName, circuitId, circuitName, operation, score, totalTime, mistakes, accuracy, difficultyAchieved } = req.body;
+
+      if (!playerId || !playerName || !circuitId || !circuitName || !operation || score === undefined || totalTime === undefined || mistakes === undefined || accuracy === undefined || !difficultyAchieved) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      if (typeof playerName !== 'string' || playerName.length > 20) {
+        return res.status(400).json({ error: "Invalid player name" });
+      }
+
+      const validOperations = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'];
+      if (!validOperations.includes(operation)) {
+        return res.status(400).json({ error: "Invalid operation" });
+      }
+
+      const validDifficulties = ['beginner', 'easy', 'medium', 'hard'];
+      if (!validDifficulties.includes(difficultyAchieved)) {
+        return res.status(400).json({ error: "Invalid difficulty" });
+      }
+
+      const validCircuits = ['monza', 'spa', 'monaco', 'suzuka', 'silverstone'];
+      if (!validCircuits.includes(circuitId)) {
+        return res.status(400).json({ error: "Invalid circuit" });
+      }
+
+      if (typeof score !== 'number' || score < 0 || score > 100000) {
+        return res.status(400).json({ error: "Invalid score" });
+      }
+
+      if (typeof totalTime !== 'number' || totalTime < 1000 || totalTime > 3600000) {
+        return res.status(400).json({ error: "Invalid time" });
+      }
+
+      if (typeof mistakes !== 'number' || mistakes < 0 || mistakes > 200) {
+        return res.status(400).json({ error: "Invalid mistakes" });
+      }
+
+      if (typeof accuracy !== 'number' || accuracy < 0 || accuracy > 100) {
+        return res.status(400).json({ error: "Invalid accuracy" });
+      }
+
+      const entry = await storage.submitLaneRacerLeaderboardEntry({
+        playerId,
+        playerName,
+        circuitId,
+        circuitName,
+        operation,
+        score: Math.round(score),
+        totalTime,
+        mistakes,
+        accuracy,
+        difficultyAchieved,
+      });
+
+      res.json({ entry });
+    } catch (error) {
+      console.error("Error submitting Lane Racer leaderboard entry:", error);
+      res.status(500).json({ error: "Failed to submit leaderboard entry" });
+    }
+  });
+
+  // Get Lane Racer leaderboard entries
+  app.get("/api/lane-racer-leaderboard", async (req, res) => {
+    try {
+      const circuitId = req.query.circuitId as string | undefined;
+      const operation = req.query.operation as string | undefined;
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
+
+      const entries = await storage.getLaneRacerLeaderboard(circuitId, operation, limit);
+      res.json({ entries });
+    } catch (error) {
+      console.error("Error fetching Lane Racer leaderboard:", error);
+      res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+  });
+
   return httpServer;
 }
