@@ -114,18 +114,6 @@ export default function Hub() {
             </motion.button>
           </Link>
 
-          {/* Deploy/Harvest */}
-          <Link href="/deploy-harvest">
-            <motion.button
-              onClick={() => { if (state.soundEnabled) playClickSound(); }}
-              whileTap={{ scale: 0.98 }}
-              style={hubCardStyle}
-            >
-              <span className="block" style={hubTitleStyle}>DEPLOY/HARVEST</span>
-              <span className="block" style={hubSubStyle}>ENERGY MANAGEMENT</span>
-            </motion.button>
-          </Link>
-
           {/* Garage */}
           <Link href="/garage">
             <motion.button

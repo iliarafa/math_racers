@@ -2017,6 +2017,18 @@ export default function Game() {
               </motion.button>
             </Link>
 
+            {/* Deploy/Harvest Card */}
+            <Link href="/deploy-harvest">
+              <motion.button
+                onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
+                whileTap={{ scale: 0.98 }}
+                style={modeCardStyle}
+              >
+                <span className="block" style={modeTitleStyle}>DEPLOY/HARVEST</span>
+                <span className="block" style={modeSubStyle}>ENERGY MANAGEMENT</span>
+              </motion.button>
+            </Link>
+
             {/* Free Practice Card */}
             <motion.button
               onClick={() => {

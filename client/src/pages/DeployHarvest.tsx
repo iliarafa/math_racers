@@ -1,9 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
-import { type Difficulty, DRIVERS, getHarderDifficulty } from '@/lib/gameLogic';
-import { generateRatioQuestion } from '@/lib/ratioQuestions';
+import { ChevronLeft } from 'lucide-react';
+import { type Difficulty, DRIVERS, getHarderDifficulty, generateQuestion } from '@/lib/gameLogic';
 import { GameLayout } from '@/components/layout/GameLayout';
+import logoImage from '@assets/1Asset_3@2x_1767902844976.png';
 
 // ─── Constants ──────────────────────────────────────────────────────────────
 const STARTING_ENERGY = 50;
@@ -50,6 +51,7 @@ export default function DeployHarvest() {
   // ─── Core State ─────────────────────────────────────────────────────────
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
   const [difficulty, setDifficulty] = useState<Difficulty>('beginner');
+  const [selectedOperation, setSelectedOperation] = useState('Addition');
 
   // Racing state
   const [energy, setEnergy] = useState(STARTING_ENERGY);
@@ -68,7 +70,7 @@ export default function DeployHarvest() {
 
   // Question
   const [currentQuestion, setCurrentQuestion] = useState(() =>
-    generateRatioQuestion('beginner')
+    generateQuestion('jeddah', 'beginner', false, 0, undefined, 'Addition')
   );
   const previousDisplayRef = useRef<string | undefined>(undefined);
 
@@ -155,15 +157,24 @@ export default function DeployHarvest() {
     };
   }, []);
 
+  // Notify App.tsx when entering/leaving race states (hides video & pauses music)
+  useEffect(() => {
+    const isRacing = gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing';
+    window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: isRacing } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: false } }));
+    };
+  }, [gameStatus]);
+
   // ─── Question Generation ───────────────────────────────────────────────
   const generateNextQuestion = useCallback((forMode: EnergyMode, diff: Difficulty) => {
     const isDeployMode = forMode === 'deploy';
     const effectiveDifficulty = isDeployMode ? getHarderDifficulty(diff) : diff;
-    const boosted = isDeployMode && diff === 'hard';
-    const q = generateRatioQuestion(effectiveDifficulty, boosted, previousDisplayRef.current);
+    const boostFactor = isDeployMode ? 0.5 : 0;
+    const q = generateQuestion('jeddah', effectiveDifficulty, false, boostFactor, previousDisplayRef.current, selectedOperation);
     previousDisplayRef.current = q.display;
     return q;
-  }, []);
+  }, [selectedOperation]);
 
   // ─── Start Race (from setup) ───────────────────────────────────────────
   const startCountdown = useCallback(() => {
@@ -443,66 +454,121 @@ export default function DeployHarvest() {
   // ─── Setup Screen ──────────────────────────────────────────────────────
   if (gameStatus === 'setup') {
     return (
-      <GameLayout backHref="/hub" trackName="DEPLOY/HARVEST" darkBackground>
-        <div className="flex flex-col items-center gap-6 py-6 px-4 max-w-lg mx-auto w-full" style={oxanium}>
-          <div className="text-center">
-            <h1 className="text-3xl font-bold text-white tracking-wider">DEPLOY/HARVEST</h1>
-            <p className="text-white/60 text-sm mt-1">An Introduction to Ratios</p>
-          </div>
+      <div className="h-screen flex flex-col relative overflow-hidden">
+        {/* Header: Back + Logo — matches Game.tsx mode_select */}
+        <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
+          <Link href="/game">
+            <button
+              className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
+              style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
+            >
+              <ChevronLeft size={24} />
+            </button>
+          </Link>
+          <img
+            src={logoImage}
+            alt="F1 Math Racer"
+            className="h-8 md:h-12 object-contain"
+          />
+        </div>
 
-          {/* Lore Card */}
-          <div className="rounded-xl p-4 w-full" style={glassStyle}>
-            <p className="text-white/80 text-sm leading-relaxed">
-              The 2026 regulations bring a new energy crisis to the grid. Drivers must balance
-              <span className="text-green-400 font-semibold"> DEPLOY </span>
-              mode for raw speed against
-              <span className="text-blue-400 font-semibold"> HARVEST </span>
-              mode to recharge. Push too hard and you'll hit
-              <span className="text-red-400 font-semibold"> DERATING </span>
-              — forced to crawl while your rivals fly past. Master the ratio of deploy to harvest and bring home the win.
-            </p>
-          </div>
-
-          {/* Difficulty Selection */}
-          <div className="w-full">
-            <p className="text-white/50 text-xs uppercase tracking-widest mb-2 text-center">Select Series</p>
-            <div className="grid grid-cols-4 gap-2">
-              {DRIVERS.map(d => (
-                <motion.button
-                  key={d.id}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setDifficulty(d.difficulty)}
-                  className={`py-3 px-2 rounded-lg text-sm font-bold transition-all ${
-                    difficulty === d.difficulty
-                      ? 'bg-white text-black ring-2 ring-white'
-                      : 'bg-white/10 text-white/70 hover:bg-white/20'
-                  }`}
-                  style={oxanium}
-                >
-                  {d.name}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
-          {/* Race Info */}
-          <div className="rounded-xl p-3 w-full text-center" style={glassStyle}>
-            <p className="text-white/60 text-xs tracking-widest">
-              3 Stints &middot; 45 Questions &middot; 50% Start Energy
-            </p>
-          </div>
-
-          {/* Start Button */}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={startCountdown}
-            className="w-full py-4 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-lg tracking-widest transition-colors"
+        {/* Title */}
+        <div className="relative z-10 mt-2 md:mt-6 mb-4 md:mb-6 flex flex-col items-center">
+          <h2
+            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
             style={oxanium}
           >
-            LIGHTS OUT
-          </motion.button>
+            Deploy/Harvest
+          </h2>
         </div>
-      </GameLayout>
+
+        {/* Scrollable Content */}
+        <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+          <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
+            {/* Lore Card */}
+            <div className="rounded-xl p-4 w-full" style={glassStyle}>
+              <p className="text-white/80 text-sm leading-relaxed">
+                The 2026 regulations bring a new energy crisis to the grid. Drivers must balance
+                <span className="text-green-400 font-semibold"> DEPLOY </span>
+                mode for raw speed against
+                <span className="text-blue-400 font-semibold"> HARVEST </span>
+                mode to recharge. Push too hard and you'll hit
+                <span className="text-red-400 font-semibold"> DERATING </span>
+                — forced to crawl while your rivals fly past. Master the ratio of deploy to harvest and bring home the win.
+              </p>
+            </div>
+
+            {/* Operation Selection */}
+            <div className="w-full">
+              <p className="text-white/50 text-xs uppercase tracking-widest mb-2 text-center" style={oxanium}>Select Operation</p>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Addition', symbol: '+', type: 'Addition' },
+                  { label: 'Subtraction', symbol: '−', type: 'Subtraction' },
+                  { label: 'Multiplication', symbol: '×', type: 'Multiplication' },
+                  { label: 'Division', symbol: '÷', type: 'Division' },
+                  { label: 'Variables', symbol: 'f(x)', type: 'Variables' },
+                  { label: 'Ratios', symbol: 'a:b', type: 'Ratios' },
+                ].map(op => (
+                  <motion.button
+                    key={op.type}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSelectedOperation(op.type)}
+                    className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all ${
+                      selectedOperation === op.type
+                        ? 'ring-2 ring-white bg-white/20'
+                        : 'bg-white/8 hover:bg-white/15'
+                    }`}
+                    style={{ ...glassStyle, border: selectedOperation === op.type ? '1px solid rgba(255,255,255,0.4)' : glassStyle.border }}
+                  >
+                    <span className="text-xl font-bold text-white/85">{op.symbol}</span>
+                    <span className="text-[9px] text-white/50 uppercase tracking-widest mt-1">{op.label}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Difficulty Selection */}
+            <div className="w-full">
+              <p className="text-white/50 text-xs uppercase tracking-widest mb-2 text-center" style={oxanium}>Select Series</p>
+              <div className="grid grid-cols-4 gap-2">
+                {DRIVERS.map(d => (
+                  <motion.button
+                    key={d.id}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setDifficulty(d.difficulty)}
+                    className={`py-3 px-2 rounded-lg text-sm font-bold transition-all ${
+                      difficulty === d.difficulty
+                        ? 'bg-white text-black ring-2 ring-white'
+                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                    }`}
+                    style={oxanium}
+                  >
+                    {d.name}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Race Info */}
+            <div className="rounded-xl p-3 w-full text-center" style={glassStyle}>
+              <p className="text-white/60 text-xs tracking-widest">
+                3 Stints &middot; 45 Questions &middot; 50% Start Energy
+              </p>
+            </div>
+
+            {/* Start Button */}
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={startCountdown}
+              className="w-full py-4 rounded-xl bg-green-600 hover:bg-green-500 text-white font-bold text-lg tracking-widest transition-colors"
+              style={oxanium}
+            >
+              LIGHTS OUT
+            </motion.button>
+          </div>
+        </div>
+      </div>
     );
   }
 

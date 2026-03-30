@@ -47,7 +47,7 @@ function Router() {
 }
 
 const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/leaderboard', '/gp-leaderboard', '/lane-racer', '/deploy-harvest', '/multiplayer'];
-const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
+const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer', '/deploy-harvest'];
 
 function PersistentVideo() {
   const [location] = useLocation();
