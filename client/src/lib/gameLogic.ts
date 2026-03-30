@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { generateRatioQuestion } from './ratioQuestions';
 
 export type Operation = '+' | '-' | 'x' | '÷' | 'var';
 export type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard';
@@ -161,6 +162,18 @@ export const CIRCUITS: Circuit[] = [
       s1: "M 145 25 L 190 15 Q 210 15 215 35 L 200 70 L 180 100 Q 170 120 145 125 L 135 120 L 125 130 Q 110 145 90 145 L 70 145 Q 50 145 50 125 L 55 115 L 80 60 L 85 50 Q 95 35 75 35",
       s2: "M 75 35 Q 55 35 55 65 Q 55 95 80 95 L 100 95 L 120 70 L 140 25 Q 150 5 170 5 L 200 5 Q 225 5 230 25 L 230 40 Q 230 60 250 65 L 265 60 Q 285 55 285 85 L 285 115",
       s3: "M 285 115 Q 285 140 255 140 L 220 140 L 200 115 L 190 125 L 175 125 Q 155 125 150 105 L 145 25"
+    }
+  },
+  {
+    id: "jeddah",
+    name: "JEDDAH",
+    type: "Ratios",
+    description: "The Energy Corridor",
+    mapUrl: "",
+    paths: {
+      s1: "M 40 80 L 60 30 Q 80 10 120 10 L 200 10 Q 240 10 250 40 L 260 70",
+      s2: "M 260 70 L 270 100 Q 275 130 250 140 L 180 145 Q 140 145 120 130 L 100 110",
+      s3: "M 100 110 Q 80 90 60 100 L 45 110 Q 30 120 30 100 L 40 80"
     }
   }
 ];
@@ -639,6 +652,9 @@ function calculateBotTime(
     case "Variables":
       operationModifier = 1.25; // Slowest
       break;
+    case "Ratios":
+      operationModifier = 1.20;
+      break;
   }
 
   // Complexity modifier based on actual numbers
@@ -664,6 +680,7 @@ interface OperationRanges {
   multiplication: { min: number; max: number };
   division: { min: number; max: number };
   variables: { min: number; max: number };
+  ratios: { min: number; max: number };
 }
 
 // Base operation ranges for each difficulty level
@@ -675,6 +692,7 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     multiplication: { min: 1, max: 5 },
     division: { min: 1, max: 5 },
     variables: { min: 1, max: 5 },
+    ratios: { min: 1, max: 5 },
   },
   easy: {
     // F3: Ages 8-10
@@ -683,6 +701,7 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     multiplication: { min: 2, max: 10 },
     division: { min: 2, max: 10 },
     variables: { min: 2, max: 12 },
+    ratios: { min: 2, max: 10 },
   },
   medium: {
     // F2: Ages 10-12
@@ -691,6 +710,7 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     multiplication: { min: 3, max: 12 },
     division: { min: 3, max: 12 },
     variables: { min: 3, max: 15 },
+    ratios: { min: 3, max: 12 },
   },
   hard: {
     // F1: Ages 12+
@@ -699,6 +719,7 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     multiplication: { min: 5, max: 15 },
     division: { min: 5, max: 15 },
     variables: { min: 5, max: 20 },
+    ratios: { min: 5, max: 15 },
   },
 };
 
@@ -709,6 +730,7 @@ const BOOSTED_HARD_RANGES: OperationRanges = {
   multiplication: { min: 7, max: 20 },
   division: { min: 7, max: 20 },
   variables: { min: 8, max: 30 },
+  ratios: { min: 8, max: 20 },
 };
 
 // Get the next difficulty level for wet interpolation
@@ -751,6 +773,7 @@ function getOperationRanges(difficulty: Difficulty, isWet: boolean, boostFactor:
     multiplication: interpolateRange(baseRanges.multiplication, nextRanges.multiplication, totalFactor),
     division: interpolateRange(baseRanges.division, nextRanges.division, totalFactor),
     variables: interpolateRange(baseRanges.variables, nextRanges.variables, totalFactor),
+    ratios: interpolateRange(baseRanges.ratios, nextRanges.ratios, totalFactor),
   };
 }
 
@@ -763,6 +786,7 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Multiplication: 5000,
     Division: 5500,
     Variables: 6000,
+    Ratios: 5000,
   },
   easy: {
     Addition: 5000,
@@ -770,6 +794,7 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Multiplication: 6000,
     Division: 6500,
     Variables: 7000,
+    Ratios: 6000,
   },
   medium: {
     Addition: 6000,
@@ -777,6 +802,7 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Multiplication: 7000,
     Division: 7500,
     Variables: 8000,
+    Ratios: 7000,
   },
   hard: {
     Addition: 7000,
@@ -784,6 +810,7 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Multiplication: 8000,
     Division: 8500,
     Variables: 9000,
+    Ratios: 8000,
   },
 };
 
@@ -979,6 +1006,15 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
         num1 = num2 * answer;
         display = `${num2}x = ${num1}`;
       }
+      break;
+    }
+
+    case "Ratios": {
+      const ratioQ = generateRatioQuestion(difficulty, boostFactor > 0, previousDisplay);
+      display = ratioQ.display;
+      answer = ratioQ.answer;
+      num1 = ratioQ.num1 ?? 0;
+      num2 = ratioQ.num2 ?? 0;
       break;
     }
 
