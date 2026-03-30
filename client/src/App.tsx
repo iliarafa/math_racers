@@ -22,6 +22,7 @@ import RacerLog from "@/pages/RacerLog";
 import Leaderboard from "@/pages/Leaderboard";
 import GPLeaderboard from "@/pages/GPLeaderboard";
 import LaneRacer from "@/pages/LaneRacer";
+import DeployHarvest from "@/pages/DeployHarvest";
 import Hub from "@/pages/Hub";
 
 function Router() {
@@ -39,12 +40,13 @@ function Router() {
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/gp-leaderboard" component={GPLeaderboard} />
       <Route path="/lane-racer" component={LaneRacer} />
+      <Route path="/deploy-harvest" component={DeployHarvest} />
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/leaderboard', '/gp-leaderboard', '/lane-racer', '/multiplayer'];
+const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/leaderboard', '/gp-leaderboard', '/lane-racer', '/deploy-harvest', '/multiplayer'];
 const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
 
 function PersistentVideo() {
