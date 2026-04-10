@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { ChevronLeft } from 'lucide-react';
 import { type Difficulty, DRIVERS, getHarderDifficulty, generateQuestion } from '@/lib/gameLogic';
 import { GameLayout } from '@/components/layout/GameLayout';
@@ -48,6 +48,7 @@ const glassStyle = {
 const oxanium = { fontFamily: 'Oxanium, sans-serif' };
 
 export default function DeployHarvest() {
+  const [, navigate] = useLocation();
   // ─── Core State ─────────────────────────────────────────────────────────
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
   const [difficulty, setDifficulty] = useState<Difficulty>('beginner');
@@ -781,6 +782,17 @@ export default function DeployHarvest() {
       <div className="flex-1 flex flex-col h-full overflow-hidden" style={{ ...oxanium, paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
         {/* Top Bar */}
         <div className="flex items-center justify-between px-4 py-2 text-xs shrink-0">
+          <button
+            onClick={() => {
+              if (confirm('Quit race? Progress will be lost.')) {
+                stopTimer();
+                navigate('/game');
+              }
+            }}
+            className="text-white/60 hover:text-white transition-colors shrink-0 -ml-1 mr-1"
+          >
+            <ChevronLeft size={20} />
+          </button>
           <div className="text-white/60 font-mono">{formatTime(elapsedMs)}</div>
           <div className="text-white/80 font-bold tracking-widest">
             Stint {currentStint}/{TOTAL_STINTS} &middot; Q{stintQuestionNum + 1}/{QUESTIONS_PER_STINT}
