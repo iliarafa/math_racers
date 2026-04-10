@@ -852,7 +852,7 @@ export default function Game() {
 
   // Notify App.tsx when entering/leaving race states (hides video & pauses music)
   useEffect(() => {
-    const isRacing = gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing';
+    const isRacing = gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed';
     window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: isRacing } }));
     return () => {
       window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: false } }));
@@ -2017,17 +2017,7 @@ export default function Game() {
               </motion.button>
             </Link>
 
-            {/* Deploy/Harvest Card */}
-            <Link href="/deploy-harvest">
-              <motion.button
-                onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-                whileTap={{ scale: 0.98 }}
-                style={modeCardStyle}
-              >
-                <span className="block" style={modeTitleStyle}>DEPLOY/HARVEST</span>
-                <span className="block" style={modeSubStyle}>ENERGY MANAGEMENT</span>
-              </motion.button>
-            </Link>
+            {/* Deploy/Harvest Card — archived, re-enable later */}
 
             {/* Free Practice Card */}
             <motion.button

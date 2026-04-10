@@ -195,28 +195,7 @@ const chapters: Chapter[] = [
           ],
         },
       },
-      {
-        id: "deploy-harvest",
-        title: "Deploy/Harvest",
-        description: "Energy management mode — An Introduction to Ratios. 3 stints of 15 questions with ratio feedback.",
-        details: [
-          "# How It Works",
-          "Toggle between Deploy and Harvest modes during the race.",
-          "Deploy — Harder questions, 2x progress, energy drains per question.",
-          "Harvest — Base difficulty, 1x progress, energy recharges per correct answer.",
-          "# Derating",
-          "If energy hits 0%, you derate: forced harvest for 3 questions at 0.5x progress while the bot speeds up.",
-          "# Stint Reviews",
-          "After each stint of 15 questions, see your Deploy:Harvest ratio, accuracy breakdown, and optimal strategy feedback.",
-          "# Energy System",
-          "Start at 50% — Deploy drains 7% per question, wrong answer costs 15% total — Harvest recharges 7% per correct answer.",
-        ],
-        richDetails: [
-          { color: "text-green-500", label: "Deploy", text: "2x progress, harder questions, energy drains" },
-          { color: "text-blue-500", label: "Harvest", text: "1x progress, base difficulty, energy recharges" },
-          { color: "text-red-500", label: "Derating", text: "0% energy = 3Q lockout, 0.5x progress, bot 1.5x speed" },
-        ],
-      },
+      /* Deploy/Harvest regulation — archived, re-enable later */
     ],
   },
   {
