@@ -81,7 +81,8 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   monza: 53,
   melbourne: 58,
   china: 56,
-  bahrain: 57
+  bahrain: 57,
+  miami: 57
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -165,10 +166,10 @@ export const CIRCUITS: Circuit[] = [
     }
   },
   {
-    id: "jeddah",
-    name: "JEDDAH",
+    id: "miami",
+    name: "MIAMI",
     type: "Ratios",
-    description: "The Energy Corridor",
+    description: "The Magic City",
     mapUrl: "",
     paths: {
       s1: "M 40 80 L 60 30 Q 80 10 120 10 L 200 10 Q 240 10 250 40 L 260 70",

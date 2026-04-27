@@ -46,6 +46,8 @@ import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
+import trackMiami from "@/assets/miami_track.png";
+import flagUs from "@/assets/flag_us.jpg";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageCar from "@/assets/garage_car.jpeg";
@@ -57,14 +59,14 @@ import chooseTrackVideo from "@assets/choose_TRACK.mp4";
 // Also add the new track/flag assets as imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 const CURRENT_GRAND_PRIX = {
-  circuitId: 'suzuka',
-  name: 'SUZUKA',
-  country: 'Japan',
-  trackImage: trackSuzuka,
-  flagImage: flagJapan,
-  rainProbability: 0.42,
-  simLapCount: 53,
-  gradient: 'linear-gradient(90deg, #FFFFFF 0%, #BC002D 50%, #BC002D 100%)',
+  circuitId: 'miami',
+  name: 'MIAMI',
+  country: 'USA',
+  trackImage: trackMiami,
+  flagImage: flagUs,
+  rainProbability: 0.15,
+  simLapCount: 57,
+  gradient: 'linear-gradient(90deg, #FF6B35 0%, #004E89 50%, #004E89 100%)',
 };
 // ───────────────────────────────────────────────────────────────────
 
@@ -76,6 +78,7 @@ const FLAG_IMAGES: { [circuitId: string]: string } = {
   "silverstone": flagUK,
   [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.flagImage,
   "bahrain": flagBahrain,
+  "miami": flagUs,
 };
 
 const TRACK_IMAGES: { [circuitId: string]: string } = {
@@ -85,6 +88,7 @@ const TRACK_IMAGES: { [circuitId: string]: string } = {
   "suzuka": trackSuzuka,
   "silverstone": trackSilverstone,
   [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.trackImage,
+  "miami": trackMiami,
 };
 
 const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } } = {
@@ -93,6 +97,7 @@ const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } 
   "monaco": { red: circuitMonacoRed, black: circuitMonacoBlack },
   "silverstone": { red: circuitSilverstoneRed, black: circuitSilverstoneBlack },
   "spa": { red: circuitSpaRed, black: circuitSpaBlack },
+  "miami": { red: trackMiami, black: trackMiami },
 };
 
 // Custom checkered flag icon component
@@ -146,11 +151,11 @@ const createGrandPrixCircuit = (op: string): Circuit => ({
   paths: { s1: '', s2: '', s3: '' }
 });
 
-const createBahrainCircuit = (op: string): Circuit => ({
-  id: 'bahrain',
-  name: CURRENT_GRAND_PRIX.name,
+const createMiamiCircuit = (op: string): Circuit => ({
+  id: 'miami',
+  name: 'MIAMI',
   type: op,
-  description: 'Pre-Season Testing',
+  description: 'Free Practice',
   mapUrl: '',
   paths: { s1: '', s2: '', s3: '' }
 });
@@ -974,7 +979,7 @@ export default function Game() {
       if (isGrandPrix) {
         setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
       } else if (isPreSeasonTesting) {
-        setSelectedCircuit(createBahrainCircuit(selectedOperation));
+        setSelectedCircuit(createMiamiCircuit(selectedOperation));
       } else {
         setSelectedCircuit(CIRCUITS[0]);
       }
@@ -1015,7 +1020,7 @@ export default function Game() {
     if (isGrandPrix) {
       setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
     } else if (isPreSeasonTesting) {
-      setSelectedCircuit(createBahrainCircuit(selectedOperation));
+      setSelectedCircuit(createMiamiCircuit(selectedOperation));
     }
     setGameStatus('selecting');
   };
@@ -2030,7 +2035,7 @@ export default function Game() {
               style={modeCardStyle}
             >
               <span className="block" style={modeTitleStyle}>FREE PRACTICE</span>
-              <span className="block" style={modeSubStyle}>ROUND 3 / SUZUKA</span>
+              <span className="block" style={modeSubStyle}>ROUND 4 / MIAMI</span>
             </motion.button>
           </div>
         </div>
@@ -2079,7 +2084,7 @@ export default function Game() {
           >
             {isPreSeasonTesting
               ? '100 questions with adaptive difficulty and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.'
-              : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to ${CURRENT_GRAND_PRIX.name}, ${CURRENT_GRAND_PRIX.country}.`}
+              : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to the Miami International Autodrome.`}
           </p>
           <h3
             className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-white"
@@ -2100,7 +2105,7 @@ export default function Game() {
                   setSelectedDriver(kartingDriver);
                   localStorage.setItem('lastSelectedDriverId', kartingDriver.id);
                   if (isPreSeasonTesting) {
-                    setSelectedCircuit(createBahrainCircuit(op.type));
+                    setSelectedCircuit(createMiamiCircuit(op.type));
                     setIsPracticeMode(true);
                     setRaceMode('solo');
                     setSelectedTab('testing');
@@ -2499,7 +2504,7 @@ export default function Game() {
             /* Pre-Season Testing Card */
             (<div className="flex flex-col items-center">
               <motion.div
-                key={`pst-${CURRENT_GRAND_PRIX.circuitId}-card`}
+                key={`pst-miami-card`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
@@ -2509,7 +2514,7 @@ export default function Game() {
                   border: '1px solid rgba(255,255,255,0.2)',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
                 }}
-                data-testid={`hero-card-pst-${CURRENT_GRAND_PRIX.circuitId}`}
+                data-testid="hero-card-pst-miami"
               >
                 {/* Header - Circuit & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
@@ -2517,11 +2522,11 @@ export default function Game() {
                     className="text-2xl font-bold uppercase tracking-wider text-white"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
-                    {CURRENT_GRAND_PRIX.name}
+                    MIAMI
                   </h2>
                   <img
-                    src={CURRENT_GRAND_PRIX.flagImage}
-                    alt={`${CURRENT_GRAND_PRIX.country} flag`}
+                    src={flagUs}
+                    alt="USA flag"
                     className="h-5 w-7 object-cover rounded-sm relative -top-0.5"
                   />
                 </div>
@@ -2529,8 +2534,8 @@ export default function Game() {
                 {/* Track Map */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                   <img
-                    src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
-                    alt={`${CURRENT_GRAND_PRIX.name} circuit`}
+                    src={trackMiami}
+                    alt="Miami circuit"
                     className="h-32 md:h-52 object-contain"
                     style={{ maxWidth: '280px', filter: 'invert(1)' }}
                   />

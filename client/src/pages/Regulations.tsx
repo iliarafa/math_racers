@@ -36,7 +36,7 @@ const chapters: Chapter[] = [
           "Monza — Multiplication",
           "Suzuka — Division",
           "Silverstone — Variables / Algebra",
-          "Jeddah — Ratios",
+          "Miami — Ratios",
           "#Series",
           "Karting (ages 6–8) — numbers 1 to 10",
           "F3 (ages 8–10) — numbers 10 to 50",
@@ -55,8 +55,8 @@ const chapters: Chapter[] = [
       },
       {
         id: "ratios",
-        title: "Ratios (Jeddah)",
-        description: "The Energy Corridor — Jeddah street circuit introduces ratio problems.",
+        title: "Ratios (Miami)",
+        description: "The Magic City — Miami International Autodrome introduces ratio problems.",
         details: [
           "# Question Types by Series",
           "Karting — Concrete ratios: \"For every X, there are Y\" pattern",

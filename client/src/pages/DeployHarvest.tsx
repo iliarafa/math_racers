@@ -71,7 +71,7 @@ export default function DeployHarvest() {
 
   // Question
   const [currentQuestion, setCurrentQuestion] = useState(() =>
-    generateQuestion('jeddah', 'beginner', false, 0, undefined, 'Addition')
+    generateQuestion('miami', 'beginner', false, 0, undefined, 'Addition')
   );
   const previousDisplayRef = useRef<string | undefined>(undefined);
 
@@ -172,7 +172,7 @@ export default function DeployHarvest() {
     const isDeployMode = forMode === 'deploy';
     const effectiveDifficulty = isDeployMode ? getHarderDifficulty(diff) : diff;
     const boostFactor = isDeployMode ? 0.5 : 0;
-    const q = generateQuestion('jeddah', effectiveDifficulty, false, boostFactor, previousDisplayRef.current, selectedOperation);
+    const q = generateQuestion('miami', effectiveDifficulty, false, boostFactor, previousDisplayRef.current, selectedOperation);
     previousDisplayRef.current = q.display;
     return q;
   }, [selectedOperation]);
