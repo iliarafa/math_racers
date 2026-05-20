@@ -36,7 +36,6 @@ const chapters: Chapter[] = [
           "Monza — Multiplication",
           "Suzuka — Division",
           "Silverstone — Variables / Algebra",
-          "Miami — Ratios",
           "#Series",
           "Karting (ages 6–8) — numbers 1 to 10",
           "F3 (ages 8–10) — numbers 10 to 50",
@@ -51,19 +50,6 @@ const chapters: Chapter[] = [
         details: [
           "Wrong answers show a track limits warning",
           "4th wrong attempt on the same question results in a crash (DNF)",
-        ],
-      },
-      {
-        id: "ratios",
-        title: "Ratios (Miami)",
-        description: "The Magic City — Miami International Autodrome introduces ratio problems.",
-        details: [
-          "# Question Types by Series",
-          "Karting — Concrete ratios: \"For every X, there are Y\" pattern",
-          "F3 — Equivalent ratios and simplifying (e.g., 3:5 = ?:15)",
-          "F2 — Proportions and cross-multiplication word problems",
-          "F1 — Unit rates, efficiency comparisons, multi-step rate calculations",
-          "All answers are positive integers.",
         ],
       },
       {
@@ -130,32 +116,9 @@ const chapters: Chapter[] = [
     title: "Race Formats",
     articles: [
       {
-        id: "championship",
-        title: "Championship",
-        description: "Progress through the series by championing circuits.",
-        details: [
-          "Beat the bot to champion a circuit at your current series",
-          "Championing a circuit unlocks it at the next series",
-          "A new series unlocks when you champion at least one circuit at the previous series",
-          "Progression: Karting → F3 → F2 → F1",
-        ],
-      },
-      {
-        id: "practice-mode",
-        title: "Practice Mode",
-        description: "A pressure-free environment within Career mode to sharpen your skills on any circuit.",
-        details: [
-          "100-question sessions that loop until you stop",
-          "No track limit penalties or disqualifications",
-          "No series or circuit locks — practice any circuit at any difficulty",
-          "Power-ups still work in practice",
-          "No Leaderboard submission",
-        ],
-      },
-      {
         id: "grand-prix",
         title: "Grand Prix",
-        description: "A full race weekend at Melbourne with three sequential phases.",
+        description: "A full race weekend at the Circuit Gilles-Villeneuve with three sequential phases.",
         details: [
           "Select your math operation, then progress through Practice, Qualifying, and Race Day",
           "Practice (30 questions) — dynamic difficulty adjusts as you go",
@@ -249,7 +212,7 @@ const chapters: Chapter[] = [
           "Leaderboard — Free Practice standings",
           "Regulations — rules and guide (this page)",
           "Strategy — math reference guide with tips for each operation",
-          "Reset Career — wipes all progress (requires confirmation)",
+          "Reset — wipes all progress (requires confirmation)",
         ],
       },
       {

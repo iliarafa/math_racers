@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { generateRatioQuestion } from './ratioQuestions';
 
 export type Operation = '+' | '-' | 'x' | '÷' | 'var';
 export type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard';
@@ -57,8 +56,6 @@ export interface GameState {
   powerUpsEnabled: boolean;
   personalBests: { [circuitId: string]: number };
   lapHistory: LapEntry[];
-  unlockedSeries: 'karting' | 'f3' | 'f2' | 'f1';  // Highest unlocked series (kept for backward compat)
-  championedCircuits: { [circuitId: string]: string[] }; // circuitId -> array of championed series
   playerName: string;
   playerId: string;
 }
@@ -82,7 +79,7 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   melbourne: 58,
   china: 56,
   bahrain: 57,
-  miami: 57
+  canada: 70
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -164,18 +161,6 @@ export const CIRCUITS: Circuit[] = [
       s2: "M 75 35 Q 55 35 55 65 Q 55 95 80 95 L 100 95 L 120 70 L 140 25 Q 150 5 170 5 L 200 5 Q 225 5 230 25 L 230 40 Q 230 60 250 65 L 265 60 Q 285 55 285 85 L 285 115",
       s3: "M 285 115 Q 285 140 255 140 L 220 140 L 200 115 L 190 125 L 175 125 Q 155 125 150 105 L 145 25"
     }
-  },
-  {
-    id: "miami",
-    name: "MIAMI",
-    type: "Ratios",
-    description: "The Magic City",
-    mapUrl: "",
-    paths: {
-      s1: "M 40 80 L 60 30 Q 80 10 120 10 L 200 10 Q 240 10 250 40 L 260 70",
-      s2: "M 260 70 L 270 100 Q 275 130 250 140 L 180 145 Q 140 145 120 130 L 100 110",
-      s3: "M 100 110 Q 80 90 60 100 L 45 110 Q 30 120 30 100 L 40 80"
-    }
   }
 ];
 
@@ -194,96 +179,9 @@ const INITIAL_STATE: GameState = {
   powerUpsEnabled: true,
   personalBests: {},
   lapHistory: [],
-  unlockedSeries: 'karting',
-  championedCircuits: {},
   playerName: '',
   playerId: '',
 };
-
-// Helper function to check if a series is unlocked (legacy, kept for backward compat)
-export const isSeriesUnlocked = (series: string, unlockedSeries: string): boolean => {
-  const order = ['karting', 'f3', 'f2', 'f1'];
-  return order.indexOf(series) <= order.indexOf(unlockedSeries);
-};
-
-const SERIES_ORDER = ['karting', 'f3', 'f2', 'f1'];
-
-// Check if a specific circuit is unlocked for a given series
-// A circuit is playable at a series if: it's karting, OR the circuit was championed at the previous series
-export const isCircuitUnlockedForSeries = (
-  circuitId: string,
-  series: string,
-  championedCircuits: { [circuitId: string]: string[] }
-): boolean => {
-  if (series === 'karting') return true;
-  const idx = SERIES_ORDER.indexOf(series);
-  if (idx <= 0) return true;
-  const previousSeries = SERIES_ORDER[idx - 1];
-  return (championedCircuits[circuitId] ?? []).includes(previousSeries);
-};
-
-// Check if a series is available (at least one circuit was championed at the previous series)
-export const isSeriesAvailable = (
-  series: string,
-  championedCircuits: { [circuitId: string]: string[] }
-): boolean => {
-  if (series === 'karting') return true;
-  const idx = SERIES_ORDER.indexOf(series);
-  if (idx <= 0) return true;
-  const previousSeries = SERIES_ORDER[idx - 1];
-  return CIRCUITS.some(c => (championedCircuits[c.id] ?? []).includes(previousSeries));
-};
-
-// Get display name of the previous series
-export const getPreviousSeriesLabel = (series: string): string => {
-  const idx = SERIES_ORDER.indexOf(series);
-  if (idx <= 0) return '';
-  const prevId = SERIES_ORDER[idx - 1];
-  const driver = DRIVERS.find(d => d.id === prevId);
-  return driver?.label ?? prevId;
-};
-
-// Get the label of the first series where the circuit is NOT yet championed (below the target series)
-export const getNextRequiredSeriesLabel = (
-  circuitId: string,
-  series: string,
-  championedCircuits: { [circuitId: string]: string[] }
-): string => {
-  const championed = championedCircuits[circuitId] ?? [];
-  const targetIdx = SERIES_ORDER.indexOf(series);
-  for (let i = 0; i < targetIdx; i++) {
-    if (!championed.includes(SERIES_ORDER[i])) {
-      const driver = DRIVERS.find(d => d.id === SERIES_ORDER[i]);
-      return driver?.label ?? SERIES_ORDER[i];
-    }
-  }
-  return getPreviousSeriesLabel(series);
-};
-
-// Derive the highest unlocked series from championedCircuits (for backward compat)
-const deriveUnlockedSeries = (championedCircuits: { [circuitId: string]: string[] }): GameState['unlockedSeries'] => {
-  // Walk from highest to lowest; a series is "unlocked" if at least one circuit was championed at the previous series
-  for (let i = SERIES_ORDER.length - 1; i > 0; i--) {
-    const series = SERIES_ORDER[i];
-    if (isSeriesAvailable(series, championedCircuits)) {
-      return series as GameState['unlockedSeries'];
-    }
-  }
-  return 'karting';
-};
-
-// Backfill championedCircuits from old unlockedSeries value
-// Assumes all circuits were championed at all series below the unlocked one
-function migrateChampionedCircuits(unlockedSeries: string): { [circuitId: string]: string[] } {
-  const result: { [circuitId: string]: string[] } = {};
-  const idx = SERIES_ORDER.indexOf(unlockedSeries);
-  if (idx <= 0) return result;
-  // Mark all circuits as championed for every series below the unlocked one
-  for (const circuit of CIRCUITS) {
-    result[circuit.id] = SERIES_ORDER.slice(0, idx); // e.g. for f3: ['karting']
-  }
-  return result;
-}
 
 export const SHOP_ITEMS = [
   { id: 'red-livery', name: 'Scuderia Red', type: 'livery', cost: 0, color: 'bg-red-600' },
@@ -320,11 +218,6 @@ export function useGameState() {
       const saved = localStorage.getItem('f1-math-racer-state');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const unlockedSeries = parsed.unlockedSeries ?? 'karting';
-        // Migrate: if old data has unlockedSeries but no championedCircuits, backfill
-        const championedCircuits = parsed.championedCircuits && Object.keys(parsed.championedCircuits).length > 0
-          ? parsed.championedCircuits
-          : (unlockedSeries !== 'karting' ? migrateChampionedCircuits(unlockedSeries) : {});
         return {
           coins: parsed.coins ?? 0,
           unlockedItems: parsed.unlockedItems ?? ['red-livery', 'hard-tires'],
@@ -340,8 +233,6 @@ export function useGameState() {
           powerUpsEnabled: parsed.powerUpsEnabled ?? true,
           personalBests: parsed.personalBests ?? {},
           lapHistory: parsed.lapHistory ?? [],
-          unlockedSeries: unlockedSeries,
-          championedCircuits: championedCircuits,
           playerName: parsed.playerName ?? '',
           playerId: parsed.playerId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36)),
         };
@@ -423,22 +314,6 @@ export function useGameState() {
     setState(prev => ({ ...prev, racesWon: prev.racesWon + 1 }));
   };
 
-  const championCircuit = (circuitId: string, series: string) => {
-    setState(prev => {
-      const existing = prev.championedCircuits[circuitId] ?? [];
-      if (existing.includes(series)) return prev; // Already championed
-      const updated = {
-        ...prev.championedCircuits,
-        [circuitId]: [...existing, series],
-      };
-      return {
-        ...prev,
-        championedCircuits: updated,
-        unlockedSeries: deriveUnlockedSeries(updated),
-      };
-    });
-  };
-
   const updatePersonalBest = (circuitId: string, time: number, difficulty?: Difficulty) => {
     setState(prev => {
       const key = difficulty ? `${circuitId}:${difficulty}` : circuitId;
@@ -512,7 +387,6 @@ export function useGameState() {
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,
-    championCircuit,
     updatePersonalBest,
     resetAllData,
     recordLapTime,
@@ -653,9 +527,6 @@ function calculateBotTime(
     case "Variables":
       operationModifier = 1.25; // Slowest
       break;
-    case "Ratios":
-      operationModifier = 1.20;
-      break;
   }
 
   // Complexity modifier based on actual numbers
@@ -681,7 +552,6 @@ interface OperationRanges {
   multiplication: { min: number; max: number };
   division: { min: number; max: number };
   variables: { min: number; max: number };
-  ratios: { min: number; max: number };
 }
 
 // Base operation ranges for each difficulty level
@@ -693,7 +563,6 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     multiplication: { min: 1, max: 5 },
     division: { min: 1, max: 5 },
     variables: { min: 1, max: 5 },
-    ratios: { min: 1, max: 5 },
   },
   easy: {
     // F3: Ages 8-10
@@ -702,7 +571,6 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     multiplication: { min: 2, max: 10 },
     division: { min: 2, max: 10 },
     variables: { min: 2, max: 12 },
-    ratios: { min: 2, max: 10 },
   },
   medium: {
     // F2: Ages 10-12
@@ -711,7 +579,6 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     multiplication: { min: 3, max: 12 },
     division: { min: 3, max: 12 },
     variables: { min: 3, max: 15 },
-    ratios: { min: 3, max: 12 },
   },
   hard: {
     // F1: Ages 12+
@@ -720,7 +587,6 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     multiplication: { min: 5, max: 15 },
     division: { min: 5, max: 15 },
     variables: { min: 5, max: 20 },
-    ratios: { min: 5, max: 15 },
   },
 };
 
@@ -731,7 +597,6 @@ const BOOSTED_HARD_RANGES: OperationRanges = {
   multiplication: { min: 7, max: 20 },
   division: { min: 7, max: 20 },
   variables: { min: 8, max: 30 },
-  ratios: { min: 8, max: 20 },
 };
 
 // Get the next difficulty level for wet interpolation
@@ -774,7 +639,6 @@ function getOperationRanges(difficulty: Difficulty, isWet: boolean, boostFactor:
     multiplication: interpolateRange(baseRanges.multiplication, nextRanges.multiplication, totalFactor),
     division: interpolateRange(baseRanges.division, nextRanges.division, totalFactor),
     variables: interpolateRange(baseRanges.variables, nextRanges.variables, totalFactor),
-    ratios: interpolateRange(baseRanges.ratios, nextRanges.ratios, totalFactor),
   };
 }
 
@@ -787,7 +651,6 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Multiplication: 5000,
     Division: 5500,
     Variables: 6000,
-    Ratios: 5000,
   },
   easy: {
     Addition: 5000,
@@ -795,7 +658,6 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Multiplication: 6000,
     Division: 6500,
     Variables: 7000,
-    Ratios: 6000,
   },
   medium: {
     Addition: 6000,
@@ -803,7 +665,6 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Multiplication: 7000,
     Division: 7500,
     Variables: 8000,
-    Ratios: 7000,
   },
   hard: {
     Addition: 7000,
@@ -811,7 +672,6 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Multiplication: 8000,
     Division: 8500,
     Variables: 9000,
-    Ratios: 8000,
   },
 };
 
@@ -1007,15 +867,6 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
         num1 = num2 * answer;
         display = `${num2}x = ${num1}`;
       }
-      break;
-    }
-
-    case "Ratios": {
-      const ratioQ = generateRatioQuestion(difficulty, boostFactor > 0, previousDisplay);
-      display = ratioQ.display;
-      answer = ratioQ.answer;
-      num1 = ratioQ.num1 ?? 0;
-      num2 = ratioQ.num2 ?? 0;
       break;
     }
 

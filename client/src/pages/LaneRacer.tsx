@@ -19,14 +19,12 @@ import circuitSuzukaBlack from "@/assets/circuit_suzuka_black.png";
 import circuitMonacoBlack from "@/assets/circuit_monaco_black.png";
 import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
-import trackMiami from "@/assets/miami_track.png";
-import flagUs from "@/assets/flag_us.jpg";
 
 const FLAG_IMAGES: { [id: string]: string } = {
-  monza: flagItaly, spa: flagBelgium, monaco: flagMonaco, suzuka: flagJapan, silverstone: flagUK, miami: flagUs,
+  monza: flagItaly, spa: flagBelgium, monaco: flagMonaco, suzuka: flagJapan, silverstone: flagUK,
 };
 const CIRCUIT_MAP_IMAGES: { [id: string]: string } = {
-  monza: circuitMonzaBlack, spa: circuitSpaBlack, monaco: circuitMonacoBlack, suzuka: circuitSuzukaBlack, silverstone: circuitSilverstoneBlack, miami: trackMiami,
+  monza: circuitMonzaBlack, spa: circuitSpaBlack, monaco: circuitMonacoBlack, suzuka: circuitSuzukaBlack, silverstone: circuitSilverstoneBlack,
 };
 
 type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';

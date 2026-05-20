@@ -38,7 +38,6 @@ export function Paywall({ onBack, onPurchaseSuccess }: PaywallProps) {
   };
 
   const features = [
-    { icon: Trophy, label: 'Career Mode', desc: 'Championship progression' },
     { icon: Flag, label: 'Grand Prix', desc: 'Full race weekends' },
     { icon: Globe, label: 'Multiplayer', desc: '1v1 online racing' },
   ];

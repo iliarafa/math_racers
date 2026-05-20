@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, isSeriesAvailable, isCircuitUnlockedForSeries, getPreviousSeriesLabel, getNextRequiredSeriesLabel, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2, Trophy } from "lucide-react";
@@ -46,8 +46,8 @@ import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
-import trackMiami from "@/assets/miami_track.png";
-import flagUs from "@/assets/flag_us.jpg";
+import trackCanada from "@/assets/track_canada.png";
+import flagCanada from "@/assets/flag_canada.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageCar from "@/assets/garage_car.jpeg";
@@ -59,14 +59,14 @@ import chooseTrackVideo from "@assets/choose_TRACK.mp4";
 // Also add the new track/flag assets as imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 const CURRENT_GRAND_PRIX = {
-  circuitId: 'miami',
-  name: 'MIAMI',
-  country: 'USA',
-  trackImage: trackMiami,
-  flagImage: flagUs,
-  rainProbability: 0.15,
-  simLapCount: 57,
-  gradient: 'linear-gradient(90deg, #FF6B35 0%, #004E89 50%, #004E89 100%)',
+  circuitId: 'canada',
+  name: 'CANADA',
+  country: 'CANADA',
+  trackImage: trackCanada,
+  flagImage: flagCanada,
+  rainProbability: 0.40,
+  simLapCount: 70,
+  gradient: 'linear-gradient(90deg, #D52B1E 0%, #FFFFFF 50%, #D52B1E 100%)',
 };
 // ───────────────────────────────────────────────────────────────────
 
@@ -78,7 +78,6 @@ const FLAG_IMAGES: { [circuitId: string]: string } = {
   "silverstone": flagUK,
   [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.flagImage,
   "bahrain": flagBahrain,
-  "miami": flagUs,
 };
 
 const TRACK_IMAGES: { [circuitId: string]: string } = {
@@ -88,7 +87,6 @@ const TRACK_IMAGES: { [circuitId: string]: string } = {
   "suzuka": trackSuzuka,
   "silverstone": trackSilverstone,
   [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.trackImage,
-  "miami": trackMiami,
 };
 
 const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } } = {
@@ -97,7 +95,7 @@ const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } 
   "monaco": { red: circuitMonacoRed, black: circuitMonacoBlack },
   "silverstone": { red: circuitSilverstoneRed, black: circuitSilverstoneBlack },
   "spa": { red: circuitSpaRed, black: circuitSpaBlack },
-  "miami": { red: trackMiami, black: trackMiami },
+  "canada": { red: trackCanada, black: trackCanada },
 };
 
 // Custom checkered flag icon component
@@ -151,9 +149,9 @@ const createGrandPrixCircuit = (op: string): Circuit => ({
   paths: { s1: '', s2: '', s3: '' }
 });
 
-const createMiamiCircuit = (op: string): Circuit => ({
-  id: 'miami',
-  name: 'MIAMI',
+const createCanadaCircuit = (op: string): Circuit => ({
+  id: 'canada',
+  name: 'CANADA',
   type: op,
   description: 'Free Practice',
   mapUrl: '',
@@ -618,7 +616,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, championCircuit, updatePersonalBest, recordLapTime, setPlayerName } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime, setPlayerName } = useGameState();
   const { isPremium } = usePurchase();
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
@@ -733,7 +731,7 @@ export default function Game() {
   const questionStartTimeRef = useRef<number>(Date.now());
   // Track the best time for each sector and who holds it (F1-style competitive timing)
   const [revealedAttempts, setRevealedAttempts] = useState<Set<string>>(new Set());
-  const [gameStatus, setGameStatus] = useState<'mode_select' | 'driver_select' | 'operation_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>('mode_select');
+  const [gameStatus, setGameStatus] = useState<'mode_select' | 'operation_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>('mode_select');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -966,7 +964,7 @@ export default function Game() {
 
   // Guard: redirect to proper selection if missing driver/circuit
   useEffect(() => {
-    if (!selectedDriver && gameStatus !== 'mode_select' && gameStatus !== 'driver_select' && gameStatus !== 'operation_select' && gameStatus !== 'paywall') {
+    if (!selectedDriver && gameStatus !== 'mode_select' && gameStatus !== 'operation_select' && gameStatus !== 'paywall') {
       setGameStatus('mode_select');
     } else if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
       setGameStatus('selecting');
@@ -979,7 +977,7 @@ export default function Game() {
       if (isGrandPrix) {
         setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
       } else if (isPreSeasonTesting) {
-        setSelectedCircuit(createMiamiCircuit(selectedOperation));
+        setSelectedCircuit(createCanadaCircuit(selectedOperation));
       } else {
         setSelectedCircuit(CIRCUITS[0]);
       }
@@ -1020,7 +1018,7 @@ export default function Game() {
     if (isGrandPrix) {
       setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
     } else if (isPreSeasonTesting) {
-      setSelectedCircuit(createMiamiCircuit(selectedOperation));
+      setSelectedCircuit(createCanadaCircuit(selectedOperation));
     }
     setGameStatus('selecting');
   };
@@ -1524,10 +1522,6 @@ export default function Game() {
     if (beatBot) {
        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
        incrementRacesWon();
-       // Record championship for this circuit at this series
-       if (selectedCircuit && selectedDriver) {
-         championCircuit(selectedCircuit.id, selectedDriver.id);
-       }
        if (selectedDriver?.difficulty === 'hard' && state.soundEnabled) {
          playSimplyLovely();
        }
@@ -1971,24 +1965,33 @@ export default function Game() {
         {/* Mode Cards */}
         <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
           <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
-            {/* Career Card */}
+            {/* Free Practice Card */}
             <motion.button
               onClick={() => {
                 if (state.soundEnabled) playCarouselClick();
-                if (!isPremium) { setGameStatus('paywall'); return; }
-                setGameStatus('driver_select');
+                setIsPreSeasonTesting(true);
+                setGameStatus('operation_select');
               }}
               whileTap={{ scale: 0.98 }}
               style={modeCardStyle}
             >
-              <span className="block" style={modeTitleStyle}>CAREER</span>
-              <span className="block" style={modeSubStyle}>CHAMPIONSHIP</span>
-              {!isPremium && (
-                <span className="block" style={{ ...modeSubStyle, fontSize: '0.65rem', color: '#999', marginTop: '6px' }}>
-                  Full version
-                </span>
-              )}
+              <span className="block" style={modeTitleStyle}>FREE PRACTICE</span>
+              <span className="block" style={modeSubStyle}>ROUND 5 / CANADA</span>
             </motion.button>
+
+            {/* Sim Racing Card */}
+            <Link href="/lane-racer">
+              <motion.button
+                onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
+                whileTap={{ scale: 0.98 }}
+                style={modeCardStyle}
+              >
+                <span className="block" style={modeTitleStyle}>LANE RACER</span>
+                <span className="block" style={modeSubStyle}>ARCADE MODE</span>
+              </motion.button>
+            </Link>
+
+            {/* Deploy/Harvest Card — archived, re-enable later */}
 
             {/* Grand Prix Card */}
             <motion.button
@@ -2008,34 +2011,6 @@ export default function Game() {
                   Full version
                 </span>
               )}
-            </motion.button>
-
-            {/* Sim Racing Card */}
-            <Link href="/lane-racer">
-              <motion.button
-                onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-                whileTap={{ scale: 0.98 }}
-                style={modeCardStyle}
-              >
-                <span className="block" style={modeTitleStyle}>LANE RACER</span>
-                <span className="block" style={modeSubStyle}>ARCADE MODE</span>
-              </motion.button>
-            </Link>
-
-            {/* Deploy/Harvest Card — archived, re-enable later */}
-
-            {/* Free Practice Card */}
-            <motion.button
-              onClick={() => {
-                if (state.soundEnabled) playCarouselClick();
-                setIsPreSeasonTesting(true);
-                setGameStatus('operation_select');
-              }}
-              whileTap={{ scale: 0.98 }}
-              style={modeCardStyle}
-            >
-              <span className="block" style={modeTitleStyle}>FREE PRACTICE</span>
-              <span className="block" style={modeSubStyle}>ROUND 4 / MIAMI</span>
             </motion.button>
           </div>
         </div>
@@ -2084,7 +2059,7 @@ export default function Game() {
           >
             {isPreSeasonTesting
               ? '100 questions with adaptive difficulty and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.'
-              : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to the Miami International Autodrome.`}
+              : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to the Circuit Gilles-Villeneuve.`}
           </p>
           <h3
             className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-white"
@@ -2105,7 +2080,7 @@ export default function Game() {
                   setSelectedDriver(kartingDriver);
                   localStorage.setItem('lastSelectedDriverId', kartingDriver.id);
                   if (isPreSeasonTesting) {
-                    setSelectedCircuit(createMiamiCircuit(op.type));
+                    setSelectedCircuit(createCanadaCircuit(op.type));
                     setIsPracticeMode(true);
                     setRaceMode('solo');
                     setSelectedTab('testing');
@@ -2196,185 +2171,13 @@ export default function Game() {
   }
 
   // Driver Selection Screen - Racing Series Menu
-  if (gameStatus === 'driver_select') {
-    const seriesOptions = [
-      { id: 'f1', name: 'FORMULA 1', description: 'Champion', driver: DRIVERS.find(d => d.id === 'f1'), color: '#e10600' },
-      { id: 'f2', name: 'FORMULA 2', description: 'Pro', driver: DRIVERS.find(d => d.id === 'f2'), color: '#00a0dc' },
-      { id: 'f3', name: 'FORMULA 3', description: 'Rookie', driver: DRIVERS.find(d => d.id === 'f3'), color: '#000000' },
-      { id: 'karting', name: 'KARTING', description: 'Amateur', driver: DRIVERS.find(d => d.id === 'karting'), color: '#006B3F' },
-    ];
-
-    const seriesCardStyle: React.CSSProperties = {
-      backgroundColor: 'rgba(255,255,255,0.12)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255,255,255,0.2)',
-      borderRadius: '12px',
-      padding: '16px 20px',
-      width: '100%',
-      textAlign: 'left' as const,
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-    };
-    const seriesTitleStyle: React.CSSProperties = {
-      fontFamily: 'Oxanium, sans-serif',
-      fontSize: window.innerWidth >= 768 ? '1.4rem' : '1.15rem',
-      fontWeight: 'bold',
-      color: '#FFFFFF',
-    };
-    const seriesSubStyle: React.CSSProperties = {
-      fontFamily: 'Oxanium, sans-serif',
-      fontSize: '0.75rem',
-      color: 'rgba(255,255,255,0.65)',
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.08em',
-      marginTop: '4px',
-    };
-
-    return (
-      <div className="h-screen flex flex-col relative overflow-hidden">
-
-        {/* Header: Back + Logo */}
-        <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
-          <button
-            onClick={() => {
-              if (state.soundEnabled) playCarouselClick();
-              setGameStatus('mode_select');
-            }}
-            className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
-            style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
-            data-testid="button-back-menu"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <img
-            src={logoImage}
-            alt="F1 Math Racer"
-            className="h-8 md:h-12 object-contain"
-          />
-        </div>
-
-        {/* Title */}
-        <div className="relative z-10 mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
-          <h2
-            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-          >
-            Select Series
-          </h2>
-        </div>
-
-        {/* Series Cards */}
-        <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 100px)' }}>
-          <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
-            {seriesOptions.map((series) => {
-              const isSelected = selectedDriver?.id === series.id;
-              const isUnlocked = isPracticeMode || isSeriesAvailable(series.id, state.championedCircuits);
-
-              return (
-                <motion.button
-                  key={series.id}
-                  onClick={() => {
-                    if (!isUnlocked) return;
-                    setSelectedDriver(series.driver || null);
-                    if (state.soundEnabled) playCarouselClick();
-                  }}
-                  whileTap={isUnlocked ? { scale: 0.98 } : undefined}
-                  style={{
-                    ...seriesCardStyle,
-                    ...(isSelected ? { border: '2px solid rgba(255,255,255,0.8)' } : {}),
-                    ...(!isUnlocked ? { opacity: 0.5, cursor: 'default' } : {}),
-                  }}
-                  data-testid={`level-${series.id}`}
-                >
-                  <span className="block" style={seriesTitleStyle}>{series.name}</span>
-                  <span className="block" style={seriesSubStyle}>
-                    {isUnlocked ? series.description.toUpperCase() : 'WIN TO UNLOCK'}
-                  </span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Confirm Button - Fixed Bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center z-10" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          {selectedDriver && (
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                if (state.soundEnabled) playCarouselClick();
-                handleDriverSelect(selectedDriver!);
-              }}
-              className="w-full max-w-sm md:max-w-lg py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
-              style={{
-                fontFamily: 'Oxanium, sans-serif',
-                backgroundColor: '#22c55e',
-                animation: 'pulse-green 2s infinite'
-              }}
-              data-testid="button-confirm-strategy"
-            >
-              Select Track
-            </motion.button>
-          )}
-        </div>
-        <style>{`
-          @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(34, 197, 94, 0.3); }
-          }
-        `}</style>
-      </div>
-    );
-  }
 
   // Circuit Selection Screen - Dark Race Setup
   if (gameStatus === 'selecting') {
     const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
     const displayCircuit = selectedCircuit || CIRCUITS[0];
-    const isCircuitLocked = (isPracticeMode || isGrandPrix) ? false : (selectedDriver ? !isCircuitUnlockedForSeries(displayCircuit.id, selectedDriver.id, state.championedCircuits) : false);
+    const isCircuitLocked = false;
 
-    const goToPrevCircuit = () => {
-      const newIndex = currentCircuitIndex === 0 ? CIRCUITS.length - 1 : currentCircuitIndex - 1;
-      handleCircuitSelect(CIRCUITS[newIndex]);
-      if (state.soundEnabled) playCarouselClick();
-    };
-    
-    const goToNextCircuit = () => {
-      const newIndex = currentCircuitIndex === CIRCUITS.length - 1 ? 0 : currentCircuitIndex + 1;
-      handleCircuitSelect(CIRCUITS[newIndex]);
-      if (state.soundEnabled) playCarouselClick();
-    };
-
-    const handleTouchStart = (e: React.TouchEvent) => {
-      touchStartXRef.current = e.touches[0].clientX;
-      touchStartYRef.current = e.touches[0].clientY;
-    };
-    const handleTouchMove = (e: React.TouchEvent) => {
-      if (touchStartXRef.current === null || touchStartYRef.current === null) return;
-      const diffX = Math.abs(e.touches[0].clientX - touchStartXRef.current);
-      const diffY = Math.abs(e.touches[0].clientY - touchStartYRef.current);
-      if (diffX > diffY && diffX > 10) {
-        e.preventDefault();
-      }
-    };
-    const handleTouchEnd = (e: React.TouchEvent) => {
-      if (touchStartXRef.current === null) return;
-      const touchEndX = e.changedTouches[0].clientX;
-      const diff = touchStartXRef.current - touchEndX;
-      if (Math.abs(diff) > 50) {
-        if (diff > 0) {
-          goToNextCircuit();
-        } else {
-          goToPrevCircuit();
-        }
-      }
-      touchStartXRef.current = null;
-      touchStartYRef.current = null;
-    };
 
     return (
       <div className="min-h-screen flex flex-col transition-colors duration-300 relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
@@ -2466,36 +2269,7 @@ export default function Game() {
                 Race
               </button>
             </div>
-          ) : (
-            <div className="rounded-full p-1 flex gap-1 bg-white/10">
-              <button
-                onClick={() => { setSelectedTab('race'); setIsPracticeMode(false); setRaceMode('bot'); if (state.soundEnabled) playCarouselClick(); }}
-                className={cn(
-                  "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
-                  selectedTab === 'race'
-                    ? "bg-red-600 text-white"
-                    : "bg-transparent text-white/50 hover:text-white"
-                )}
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-                data-testid="button-race-mode"
-              >
-                Race
-              </button>
-              <button
-                onClick={() => { setSelectedTab('practice'); setIsPracticeMode(true); setRaceMode('solo'); if (state.soundEnabled) playCarouselClick(); }}
-                className={cn(
-                  "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
-                  selectedTab === 'practice'
-                    ? "bg-green-600 text-white"
-                    : "bg-transparent text-white/50 hover:text-white"
-                )}
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-                data-testid="button-practice-mode"
-              >
-                Practice
-              </button>
-            </div>
-          )}
+          ) : null}
         </div>
         {/* Main Content - Hero Card with Side Chevrons */}
         {/* Card area — same position as series buttons list */}
@@ -2504,7 +2278,7 @@ export default function Game() {
             /* Pre-Season Testing Card */
             (<div className="flex flex-col items-center">
               <motion.div
-                key={`pst-miami-card`}
+                key={`pst-canada-card`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
@@ -2514,7 +2288,7 @@ export default function Game() {
                   border: '1px solid rgba(255,255,255,0.2)',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
                 }}
-                data-testid="hero-card-pst-miami"
+                data-testid="hero-card-pst-canada"
               >
                 {/* Header - Circuit & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
@@ -2522,11 +2296,11 @@ export default function Game() {
                     className="text-2xl font-bold uppercase tracking-wider text-white"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
-                    MIAMI
+                    CANADA
                   </h2>
                   <img
-                    src={flagUs}
-                    alt="USA flag"
+                    src={flagCanada}
+                    alt="Canada flag"
                     className="h-5 w-7 object-cover rounded-sm relative -top-0.5"
                   />
                 </div>
@@ -2534,8 +2308,8 @@ export default function Game() {
                 {/* Track Map */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                   <img
-                    src={trackMiami}
-                    alt="Miami circuit"
+                    src={trackCanada}
+                    alt="Canada circuit"
                     className="h-32 md:h-52 object-contain"
                     style={{ maxWidth: '280px', filter: 'invert(1)' }}
                   />
@@ -2686,199 +2460,8 @@ export default function Game() {
                 </div>
               </motion.div>
             </div>)
-          ) : (
-            /* Track Selection Card */
-            (<>
-              {/* Left Chevron - hidden on mobile */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={goToPrevCircuit}
-                className="hidden md:flex p-3 transition-colors text-white/40 hover:text-white"
-                data-testid="circuit-prev"
-              >
-                <ChevronLeft className="w-12 h-12" />
-              </motion.button>
-              {/* Card wrapper with swipe hint */}
-              <div className="flex flex-col items-center">
-                {/* Swipe hint - mobile only */}
-                <div className="md:hidden text-center text-[10px] text-white/40 uppercase tracking-widest pb-3">
-                  Swipe to choose track
-                </div>
-
-                {/* Hero Card - swipeable on mobile */}
-                <motion.div
-                  key={displayCircuit.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-[350px] md:w-[500px] rounded-[20px] p-4 md:p-6 flex flex-col transition-colors duration-300 select-none relative backdrop-blur-xl"
-                  style={{
-                    backgroundColor: 'rgba(255,255,255,0.12)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-                    touchAction: 'none'
-                  }}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  data-testid={`hero-card-${displayCircuit.id}`}
-                >
-                  {/* Locked overlay */}
-                  {isCircuitLocked && selectedDriver && (
-                    <div className="absolute inset-0 rounded-[20px] bg-black/60 z-10 flex items-center justify-center p-6">
-                      <p className="text-center text-red-400 text-sm font-bold uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-                        Champion {getNextRequiredSeriesLabel(displayCircuit.id, selectedDriver.id, state.championedCircuits)} to unlock {displayCircuit.type}
-                      </p>
-                    </div>
-                  )}
-                  {/* Header - Circuit Name & Flag */}
-                  <div className="flex items-center justify-center gap-3 mb-4">
-                    <h2
-                      className="text-2xl font-bold uppercase tracking-wider text-white"
-                      style={{ fontFamily: 'Oxanium, sans-serif' }}
-                    >
-                      {displayCircuit.name}
-                    </h2>
-                    <img 
-                      src={FLAG_IMAGES[displayCircuit.id]} 
-                      alt={`${displayCircuit.name} flag`} 
-                      className="h-5 w-7 object-cover rounded-sm"
-                    />
-                  </div>
-
-                  {/* Track Map */}
-                  <div className="flex-1 flex items-center justify-center py-3 md:py-6">
-                    {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
-                      <img
-                        src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black}
-                        alt={`${displayCircuit.name} circuit`}
-                        className="h-32 md:h-52 object-contain"
-                        style={{ maxWidth: '280px', filter: 'invert(1)' }}
-                      />
-                    ) : (
-                      <svg 
-                        viewBox="0 0 300 160" 
-                        className="w-full h-32 md:h-52"
-                        style={{ maxWidth: '280px' }}
-                      >
-                        <path
-                          d={displayCircuit.paths.s1}
-                          fill="none"
-                          stroke="#ffffff"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d={displayCircuit.paths.s2}
-                          fill="none"
-                          stroke="#ffffff"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d={displayCircuit.paths.s3}
-                          fill="none"
-                          stroke="#ffffff"
-                          strokeWidth="4"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
-                  </div>
-
-                  {/* Info - Math Type */}
-                  <div className="text-center mb-2 md:mb-4">
-                    <div className="text-sm uppercase tracking-wider mb-1 text-white/50">Math Type</div>
-                    <div
-                      className="text-lg font-bold uppercase text-white"
-                      style={{ fontFamily: 'Oxanium, sans-serif' }}
-                    >
-                      {displayCircuit.type}
-                    </div>
-                  </div>
-
-                  {/* Weather Toggle */}
-                  <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
-                    <button
-                      onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
-                      className={cn(
-                        "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                        selectedWeather === 'dry'
-                          ? "bg-yellow-500/20 ring-2 ring-yellow-500"
-                          : "bg-transparent hover:bg-white/5"
-                      )}
-                      data-testid="weather-dry"
-                    >
-                      <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(10) hue-rotate(3deg) brightness(0.95)' : undefined }} />
-                      <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
-                    </button>
-                    <button
-                      onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
-                      className={cn(
-                        "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                        selectedWeather === 'wet'
-                          ? "bg-blue-500/20 ring-2 ring-blue-500"
-                          : "bg-transparent hover:bg-white/5"
-                      )}
-                      data-testid="weather-wet"
-                    >
-                      <img src={weatherRain} alt="Wet" className="w-8 h-8" style={{ filter: selectedWeather === 'wet' ? 'invert(1) sepia(1) saturate(5) hue-rotate(190deg)' : undefined }} />
-                      <span className="text-[9px] text-white/50 uppercase tracking-wide">Wet</span>
-                    </button>
-                    <button
-                      onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
-                      className={cn(
-                        "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                        selectedWeather === 'random'
-                          ? "bg-purple-500/20 ring-2 ring-purple-500"
-                          : "bg-transparent hover:bg-white/5"
-                      )}
-                      data-testid="weather-random"
-                    >
-                      <img src={weatherRandom} alt="Random" className="w-8 h-8" style={{ filter: selectedWeather === 'random' ? 'invert(1) sepia(1) saturate(5) hue-rotate(250deg)' : undefined }} />
-                      <span className="text-[9px] text-white/50 uppercase tracking-wide">Random</span>
-                    </button>
-                  </div>
-                </motion.div>
-              </div>
-              {/* Right Chevron - hidden on mobile */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={goToNextCircuit}
-                className="hidden md:flex p-3 transition-colors text-white/40 hover:text-white"
-                data-testid="circuit-next"
-              >
-                <ChevronRight className="w-12 h-12" />
-              </motion.button>
-            </>)
-          )}
+          ) : null}
         </div>
-        {/* Track Dots Indicator - only show for track selection */}
-        {!isGrandPrix && !isPreSeasonTesting && (
-          <div className="fixed bottom-44 landscape:md:bottom-36 left-0 right-0 flex justify-center gap-2 z-10">
-            {CIRCUITS.map((circuit, index) => {
-              const dotLocked = isPracticeMode ? false : (selectedDriver ? !isCircuitUnlockedForSeries(circuit.id, selectedDriver.id, state.championedCircuits) : false);
-              return (
-                <button
-                  key={circuit.id}
-                  onClick={() => { handleCircuitSelect(circuit); if (state.soundEnabled) playCarouselClick(); }}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all",
-                    currentCircuitIndex === index
-                      ? (dotLocked ? "bg-gray-500" : "bg-white")
-                      : (dotLocked ? "bg-gray-700" : "bg-gray-500")
-                  )}
-                  data-testid={`circuit-dot-${circuit.id}`}
-                />
-              );
-            })}
-          </div>
-        )}
         {/* Start Engine Button - Fixed Bottom */}
         <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300 z-10" style={{ backgroundColor: 'transparent' }}>
           <motion.button
@@ -2928,8 +2511,6 @@ export default function Game() {
                 dynamicDifficultyRef.current = null;
                 setSelectedTab('race');
                 setGameStatus("mode_select");
-              } else {
-                setGameStatus("driver_select");
               }
             }}
             className="transition-colors text-sm uppercase tracking-wider text-white/50 hover:text-white"
