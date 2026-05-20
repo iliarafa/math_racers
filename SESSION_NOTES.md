@@ -9,13 +9,16 @@ Shipped to `main` and deployed to the iPhone 17 simulator:
 2. **Career mode removed entirely; Ratios math type dropped.**
 3. **Grand Prix leaderboard** added (with a real score) as a tab, and the **leaderboard database was rebuilt** on a new Supabase project (the old one had been deleted).
 
-Then (implemented + verified, **not yet committed/pushed/deployed** as of this writing):
-4. **Lane Racer & Multiplayer: added Miami + Canada tracks**, and Lane Racer's math operation is now **player-selected** (a 4th "MATH" drum) instead of being locked to the track. The Leaderboard's Lane Racer circuit filter now lists Miami + Canada.
+Then shipped:
+4. **Lane Racer & Multiplayer: added Miami + Canada tracks**; the Leaderboard's Lane Racer circuit filter now lists Miami + Canada. (commit `3186ff8`)
+5. **Math operation is now player-selected (not locked to the track)** in **both Lane Racer** (a 4th "MATH" drum — `3186ff8`) **and Multiplayer** (an operation selector on the race-setup screen — latest commit).
 
 Commits on `main` (pushed):
 - `2d87db3` — Remove Career mode and Ratios; switch Grand Prix & Free Practice to Canada (also reorders the SELECT MODE menu and fixes the Regulations text).
 - `1b3008e` — Add Grand Prix leaderboard with scoring; move leaderboards to a new Supabase DB.
 - `972d61c` — Add session notes / handoff doc.
+- `3186ff8` — Add Miami & Canada tracks to Lane Racer + Multiplayer; player-chosen Lane Racer operation.
+- (latest) — Multiplayer: player-chosen operation + this doc update.
 
 ---
 
@@ -56,15 +59,16 @@ A new Supabase project was created and the app repointed to it:
 - The old standalone `/gp-leaderboard` page was deleted; the in-game link points at the tab. There is a separate `GPLeaderboard` page concept no longer in the app.
 
 ### Lane Racer & Multiplayer: Miami + Canada tracks + chosen operation
-*(latest work — implemented & verified, not yet committed)*
+*(committed: `3186ff8`; Multiplayer operation in the latest commit)*
 - **`CIRCUITS` (`gameLogic.ts`) now has 7 circuits**: spa (Addition), monaco (Subtraction), monza (Multiplication), suzuka (Division), silverstone (Variables), **canada (Addition)**, **miami (Multiplication)**. `CIRCUITS` feeds both the Lane Racer and Multiplayer track carousels.
-- A circuit's `type` is its default / Multiplayer operation. **Canada=Addition, Miami=Multiplication are arbitrary defaults** — change freely. (Multiplayer still locks operation to the track's `type`.)
+- A circuit's `type` is its **default/initial** operation. **Canada=Addition, Miami=Multiplication are arbitrary defaults** — change freely. (Operation is now player-selectable in both Lane Racer and Multiplayer — see below.)
 - `SIM_LAP_COUNTS`: added `canada: 70`, `miami: 57` (Realism-mode lap counts).
 - **Lane Racer operation is now player-chosen**: the setup screen gained a 4th "MATH" drum (LEVEL | TEAM | TRACK | MATH) using a local `OPERATION_OPTIONS`; `selectedOperation` is passed to `generateQuestion(...)` as the `operationOverride` and submitted to the leaderboard (no longer derived from the track's `type`). The setup card was widened `max-w-sm` → `max-w-md` to fit 4 drums.
+- **Multiplayer operation is now player-chosen too**: an operation selector on the race-setup (`track_select`) screen. The host's choice generates the shared question set (via `operationOverride`) and **propagates to the guest through the `start_countdown` → `countdown_start` WS flow** (mirrors how `weather` is synced — `server/websocket.ts` passes `operation` through `handleStartCountdown`'s broadcast). Overtake "harder" questions on both sides use the chosen operation. (Two-client UI couldn't be fully tested solo; type-checked + mirrors the weather pattern.)
 - **Track/flag images:** Lane Racer & Multiplayer `CIRCUIT_MAP_IMAGES` / `FLAG_IMAGES` got `miami`/`canada` entries (`miami_track.png`/`track_canada.png` + `flag_us.jpg`/`flag_canada.png`). The Canada/Miami `CIRCUITS` entries have empty SVG `paths` — carousels render the track PNG, not the sectors.
 - **Leaderboard:** the Lane Racer tab's circuit filter (`CIRCUIT_FILTERS` + `CIRCUIT_ID_MAP` in `Leaderboard.tsx`) now includes Miami + Canada.
 - `miami_track.png` + `flag_us.jpg` were **restored from git `4278974`** (they'd been deleted with Ratios).
-- Touched (uncommitted): `gameLogic.ts`, `LaneRacer.tsx`, `Leaderboard.tsx`, `Multiplayer.tsx`, + restored `miami_track.png` / `flag_us.jpg`.
+- Files: `gameLogic.ts`, `LaneRacer.tsx`, `Leaderboard.tsx`, `Multiplayer.tsx`, `server/websocket.ts`, + restored `miami_track.png` / `flag_us.jpg`.
 
 ---
 

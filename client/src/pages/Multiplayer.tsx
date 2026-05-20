@@ -125,6 +125,14 @@ const playBeep = (frequency: number = 800, duration: number = 150) => {
 type GameStatus = "lobby" | "waiting" | "track_select" | "countdown" | "racing" | "finished";
 type Weather = 'dry' | 'wet' | 'random';
 
+const OPERATION_OPTIONS: { label: string; type: string }[] = [
+  { label: '+', type: 'Addition' },
+  { label: '−', type: 'Subtraction' },
+  { label: '×', type: 'Multiplication' },
+  { label: '÷', type: 'Division' },
+  { label: 'x=?', type: 'Variables' },
+];
+
 const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
   "spa": 0.60,
   "silverstone": 0.50,
@@ -160,6 +168,7 @@ export default function Multiplayer() {
     return (savedId && DRIVERS.find(d => d.id === savedId)) || DRIVERS[0];
   });
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
+  const [selectedOperation, setSelectedOperation] = useState('Addition');
   const [isWetRace, setIsWetRace] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -327,6 +336,9 @@ export default function Multiplayer() {
         }
         if (message.weather) {
           setSelectedWeather(message.weather);
+        }
+        if (message.operation) {
+          setSelectedOperation(message.operation);
         }
         // Sync power-ups settings
         if (message.powerUpsEnabled !== undefined) {
@@ -523,12 +535,12 @@ export default function Multiplayer() {
     if (overtakeActive && selectedCircuit && selectedDriver) {
       // Generate a harder question for the current position
       const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
-      const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace);
+      const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace, 0, undefined, selectedOperation);
       setOvertakeQuestion(harderQ);
     } else {
       setOvertakeQuestion(null);
     }
-  }, [overtakeActive, selectedCircuit, selectedDriver, isWetRace]);
+  }, [overtakeActive, selectedCircuit, selectedDriver, isWetRace, selectedOperation]);
   
   const createRoom = async () => {
     if (!playerName.trim()) {
@@ -544,7 +556,7 @@ export default function Multiplayer() {
     try {
       const tempQuestions: Question[] = [];
       for (let i = 0; i < getRaceLength(circuit.id, state.simMode); i++) {
-        tempQuestions.push(generateQuestion(circuit.id, driver.difficulty));
+        tempQuestions.push(generateQuestion(circuit.id, driver.difficulty, false, 0, undefined, selectedOperation));
       }
       
       const response = await fetch("/api/rooms", {
@@ -634,7 +646,7 @@ export default function Multiplayer() {
     // Generate questions based on selected circuit with weather modifier
     const newQuestions: Question[] = [];
     for (let i = 0; i < raceLength; i++) {
-      newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty, wetRace));
+      newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty, wetRace, 0, undefined, selectedOperation));
     }
     setQuestions(newQuestions);
 
@@ -651,6 +663,7 @@ export default function Multiplayer() {
           circuitId: selectedCircuit.id,
           driverId: selectedDriver.id,
           weather: selectedWeather,
+          operation: selectedOperation,
           questions: newQuestions.map(q => ({ display: q.display, answer: q.answer })),
           powerUpsEnabled
         })
@@ -662,6 +675,7 @@ export default function Multiplayer() {
         circuitId: selectedCircuit.id,
         driverId: selectedDriver.id,
         weather: selectedWeather,
+        operation: selectedOperation,
         powerUpsEnabled,
         questions: newQuestions.map(q => ({ display: q.display, answer: q.answer })),
         raceLength,
@@ -875,7 +889,7 @@ export default function Multiplayer() {
           // Generate new harder question if overtake still active
           if (overtakeActive && selectedCircuit && selectedDriver) {
             const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
-            const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace);
+            const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace, 0, undefined, selectedOperation);
             setOvertakeQuestion(harderQ);
           }
         }, 400);
@@ -1445,6 +1459,25 @@ export default function Multiplayer() {
                 <img src={weatherRandom} alt="Random" className="w-8 h-8" />
                 <span className="text-[9px] text-gray-500 uppercase tracking-wide">Surprise</span>
               </button>
+            </div>
+
+            {/* Operation Toggle */}
+            <div className="flex justify-center gap-2 pt-2 mt-2 border-t border-gray-300 flex-wrap">
+              {OPERATION_OPTIONS.map(op => (
+                <button
+                  key={op.type}
+                  onClick={() => setSelectedOperation(op.type)}
+                  className={cn(
+                    "min-w-[44px] px-3 py-2 rounded-lg transition-all text-sm font-bold",
+                    selectedOperation === op.type
+                      ? "bg-green-500/20 ring-2 ring-green-500 text-white"
+                      : "bg-transparent text-gray-400 hover:bg-white/5"
+                  )}
+                  data-testid={`mp-op-${op.type}`}
+                >
+                  {op.label}
+                </button>
+              ))}
             </div>
           </motion.div>
 

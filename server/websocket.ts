@@ -118,7 +118,7 @@ function handleMessage(ws: WebSocket, message: any) {
       handleJoinRoom(ws, message);
       break;
     case "start_countdown":
-      handleStartCountdown(message.roomCode, message.circuitId, message.driverId, message.weather, message.powerUpsEnabled, message.questions, message.raceLength, message.aeroZones);
+      handleStartCountdown(message.roomCode, message.circuitId, message.driverId, message.weather, message.operation, message.powerUpsEnabled, message.questions, message.raceLength, message.aeroZones);
       break;
     case "progress_update":
       handleProgressUpdate(ws, message);
@@ -209,7 +209,7 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
   }
 }
 
-function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: string, weather?: string, powerUpsEnabled?: boolean, questions?: any[], raceLength?: number, clientAeroZones?: number[]) {
+function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: string, weather?: string, operation?: string, powerUpsEnabled?: boolean, questions?: any[], raceLength?: number, clientAeroZones?: number[]) {
   const room = rooms.get(roomCode);
   if (!room) return;
 
@@ -264,6 +264,7 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
     circuitId,
     driverId,
     weather,
+    operation,
     powerUpsEnabled: room.powerUpsEnabled,
     aeroZones: room.aeroZones,
     questions
