@@ -928,6 +928,29 @@ export function calculatePSTScore(
   return Math.min(Math.round(score), 100000);
 }
 
+// Calculate Grand Prix score: Race Day result via the shared formula, x1.25 if pole.
+export function calculateGPScore(
+  totalTimeMs: number,
+  mistakes: number,
+  difficultyAchieved: Difficulty,
+  raceLength: number,
+  polePosition: boolean
+): number {
+  if (totalTimeMs <= 0 || raceLength <= 0) return 0;
+  const timeInSeconds = totalTimeMs / 1000;
+  const correctAnswers = Math.max(0, raceLength - mistakes);
+  const difficultyMultipliers: Record<Difficulty, number> = {
+    beginner: 1.0,
+    easy: 1.5,
+    medium: 2.0,
+    hard: 3.0,
+  };
+  const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
+  let score = (raceLength / timeInSeconds) * (correctAnswers / raceLength) * multiplier * 1000;
+  if (polePosition) score *= 1.25;
+  return Math.min(Math.round(score), 100000);
+}
+
 // Calculate Lane Racer score (same formula as PST)
 export function calculateLaneRacerScore(
   totalTimeMs: number,

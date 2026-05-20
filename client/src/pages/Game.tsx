@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore } from "@/lib/gameLogic";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2, Trophy } from "lucide-react";
@@ -1352,6 +1352,7 @@ export default function Game() {
             accuracy,
             difficultyAchieved: grandPrixLockedDifficulty || 'beginner',
             polePosition: grandPrixPolePosition,
+            score: calculateGPScore(elapsedTime, mistakes, grandPrixLockedDifficulty || 'beginner', raceLength, grandPrixPolePosition),
           };
 
           if (!state.playerName?.trim()) {
@@ -2140,7 +2141,7 @@ export default function Game() {
         </div>
         {!isPreSeasonTesting && (
           <div className="flex justify-center mt-4">
-            <Link href="/gp-leaderboard">
+            <Link href="/leaderboard?mode=grand-prix">
               <button
                 className="flex items-center gap-2 transition-colors text-sm uppercase tracking-wider text-white/50 hover:text-white"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}

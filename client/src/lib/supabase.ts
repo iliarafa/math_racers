@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
-  "https://rzvpuvejsrfcugeqnadq.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ6dnB1dmVqc3JmY3VnZXFuYWRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3NTMwMjQsImV4cCI6MjA4NjMyOTAyNH0.V7k1x0FpVePUO2rat6aP0VxzA7AetpC7UR-giXqg4Po",
+  "https://pslagmyvlvrpwnbhwqpp.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzbGFnbXl2bHZycHduYmh3cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyOTc1MjMsImV4cCI6MjA5NDg3MzUyM30.--mJ32WicSQT4VKmPzoMfFD0rw68rJnQQY9JoXeZhRY",
 );
 
 export interface LeaderboardSubmission {
@@ -65,6 +65,7 @@ export interface GPLeaderboardSubmission {
   accuracy: number;
   difficultyAchieved: string;
   polePosition: boolean;
+  score: number;
 }
 
 export async function submitGPLeaderboardEntry(entry: GPLeaderboardSubmission) {
@@ -81,6 +82,7 @@ export async function submitGPLeaderboardEntry(entry: GPLeaderboardSubmission) {
       accuracy: entry.accuracy,
       difficulty_achieved: entry.difficultyAchieved,
       pole_position: entry.polePosition,
+      score: Math.round(entry.score),
     })
     .select()
     .single();
@@ -93,7 +95,7 @@ export async function getGPLeaderboard(circuitId?: string, operation?: string, l
   let query = supabase
     .from("gp_leaderboard")
     .select("*")
-    .order("mistakes", { ascending: true })
+    .order("score", { ascending: false })
     .order("total_time", { ascending: true })
     .limit(Math.min(limit, 100));
 

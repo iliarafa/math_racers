@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
-import { getLeaderboard, getLaneRacerLeaderboard } from "@/lib/supabase";
+import { getLeaderboard, getLaneRacerLeaderboard, getGPLeaderboard } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Trophy, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,6 +19,7 @@ interface LeaderboardEntry {
   difficultyAchieved: string;
   createdAt: string;
   circuitName?: string;
+  polePosition?: boolean;
 }
 
 const OPERATIONS = ['All', 'Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'];
@@ -41,13 +42,16 @@ function formatTime(ms: number) {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
 }
 
-type TabMode = 'pst' | 'lane-racer';
+type TabMode = 'pst' | 'lane-racer' | 'grand-prix';
 
 export default function Leaderboard() {
   const { state } = useGameState();
   const [activeTab, setActiveTab] = useState<TabMode>(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('mode') === 'lane-racer' ? 'lane-racer' : 'pst';
+    const mode = params.get('mode');
+    if (mode === 'lane-racer') return 'lane-racer';
+    if (mode === 'grand-prix') return 'grand-prix';
+    return 'pst';
   });
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [selectedOp, setSelectedOp] = useState('All');
@@ -78,6 +82,30 @@ export default function Leaderboard() {
             accuracy: e.accuracy,
             difficultyAchieved: e.difficulty_achieved,
             createdAt: e.created_at,
+          })));
+          setLoading(false);
+        })
+        .catch(() => {
+          setEntries([]);
+          setError('offline');
+          setLoading(false);
+        });
+    } else if (activeTab === 'grand-prix') {
+      getGPLeaderboard(undefined, op, 50)
+        .then(data => {
+          setEntries(data.map((e: any) => ({
+            id: e.id,
+            playerId: e.player_id,
+            playerName: e.player_name,
+            operation: e.operation,
+            score: e.score,
+            totalTime: e.total_time,
+            mistakes: e.mistakes,
+            accuracy: e.accuracy,
+            difficultyAchieved: e.difficulty_achieved,
+            createdAt: e.created_at,
+            circuitName: e.circuit_name,
+            polePosition: e.pole_position,
           })));
           setLoading(false);
         })
@@ -131,7 +159,7 @@ export default function Leaderboard() {
               <h1 className="text-lg md:text-xl font-bold tracking-widest uppercase text-white">Leaderboard</h1>
             </div>
             <p className="text-xs text-white/70 mt-1 ml-9">
-              {activeTab === 'pst' ? 'Record 100 laps in Free Practice to enter.' : 'Complete a Lane Racer race to enter.'}
+              {activeTab === 'pst' ? 'Record 100 laps in Free Practice to enter.' : activeTab === 'grand-prix' ? 'Finish a Grand Prix Race Day to enter.' : 'Complete a Lane Racer race to enter.'}
             </p>
           </div>
 
@@ -160,6 +188,18 @@ export default function Leaderboard() {
               style={{ fontFamily: 'Oxanium, sans-serif' }}
             >
               Lane Racer
+            </button>
+            <button
+              onClick={() => { setActiveTab('grand-prix'); setSelectedOp('All'); setSelectedCircuit('All'); }}
+              className={cn(
+                "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors",
+                activeTab === 'grand-prix'
+                  ? "bg-yellow-400 text-black"
+                  : "bg-white/10 text-white/50 hover:text-white"
+              )}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              Grand Prix
             </button>
           </div>
 
@@ -243,7 +283,7 @@ export default function Leaderboard() {
               <Trophy className="w-12 h-12 text-white/40" />
               <div className="text-white/70 text-sm uppercase tracking-widest">No entries yet</div>
               <p className="text-white/50 text-xs">
-                {activeTab === 'pst' ? 'Complete a 57-lap PST cycle to appear here' : 'Complete a Lane Racer race to appear here'}
+                {activeTab === 'pst' ? 'Complete a 57-lap PST cycle to appear here' : activeTab === 'grand-prix' ? 'Finish a Grand Prix Race Day to appear here' : 'Complete a Lane Racer race to appear here'}
               </p>
             </div>
           ) : visibleEntries.length === 0 ? (
@@ -290,9 +330,12 @@ export default function Leaderboard() {
                           {isCurrentPlayer && (
                             <span className="text-[10px] font-bold text-yellow-400 bg-yellow-400/20 px-1.5 py-0.5 rounded uppercase tracking-wider">YOU</span>
                           )}
+                          {activeTab === 'grand-prix' && entry.polePosition && (
+                            <span className="text-[10px] font-bold text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">POLE</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-3 mt-0.5">
-                          {activeTab === 'lane-racer' && entry.circuitName && (
+                          {(activeTab === 'lane-racer' || activeTab === 'grand-prix') && entry.circuitName && (
                             <>
                               <span className="text-[10px] text-white/70 uppercase tracking-wider">{entry.circuitName}</span>
                               <span className="text-[10px] text-white/50">•</span>

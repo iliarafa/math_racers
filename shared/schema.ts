@@ -92,6 +92,7 @@ export const gpLeaderboard = pgTable("gp_leaderboard", {
   accuracy: integer("accuracy").notNull(),
   difficultyAchieved: varchar("difficulty_achieved", { length: 20 }).notNull(),
   polePosition: boolean("pole_position").notNull().default(false),
+  score: integer("score").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -106,6 +107,7 @@ export const insertGPLeaderboardSchema = createInsertSchema(gpLeaderboard).pick(
   accuracy: true,
   difficultyAchieved: true,
   polePosition: true,
+  score: true,
 });
 
 export type InsertGPLeaderboardEntry = z.infer<typeof insertGPLeaderboardSchema>;
