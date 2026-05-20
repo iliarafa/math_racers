@@ -22,6 +22,10 @@ import flag_japan from "@/assets/flag_japan.png";
 import flag_monaco from "@/assets/flag_monaco.png";
 import flag_uk from "@/assets/flag_uk.png";
 import flag_belgium from "@/assets/flag_belgium.png";
+import flag_us from "@/assets/flag_us.jpg";
+import flag_canada from "@/assets/flag_canada.png";
+import track_miami from "@/assets/miami_track.png";
+import track_canada from "@/assets/track_canada.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import trackLimitsFlag from "@/assets/track-limits-flag.png";
 
@@ -31,6 +35,8 @@ const CIRCUIT_MAP_IMAGES: Record<string, { black: string }> = {
   monaco: { black: circuit_monaco_black },
   silverstone: { black: circuit_silverstone_black },
   spa: { black: circuit_spa_black },
+  miami: { black: track_miami },
+  canada: { black: track_canada },
 };
 
 const FLAG_IMAGES: Record<string, string> = {
@@ -39,6 +45,8 @@ const FLAG_IMAGES: Record<string, string> = {
   monaco: flag_monaco,
   silverstone: flag_uk,
   spa: flag_belgium,
+  miami: flag_us,
+  canada: flag_canada,
 };
 import confetti from "canvas-confetti";
 

@@ -4,14 +4,18 @@ Handoff summary of changes made this session, plus context future sessions will 
 
 ## TL;DR
 
-Three things shipped to `main` and deployed to the iPhone 17 simulator:
+Shipped to `main` and deployed to the iPhone 17 simulator:
 1. **Grand Prix & Free Practice retheme: Miami → Canada (Montreal).**
 2. **Career mode removed entirely; Ratios math type dropped.**
 3. **Grand Prix leaderboard** added (with a real score) as a tab, and the **leaderboard database was rebuilt** on a new Supabase project (the old one had been deleted).
 
-Two commits (both on `main`, pushed):
+Then (implemented + verified, **not yet committed/pushed/deployed** as of this writing):
+4. **Lane Racer & Multiplayer: added Miami + Canada tracks**, and Lane Racer's math operation is now **player-selected** (a 4th "MATH" drum) instead of being locked to the track. The Leaderboard's Lane Racer circuit filter now lists Miami + Canada.
+
+Commits on `main` (pushed):
 - `2d87db3` — Remove Career mode and Ratios; switch Grand Prix & Free Practice to Canada (also reorders the SELECT MODE menu and fixes the Regulations text).
 - `1b3008e` — Add Grand Prix leaderboard with scoring; move leaderboards to a new Supabase DB.
+- `972d61c` — Add session notes / handoff doc.
 
 ---
 
@@ -41,7 +45,7 @@ A new Supabase project was created and the app repointed to it:
 ### Career mode + Ratios removed
 - **Career mode is gone**: the SELECT MODE card, the series-select screen, the circuit carousel + unlock gating, and the championship progression system (`championedCircuits`, `unlockedSeries`, series-unlock helpers, `championCircuit`) were all removed.
 - **Kept** (NOT Career-only): `careerPoints` / `addCareerPoints` / `POSITION_POINTS` — used by Multiplayer and shown in the Racer Log.
-- **Ratios dropped**: the Miami circuit, the ratio question generator (`ratioQuestions.ts` deleted), and all references removed. The app's math operations are now **Addition, Subtraction, Multiplication, Division, Variables** (5 circuits: SPA, Monaco, Monza, Suzuka, Silverstone).
+- **Ratios dropped**: the ratio question generator (`ratioQuestions.ts` deleted) and all Ratios references removed. The app's math operations are now **Addition, Subtraction, Multiplication, Division, Variables** (no Ratios). Miami was removed here too, but was **later re-added as a plain track skin** (see "Lane Racer & Multiplayer: Miami + Canada tracks" below) — it is no longer a Ratios circuit.
 - **Paywall** now gates **Grand Prix** only (it already did; Career's gate was just removed).
 - **SELECT MODE order** is now: **Free Practice → Lane Racer → Grand Prix**.
 
@@ -50,6 +54,17 @@ A new Supabase project was created and the app repointed to it:
 - GP Race Day finish submits a `score` (`Game.tsx`); `gp_leaderboard` has a `score` column; `getGPLeaderboard` orders by **score desc, then time asc**.
 - The **Leaderboard page** (`client/src/pages/Leaderboard.tsx`) now has three tabs: Free Practice, Lane Racer, **Grand Prix**. GP rows show a purple **POLE** chip, the circuit, and points. Deep-link: `/leaderboard?mode=grand-prix`.
 - The old standalone `/gp-leaderboard` page was deleted; the in-game link points at the tab. There is a separate `GPLeaderboard` page concept no longer in the app.
+
+### Lane Racer & Multiplayer: Miami + Canada tracks + chosen operation
+*(latest work — implemented & verified, not yet committed)*
+- **`CIRCUITS` (`gameLogic.ts`) now has 7 circuits**: spa (Addition), monaco (Subtraction), monza (Multiplication), suzuka (Division), silverstone (Variables), **canada (Addition)**, **miami (Multiplication)**. `CIRCUITS` feeds both the Lane Racer and Multiplayer track carousels.
+- A circuit's `type` is its default / Multiplayer operation. **Canada=Addition, Miami=Multiplication are arbitrary defaults** — change freely. (Multiplayer still locks operation to the track's `type`.)
+- `SIM_LAP_COUNTS`: added `canada: 70`, `miami: 57` (Realism-mode lap counts).
+- **Lane Racer operation is now player-chosen**: the setup screen gained a 4th "MATH" drum (LEVEL | TEAM | TRACK | MATH) using a local `OPERATION_OPTIONS`; `selectedOperation` is passed to `generateQuestion(...)` as the `operationOverride` and submitted to the leaderboard (no longer derived from the track's `type`). The setup card was widened `max-w-sm` → `max-w-md` to fit 4 drums.
+- **Track/flag images:** Lane Racer & Multiplayer `CIRCUIT_MAP_IMAGES` / `FLAG_IMAGES` got `miami`/`canada` entries (`miami_track.png`/`track_canada.png` + `flag_us.jpg`/`flag_canada.png`). The Canada/Miami `CIRCUITS` entries have empty SVG `paths` — carousels render the track PNG, not the sectors.
+- **Leaderboard:** the Lane Racer tab's circuit filter (`CIRCUIT_FILTERS` + `CIRCUIT_ID_MAP` in `Leaderboard.tsx`) now includes Miami + Canada.
+- `miami_track.png` + `flag_us.jpg` were **restored from git `4278974`** (they'd been deleted with Ratios).
+- Touched (uncommitted): `gameLogic.ts`, `LaneRacer.tsx`, `Leaderboard.tsx`, `Multiplayer.tsx`, + restored `miami_track.png` / `flag_us.jpg`.
 
 ---
 
@@ -82,5 +97,5 @@ A new Supabase project was created and the app repointed to it:
 ## Known follow-ups / watch-outs
 - New leaderboard DB is **empty** and costs **$10/mo** — keep or downgrade as desired.
 - GP Race Day length comes from `getRaceLength(circuitId, !isPracticeMode && simMode)` — it's `RACE_LENGTH` (20) unless Realism mode is on, where it's the sim lap count. The GP score normalizes by lap count, so this is fine, but be aware the "race" length varies.
-- The archived `client/src/pages/DeployHarvest.tsx` still references `'miami'`/`'Ratios'` as string args. It's unrouted and compiles, so it was left as-is; if Deploy/Harvest is ever re-enabled, those need revisiting.
+- The archived `client/src/pages/DeployHarvest.tsx` references `'miami'`/`'Ratios'` as string args. `'miami'` now resolves to a real circuit again (Multiplication); `'Ratios'` still falls back to Addition (the Ratios generator is gone). Unrouted and compiles; revisit if Deploy/Harvest is re-enabled.
 - `package.json` version is still `1.0.0`; the displayed app version lives elsewhere (e.g. `capacitor.config.ts` had `1.1.0`). No version bump was done this session.

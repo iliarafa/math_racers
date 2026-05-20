@@ -19,12 +19,16 @@ import circuitSuzukaBlack from "@/assets/circuit_suzuka_black.png";
 import circuitMonacoBlack from "@/assets/circuit_monaco_black.png";
 import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
+import trackMiami from "@/assets/miami_track.png";
+import trackCanada from "@/assets/track_canada.png";
+import flagUs from "@/assets/flag_us.jpg";
+import flagCanada from "@/assets/flag_canada.png";
 
 const FLAG_IMAGES: { [id: string]: string } = {
-  monza: flagItaly, spa: flagBelgium, monaco: flagMonaco, suzuka: flagJapan, silverstone: flagUK,
+  monza: flagItaly, spa: flagBelgium, monaco: flagMonaco, suzuka: flagJapan, silverstone: flagUK, miami: flagUs, canada: flagCanada,
 };
 const CIRCUIT_MAP_IMAGES: { [id: string]: string } = {
-  monza: circuitMonzaBlack, spa: circuitSpaBlack, monaco: circuitMonacoBlack, suzuka: circuitSuzukaBlack, silverstone: circuitSilverstoneBlack,
+  monza: circuitMonzaBlack, spa: circuitSpaBlack, monaco: circuitMonacoBlack, suzuka: circuitSuzukaBlack, silverstone: circuitSilverstoneBlack, miami: trackMiami, canada: trackCanada,
 };
 
 type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
@@ -34,6 +38,14 @@ const DIFFICULTY_OPTIONS: { label: string; value: Difficulty }[] = [
   { label: 'F3', value: 'easy' },
   { label: 'F2', value: 'medium' },
   { label: 'F1', value: 'hard' },
+];
+
+const OPERATION_OPTIONS: { label: string; type: string }[] = [
+  { label: '+', type: 'Addition' },
+  { label: '−', type: 'Subtraction' },
+  { label: '×', type: 'Multiplication' },
+  { label: '÷', type: 'Division' },
+  { label: 'x=?', type: 'Variables' },
 ];
 
 // Precompute blob URLs for team car previews (module-level, created once)
@@ -79,6 +91,8 @@ export default function LaneRacer() {
   const [currentCircuitIndex, setCurrentCircuitIndex] = useState(0);
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('beginner');
   const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+  const [currentOpIndex, setCurrentOpIndex] = useState(0);
+  const selectedOperation = OPERATION_OPTIONS[currentOpIndex].type;
   const [currentTeamIndex, setCurrentTeamIndex] = useState(() => {
     const saved = localStorage.getItem('lastSelectedTeam');
     const idx = TEAMS.findIndex(t => t.id === saved);
@@ -120,6 +134,7 @@ export default function LaneRacer() {
   const swipeStartXRef = useRef<number | null>(null);
   const teamSwipeStartXRef = useRef<number | null>(null);
   const levelSwipeStartXRef = useRef<number | null>(null);
+  const opSwipeStartXRef = useRef<number | null>(null);
 
   // Auto-submit leaderboard entry when race finishes
   useEffect(() => {
@@ -128,13 +143,12 @@ export default function LaneRacer() {
     const accuracy = questionNum > 0 ? Math.round((correctCount / questionNum) * 100) : 0;
     const mistakes = raceLength - correctCount;
     const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, selectedDifficulty);
-    const circuitOperation = CIRCUITS.find(c => c.id === selectedCircuit.id)?.type || 'Addition';
 
     const submission = {
       playerId: state.playerId,
       circuitId: selectedCircuit.id,
       circuitName: selectedCircuit.name,
-      operation: circuitOperation,
+      operation: selectedOperation,
       score,
       totalTime,
       mistakes,
@@ -156,13 +170,13 @@ export default function LaneRacer() {
   }, [gameStatus, submitted, showNamePrompt, pendingSubmission]);
 
   const spawnQuestion = useCallback(() => {
-    const q = generateQuestion(selectedCircuit.id, selectedDifficulty, false, 0, prevDisplayRef.current);
+    const q = generateQuestion(selectedCircuit.id, selectedDifficulty, false, 0, prevDisplayRef.current, selectedOperation);
     prevDisplayRef.current = q.display;
     const wrong = generateWrongAnswers(q.answer, 2);
     setQuestionDisplay(q.display);
     setQuestionNum(prev => prev + 1);
     engineRef.current?.spawnTokens(q.answer, wrong);
-  }, [selectedCircuit.id, selectedDifficulty]);
+  }, [selectedCircuit.id, selectedDifficulty, selectedOperation]);
 
   const handleCorrect = useCallback(() => {
     setCorrectCount(prev => prev + 1);
@@ -414,6 +428,8 @@ export default function LaneRacer() {
             const goToPrevTeam = () => { const n = (currentTeamIndex - 1 + TEAMS.length) % TEAMS.length; setCurrentTeamIndex(n); setSelectedTeam(TEAMS[n].id); localStorage.setItem('lastSelectedTeam', TEAMS[n].id); };
             const goToNextTrack = () => { const n = (currentCircuitIndex + 1) % CIRCUIT_OPTIONS.length; setCurrentCircuitIndex(n); setSelectedCircuit(CIRCUIT_OPTIONS[n]); };
             const goToPrevTrack = () => { const n = (currentCircuitIndex - 1 + CIRCUIT_OPTIONS.length) % CIRCUIT_OPTIONS.length; setCurrentCircuitIndex(n); setSelectedCircuit(CIRCUIT_OPTIONS[n]); };
+            const goToNextOp = () => setCurrentOpIndex((currentOpIndex + 1) % OPERATION_OPTIONS.length);
+            const goToPrevOp = () => setCurrentOpIndex((currentOpIndex - 1 + OPERATION_OPTIONS.length) % OPERATION_OPTIONS.length);
 
             const makeSwipeHandlers = (ref: React.MutableRefObject<number | null>, onNext: () => void, onPrev: () => void) => ({
               onTouchStart: (e: React.TouchEvent) => { ref.current = e.touches[0].clientY; },
@@ -428,6 +444,7 @@ export default function LaneRacer() {
             const levelSwipe = makeSwipeHandlers(levelSwipeStartXRef, goToNextLevel, goToPrevLevel);
             const teamSwipe = makeSwipeHandlers(teamSwipeStartXRef, goToNextTeam, goToPrevTeam);
             const trackSwipe = makeSwipeHandlers(swipeStartXRef, goToNextTrack, goToPrevTrack);
+            const opSwipe = makeSwipeHandlers(opSwipeStartXRef, goToNextOp, goToPrevOp);
 
             const drumStyle: React.CSSProperties = {
               height: drumItemH * 3,
@@ -450,7 +467,7 @@ export default function LaneRacer() {
 
             return (
               <div
-                className="w-full max-w-sm rounded-2xl px-3 py-4"
+                className="w-full max-w-md rounded-2xl px-3 py-4"
                 style={{
                   backgroundColor: 'rgba(255,255,255,0.08)',
                   backdropFilter: 'blur(16px)',
@@ -565,6 +582,43 @@ export default function LaneRacer() {
                               color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
                             }}>
                               {circuit.name}
+                            </span>
+                            {offset === 1 && <ChevronDown size={14} className="text-white/30 mt-1" />}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Vertical divider */}
+                  <div className="w-px self-stretch" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }} />
+
+                  {/* MATH Drum */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Math</div>
+                    <div style={drumStyle} className="w-full" {...opSwipe}>
+                      <div style={activeHighlight} />
+                      {[-1, 0, 1].map(offset => {
+                        const idx = getIdx(currentOpIndex, offset, OPERATION_OPTIONS.length);
+                        const op = OPERATION_OPTIONS[idx];
+                        const isActive = offset === 0;
+                        return (
+                          <motion.div
+                            key={`op-${currentOpIndex}-${offset}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: isActive ? 1 : 0.3, y: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex flex-col items-center justify-center cursor-pointer"
+                            style={{ height: drumItemH }}
+                            onClick={() => { if (offset === -1) goToPrevOp(); else if (offset === 1) goToNextOp(); }}
+                          >
+                            {offset === -1 && <ChevronUp size={14} className="text-white/30 mb-1" />}
+                            <span className="font-bold uppercase tracking-wider text-center" style={{
+                              fontFamily: 'Oxanium, sans-serif',
+                              fontSize: isActive ? '1rem' : '0.8rem',
+                              color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                            }}>
+                              {op.label}
                             </span>
                             {offset === 1 && <ChevronDown size={14} className="text-white/30 mt-1" />}
                           </motion.div>

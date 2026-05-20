@@ -79,7 +79,8 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   melbourne: 58,
   china: 56,
   bahrain: 57,
-  canada: 70
+  canada: 70,
+  miami: 57
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -161,6 +162,22 @@ export const CIRCUITS: Circuit[] = [
       s2: "M 75 35 Q 55 35 55 65 Q 55 95 80 95 L 100 95 L 120 70 L 140 25 Q 150 5 170 5 L 200 5 Q 225 5 230 25 L 230 40 Q 230 60 250 65 L 265 60 Q 285 55 285 85 L 285 115",
       s3: "M 285 115 Q 285 140 255 140 L 220 140 L 200 115 L 190 125 L 175 125 Q 155 125 150 105 L 145 25"
     }
+  },
+  {
+    id: "canada",
+    name: "CANADA",
+    type: "Addition",
+    description: "Circuit Gilles-Villeneuve",
+    mapUrl: "",
+    paths: { s1: "", s2: "", s3: "" }
+  },
+  {
+    id: "miami",
+    name: "MIAMI",
+    type: "Multiplication",
+    description: "Miami International Autodrome",
+    mapUrl: "",
+    paths: { s1: "", s2: "", s3: "" }
   }
 ];
 

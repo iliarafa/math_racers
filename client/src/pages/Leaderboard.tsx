@@ -23,9 +23,9 @@ interface LeaderboardEntry {
 }
 
 const OPERATIONS = ['All', 'Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'];
-const CIRCUIT_FILTERS = ['All', 'Monza', 'Spa', 'Monaco', 'Suzuka', 'Silverstone'];
+const CIRCUIT_FILTERS = ['All', 'Monza', 'Spa', 'Monaco', 'Suzuka', 'Silverstone', 'Miami', 'Canada'];
 const CIRCUIT_ID_MAP: Record<string, string> = {
-  Monza: 'monza', Spa: 'spa', Monaco: 'monaco', Suzuka: 'suzuka', Silverstone: 'silverstone',
+  Monza: 'monza', Spa: 'spa', Monaco: 'monaco', Suzuka: 'suzuka', Silverstone: 'silverstone', Miami: 'miami', Canada: 'canada',
 };
 
 const DIFFICULTY_LABELS: Record<string, string> = {
