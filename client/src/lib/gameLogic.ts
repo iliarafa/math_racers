@@ -987,3 +987,42 @@ export function calculateLaneRacerScore(
   const score = (raceLength / timeInSeconds) * (correctCount / raceLength) * multiplier * 1000;
   return Math.min(Math.round(score), 100000);
 }
+
+// --- Rival pacing (Lane Racer "sense of racing") -------------------------
+// Deterministic per-question bot time (no randomness/complexity) used only to
+// pace the on-screen rival marker. Mirrors the base + operation modifier used
+// in calculateBotTime so the rival feels consistent with the difficulty.
+export function estimateBotQuestionMs(difficulty: Difficulty, operation: string): number {
+  const base: Record<Difficulty, number> = {
+    beginner: 2500,
+    easy: 3500,
+    medium: 4500,
+    hard: 6000,
+  };
+  const opMod: Record<string, number> = {
+    Addition: 0.85,
+    Subtraction: 0.95,
+    Multiplication: 1.15,
+    Division: 1.20,
+    Variables: 1.25,
+  };
+  return Math.round(base[difficulty] * (opMod[operation] ?? 1.0));
+}
+
+export function estimateRivalRaceTimeMs(
+  raceLength: number,
+  difficulty: Difficulty,
+  operation: string,
+): number {
+  return raceLength * estimateBotQuestionMs(difficulty, operation);
+}
+
+export function rivalProgress(elapsedMs: number, rivalTargetMs: number): number {
+  if (rivalTargetMs <= 0) return 0;
+  return Math.max(0, Math.min(1, elapsedMs / rivalTargetMs));
+}
+
+// 1 (ahead/tied) or 2 (behind) relative to the rival.
+export function rivalPosition(playerProgress: number, rivalProg: number): 1 | 2 {
+  return playerProgress >= rivalProg ? 1 : 2;
+}

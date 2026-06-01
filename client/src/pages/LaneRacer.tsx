@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LENGTH, SIM_LAP_COUNTS, calculateLaneRacerScore } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LENGTH, SIM_LAP_COUNTS, calculateLaneRacerScore, estimateRivalRaceTimeMs, rivalProgress, rivalPosition } from "@/lib/gameLogic";
 import type { Difficulty } from "@/lib/gameLogic";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
@@ -262,17 +262,23 @@ export default function LaneRacer() {
       onWrong: handleWrong,
       onMiss: handleMiss,
       onFinished: handleFinished,
-    }, raceLength, selectedTeam);
+    }, raceLength, selectedTeam, selectedDifficulty);
 
     engineRef.current = engine;
     startTimeRef.current = Date.now();
     engine.start();
 
     window.addEventListener('resize', resize);
+    // Keep the canvas matched to the wrapper's current size — the wrapper can
+    // shrink after mount (layout settle), which would otherwise leave the
+    // canvas overflowing and the bottom HUD (speedometer) clipped.
+    const resizeObserver = new ResizeObserver(resize);
+    if (wrapper) resizeObserver.observe(wrapper);
     return () => {
       engine.destroy();
       engineRef.current = null;
       window.removeEventListener('resize', resize);
+      resizeObserver.disconnect();
     };
   }, [gameStatus, raceLength, handleCorrect, handleWrong, handleMiss, handleFinished]);
 
@@ -372,6 +378,18 @@ export default function LaneRacer() {
     }, 16);
     return () => clearInterval(interval);
   }, [gameStatus]);
+
+  const rivalTargetMs = useMemo(
+    () => estimateRivalRaceTimeMs(raceLength, selectedDifficulty, selectedOperation),
+    [raceLength, selectedDifficulty, selectedOperation],
+  );
+  const playerProgress = raceLength > 0 ? Math.min(1, questionNum / raceLength) : 0;
+  const rivalProg = rivalProgress(elapsedMs, rivalTargetMs);
+  const position = rivalPosition(playerProgress, rivalProg);
+  // Rival marker car — a livery distinct from the player's selected team
+  const rivalTeamId = (TEAMS.find((t) => t.id !== selectedTeam)?.id ?? 'ferrari') as TeamId;
+  // Progress line color: green when ahead of the rival marker, yellow when behind
+  const progressColor = position === 1 ? '#19c37d' : '#ffcc00';
 
   // Setup — single page with series + track selection
   if (gameStatus === 'setup') {
@@ -837,8 +855,17 @@ export default function LaneRacer() {
           {questionDisplay || ''}
         </div>
 
+        {/* Rival progress + position */}
+        <div style={{ background: 'black', padding: '0 12px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ position: 'relative', flex: 1, height: 6, background: 'rgba(255,255,255,0.16)', borderRadius: 4 }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${playerProgress * 100}%`, background: progressColor, borderRadius: 4, boxShadow: `0 0 6px ${progressColor}` }} />
+            <img src={TEAM_PREVIEW_URLS[rivalTeamId]} alt="rival" style={{ position: 'absolute', top: '50%', left: `${rivalProg * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none' }} />
+          </div>
+          <span style={{ color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Oxanium, sans-serif' }}>P{position}</span>
+        </div>
+
         {/* Canvas */}
-        <div ref={canvasWrapperRef} className="flex-1 overflow-hidden">
+        <div ref={canvasWrapperRef} className="flex-1 min-h-0 overflow-hidden">
           <canvas
             ref={canvasRef}
             style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
