@@ -46,8 +46,6 @@ import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
-import trackCanada from "@/assets/track_canada.png";
-import flagCanada from "@/assets/flag_canada.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageCar from "@/assets/garage_car.jpeg";
@@ -59,14 +57,16 @@ import chooseTrackVideo from "@assets/choose_TRACK.mp4";
 // Also add the new track/flag assets as imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 const CURRENT_GRAND_PRIX = {
-  circuitId: 'canada',
-  name: 'CANADA',
-  country: 'CANADA',
-  trackImage: trackCanada,
-  flagImage: flagCanada,
-  rainProbability: 0.40,
-  simLapCount: 70,
-  gradient: 'linear-gradient(90deg, #D52B1E 0%, #FFFFFF 50%, #D52B1E 100%)',
+  round: 6,
+  circuitId: 'monaco',
+  name: 'MONACO',
+  country: 'MONACO',
+  trackImage: trackMonaco,
+  flagImage: flagMonaco,
+  rainProbability: 0.25,
+  simLapCount: 78,
+  gradient: 'linear-gradient(90deg, #CE1126 0%, #FFFFFF 50%, #CE1126 100%)',
+  welcomeBlurb: 'This week we take you to the Circuit de Monaco.',
 };
 // ───────────────────────────────────────────────────────────────────
 
@@ -95,7 +95,6 @@ const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } 
   "monaco": { red: circuitMonacoRed, black: circuitMonacoBlack },
   "silverstone": { red: circuitSilverstoneRed, black: circuitSilverstoneBlack },
   "spa": { red: circuitSpaRed, black: circuitSpaBlack },
-  "canada": { red: trackCanada, black: trackCanada },
 };
 
 // Custom checkered flag icon component
@@ -149,9 +148,9 @@ const createGrandPrixCircuit = (op: string): Circuit => ({
   paths: { s1: '', s2: '', s3: '' }
 });
 
-const createCanadaCircuit = (op: string): Circuit => ({
-  id: 'canada',
-  name: 'CANADA',
+const createFreePracticeCircuit = (op: string): Circuit => ({
+  id: CURRENT_GRAND_PRIX.circuitId,
+  name: CURRENT_GRAND_PRIX.name,
   type: op,
   description: 'Free Practice',
   mapUrl: '',
@@ -977,7 +976,7 @@ export default function Game() {
       if (isGrandPrix) {
         setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
       } else if (isPreSeasonTesting) {
-        setSelectedCircuit(createCanadaCircuit(selectedOperation));
+        setSelectedCircuit(createFreePracticeCircuit(selectedOperation));
       } else {
         setSelectedCircuit(CIRCUITS[0]);
       }
@@ -1018,7 +1017,7 @@ export default function Game() {
     if (isGrandPrix) {
       setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
     } else if (isPreSeasonTesting) {
-      setSelectedCircuit(createCanadaCircuit(selectedOperation));
+      setSelectedCircuit(createFreePracticeCircuit(selectedOperation));
     }
     setGameStatus('selecting');
   };
@@ -1977,7 +1976,7 @@ export default function Game() {
               style={modeCardStyle}
             >
               <span className="block" style={modeTitleStyle}>FREE PRACTICE</span>
-              <span className="block" style={modeSubStyle}>ROUND 5 / CANADA</span>
+              <span className="block" style={modeSubStyle}>{`ROUND ${CURRENT_GRAND_PRIX.round} / ${CURRENT_GRAND_PRIX.name}`}</span>
             </motion.button>
 
             {/* Sim Racing Card */}
@@ -2060,7 +2059,7 @@ export default function Game() {
           >
             {isPreSeasonTesting
               ? '100 questions with adaptive difficulty and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.'
-              : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. This week we take you to the Circuit Gilles-Villeneuve.`}
+              : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`}
           </p>
           <h3
             className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-white"
@@ -2081,7 +2080,7 @@ export default function Game() {
                   setSelectedDriver(kartingDriver);
                   localStorage.setItem('lastSelectedDriverId', kartingDriver.id);
                   if (isPreSeasonTesting) {
-                    setSelectedCircuit(createCanadaCircuit(op.type));
+                    setSelectedCircuit(createFreePracticeCircuit(op.type));
                     setIsPracticeMode(true);
                     setRaceMode('solo');
                     setSelectedTab('testing');
@@ -2279,7 +2278,7 @@ export default function Game() {
             /* Pre-Season Testing Card */
             (<div className="flex flex-col items-center">
               <motion.div
-                key={`pst-canada-card`}
+                key={`pst-${CURRENT_GRAND_PRIX.circuitId}-card`}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.2 }}
@@ -2289,7 +2288,7 @@ export default function Game() {
                   border: '1px solid rgba(255,255,255,0.2)',
                   boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
                 }}
-                data-testid="hero-card-pst-canada"
+                data-testid={`hero-card-pst-${CURRENT_GRAND_PRIX.circuitId}`}
               >
                 {/* Header - Circuit & Flag */}
                 <div className="flex items-center justify-center gap-3 mb-4">
@@ -2297,11 +2296,11 @@ export default function Game() {
                     className="text-2xl font-bold uppercase tracking-wider text-white"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
-                    CANADA
+                    {CURRENT_GRAND_PRIX.name}
                   </h2>
                   <img
-                    src={flagCanada}
-                    alt="Canada flag"
+                    src={CURRENT_GRAND_PRIX.flagImage}
+                    alt={`${CURRENT_GRAND_PRIX.country} flag`}
                     className="h-5 w-7 object-cover rounded-sm relative -top-0.5"
                   />
                 </div>
@@ -2309,8 +2308,8 @@ export default function Game() {
                 {/* Track Map */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6">
                   <img
-                    src={trackCanada}
-                    alt="Canada circuit"
+                    src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+                    alt={`${CURRENT_GRAND_PRIX.name} circuit`}
                     className="h-32 md:h-52 object-contain"
                     style={{ maxWidth: '280px', filter: 'invert(1)' }}
                   />
