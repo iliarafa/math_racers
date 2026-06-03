@@ -16,7 +16,11 @@
       "mcp__plugin_playwright_playwright__browser_navigate",
       "Bash(/Users/iliasrafailidis/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.2/scripts/start-server.sh --project-dir /Users/iliasrafailidis/development/math_racers)",
       "Bash(find /Users/iliasrafailidis/development/math_racers -type f \\\\\\(-name *.mp4 -o -name *.webm -o -name *.mov -o -name *.avi \\\\\\))",
-      "Bash(file:*)"
+      "Bash(file:*)",
+      "Bash(lsof -nP -iTCP:8081 -sTCP:LISTEN)",
+      "Bash(git fetch *)",
+      "Skill(update-config)",
+      "Skill(update-config:*)"
     ]
   },
   "hooks": {

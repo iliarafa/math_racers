@@ -5,3 +5,8 @@ server/public
 vite.config.ts.*
 *.tar.gz
 build/
+.playwright-mcp/
+.superpowers/
+/harvest-mode.png
+/hub-screenshot.png
+/racing-screenshot.png

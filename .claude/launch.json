@@ -4,8 +4,16 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev:client"],
-      "port": 5000
+      "runtimeArgs": ["run", "dev"],
+      "port": 8081,
+      "autoPort": false
+    },
+    {
+      "name": "lane-racer",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd ../lane-racer && npm run dev -- --port 5181 --host"],
+      "port": 5181,
+      "autoPort": false
     }
   ]
 }
