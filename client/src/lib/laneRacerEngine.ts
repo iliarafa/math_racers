@@ -100,6 +100,7 @@ export class LaneRacerEngine {
   private carImage: HTMLImageElement;
   private asphaltPattern: CanvasPattern | null = null;
   private difficulty: Difficulty;
+  private safeBottomInset: number = 0;
 
   constructor(canvas: HTMLCanvasElement, callbacks: LaneRacerCallbacks, totalQuestions: number, teamId: TeamId = 'mercedes', difficulty: Difficulty = 'beginner') {
     this.canvas = canvas;
@@ -171,6 +172,10 @@ export class LaneRacerEngine {
   start() {
     this.lastTimestamp = performance.now();
     this.loop(this.lastTimestamp);
+  }
+
+  setSafeBottomInset(px: number) {
+    this.safeBottomInset = px;
   }
 
   destroy() {
@@ -595,16 +600,17 @@ export class LaneRacerEngine {
     const ctx = this.ctx;
     const kmh = speedToKmh(this.state.speed);
     const pad = Math.round(w * 0.045);
+    const yBase = h - pad - this.safeBottomInset;
 
     // Readout
     ctx.textAlign = 'right';
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.font = `${Math.round(w * 0.022)}px Oxanium, sans-serif`;
-    ctx.fillText('KM/H', w - pad, h - pad);
+    ctx.fillText('KM/H', w - pad, yBase);
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${Math.round(w * 0.05)}px Oxanium, sans-serif`;
-    ctx.fillText(`${kmh}`, w - pad, h - pad - Math.round(w * 0.026));
+    ctx.fillText(`${kmh}`, w - pad, yBase - Math.round(w * 0.026));
   }
 
   private drawCar(x: number, y: number, w: number = CAR_WIDTH, h: number = CAR_HEIGHT) {

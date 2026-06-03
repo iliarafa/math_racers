@@ -266,9 +266,23 @@ export default function LaneRacer() {
 
     engineRef.current = engine;
     startTimeRef.current = Date.now();
+
+    // Measure the actual bottom safe-area inset (home indicator height) by
+    // reading a probe element whose padding-bottom is env(safe-area-inset-bottom).
+    // The padding resolves to a real px value, then we add a small visual margin.
+    const measureSafeBottom = () => {
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;visibility:hidden;padding-bottom:env(safe-area-inset-bottom);';
+      document.body.appendChild(probe);
+      const inset = parseFloat(getComputedStyle(probe).paddingBottom) || 0;
+      document.body.removeChild(probe);
+      engine.setSafeBottomInset(inset + 28);
+    };
+    measureSafeBottom();
     engine.start();
 
     window.addEventListener('resize', resize);
+    window.addEventListener('resize', measureSafeBottom);
     // Keep the canvas matched to the wrapper's current size — the wrapper can
     // shrink after mount (layout settle), which would otherwise leave the
     // canvas overflowing and the bottom HUD (speedometer) clipped.
@@ -278,6 +292,7 @@ export default function LaneRacer() {
       engine.destroy();
       engineRef.current = null;
       window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', measureSafeBottom);
       resizeObserver.disconnect();
     };
   }, [gameStatus, raceLength, handleCorrect, handleWrong, handleMiss, handleFinished]);
