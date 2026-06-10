@@ -21,14 +21,16 @@ import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import trackMiami from "@/assets/miami_track.png";
 import trackCanada from "@/assets/track_canada.png";
+import circuitCatalunya from "@/assets/circuit_catalunya.png";
 import flagUs from "@/assets/flag_us.jpg";
 import flagCanada from "@/assets/flag_canada.png";
+import flagSpain from "@/assets/flag_spain.png";
 
 const FLAG_IMAGES: { [id: string]: string } = {
-  monza: flagItaly, spa: flagBelgium, monaco: flagMonaco, suzuka: flagJapan, silverstone: flagUK, miami: flagUs, canada: flagCanada,
+  monza: flagItaly, spa: flagBelgium, monaco: flagMonaco, suzuka: flagJapan, silverstone: flagUK, miami: flagUs, canada: flagCanada, barcelona: flagSpain,
 };
 const CIRCUIT_MAP_IMAGES: { [id: string]: string } = {
-  monza: circuitMonzaBlack, spa: circuitSpaBlack, monaco: circuitMonacoBlack, suzuka: circuitSuzukaBlack, silverstone: circuitSilverstoneBlack, miami: trackMiami, canada: trackCanada,
+  monza: circuitMonzaBlack, spa: circuitSpaBlack, monaco: circuitMonacoBlack, suzuka: circuitSuzukaBlack, silverstone: circuitSilverstoneBlack, miami: trackMiami, canada: trackCanada, barcelona: circuitCatalunya,
 };
 
 type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
@@ -45,7 +47,7 @@ const OPERATION_OPTIONS: { label: string; type: string }[] = [
   { label: '−', type: 'Subtraction' },
   { label: '×', type: 'Multiplication' },
   { label: '÷', type: 'Division' },
-  { label: 'x=?', type: 'Variables' },
+  { label: 'f(x)', type: 'Variables' },
 ];
 
 // Precompute blob URLs for team car previews (module-level, created once)
