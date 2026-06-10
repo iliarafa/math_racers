@@ -45,6 +45,8 @@ import circuitSilverstoneRed from "@/assets/circuit_silverstone_red.png";
 import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
+import circuitCatalunya from "@/assets/circuit_catalunya.png";
+import flagSpain from "@/assets/flag_spain.png";
 import trackBahrain from "@/assets/track_bahrain.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
@@ -57,16 +59,16 @@ import chooseTrackVideo from "@assets/choose_TRACK.mp4";
 // Also add the new track/flag assets as imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 const CURRENT_GRAND_PRIX = {
-  round: 6,
-  circuitId: 'monaco',
-  name: 'MONACO',
-  country: 'MONACO',
-  trackImage: trackMonaco,
-  flagImage: flagMonaco,
-  rainProbability: 0.25,
-  simLapCount: 78,
-  gradient: 'linear-gradient(90deg, #CE1126 0%, #FFFFFF 50%, #CE1126 100%)',
-  welcomeBlurb: 'This week we take you to the Circuit de Monaco.',
+  round: 7,
+  circuitId: 'barcelona',
+  name: 'BARCELONA',
+  country: 'SPAIN',
+  trackImage: circuitCatalunya,
+  flagImage: flagSpain,
+  rainProbability: 0.10,
+  simLapCount: 66,
+  gradient: 'linear-gradient(90deg, #AA151B 0%, #F1BF00 50%, #AA151B 100%)',
+  welcomeBlurb: 'This week we take you to the Circuit de Barcelona-Catalunya.',
 };
 // ───────────────────────────────────────────────────────────────────
 
@@ -95,6 +97,7 @@ const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } 
   "monaco": { red: circuitMonacoRed, black: circuitMonacoBlack },
   "silverstone": { red: circuitSilverstoneRed, black: circuitSilverstoneBlack },
   "spa": { red: circuitSpaRed, black: circuitSpaBlack },
+  "barcelona": { red: circuitCatalunya, black: circuitCatalunya },
 };
 
 // Custom checkered flag icon component

@@ -80,7 +80,8 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   china: 56,
   bahrain: 57,
   canada: 70,
-  miami: 57
+  miami: 57,
+  barcelona: 66
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -176,6 +177,14 @@ export const CIRCUITS: Circuit[] = [
     name: "MIAMI",
     type: "Multiplication",
     description: "Miami International Autodrome",
+    mapUrl: "",
+    paths: { s1: "", s2: "", s3: "" }
+  },
+  {
+    id: "barcelona",
+    name: "BARCELONA",
+    type: "Variables",
+    description: "Circuit de Barcelona-Catalunya",
     mapUrl: "",
     paths: { s1: "", s2: "", s3: "" }
   }
