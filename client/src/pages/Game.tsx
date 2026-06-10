@@ -45,32 +45,13 @@ import circuitSilverstoneRed from "@/assets/circuit_silverstone_red.png";
 import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
-import circuitCatalunya from "@/assets/circuit_catalunya.png";
-import flagSpain from "@/assets/flag_spain.png";
 import trackBahrain from "@/assets/track_bahrain.png";
+import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import garageCar from "@/assets/garage_car.jpeg";
 import trackIllustration from "@/assets/track_illustration.jpeg";
 import chooseTrackVideo from "@assets/choose_TRACK.mp4";
-
-// ── Grand Prix Circuit Config ──────────────────────────────────────
-// Change these fields each week to follow the F1 calendar.
-// Also add the new track/flag assets as imports above and update
-// SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
-const CURRENT_GRAND_PRIX = {
-  round: 7,
-  circuitId: 'barcelona',
-  name: 'BARCELONA',
-  country: 'SPAIN',
-  trackImage: circuitCatalunya,
-  flagImage: flagSpain,
-  rainProbability: 0.10,
-  simLapCount: 66,
-  gradient: 'linear-gradient(90deg, #AA151B 0%, #F1BF00 50%, #AA151B 100%)',
-  welcomeBlurb: 'This week we take you to the Circuit de Barcelona-Catalunya.',
-};
-// ───────────────────────────────────────────────────────────────────
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
   "monza": flagItaly,
@@ -97,7 +78,7 @@ const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } 
   "monaco": { red: circuitMonacoRed, black: circuitMonacoBlack },
   "silverstone": { red: circuitSilverstoneRed, black: circuitSilverstoneBlack },
   "spa": { red: circuitSpaRed, black: circuitSpaBlack },
-  "barcelona": { red: circuitCatalunya, black: circuitCatalunya },
+  [CURRENT_GRAND_PRIX.circuitId]: { red: CURRENT_GRAND_PRIX.trackImage, black: CURRENT_GRAND_PRIX.trackImage },
 };
 
 // Custom checkered flag icon component
@@ -1968,6 +1949,38 @@ export default function Game() {
         {/* Mode Cards */}
         <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
           <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
+            {/* Weekend Briefing Banner — links to /grand-prix */}
+            <Link
+              href="/grand-prix"
+              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
+              data-testid="link-weekend-briefing"
+              style={{
+                background: CURRENT_GRAND_PRIX.gradient,
+                borderRadius: '14px',
+                padding: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                color: '#1a1a1a',
+                boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
+                textDecoration: 'none',
+              }}
+            >
+              <img
+                src={CURRENT_GRAND_PRIX.flagImage}
+                alt={`${CURRENT_GRAND_PRIX.country} flag`}
+                style={{ width: 30, height: 22, borderRadius: 3, objectFit: 'cover', flexShrink: 0 }}
+              />
+              <div style={{ flex: 1, lineHeight: 1.1, fontFamily: 'Oxanium, sans-serif' }}>
+                <div style={{ fontSize: '9px', letterSpacing: '0.3em', fontWeight: 800, opacity: 0.85 }}>
+                  WEEKEND BRIEFING
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '0.06em', marginTop: '2px' }}>
+                  {CURRENT_GRAND_PRIX.name}
+                </div>
+              </div>
+            </Link>
+
             {/* Free Practice Card */}
             <motion.button
               onClick={() => {

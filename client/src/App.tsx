@@ -21,6 +21,7 @@ import Regulations from "@/pages/Regulations";
 import RacerLog from "@/pages/RacerLog";
 import Leaderboard from "@/pages/Leaderboard";
 import LaneRacer from "@/pages/LaneRacer";
+import GrandPrixInfo from "@/pages/GrandPrixInfo";
 // import DeployHarvest from "@/pages/DeployHarvest"; // archived — re-enable later
 import Hub from "@/pages/Hub";
 
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/game" component={Game} />
       <Route path="/garage" component={Garage} />
       <Route path="/strategy" component={StrategyGuide} />
+      <Route path="/grand-prix" component={GrandPrixInfo} />
       <Route path="/reaction" component={ReactionTest} />
       <Route path="/multiplayer" component={Multiplayer} />
       <Route path="/regulations" component={Regulations} />
