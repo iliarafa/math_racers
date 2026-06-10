@@ -7,6 +7,7 @@ interface GameLayoutProps {
   children: React.ReactNode;
   trackName?: string;
   hideHeader?: boolean;
+  hideLogo?: boolean;
   lockViewport?: boolean;
   darkBackground?: boolean;
   hideGarageButton?: boolean;
@@ -16,7 +17,7 @@ interface GameLayoutProps {
   backHref?: string;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, lockViewport = false, darkBackground = false, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref }: GameLayoutProps) {
   return (
     <div className={cn(
       "text-foreground flex flex-col",
@@ -46,13 +47,15 @@ export function GameLayout({ children, trackName, hideHeader = false, lockViewpo
                 </button>
               </Link>
             )}
-            <Link href="/">
-              <img
-                src={logoImage}
-                alt="Math Racer"
-                className="h-8 md:h-10 w-auto cursor-pointer hover:opacity-70 transition-opacity"
-              />
-            </Link>
+            {!hideLogo && (
+              <Link href="/">
+                <img
+                  src={logoImage}
+                  alt="Math Racer"
+                  className="h-8 md:h-10 w-auto cursor-pointer hover:opacity-70 transition-opacity"
+                />
+              </Link>
+            )}
             {headerAfterLogo}
             {trackName && (
               <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground bg-secondary px-3 py-1 rounded-full">

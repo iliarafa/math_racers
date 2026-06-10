@@ -1,13 +1,13 @@
+import { useState } from "react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { getGrandPrixHistory, PodiumEntry, QualiEntry } from "@/lib/grandPrixHistory";
 
-const RACE_POS_LABELS = ['P1', 'P2', 'P3'] as const;
-const QUALI_POS_LABELS = ['POLE', '2ND', '3RD'] as const;
+const COLLAPSED_ROWS = 3;
 
 function FactRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 py-2 border-b border-white/10">
+    <div className="flex items-baseline justify-between gap-4 py-3">
       <span className="text-[10px] uppercase tracking-widest text-white/40 font-mono">{label}</span>
       <span className="text-sm text-white text-right" style={{ fontFamily: 'Oxanium, sans-serif' }}>
         {value}
@@ -18,13 +18,15 @@ function FactRow({ label, value }: { label: string; value: string }) {
 
 function ResultTable({
   title,
-  posLabels,
   rows,
 }: {
   title: string;
-  posLabels: readonly string[];
   rows: readonly (PodiumEntry | QualiEntry)[];
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasMore = rows.length > COLLAPSED_ROWS;
+  const visibleRows = expanded ? rows : rows.slice(0, COLLAPSED_ROWS);
+
   return (
     <section className="mt-8">
       <h2
@@ -33,19 +35,19 @@ function ResultTable({
       >
         {title}
       </h2>
-      <div>
-        <div className="grid grid-cols-[3rem_1fr_6rem_5.5rem] gap-2 px-2 pb-1 text-[10px] uppercase tracking-widest text-white/30 font-mono">
+      <div className="rounded-lg bg-black px-4 py-2">
+        <div className="grid grid-cols-[3rem_1fr_6rem_5.5rem] gap-2 pb-1 text-[10px] uppercase tracking-widest text-white/30 font-mono">
           <span>Pos</span>
           <span>Driver</span>
           <span>Team</span>
           <span className="text-right">Time</span>
         </div>
-        {rows.map((row, i) => (
+        {visibleRows.map((row, i) => (
           <div
             key={i}
-            className="grid grid-cols-[3rem_1fr_6rem_5.5rem] gap-2 px-2 py-2 text-sm border-b border-white/5"
+            className="grid grid-cols-[3rem_1fr_6rem_5.5rem] gap-2 py-3 text-sm"
           >
-            <span className="text-white/60 font-mono text-xs leading-5">{posLabels[i]}</span>
+            <span className="text-white/60 font-mono text-xs leading-5">{`P${i + 1}`}</span>
             <span className="text-white">{row.name}</span>
             <span className="text-white/60 text-xs leading-5">{row.team}</span>
             <span className="text-white/80 font-mono text-xs text-right leading-5">
@@ -53,6 +55,16 @@ function ResultTable({
             </span>
           </div>
         ))}
+        {hasMore && (
+          <button
+            type="button"
+            onClick={() => setExpanded(v => !v)}
+            className="w-full mt-2 py-3 text-[10px] uppercase tracking-[0.25em] text-white/50 hover:text-white/80 transition-colors border-t border-white/10"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            {expanded ? 'Show less' : `Show all (${rows.length})`}
+          </button>
+        )}
       </div>
     </section>
   );
@@ -63,12 +75,12 @@ export default function GrandPrixInfo() {
   const history = getGrandPrixHistory(gp.circuitId);
 
   return (
-    <GameLayout hideGarageButton lockViewport backHref="/game" darkBackground>
+    <GameLayout hideLogo hideGarageButton lockViewport backHref="/game" darkBackground>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24">
         <div className="max-w-2xl md:max-w-3xl mx-auto">
 
           {/* Hero */}
-          <div className="text-center mb-6">
+          <div className="text-center mb-8">
             <div
               className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-2"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
@@ -127,7 +139,7 @@ export default function GrandPrixInfo() {
                 >
                   Circuit Facts
                 </h2>
-                <div className="rounded-lg bg-white/5 px-4 py-2">
+                <div className="rounded-lg bg-black px-4 py-2">
                   <FactRow label="First Held" value={String(history.firstHeld)} />
                   <FactRow label="Length" value={history.trackLength} />
                   <FactRow label="Race Laps" value={String(history.laps)} />
@@ -137,20 +149,18 @@ export default function GrandPrixInfo() {
                   />
                   <FactRow
                     label="Most Wins"
-                    value={`${history.mostWins.driver} (${history.mostWins.count})`}
+                    value={`${history.mostWins.driver} — ${history.mostWins.count} wins`}
                   />
                 </div>
               </section>
 
               {/* Last year results */}
               <ResultTable
-                title={`${history.lastYear.season} Race Podium`}
-                posLabels={RACE_POS_LABELS}
+                title={`${history.lastYear.season} Race Results`}
                 rows={history.lastYear.race}
               />
               <ResultTable
-                title={`${history.lastYear.season} Qualifying Top 3`}
-                posLabels={QUALI_POS_LABELS}
+                title={`${history.lastYear.season} Qualifying Results`}
                 rows={history.lastYear.quali}
               />
 
