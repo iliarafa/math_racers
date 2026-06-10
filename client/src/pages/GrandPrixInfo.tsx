@@ -5,6 +5,21 @@ import { getGrandPrixHistory, PodiumEntry, QualiEntry } from "@/lib/grandPrixHis
 
 const COLLAPSED_ROWS = 3;
 
+const TEAM_COLORS: Record<string, string> = {
+  'McLaren':       '#FF8000',
+  'Ferrari':       '#E8002D',
+  'Mercedes':      '#27F4D2',
+  'Red Bull':      '#4781D7',
+  'Racing Bulls':  '#6692FF',
+  'Alpine':        '#00A1E8',
+  'Aston Martin':  '#229971',
+  'Williams':      '#64C4FF',
+  'Kick Sauber':   '#52E252',
+  'Haas':          '#B6BABD',
+};
+const FALLBACK_TEAM_COLOR = 'rgba(255,255,255,0.6)';
+const teamColor = (team: string) => TEAM_COLORS[team] ?? FALLBACK_TEAM_COLOR;
+
 function FactRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-4 py-3">
@@ -49,7 +64,7 @@ function ResultTable({
           >
             <span className="text-white/60 font-mono text-xs leading-5">{`P${i + 1}`}</span>
             <span className="text-white">{row.name}</span>
-            <span className="text-white/60 text-xs leading-5">{row.team}</span>
+            <span className="text-xs leading-5" style={{ color: teamColor(row.team) }}>{row.team}</span>
             <span className="text-white/80 font-mono text-xs text-right leading-5">
               {row.time ?? '—'}
             </span>
