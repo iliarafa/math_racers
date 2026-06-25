@@ -46,7 +46,7 @@ function Router() {
   );
 }
 
-const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/leaderboard', '/lane-racer', '/multiplayer'];
+const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/leaderboard', '/lane-racer', '/multiplayer', '/grand-prix'];
 const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
 
 function PersistentVideo() {

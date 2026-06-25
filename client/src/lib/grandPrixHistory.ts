@@ -1,4 +1,5 @@
 import catalunyaDetail from "@/assets/catalunya_detail_track.png";
+import austriaDetail from "@/assets/austria_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -21,6 +22,64 @@ export type GrandPrixHistory = {
 };
 
 export const GP_HISTORY: Record<string, GrandPrixHistory> = {
+  austria: {
+    officialName: 'GROSSER PREIS VON ÖSTERREICH 2026',
+    firstHeld: 1970,
+    trackLength: '4.318 km',
+    laps: 70,
+    lapRecord: { driver: 'Carlos Sainz', time: '1:05.619', year: 2020 },
+    mostWins: { driver: 'Max Verstappen', count: 4 },
+    summary:
+      'The Red Bull Ring sits high in the Styrian mountains above Spielberg and is the shortest lap on the calendar by time — a flying lap is barely over a minute. There are only ten corners, but big elevation changes and three heavy uphill braking zones make it one of the best overtaking tracks of the year. First raced in 1970 as the Österreichring and reborn as the Red Bull-owned Red Bull Ring in 2011, it rewards traction out of the slow corners, braking stability and bravery over the blind crests.',
+    detailMapImage: austriaDetail,
+    lastYear: {
+      season: 2025,
+      race: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:23:47.693' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '+2.695' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+19.820' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+29.020' },
+        { name: 'George Russell', team: 'Mercedes', time: '+1:02.396' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+1:07.754' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+1 lap' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+1 lap' },
+        { name: 'Nico Hulkenberg', team: 'Kick Sauber', time: '+1 lap' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1 lap' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+1 lap' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+1 lap' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1 lap' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+1 lap' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1 lap' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+2 laps' },
+        { name: 'Alexander Albon', team: 'Williams', time: 'DNF' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: 'DNF' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: 'DNF' },
+        { name: 'Carlos Sainz', team: 'Williams', time: 'DNS' },
+      ],
+      quali: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:03.971' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:04.492' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:04.554' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:04.582' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:04.763' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:04.926' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:04.929' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:05.132' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:05.276' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:05.649' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:05.128' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:05.205' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:05.226' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:05.288' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:05.312' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:05.329' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:05.364' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:05.369' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:05.582' },
+        { name: 'Nico Hulkenberg', team: 'Kick Sauber', time: '1:05.606' },
+      ],
+    },
+  },
   barcelona: {
     officialName: 'GRAN PREMIO DE BARCELONA-CATALUNYA 2026',
     firstHeld: 1991,
