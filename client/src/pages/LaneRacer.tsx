@@ -251,13 +251,21 @@ export default function LaneRacer() {
     // Size canvas to fill the wrapper (below question bar + HUD)
     const resize = () => {
       if (!wrapper) return;
+      const wrapW = wrapper.clientWidth;
+      const h = Math.max(wrapper.clientHeight, 300);
       const isTablet = Math.min(window.screen.width, window.screen.height) >= 700;
-      const w = isTablet ? wrapper.clientWidth : Math.min(wrapper.clientWidth, 500);
-      const h = wrapper.clientHeight;
+      let w;
+      if (wrapW > wrapper.clientHeight) {
+        // Landscape window (desktop browser): letterbox to a 9:16 portrait field
+        w = Math.min(wrapW, Math.round(h * 9 / 16));
+      } else {
+        // Portrait (phones / tablets) — unchanged
+        w = isTablet ? wrapW : Math.min(wrapW, 500);
+      }
       canvas.width = w;
-      canvas.height = Math.max(h, 300);
+      canvas.height = h;
       canvas.style.width = `${w}px`;
-      canvas.style.height = `${Math.max(h, 300)}px`;
+      canvas.style.height = `${h}px`;
     };
     resize();
 
@@ -884,7 +892,7 @@ export default function LaneRacer() {
         </div>
 
         {/* Canvas */}
-        <div ref={canvasWrapperRef} className="flex-1 min-h-0 overflow-hidden">
+        <div ref={canvasWrapperRef} className="flex-1 min-h-0 overflow-hidden bg-black">
           <canvas
             ref={canvasRef}
             style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
