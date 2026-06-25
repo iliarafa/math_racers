@@ -885,9 +885,9 @@ export default function LaneRacer() {
         {/* Rival progress + position */}
         <div style={{ background: 'black', padding: '0 12px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ position: 'relative', flex: 1, height: 6, background: 'rgba(255,255,255,0.16)', borderRadius: 4 }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${playerProgress * 100}%`, background: progressColor, borderRadius: 4, boxShadow: `0 0 6px ${progressColor}` }} />
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${playerProgress * 100}%`, background: progressColor, borderRadius: 4, boxShadow: `0 0 6px ${progressColor}`, transition: 'width 0.4s ease-out' }} />
             <img src={TEAM_PREVIEW_URLS[rivalTeamId]} alt="rival" style={{ position: 'absolute', top: '50%', left: `${rivalProg * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 1 }} />
-            <img src={TEAM_PREVIEW_URLS[selectedTeam]} alt="you" style={{ position: 'absolute', top: '50%', left: `${playerProgress * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 2 }} />
+            <img src={TEAM_PREVIEW_URLS[selectedTeam]} alt="you" style={{ position: 'absolute', top: '50%', left: `${playerProgress * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 2, transition: 'left 0.4s ease-out' }} />
           </div>
           <span style={{ color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Oxanium, sans-serif' }}>P{position}</span>
         </div>
