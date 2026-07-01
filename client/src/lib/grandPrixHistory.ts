@@ -1,5 +1,6 @@
 import catalunyaDetail from "@/assets/catalunya_detail_track.png";
 import austriaDetail from "@/assets/austria_detail_track.png";
+import silverstoneDetail from "@/assets/silverstone_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -22,6 +23,64 @@ export type GrandPrixHistory = {
 };
 
 export const GP_HISTORY: Record<string, GrandPrixHistory> = {
+  silverstone: {
+    officialName: 'FORMULA 1 BRITISH GRAND PRIX 2026',
+    firstHeld: 1950,
+    trackLength: '5.891 km',
+    laps: 52,
+    lapRecord: { driver: 'Max Verstappen', time: '1:27.097', year: 2020 },
+    mostWins: { driver: 'Lewis Hamilton', count: 9 },
+    summary:
+      'Silverstone is the birthplace of the Formula 1 World Championship — it hosted the very first round of the inaugural 1950 season on the runways of a former World War II RAF bomber airfield. It remains one of the fastest and most physical laps of the year: the flat-out sweep of Copse, the daunting Maggotts–Becketts–Chapel complex and the long Hangar Straight into Stowe all reward commitment and a car that stays planted through high-speed direction changes. Backed by a huge and passionate home crowd, a win at the British Grand Prix is one of the most prized on the calendar.',
+    detailMapImage: silverstoneDetail,
+    lastYear: {
+      season: 2025,
+      race: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:37:15.735' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '+6.812' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '+34.742' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+39.812' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '+56.781' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+59.857' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+1:00.603' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+1:04.135' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+1:05.858' },
+        { name: 'George Russell', team: 'Mercedes', time: '+1:10.674' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+1:12.095' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+1:16.592' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1:17.301' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+1:24.477' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+1 lap' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: 'DNF' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: 'DNF' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: 'DNF' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: 'DNF' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: 'DNS' },
+      ],
+      quali: [
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:24.892' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:24.995' },
+        { name: 'Lando Norris', team: 'McLaren', time: '1:25.010' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:25.029' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:25.095' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:25.121' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:25.374' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:25.471' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:25.621' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:25.785' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:25.746' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:25.826' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:25.864' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:25.889' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:25.950' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:26.440' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:26.446' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:26.504' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:26.574' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:27.060' },
+      ],
+    },
+  },
   austria: {
     officialName: 'GROSSER PREIS VON ÖSTERREICH 2026',
     firstHeld: 1970,

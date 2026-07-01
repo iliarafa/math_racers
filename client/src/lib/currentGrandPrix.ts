@@ -1,21 +1,21 @@
-import circuitAustria from "@/assets/circuit_austria.png";
-import flagAustria from "@/assets/flag_austria.png";
+import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
+import flagUK from "@/assets/flag_uk.png";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
 // Also add the new track/flag asset imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 export const CURRENT_GRAND_PRIX = {
-  round: 8,
-  circuitId: 'austria',
-  name: 'AUSTRIA',
-  country: 'AUSTRIA',
-  trackImage: circuitAustria,
-  flagImage: flagAustria,
-  rainProbability: 0.35,
-  simLapCount: 70,
-  gradient: 'linear-gradient(90deg, #ED2939 0%, #FFFFFF 50%, #ED2939 100%)',
-  welcomeBlurb: 'This week we head to the Red Bull Ring in the Styrian mountains for the Austrian Grand Prix.',
+  round: 9,
+  circuitId: 'silverstone',
+  name: 'SILVERSTONE',
+  country: 'UNITED KINGDOM',
+  trackImage: circuitSilverstoneBlack,
+  flagImage: flagUK,
+  rainProbability: 0.45,
+  simLapCount: 52,
+  gradient: 'linear-gradient(90deg, #012169 0%, #FFFFFF 50%, #C8102E 100%)',
+  welcomeBlurb: 'This week we head to Silverstone, the fast, sweeping home of British motorsport, for the British Grand Prix.',
 };
 
 export type CurrentGrandPrix = typeof CURRENT_GRAND_PRIX;
