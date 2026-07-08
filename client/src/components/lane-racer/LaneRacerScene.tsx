@@ -187,36 +187,109 @@ function Road({ controller }: { controller: LaneRacerController3D }) {
 
 function PlayerCar({ teamId }: { teamId: TeamId }) {
   const color = teamColor(teamId);
+  const dark = '#1a1a1a';
+  const tire = '#111111';
+  const carbon = '#0d0d0d';
 
   return (
     <group>
-      <mesh position={[0, 0.35, 0]}>
-        <boxGeometry args={[0.9, 0.35, 1.8]} />
+      {/* Floor / bargeboard lip */}
+      <mesh position={[0, 0.06, 0.05]}>
+        <boxGeometry args={[1.15, 0.04, 1.55]} />
+        <meshStandardMaterial color={carbon} metalness={0.2} roughness={0.8} fog={false} />
+      </mesh>
+
+      {/* Main body / monocoque */}
+      <mesh position={[0, 0.28, 0.05]}>
+        <boxGeometry args={[0.55, 0.28, 1.35]} />
+        <meshStandardMaterial color={color} metalness={0.45} roughness={0.35} fog={false} />
+      </mesh>
+
+      {/* Nose cone */}
+      <mesh position={[0, 0.22, -0.85]}>
+        <boxGeometry args={[0.28, 0.16, 0.55]} />
+        <meshStandardMaterial color={color} metalness={0.45} roughness={0.35} fog={false} />
+      </mesh>
+      <mesh position={[0, 0.18, -1.15]}>
+        <boxGeometry args={[0.16, 0.1, 0.22]} />
+        <meshStandardMaterial color={color} metalness={0.45} roughness={0.35} fog={false} />
+      </mesh>
+
+      {/* Sidepods */}
+      <mesh position={[-0.42, 0.22, 0.15]}>
+        <boxGeometry args={[0.32, 0.22, 0.85]} />
         <meshStandardMaterial color={color} metalness={0.4} roughness={0.4} fog={false} />
       </mesh>
-      <mesh position={[0, 0.55, -0.1]}>
-        <boxGeometry args={[0.5, 0.15, 0.6]} />
-        <meshStandardMaterial color="#111111" fog={false} />
+      <mesh position={[0.42, 0.22, 0.15]}>
+        <boxGeometry args={[0.32, 0.22, 0.85]} />
+        <meshStandardMaterial color={color} metalness={0.4} roughness={0.4} fog={false} />
       </mesh>
-      <mesh position={[0, 0.15, -1.05]}>
-        <boxGeometry args={[1.4, 0.08, 0.25]} />
-        <meshStandardMaterial color="#222222" fog={false} />
+
+      {/* Cockpit tub */}
+      <mesh position={[0, 0.42, 0.05]}>
+        <boxGeometry args={[0.38, 0.16, 0.55]} />
+        <meshStandardMaterial color={dark} metalness={0.3} roughness={0.5} fog={false} />
       </mesh>
-      <mesh position={[0, 0.75, 0.85]}>
-        <boxGeometry args={[1.1, 0.06, 0.2]} />
-        <meshStandardMaterial color="#222222" fog={false} />
+
+      {/* Halo */}
+      <mesh position={[0, 0.58, 0.05]}>
+        <boxGeometry args={[0.42, 0.05, 0.42]} />
+        <meshStandardMaterial color={dark} metalness={0.6} roughness={0.3} fog={false} />
       </mesh>
-      {([-0.55, 0.55] as const).map(sx => (
-        <group key={sx}>
-          <mesh position={[sx, 0.18, -0.55]}>
-            <boxGeometry args={[0.22, 0.36, 0.5]} />
-            <meshStandardMaterial color="#111111" fog={false} />
-          </mesh>
-          <mesh position={[sx, 0.18, 0.55]}>
-            <boxGeometry args={[0.24, 0.4, 0.55]} />
-            <meshStandardMaterial color="#111111" fog={false} />
-          </mesh>
-        </group>
+      <mesh position={[0, 0.52, -0.12]}>
+        <boxGeometry args={[0.08, 0.18, 0.08]} />
+        <meshStandardMaterial color={dark} metalness={0.6} roughness={0.3} fog={false} />
+      </mesh>
+
+      {/* Front wing */}
+      <mesh position={[0, 0.12, -1.28]}>
+        <boxGeometry args={[1.35, 0.05, 0.22]} />
+        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      </mesh>
+      <mesh position={[-0.62, 0.2, -1.28]}>
+        <boxGeometry args={[0.06, 0.2, 0.2]} />
+        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      </mesh>
+      <mesh position={[0.62, 0.2, -1.28]}>
+        <boxGeometry args={[0.06, 0.2, 0.2]} />
+        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      </mesh>
+
+      {/* Rear wing */}
+      <mesh position={[0, 0.72, 0.85]}>
+        <boxGeometry args={[1.15, 0.05, 0.18]} />
+        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      </mesh>
+      <mesh position={[-0.5, 0.55, 0.85]}>
+        <boxGeometry args={[0.05, 0.35, 0.16]} />
+        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      </mesh>
+      <mesh position={[0.5, 0.55, 0.85]}>
+        <boxGeometry args={[0.05, 0.35, 0.16]} />
+        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      </mesh>
+
+      {/* Mirrors */}
+      <mesh position={[-0.32, 0.48, -0.15]}>
+        <boxGeometry args={[0.12, 0.04, 0.08]} />
+        <meshStandardMaterial color={dark} fog={false} />
+      </mesh>
+      <mesh position={[0.32, 0.48, -0.15]}>
+        <boxGeometry args={[0.12, 0.04, 0.08]} />
+        <meshStandardMaterial color={dark} fog={false} />
+      </mesh>
+
+      {/* Wheels — cylinders rotated to axle axis */}
+      {([
+        [-0.55, -0.55],
+        [0.55, -0.55],
+        [-0.55, 0.55],
+        [0.55, 0.55],
+      ] as const).map(([sx, sz]) => (
+        <mesh key={`${sx}-${sz}`} position={[sx, 0.18, sz]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.2, 0.2, 0.22, 12]} />
+          <meshStandardMaterial color={tire} metalness={0.1} roughness={0.9} fog={false} />
+        </mesh>
       ))}
     </group>
   );
