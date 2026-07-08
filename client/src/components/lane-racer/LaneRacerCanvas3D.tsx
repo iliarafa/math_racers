@@ -37,16 +37,17 @@ function SceneRoot({
   useFrame((_, delta) => {
     controller.tick(delta);
     const shake = controller.renderState.shakeMagnitude;
+    // Slightly elevated rear chase — matches the F1 rear-view reference framing
     if (shake > 0) {
       camera.position.set(
         (Math.random() - 0.5) * shake,
-        3.8 + (Math.random() - 0.5) * shake,
-        10 + (Math.random() - 0.5) * shake * 0.5,
+        3.6 + (Math.random() - 0.5) * shake,
+        8.2 + (Math.random() - 0.5) * shake * 0.5,
       );
     } else {
-      camera.position.set(0, 3.8, 10);
+      camera.position.set(0, 3.6, 8.2);
     }
-    camera.lookAt(0, 0.2, -6);
+    camera.lookAt(0, 0.45, 0.2);
   });
 
   return <LaneRacerSceneKeyed controller={controller} teamId={teamId} structureVersion={structureVersion} />;
@@ -164,7 +165,7 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
           className="w-full h-full block"
           gl={{ antialias: true, alpha: false }}
           dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)]}
-          camera={{ position: [0, 3.8, 10], fov: 50, near: 0.1, far: 600 }}
+          camera={{ position: [0, 3.6, 8.2], fov: 48, near: 0.1, far: 600 }}
           onCreated={({ gl }) => {
             gl.setClearColor('#2a5230');
           }}

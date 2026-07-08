@@ -27,6 +27,15 @@ function teamColor(teamId: TeamId): string {
   return TEAMS.find(t => t.id === teamId)?.color ?? '#00d2be';
 }
 
+/** Brighten a hex color for accent stripes (clamped). */
+function accentColor(hex: string, amount = 0.35): string {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, Math.round(((n >> 16) & 255) + (255 - ((n >> 16) & 255)) * amount));
+  const g = Math.min(255, Math.round(((n >> 8) & 255) + (255 - ((n >> 8) & 255)) * amount));
+  const b = Math.min(255, Math.round((n & 255) + (255 - (n & 255)) * amount));
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
 function tokenScale(z: number): number {
   const t = THREE.MathUtils.clamp((z + 48) / 49, 0, 1);
   return THREE.MathUtils.lerp(0.78, 1.0, t);
@@ -143,12 +152,12 @@ function Road({ controller }: { controller: LaneRacerController3D }) {
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#3d3d3d';
+    ctx.fillStyle = '#5c5c5c';
     ctx.fillRect(0, 0, size, size);
     for (let i = 0; i < 180; i++) {
       const x = Math.random() * size;
       const y = Math.random() * size;
-      const b = 50 + Math.floor(Math.random() * 35);
+      const b = 78 + Math.floor(Math.random() * 40);
       ctx.fillStyle = `rgb(${b},${b},${b})`;
       ctx.fillRect(x, y, 1, 1);
     }
@@ -171,7 +180,7 @@ function Road({ controller }: { controller: LaneRacerController3D }) {
     <group ref={scrollGroupRef} renderOrder={1}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, roadCenterZ]}>
         <planeGeometry args={[ROAD_WIDTH, ROAD_LENGTH]} />
-        <meshStandardMaterial map={asphaltTex} color="#ffffff" roughness={0.95} metalness={0} fog={false} />
+        <meshStandardMaterial map={asphaltTex} color="#c8c8c8" roughness={0.95} metalness={0} fog={false} />
       </mesh>
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-ROAD_WIDTH / 2 + 0.06, 0.02, roadCenterZ]}>
@@ -216,109 +225,234 @@ function Road({ controller }: { controller: LaneRacerController3D }) {
 
 function PlayerCar({ teamId }: { teamId: TeamId }) {
   const color = teamColor(teamId);
-  const dark = '#1a1a1a';
-  const tire = '#111111';
-  const carbon = '#0d0d0d';
+  const accent = accentColor(color, 0.45);
+  // Reference rear view: tires pure black; wing/diffuser carbon; body team color
+  const graphite = '#2a2a2a';
+  const carbon = '#3d3d3d';
+  const rim = '#5a5a5a';
+  const tire = '#0a0a0a';
+  const bodyMat = { metalness: 0.45, roughness: 0.35 } as const;
+  const darkMat = { metalness: 0.35, roughness: 0.45 } as const;
 
   return (
     <group>
-      {/* Floor / bargeboard lip */}
-      <mesh position={[0, 0.06, 0.05]}>
-        <boxGeometry args={[1.15, 0.04, 1.55]} />
-        <meshStandardMaterial color={carbon} metalness={0.2} roughness={0.8} fog={false} />
+      {/* Front half (less critical from chase cam) */}
+      <mesh position={[0, 0.045, -0.2]}>
+        <boxGeometry args={[0.45, 0.03, 1.0]} />
+        <meshStandardMaterial color={carbon} metalness={0.25} roughness={0.75} fog={false} />
+      </mesh>
+      <mesh position={[0, 0.26, 0.0]}>
+        <boxGeometry args={[0.42, 0.24, 0.9]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
+      </mesh>
+      <mesh position={[0, 0.28, -0.55]}>
+        <boxGeometry args={[0.32, 0.18, 0.4]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
+      </mesh>
+      <mesh position={[0, 0.2, -0.9]}>
+        <boxGeometry args={[0.22, 0.12, 0.35]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
+      </mesh>
+      <mesh position={[0, 0.16, -1.15]}>
+        <boxGeometry args={[0.12, 0.08, 0.2]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
+      </mesh>
+      {/* Front wing — darker + slight pitch so it doesn't read as sitting on the rear wing */}
+      <mesh position={[0, 0.1, -1.32]} rotation={[-0.35, 0, 0]}>
+        <boxGeometry args={[1.3, 0.035, 0.18]} />
+        <meshBasicMaterial color="#141414" toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[-0.62, 0.16, -1.3]} rotation={[-0.2, 0, 0]}>
+        <boxGeometry args={[0.04, 0.18, 0.2]} />
+        <meshBasicMaterial color="#141414" toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[0.62, 0.16, -1.3]} rotation={[-0.2, 0, 0]}>
+        <boxGeometry args={[0.04, 0.18, 0.2]} />
+        <meshBasicMaterial color="#141414" toneMapped={false} fog={false} />
+      </mesh>
+      {([-0.58, 0.58] as const).map((sx) => (
+        <group key={`fw-${sx}`} position={[sx, 0.17, -0.55]} rotation={[0, 0, Math.PI / 2]}>
+          <mesh>
+            <cylinderGeometry args={[0.18, 0.18, 0.26, 12]} />
+            <meshStandardMaterial color={tire} metalness={0.05} roughness={0.95} fog={false} />
+          </mesh>
+          <mesh>
+            <cylinderGeometry args={[0.1, 0.1, 0.28, 10]} />
+            <meshStandardMaterial color={rim} metalness={0.5} roughness={0.4} fog={false} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[-0.28, 0.18, -0.55]} rotation={[0, 0, -0.3]}>
+        <boxGeometry args={[0.4, 0.02, 0.025]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[0.28, 0.18, -0.55]} rotation={[0, 0, 0.3]}>
+        <boxGeometry args={[0.4, 0.02, 0.025]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
       </mesh>
 
-      {/* Main body / monocoque */}
-      <mesh position={[0, 0.28, 0.05]}>
-        <boxGeometry args={[0.55, 0.28, 1.35]} />
-        <meshStandardMaterial color={color} metalness={0.45} roughness={0.35} fog={false} />
+      <mesh position={[-0.42, 0.2, 0.05]}>
+        <boxGeometry args={[0.32, 0.2, 0.65]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
+      </mesh>
+      <mesh position={[0.42, 0.2, 0.05]}>
+        <boxGeometry args={[0.32, 0.2, 0.65]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
       </mesh>
 
-      {/* Nose cone */}
-      <mesh position={[0, 0.22, -0.85]}>
-        <boxGeometry args={[0.28, 0.16, 0.55]} />
-        <meshStandardMaterial color={color} metalness={0.45} roughness={0.35} fog={false} />
+      <mesh position={[0, 0.4, -0.05]}>
+        <boxGeometry args={[0.32, 0.12, 0.4]} />
+        <meshStandardMaterial color={graphite} {...darkMat} fog={false} />
       </mesh>
-      <mesh position={[0, 0.18, -1.15]}>
-        <boxGeometry args={[0.16, 0.1, 0.22]} />
-        <meshStandardMaterial color={color} metalness={0.45} roughness={0.35} fog={false} />
+      <mesh position={[0, 0.55, -0.05]}>
+        <boxGeometry args={[0.36, 0.04, 0.36]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
       </mesh>
-
-      {/* Sidepods */}
-      <mesh position={[-0.42, 0.22, 0.15]}>
-        <boxGeometry args={[0.32, 0.22, 0.85]} />
-        <meshStandardMaterial color={color} metalness={0.4} roughness={0.4} fog={false} />
-      </mesh>
-      <mesh position={[0.42, 0.22, 0.15]}>
-        <boxGeometry args={[0.32, 0.22, 0.85]} />
-        <meshStandardMaterial color={color} metalness={0.4} roughness={0.4} fog={false} />
+      <mesh position={[0, 0.48, -0.18]}>
+        <boxGeometry args={[0.05, 0.16, 0.05]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
       </mesh>
 
-      {/* Cockpit tub */}
-      <mesh position={[0, 0.42, 0.05]}>
-        <boxGeometry args={[0.38, 0.16, 0.55]} />
-        <meshStandardMaterial color={dark} metalness={0.3} roughness={0.5} fog={false} />
+      {/* REAR END — matched to chase-cam F1 reference */}
+      <mesh position={[0, 0.36, 0.4]}>
+        <boxGeometry args={[0.28, 0.28, 0.55]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
+      </mesh>
+      <mesh position={[0, 0.32, 0.7]}>
+        <boxGeometry args={[0.2, 0.2, 0.25]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
+      </mesh>
+      <mesh position={[0, 0.58, 0.25]}>
+        <boxGeometry args={[0.16, 0.2, 0.2]} />
+        <meshBasicMaterial color={color} toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[0, 0.7, 0.25]}>
+        <boxGeometry args={[0.1, 0.06, 0.12]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
       </mesh>
 
-      {/* Halo */}
-      <mesh position={[0, 0.58, 0.05]}>
-        <boxGeometry args={[0.42, 0.05, 0.42]} />
-        <meshStandardMaterial color={dark} metalness={0.6} roughness={0.3} fog={false} />
+      <mesh position={[-0.28, 0.28, 0.55]}>
+        <boxGeometry args={[0.28, 0.28, 0.35]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
       </mesh>
-      <mesh position={[0, 0.52, -0.12]}>
-        <boxGeometry args={[0.08, 0.18, 0.08]} />
-        <meshStandardMaterial color={dark} metalness={0.6} roughness={0.3} fog={false} />
+      <mesh position={[0.28, 0.28, 0.55]}>
+        <boxGeometry args={[0.28, 0.28, 0.35]} />
+        <meshStandardMaterial color={color} {...bodyMat} fog={false} />
       </mesh>
-
-      {/* Front wing */}
-      <mesh position={[0, 0.12, -1.28]}>
-        <boxGeometry args={[1.35, 0.05, 0.22]} />
-        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      <mesh position={[-0.28, 0.32, 0.72]}>
+        <boxGeometry args={[0.2, 0.14, 0.04]} />
+        <meshBasicMaterial color={accent} toneMapped={false} fog={false} />
       </mesh>
-      <mesh position={[-0.62, 0.2, -1.28]}>
-        <boxGeometry args={[0.06, 0.2, 0.2]} />
-        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
-      </mesh>
-      <mesh position={[0.62, 0.2, -1.28]}>
-        <boxGeometry args={[0.06, 0.2, 0.2]} />
-        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      <mesh position={[0.28, 0.32, 0.72]}>
+        <boxGeometry args={[0.2, 0.14, 0.04]} />
+        <meshBasicMaterial color={accent} toneMapped={false} fog={false} />
       </mesh>
 
-      {/* Rear wing */}
-      <mesh position={[0, 0.72, 0.85]}>
-        <boxGeometry args={[1.15, 0.05, 0.18]} />
-        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      <mesh position={[0, 0.22, 0.85]}>
+        <boxGeometry args={[0.35, 0.28, 0.28]} />
+        <meshBasicMaterial color={carbon} toneMapped={false} fog={false} />
       </mesh>
-      <mesh position={[-0.5, 0.55, 0.85]}>
-        <boxGeometry args={[0.05, 0.35, 0.16]} />
-        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      <mesh position={[0, 0.28, 1.0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.055, 0.055, 0.08, 10]} />
+        <meshBasicMaterial color="#111111" toneMapped={false} fog={false} />
       </mesh>
-      <mesh position={[0.5, 0.55, 0.85]}>
-        <boxGeometry args={[0.05, 0.35, 0.16]} />
-        <meshStandardMaterial color={dark} metalness={0.35} roughness={0.45} fog={false} />
+      <mesh position={[0, 0.28, 1.04]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.035, 0.035, 0.04, 10]} />
+        <meshBasicMaterial color="#222222" toneMapped={false} fog={false} />
       </mesh>
-
-      {/* Mirrors */}
-      <mesh position={[-0.32, 0.48, -0.15]}>
-        <boxGeometry args={[0.12, 0.04, 0.08]} />
-        <meshStandardMaterial color={dark} fog={false} />
-      </mesh>
-      <mesh position={[0.32, 0.48, -0.15]}>
-        <boxGeometry args={[0.12, 0.04, 0.08]} />
-        <meshStandardMaterial color={dark} fog={false} />
+      <mesh position={[0, 0.42, 0.98]}>
+        <boxGeometry args={[0.06, 0.04, 0.04]} />
+        <meshBasicMaterial color="#f0f0f0" toneMapped={false} fog={false} />
       </mesh>
 
-      {/* Wheels — cylinders rotated to axle axis */}
-      {([
-        [-0.55, -0.55],
-        [0.55, -0.55],
-        [-0.55, 0.55],
-        [0.55, 0.55],
-      ] as const).map(([sx, sz]) => (
-        <mesh key={`${sx}-${sz}`} position={[sx, 0.18, sz]} rotation={[0, 0, Math.PI / 2]}>
-          <cylinderGeometry args={[0.2, 0.2, 0.22, 12]} />
-          <meshStandardMaterial color={tire} metalness={0.1} roughness={0.9} fog={false} />
+      {/* Diffuser — raised clear of the road (~axle height), thin vanes */}
+      <mesh position={[0, 0.14, 0.9]}>
+        <boxGeometry args={[0.8, 0.03, 0.22]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
+      </mesh>
+      {[-0.28, -0.14, 0, 0.14, 0.28].map((x) => (
+        <mesh key={`diff-${x}`} position={[x, 0.18, 0.92]}>
+          <boxGeometry args={[0.025, 0.08, 0.2]} />
+          <meshBasicMaterial color={carbon} toneMapped={false} fog={false} />
         </mesh>
+      ))}
+
+      {/*
+        Rear wing — every thickness ≤ ~0.04 (≈3–4").
+        Top plane sits just above short pylons (small air gap), not sky-high.
+        Endplates are thin sheets (X thickness), not thick blocks.
+      */}
+      {/* Short base pylons */}
+      <mesh position={[-0.12, 0.42, 0.88]}>
+        <boxGeometry args={[0.03, 0.2, 0.035]} />
+        <meshBasicMaterial color={carbon} toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[0.12, 0.42, 0.88]}>
+        <boxGeometry args={[0.03, 0.2, 0.035]} />
+        <meshBasicMaterial color={carbon} toneMapped={false} fog={false} />
+      </mesh>
+      {/* Thin swan-necks — bridge small gap to floating wing */}
+      <mesh position={[-0.12, 0.58, 0.9]} rotation={[0.25, 0, 0]}>
+        <boxGeometry args={[0.022, 0.14, 0.022]} />
+        <meshBasicMaterial color={carbon} toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[0.12, 0.58, 0.9]} rotation={[0.25, 0, 0]}>
+        <boxGeometry args={[0.022, 0.14, 0.022]} />
+        <meshBasicMaterial color={carbon} toneMapped={false} fog={false} />
+      </mesh>
+      {/* Endplates — thin in X (≤0.04), modest height, slight toe for face read */}
+      <mesh position={[-0.5, 0.72, 0.96]} rotation={[0, 0.2, 0]}>
+        <boxGeometry args={[0.035, 0.28, 0.16]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[0.5, 0.72, 0.96]} rotation={[0, -0.2, 0]}>
+        <boxGeometry args={[0.035, 0.28, 0.16]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
+      </mesh>
+      {/* Main plane — thin, lower, separate from pylons */}
+      <mesh position={[0, 0.82, 0.98]}>
+        <boxGeometry args={[0.95, 0.028, 0.09]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
+      </mesh>
+      {/* DRS flap — separate thin element just above */}
+      <mesh position={[0, 0.88, 0.95]}>
+        <boxGeometry args={[0.85, 0.022, 0.06]} />
+        <meshBasicMaterial color="#1a1a1a" toneMapped={false} fog={false} />
+      </mesh>
+
+      <mesh position={[-0.35, 0.28, 0.55]} rotation={[0, 0.2, -0.25]}>
+        <boxGeometry args={[0.45, 0.025, 0.03]} />
+        <meshBasicMaterial color={carbon} toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[0.35, 0.28, 0.55]} rotation={[0, -0.2, 0.25]}>
+        <boxGeometry args={[0.45, 0.025, 0.03]} />
+        <meshBasicMaterial color={carbon} toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[-0.35, 0.18, 0.62]} rotation={[0, 0.15, -0.2]}>
+        <boxGeometry args={[0.42, 0.02, 0.025]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
+      </mesh>
+      <mesh position={[0.35, 0.18, 0.62]} rotation={[0, -0.15, 0.2]}>
+        <boxGeometry args={[0.42, 0.02, 0.025]} />
+        <meshBasicMaterial color={graphite} toneMapped={false} fog={false} />
+      </mesh>
+
+      {/* REAR TIRES — hero of the reference: wide, tall, pure black */}
+      {([-0.68, 0.68] as const).map((sx) => (
+        <group key={`rw-${sx}`} position={[sx, 0.22, 0.55]} rotation={[0, 0, Math.PI / 2]}>
+          <mesh>
+            <cylinderGeometry args={[0.26, 0.26, 0.38, 14]} />
+            <meshStandardMaterial color={tire} metalness={0.05} roughness={0.95} fog={false} />
+          </mesh>
+          <mesh>
+            <cylinderGeometry args={[0.14, 0.14, 0.4, 12]} />
+            <meshStandardMaterial color={rim} metalness={0.45} roughness={0.45} fog={false} />
+          </mesh>
+          <mesh>
+            <cylinderGeometry args={[0.05, 0.05, 0.42, 8]} />
+            <meshStandardMaterial color="#888888" metalness={0.6} roughness={0.3} fog={false} />
+          </mesh>
+        </group>
       ))}
     </group>
   );
@@ -421,8 +555,9 @@ export function LaneRacerScene({ controller, teamId }: LaneRacerSceneProps) {
   return (
     <>
       <color attach="background" args={[GRASS_GREEN]} />
-      <ambientLight intensity={0.85} />
-      <directionalLight position={[6, 14, 10]} intensity={0.9} castShadow={false} />
+      <ambientLight intensity={1.05} />
+      <directionalLight position={[4, 16, 8]} intensity={1.15} castShadow={false} />
+      <directionalLight position={[-6, 8, 4]} intensity={0.35} castShadow={false} />
 
       <Sky />
       <Ground />
