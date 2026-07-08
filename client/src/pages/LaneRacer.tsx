@@ -7,6 +7,8 @@ import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LE
 import type { Difficulty } from "@/lib/gameLogic";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
+import { LaneRacerCanvas3D } from "@/components/lane-racer/LaneRacerCanvas3D";
+import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
 import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import flagItaly from "@/assets/flag_italy.png";
@@ -36,6 +38,9 @@ const CIRCUIT_MAP_IMAGES: { [id: string]: string } = {
 };
 
 type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
+type RendererMode = '2d' | '3d';
+
+const RENDERER_STORAGE_KEY = 'laneRacerRenderer';
 
 const DIFFICULTY_OPTIONS: { label: string; value: Difficulty }[] = [
   { label: 'Karting', value: 'beginner' },
@@ -127,9 +132,13 @@ export default function LaneRacer() {
     difficultyAchieved: string;
   } | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [renderMode, setRenderMode] = useState<RendererMode>(() => {
+    const saved = localStorage.getItem(RENDERER_STORAGE_KEY);
+    return saved === '3d' ? '3d' : '2d';
+  });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<LaneRacerEngine | null>(null);
+  const engineRef = useRef<LaneRacerEngineRef | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef(0);
@@ -241,14 +250,25 @@ export default function LaneRacer() {
     };
   }, [gameStatus]);
 
-  // Initialize engine when racing starts
+  const selectRenderMode = (mode: RendererMode) => {
+    setRenderMode(mode);
+    localStorage.setItem(RENDERER_STORAGE_KEY, mode);
+  };
+
+  const engineCallbacks = useMemo(() => ({
+    onCorrect: handleCorrect,
+    onWrong: handleWrong,
+    onMiss: handleMiss,
+    onFinished: handleFinished,
+  }), [handleCorrect, handleWrong, handleMiss, handleFinished]);
+
+  // Initialize 2D canvas engine when racing in classic mode
   useEffect(() => {
-    if (gameStatus !== 'racing' || !canvasRef.current) return;
+    if (gameStatus !== 'racing' || renderMode !== '2d' || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const wrapper = canvasWrapperRef.current;
 
-    // Size canvas to fill the wrapper (below question bar + HUD)
     const resize = () => {
       if (!wrapper) return;
       const wrapW = wrapper.clientWidth;
@@ -256,10 +276,8 @@ export default function LaneRacer() {
       const isTablet = Math.min(window.screen.width, window.screen.height) >= 700;
       let w;
       if (wrapW > wrapper.clientHeight) {
-        // Landscape window (desktop browser): letterbox to a 9:16 portrait field
         w = Math.min(wrapW, Math.round(h * 9 / 16));
       } else {
-        // Portrait (phones / tablets) — unchanged
         w = isTablet ? wrapW : Math.min(wrapW, 500);
       }
       canvas.width = w;
@@ -279,9 +297,6 @@ export default function LaneRacer() {
     engineRef.current = engine;
     startTimeRef.current = Date.now();
 
-    // Measure the actual bottom safe-area inset (home indicator height) by
-    // reading a probe element whose padding-bottom is env(safe-area-inset-bottom).
-    // The padding resolves to a real px value, then we add a small visual margin.
     const measureSafeBottom = () => {
       const probe = document.createElement('div');
       probe.style.cssText = 'position:fixed;visibility:hidden;padding-bottom:env(safe-area-inset-bottom);';
@@ -295,9 +310,6 @@ export default function LaneRacer() {
 
     window.addEventListener('resize', resize);
     window.addEventListener('resize', measureSafeBottom);
-    // Keep the canvas matched to the wrapper's current size — the wrapper can
-    // shrink after mount (layout settle), which would otherwise leave the
-    // canvas overflowing and the bottom HUD (speedometer) clipped.
     const resizeObserver = new ResizeObserver(resize);
     if (wrapper) resizeObserver.observe(wrapper);
     return () => {
@@ -307,7 +319,20 @@ export default function LaneRacer() {
       window.removeEventListener('resize', measureSafeBottom);
       resizeObserver.disconnect();
     };
-  }, [gameStatus, raceLength, handleCorrect, handleWrong, handleMiss, handleFinished]);
+  }, [gameStatus, renderMode, raceLength, selectedTeam, selectedDifficulty, handleCorrect, handleWrong, handleMiss, handleFinished]);
+
+  // Track race start time for 3D mode (2D sets this in its init effect above)
+  useEffect(() => {
+    if (gameStatus === 'racing' && renderMode === '3d') {
+      startTimeRef.current = Date.now();
+    }
+    return () => {
+      if (gameStatus === 'racing' && renderMode === '3d') {
+        engineRef.current?.destroy();
+        engineRef.current = null;
+      }
+    };
+  }, [gameStatus, renderMode]);
 
   // Spawn questions when engine needs them
   useEffect(() => {
@@ -341,8 +366,8 @@ export default function LaneRacer() {
   // Touch controls
   useEffect(() => {
     if (gameStatus !== 'racing') return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const wrapper = canvasWrapperRef.current;
+    if (!wrapper) return;
 
     const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
@@ -354,7 +379,7 @@ export default function LaneRacer() {
       const start = touchStartRef.current;
       if (!start) {
         // Tap — use left/right half
-        const rect = canvas.getBoundingClientRect();
+        const rect = wrapper.getBoundingClientRect();
         const tapX = touch.clientX - rect.left;
         if (tapX < rect.width / 2) {
           engineRef.current?.moveLeft();
@@ -374,11 +399,11 @@ export default function LaneRacer() {
       touchStartRef.current = null;
     };
 
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+    wrapper.addEventListener('touchstart', handleTouchStart, { passive: true });
+    wrapper.addEventListener('touchend', handleTouchEnd, { passive: true });
     return () => {
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchend', handleTouchEnd);
+      wrapper.removeEventListener('touchstart', handleTouchStart);
+      wrapper.removeEventListener('touchend', handleTouchEnd);
     };
   }, [gameStatus, state.soundEnabled]);
 
@@ -656,6 +681,24 @@ export default function LaneRacer() {
                     ))}
                   </div>
                 </div>
+
+                {/* 3D mode toggle */}
+                <div className="mt-3 pt-3 border-t border-white/10 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
+                    className="px-6 py-2 rounded-lg font-bold text-sm transition-all"
+                    style={{
+                      fontFamily: 'Oxanium, sans-serif',
+                      color: renderMode === '3d' ? '#fff' : 'rgba(255,255,255,0.45)',
+                      border: renderMode === '3d' ? '1.5px solid rgba(0,210,190,0.6)' : '1px solid rgba(255,255,255,0.12)',
+                      backgroundColor: renderMode === '3d' ? 'rgba(0,210,190,0.12)' : 'transparent',
+                    }}
+                    data-testid="lr-view-3d"
+                  >
+                    3D
+                  </button>
+                </div>
               </div>
             );
           })()}
@@ -892,12 +935,22 @@ export default function LaneRacer() {
           <span style={{ color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Oxanium, sans-serif' }}>P{position}</span>
         </div>
 
-        {/* Canvas */}
+        {/* Game view — 2D canvas or 3D scene */}
         <div ref={canvasWrapperRef} className="flex-1 min-h-0 overflow-hidden bg-black">
-          <canvas
-            ref={canvasRef}
-            style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
-          />
+          {renderMode === '3d' ? (
+            <LaneRacerCanvas3D
+              ref={engineRef}
+              callbacks={engineCallbacks}
+              totalQuestions={raceLength}
+              teamId={selectedTeam}
+              difficulty={selectedDifficulty}
+            />
+          ) : (
+            <canvas
+              ref={canvasRef}
+              style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
+            />
+          )}
         </div>
       </div>
     </GameLayout>
