@@ -54,6 +54,7 @@ function SceneRoot({
 
 function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
   const flashRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const speedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -65,14 +66,28 @@ function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
       }
       if (flashRef.current) {
         if (rs.flashColor && rs.flashAlpha > 0) {
-          flashRef.current.style.opacity = String(rs.flashAlpha);
+          const a = rs.flashAlpha;
+          // Match 2D: soft radial green near the car, not a solid full-screen wash
+          flashRef.current.style.opacity = '1';
           flashRef.current.style.background =
             rs.flashColor === 'green'
-              ? `rgba(34,255,120,${rs.flashAlpha * 0.35})`
-              : `rgba(225,6,0,${rs.flashAlpha * 0.35})`;
+              ? `radial-gradient(ellipse at 50% 80%, rgba(34,255,120,${a * 0.5}) 0%, rgba(34,255,120,0) 70%)`
+              : `rgba(225,6,0,${a * 0.35})`;
           flashRef.current.style.display = 'block';
         } else {
           flashRef.current.style.display = 'none';
+        }
+      }
+      if (popupRef.current) {
+        if (rs.popupAlpha > 0 && rs.popupLabel) {
+          const t = rs.popupAlpha;
+          const rise = (1 - t) * 20;
+          popupRef.current.textContent = rs.popupLabel;
+          popupRef.current.style.opacity = String(Math.min(1, t * 2));
+          popupRef.current.style.transform = `translate(-50%, calc(-50% - ${rise}px))`;
+          popupRef.current.style.display = 'block';
+        } else {
+          popupRef.current.style.display = 'none';
         }
       }
       frameId = requestAnimationFrame(update);
@@ -84,6 +99,19 @@ function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
   return (
     <>
       <div ref={flashRef} className="absolute inset-0 pointer-events-none" style={{ display: 'none' }} />
+      <div
+        ref={popupRef}
+        className="absolute left-1/2 top-[34%] pointer-events-none whitespace-nowrap"
+        style={{
+          display: 'none',
+          fontFamily: 'Oxanium, sans-serif',
+          fontWeight: 900,
+          fontSize: 'clamp(1.5rem, 9vw, 2.75rem)',
+          color: '#ffffff',
+          textShadow: '0 2px 12px rgba(0,0,0,0.55)',
+          letterSpacing: '0.04em',
+        }}
+      />
       <div
         className="absolute right-3 text-right pointer-events-none"
         style={{ bottom: 'max(12px, env(safe-area-inset-bottom))' }}
@@ -136,7 +164,7 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
           className="w-full h-full block"
           gl={{ antialias: true, alpha: false }}
           dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)]}
-          camera={{ position: [0, 3.8, 10], fov: 50, near: 0.1, far: 250 }}
+          camera={{ position: [0, 3.8, 10], fov: 50, near: 0.1, far: 600 }}
           onCreated={({ gl }) => {
             gl.setClearColor('#2a5230');
           }}

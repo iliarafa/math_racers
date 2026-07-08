@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
@@ -7,8 +7,15 @@ import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LE
 import type { Difficulty } from "@/lib/gameLogic";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
-import { LaneRacerCanvas3D } from "@/components/lane-racer/LaneRacerCanvas3D";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
+
+const LaneRacerCanvas3D = lazy(() =>
+  import("@/components/lane-racer/LaneRacerCanvas3D").then(m => ({ default: m.LaneRacerCanvas3D })),
+);
+
+function preloadLaneRacer3D() {
+  void import("@/components/lane-racer/LaneRacerCanvas3D");
+}
 import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import flagItaly from "@/assets/flag_italy.png";
@@ -253,7 +260,13 @@ export default function LaneRacer() {
   const selectRenderMode = (mode: RendererMode) => {
     setRenderMode(mode);
     localStorage.setItem(RENDERER_STORAGE_KEY, mode);
+    if (mode === '3d') preloadLaneRacer3D();
   };
+
+  // Warm the 3D chunk when the saved preference is already 3D
+  useEffect(() => {
+    if (renderMode === '3d') preloadLaneRacer3D();
+  }, [renderMode]);
 
   const engineCallbacks = useMemo(() => ({
     onCorrect: handleCorrect,
@@ -938,13 +951,23 @@ export default function LaneRacer() {
         {/* Game view — 2D canvas or 3D scene */}
         <div ref={canvasWrapperRef} className="flex-1 min-h-0 overflow-hidden bg-black">
           {renderMode === '3d' ? (
-            <LaneRacerCanvas3D
-              ref={engineRef}
-              callbacks={engineCallbacks}
-              totalQuestions={raceLength}
-              teamId={selectedTeam}
-              difficulty={selectedDifficulty}
-            />
+            <Suspense
+              fallback={
+                <div className="w-full h-full flex items-center justify-center bg-[#2a5230]">
+                  <span className="text-white/60 text-sm uppercase tracking-widest" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    Loading 3D…
+                  </span>
+                </div>
+              }
+            >
+              <LaneRacerCanvas3D
+                ref={engineRef}
+                callbacks={engineCallbacks}
+                totalQuestions={raceLength}
+                teamId={selectedTeam}
+                difficulty={selectedDifficulty}
+              />
+            </Suspense>
           ) : (
             <canvas
               ref={canvasRef}

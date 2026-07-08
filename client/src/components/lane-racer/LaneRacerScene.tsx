@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Billboard, Text } from '@react-three/drei';
+import { Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import type { TeamId } from '@/lib/carSvgs';
 import { TEAMS } from '@/lib/carSvgs';
@@ -10,9 +10,12 @@ import {
 } from '@/lib/laneRacerController3d';
 
 const ROAD_WIDTH = 7.2;
-const ROAD_LENGTH = 180;
+/** Long enough that the far tip meets the skyline (past the grass plane edge). */
+const ROAD_LENGTH = 420;
+const DASH_PERIOD = 3;
 const KERB_W = 0.38;
-const GROUND_SIZE = 600;
+const GROUND_SIZE = 800;
+const SKY_RADIUS = 500;
 const SKY_BLUE = '#87CEEB';
 const GRASS_GREEN = '#2a5230';
 
@@ -88,10 +91,33 @@ function makeKerbTexture(): THREE.CanvasTexture {
   return tex;
 }
 
+/** One dash + gap tile, repeated along the full road (2 meshes instead of hundreds). */
+function makeLaneDashTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 8;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d')!;
+  // Match prior dash: ~1.6 of 3.0 period ≈ 53% painted
+  const dashH = Math.round(canvas.height * (1.6 / DASH_PERIOD));
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, dashH);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, ROAD_LENGTH / DASH_PERIOD);
+  // Mipmaps soften far dashes and kill horizon moiré/flicker from NearestFilter
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.anisotropy = 4;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 function Sky() {
   return (
     <mesh frustumCulled={false}>
-      <sphereGeometry args={[220, 24, 12]} />
+      <sphereGeometry args={[SKY_RADIUS, 24, 12]} />
       <meshBasicMaterial color={SKY_BLUE} side={THREE.BackSide} fog={false} />
     </mesh>
   );
@@ -108,6 +134,7 @@ function Ground() {
 
 function Road({ controller }: { controller: LaneRacerController3D }) {
   const kerbTex = useMemo(() => makeKerbTexture(), []);
+  const dashTex = useMemo(() => makeLaneDashTexture(), []);
   const scrollGroupRef = useRef<THREE.Group>(null);
 
   const asphaltTex = useMemo(() => {
@@ -133,7 +160,6 @@ function Road({ controller }: { controller: LaneRacerController3D }) {
   }, []);
 
   const roadCenterZ = -ROAD_LENGTH / 2 + 20;
-  const DASH_PERIOD = 3;
 
   useFrame(() => {
     if (!scrollGroupRef.current) return;
@@ -157,19 +183,22 @@ function Road({ controller }: { controller: LaneRacerController3D }) {
         <meshBasicMaterial color="#ffffff" fog={false} />
       </mesh>
 
+      {/* Lane dividers — full-length textured strips so dashes reach the horizon */}
       {[-ROAD_WIDTH / 6, ROAD_WIDTH / 6].map((x, idx) => (
-        <group key={idx} position={[x, 0, roadCenterZ]}>
-          {Array.from({ length: Math.ceil(ROAD_LENGTH / 3) }, (_, i) => (
-            <mesh
-              key={i}
-              rotation={[-Math.PI / 2, 0, 0]}
-              position={[0, 0.025, -ROAD_LENGTH / 2 + i * 3 + 1.5]}
-            >
-              <planeGeometry args={[0.1, 1.6]} />
-              <meshBasicMaterial color="#ffffff" transparent opacity={0.55} fog={false} />
-            </mesh>
-          ))}
-        </group>
+        <mesh key={idx} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.03, roadCenterZ]}>
+          <planeGeometry args={[0.14, ROAD_LENGTH]} />
+          <meshBasicMaterial
+            map={dashTex}
+            transparent
+            opacity={0.85}
+            toneMapped={false}
+            fog={false}
+            depthWrite={false}
+            polygonOffset
+            polygonOffsetFactor={-1}
+            polygonOffsetUnits={-1}
+          />
+        </mesh>
       ))}
 
       {/* Kerbs — single textured strip per side (flat paint, scrolls with road) */}
@@ -389,8 +418,6 @@ interface LaneRacerSceneProps {
 }
 
 export function LaneRacerScene({ controller, teamId }: LaneRacerSceneProps) {
-  const rs = controller.renderState;
-
   return (
     <>
       <color attach="background" args={[GRASS_GREEN]} />
@@ -404,19 +431,6 @@ export function LaneRacerScene({ controller, teamId }: LaneRacerSceneProps) {
       <AnimatedTokens controller={controller} />
       <AnimatedPlayerCar controller={controller} teamId={teamId} />
       <Particles controller={controller} />
-
-      {rs.popupAlpha > 0 && (
-        <Text
-          position={[0, 3.5, -8]}
-          fontSize={1.2}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="middle"
-          fillOpacity={Math.min(1, rs.popupAlpha * 2)}
-        >
-          {rs.popupLabel}
-        </Text>
-      )}
     </>
   );
 }
