@@ -97,7 +97,7 @@ npm run build   # Production build (~+500KB bundle from Three.js — not code-sp
 3. **Mobile WebGL perf** — test on iOS/Capacitor; cap `dpr`, reduce geometry if needed
 
 ### Visual polish
-4. Low-poly car is primitive boxes — consider GLB models or extruded team SVGs
+4. ~~Low-poly car is primitive boxes~~ — done: medium-detail F1 silhouette with team colors (2026-07-08). GLB/SVG livery still optional later.
 5. Environment: grandstands, billboards, curved track (reference: retro behind-the-car arcade look)
 6. Answer tokens use canvas textures on billboards — works well; tune scale at spawn if needed
 
