@@ -16,8 +16,15 @@ const DASH_PERIOD = 3;
 const KERB_W = 0.38;
 const GROUND_SIZE = 800;
 const SKY_RADIUS = 500;
-const SKY_BLUE = '#87CEEB';
 const GRASS_GREEN = '#2a5230';
+/** Zenith / upper sky (deeper). */
+const SKY_ZENITH = '#5BA3D0';
+/** Near-horizon sky — desaturated blue-green so the join with grass softens. */
+const SKY_HORIZON = '#9bb8c4';
+/** Linear fog tint — mid mix of grass + horizon sky. */
+const FOG_COLOR = '#4a6a5c';
+const FOG_NEAR = 32;
+const FOG_FAR = 220;
 
 function mod(n: number, m: number): number {
   return ((n % m) + m) % m;
@@ -77,7 +84,13 @@ function AnswerTokenFace({ value }: { value: number }) {
     <Billboard>
       <mesh renderOrder={10}>
         <planeGeometry args={[1.5, 0.95]} />
-        <meshBasicMaterial map={texture} transparent toneMapped={false} depthWrite={false} />
+        <meshBasicMaterial
+          map={texture}
+          transparent
+          toneMapped={false}
+          depthWrite={false}
+          fog={false}
+        />
       </mesh>
     </Billboard>
   );
@@ -123,20 +136,72 @@ function makeLaneDashTexture(): THREE.CanvasTexture {
   return tex;
 }
 
+/** Vertical gradient for the inside of the sky sphere (v: bottom→top). */
+function makeSkyGradientTexture(): THREE.CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 4;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d')!;
+  const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  // Canvas y=0 is top of texture → maps toward sphere north (zenith) with default UVs.
+  g.addColorStop(0, SKY_ZENITH);
+  g.addColorStop(0.55, SKY_HORIZON);
+  g.addColorStop(1, '#6a8a78'); // soft ground-side fill if UVs show below horizon
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearFilter;
+  return tex;
+}
+
+function makeGrassTexture(): THREE.CanvasTexture {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = GRASS_GREEN;
+  ctx.fillRect(0, 0, size, size);
+  for (let i = 0; i < 900; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    const lift = Math.floor(Math.random() * 28) - 10;
+    const r = Math.max(0, Math.min(255, 0x2a + lift));
+    const g = Math.max(0, Math.min(255, 0x52 + lift));
+    const b = Math.max(0, Math.min(255, 0x30 + lift));
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(x, y, 1 + (Math.random() > 0.7 ? 1 : 0), 1);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(48, 48);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.generateMipmaps = true;
+  tex.minFilter = THREE.LinearMipmapLinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  return tex;
+}
+
 function Sky() {
+  const skyTex = useMemo(() => makeSkyGradientTexture(), []);
   return (
     <mesh frustumCulled={false}>
       <sphereGeometry args={[SKY_RADIUS, 24, 12]} />
-      <meshBasicMaterial color={SKY_BLUE} side={THREE.BackSide} fog={false} />
+      <meshBasicMaterial map={skyTex} side={THREE.BackSide} fog={false} toneMapped={false} />
     </mesh>
   );
 }
 
 function Ground() {
+  const grassTex = useMemo(() => makeGrassTexture(), []);
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 0]} renderOrder={0}>
       <planeGeometry args={[GROUND_SIZE, GROUND_SIZE]} />
-      <meshBasicMaterial color={GRASS_GREEN} fog={false} />
+      {/* Fog ON — distant grass softens into haze */}
+      <meshBasicMaterial map={grassTex} toneMapped={false} />
     </mesh>
   );
 }
@@ -554,7 +619,8 @@ interface LaneRacerSceneProps {
 export function LaneRacerScene({ controller, teamId }: LaneRacerSceneProps) {
   return (
     <>
-      <color attach="background" args={[GRASS_GREEN]} />
+      <color attach="background" args={[FOG_COLOR]} />
+      <fog attach="fog" args={[FOG_COLOR, FOG_NEAR, FOG_FAR]} />
       <ambientLight intensity={1.05} />
       <directionalLight position={[4, 16, 8]} intensity={1.15} castShadow={false} />
       <directionalLight position={[-6, 8, 4]} intensity={0.35} castShadow={false} />

@@ -167,7 +167,7 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
           dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)]}
           camera={{ position: [0, 3.6, 8.2], fov: 48, near: 0.1, far: 600 }}
           onCreated={({ gl }) => {
-            gl.setClearColor('#2a5230');
+            gl.setClearColor('#4a6a5c');
           }}
         >
           <SceneRoot controller={controller} teamId={teamId} structureVersion={structureVersion} />
