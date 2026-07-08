@@ -73,7 +73,7 @@ Open `http://localhost:8081/lane-racer` → enable **3D** toggle → Start.
 
 ```bash
 npm run check   # TypeScript
-npm run build   # Production build (~+500KB bundle from Three.js — not code-split yet)
+npm run build   # Production build (Three.js lazy-loaded on 3D path via LaneRacer.tsx)
 ```
 
 ### Verify checklist
@@ -92,17 +92,17 @@ npm run build   # Production build (~+500KB bundle from Three.js — not code-sp
 ## Known issues & next work
 
 ### High priority
-1. **Code-split Three.js** — lazy-load `LaneRacerCanvas3D` on `/lane-racer` only; main bundle grew ~500KB+
+1. ~~**Code-split Three.js**~~ — done: `LaneRacerCanvas3D` lazy-loaded in `LaneRacer.tsx` with preload on 3D toggle (2026-07-08)
 2. **Scroll wrap tuning** — `mod(worldScrollZ, 3)` may need adjustment if road/kerb repeat period doesn't match visual seamless loop
 3. **Mobile WebGL perf** — test on iOS/Capacitor; cap `dpr`, reduce geometry if needed
 
 ### Visual polish
 4. ~~Low-poly car is primitive boxes~~ — done: medium-detail F1 silhouette with team colors (2026-07-08). GLB/SVG livery still optional later.
-5. Environment: grandstands, billboards, curved track (reference: retro behind-the-car arcade look)
+5. ~~Environment atmosphere~~ — done: gradient sky, speckled grass, subtle fog (2026-07-08). Roadside props (grandstands / billboards) and curved track still optional later.
 6. Answer tokens use canvas textures on billboards — works well; tune scale at spawn if needed
 
 ### Merge blockers (before `main`)
-- [ ] Lazy-load 3D route chunk
+- [x] Lazy-load 3D route chunk
 - [ ] Manual QA on phone + desktop
 - [ ] Confirm 2D regression-free
 - [ ] User sign-off on 3D feel vs 2D
@@ -133,4 +133,4 @@ git log --oneline feature/lane-racer-3d ^main   # commits on branch
 git diff main...feature/lane-racer-3d           # full branch diff
 ```
 
-**Do not merge to `main` without lazy-loading and QA.**
+**Do not merge to `main` without QA.**
