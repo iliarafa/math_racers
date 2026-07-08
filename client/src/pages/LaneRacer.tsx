@@ -8,6 +8,7 @@ import type { Difficulty } from "@/lib/gameLogic";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
+import { FOG_COLOR } from "@/components/lane-racer/atmosphere";
 
 const LaneRacerCanvas3D = lazy(() =>
   import("@/components/lane-racer/LaneRacerCanvas3D").then(m => ({ default: m.LaneRacerCanvas3D })),
@@ -953,7 +954,7 @@ export default function LaneRacer() {
           {renderMode === '3d' ? (
             <Suspense
               fallback={
-                <div className="w-full h-full flex items-center justify-center bg-[#2a5230]">
+                <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: FOG_COLOR }}>
                   <span className="text-white/60 text-sm uppercase tracking-widest" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                     Loading 3D…
                   </span>

@@ -14,6 +14,7 @@ import {
   type LaneRacerEngineCallbacks,
   type LaneRacerEngineRef,
 } from '@/lib/laneRacerController3d';
+import { FOG_COLOR } from './atmosphere';
 import { LaneRacerSceneKeyed } from './LaneRacerScene';
 
 interface LaneRacerCanvas3DProps {
@@ -160,14 +161,14 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
     }), []);
 
     return (
-      <div className="relative w-full h-full bg-[#2a5230]">
+      <div className="relative w-full h-full" style={{ backgroundColor: FOG_COLOR }}>
         <Canvas
           className="w-full h-full block"
           gl={{ antialias: true, alpha: false }}
           dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)]}
           camera={{ position: [0, 3.6, 8.2], fov: 48, near: 0.1, far: 600 }}
           onCreated={({ gl }) => {
-            gl.setClearColor('#4a6a5c');
+            gl.setClearColor(FOG_COLOR);
           }}
         >
           <SceneRoot controller={controller} teamId={teamId} structureVersion={structureVersion} />

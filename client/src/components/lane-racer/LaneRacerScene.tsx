@@ -8,6 +8,7 @@ import {
   LaneRacerController3D,
   laneXForIndex,
 } from '@/lib/laneRacerController3d';
+import { FOG_COLOR, FOG_FAR, FOG_NEAR } from './atmosphere';
 
 const ROAD_WIDTH = 7.2;
 /** Long enough that the far tip meets the skyline (past the grass plane edge). */
@@ -21,10 +22,6 @@ const GRASS_GREEN = '#2a5230';
 const SKY_ZENITH = '#5BA3D0';
 /** Near-horizon sky — desaturated blue-green so the join with grass softens. */
 const SKY_HORIZON = '#9bb8c4';
-/** Linear fog tint — mid mix of grass + horizon sky. */
-const FOG_COLOR = '#4a6a5c';
-const FOG_NEAR = 32;
-const FOG_FAR = 220;
 
 function mod(n: number, m: number): number {
   return ((n % m) + m) % m;
