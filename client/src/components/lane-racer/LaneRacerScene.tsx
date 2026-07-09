@@ -16,6 +16,9 @@ const ROAD_LENGTH = 420;
 const DASH_PERIOD = 3;
 const KERB_W = 0.38;
 const GROUND_SIZE = 800;
+/** Grass texture tiles across the ground plane — keep in sync with makeGrassTexture. */
+const GRASS_REPEAT = 24;
+const GRASS_TILE = GROUND_SIZE / GRASS_REPEAT;
 const SKY_RADIUS = 500;
 const GRASS_GREEN = '#2a5230';
 /** Zenith / upper sky (deeper). */
@@ -154,27 +157,36 @@ function makeSkyGradientTexture(): THREE.CanvasTexture {
 }
 
 function makeGrassTexture(): THREE.CanvasTexture {
-  const size = 128;
+  const size = 256;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
   ctx.fillStyle = GRASS_GREEN;
   ctx.fillRect(0, 0, size, size);
-  for (let i = 0; i < 900; i++) {
+  // Soft mid-size patches — readable motion under mipmaps without looking tiled
+  for (let i = 0; i < 180; i++) {
     const x = Math.random() * size;
     const y = Math.random() * size;
-    const lift = Math.floor(Math.random() * 28) - 10;
+    const lift = Math.floor(Math.random() * 36) - 14;
     const r = Math.max(0, Math.min(255, 0x2a + lift));
-    const g = Math.max(0, Math.min(255, 0x52 + lift));
+    const g = Math.max(0, Math.min(255, 0x52 + lift + 4));
     const b = Math.max(0, Math.min(255, 0x30 + lift));
     ctx.fillStyle = `rgb(${r},${g},${b})`;
-    ctx.fillRect(x, y, 1 + (Math.random() > 0.7 ? 1 : 0), 1);
+    const w = 3 + Math.floor(Math.random() * 8);
+    const h = 2 + Math.floor(Math.random() * 7);
+    ctx.fillRect(x, y, w, h);
+  }
+  for (let i = 0; i < 60; i++) {
+    const x = Math.random() * size;
+    const y = Math.random() * size;
+    ctx.fillStyle = Math.random() > 0.5 ? '#355f3a' : '#243f28';
+    ctx.fillRect(x, y, 2 + Math.floor(Math.random() * 3), 4 + Math.floor(Math.random() * 8));
   }
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(48, 48);
+  tex.repeat.set(GRASS_REPEAT, GRASS_REPEAT);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.generateMipmaps = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter;
@@ -192,10 +204,19 @@ function Sky() {
   );
 }
 
-function Ground() {
+function Ground({ controller }: { controller: LaneRacerController3D }) {
   const grassTex = useMemo(() => makeGrassTexture(), []);
+  const groundRef = useRef<THREE.Mesh>(null);
+
+  useFrame(() => {
+    if (!groundRef.current) return;
+    // Same worldScrollZ as road/tokens — shift by one grass-tile period so the
+    // speckled plane streams toward the camera with the asphalt (seamless wrap).
+    groundRef.current.position.z = mod(controller.renderState.worldScrollZ, GRASS_TILE);
+  });
+
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.08, 0]} renderOrder={0}>
+    <mesh ref={groundRef} rotation={[-Math.PI / 2, 0, 0]} position-y={-0.08} renderOrder={0}>
       <planeGeometry args={[GROUND_SIZE, GROUND_SIZE]} />
       {/* Fog ON — distant grass softens into haze */}
       <meshBasicMaterial map={grassTex} toneMapped={false} />
@@ -623,7 +644,7 @@ export function LaneRacerScene({ controller, teamId }: LaneRacerSceneProps) {
       <directionalLight position={[-6, 8, 4]} intensity={0.35} castShadow={false} />
 
       <Sky />
-      <Ground />
+      <Ground controller={controller} />
       <Road controller={controller} />
 
       <AnimatedTokens controller={controller} />
