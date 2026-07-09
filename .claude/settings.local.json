@@ -20,7 +20,8 @@
       "Bash(lsof -nP -iTCP:8081 -sTCP:LISTEN)",
       "Bash(git fetch *)",
       "Skill(update-config)",
-      "Skill(update-config:*)"
+      "Skill(update-config:*)",
+      "WebSearch"
     ]
   },
   "hooks": {
