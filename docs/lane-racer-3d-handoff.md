@@ -15,8 +15,10 @@ npm run dev -- --port 8081
 ```
 
 ### Done this session (2026-07-12)
-- Continuous 3D lane slide + yaw/roll lean (`LANE_TRANSITION_MS` 300, `carX`/`carYaw`/`carRoll`)
-- Controller: `laneXVisual()`, eased `carLaneVisual` → continuous X; peak yaw 10° / roll 5° with `sin(π·t)` envelope
+- **Conditional lane slide** (supersedes always-on 300ms slide): early vs late chosen at input in `beginLaneTransition()`
+  - **Early** (token far / empty track): 200ms, yaw 5° / roll 2.5° (`LANE_EARLY_*`)
+  - **Late** (token in last 30% of track): 300ms, yaw 10° / roll 5° (`LANE_LATE_*`); gate `LATE_SLIDE_Z = COLLISION_Z - 0.3 * TRACK_LENGTH`
+- Controller: `laneXVisual()`, eased `carLaneVisual` → continuous `carX`/`carYaw`/`carRoll`; mode re-picked on each L/R input
 - Scene: `AnimatedPlayerCar` driven from `carX` + rotations (integer `carLane` collision unchanged)
 
 ### Done earlier on branch
@@ -34,6 +36,7 @@ npm run dev -- --port 8081
 
 ### Do not reopen without reason
 - Car silhouette (v1 locked)
+- Conditional slide v1 locked — tune `LATE_SLIDE_FRACTION` only if feel is wrong (not duration/lean peaks)
 - Lane-flow v1 locked unless motion still feels stiff (then spring approach 2)
 - Soft atmosphere approach (gradient + grass + fog; no props in that pass)
 - 2D engine removal
@@ -111,7 +114,7 @@ npm run build   # Three.js lazy-loaded on 3D path
 - [ ] Road, dashes, kerbs, **grass**, tokens scroll together
 - [ ] Soft horizon (no hard dark fog strip under sky)
 - [ ] Answer numbers crisp at spawn
-- [ ] Lane switch: continuous slide (~300ms) + lean; mash L/R mid-slide OK
+- [ ] Lane switch: early (200ms / half lean) far from token; late (300ms / full lean) in last 30%; mash L/R mid-slide OK
 - [ ] Finish + leaderboard
 - [ ] Mobile WebGL acceptable
 
@@ -127,7 +130,7 @@ npm run build   # Three.js lazy-loaded on 3D path
 ### Visual polish
 4. ~~Car~~ — medium F1 silhouette done; GLB optional later
 5. ~~Atmosphere~~ — gradient sky, scrolling speckled grass, fog done; **props still open**
-6. ~~Lane-flow~~ — continuous `carX` + yaw/roll lean done; spring tuning only if stiff
+6. ~~Lane-flow~~ — conditional early/late `carX` + yaw/roll lean done; tune `LATE_SLIDE_FRACTION` only if band feels wrong
 7. Token scale at spawn — optional
 
 ### Merge blockers (before `main`)
@@ -147,7 +150,7 @@ npm run build   # Three.js lazy-loaded on 3D path
 | Same game rules as 2D | Arcade parity |
 | Unified `worldScrollZ` | Road / markings / kerbs / grass / numbers move together |
 | Soft atmosphere before props | Depth first; roadside dressing later |
-| Continuous lane X + lean | Integer `carLane` for collision; visual slide via `carLaneVisual` → `carX` |
+| Conditional lane X + lean | Integer `carLane` for collision; early/late slide via `beginLaneTransition()` + `LATE_SLIDE_Z` |
 | Rival stays DOM ghost | Not a 3D opponent in v1 |
 
 ---
@@ -160,6 +163,8 @@ npm run build   # Three.js lazy-loaded on 3D path
 - Atmosphere plan: `docs/superpowers/plans/2026-07-08-lane-racer-3d-atmosphere.md`
 - Lane-flow: `docs/superpowers/specs/2026-07-12-lane-racer-3d-lane-flow-design.md`
 - Lane-flow plan: `docs/superpowers/plans/2026-07-12-lane-racer-3d-lane-flow.md`
+- Conditional slide: `docs/superpowers/specs/2026-07-12-lane-racer-3d-conditional-slide-design.md`
+- Conditional slide plan: `docs/superpowers/plans/2026-07-12-lane-racer-3d-conditional-slide.md`
 
 ---
 
@@ -170,6 +175,6 @@ git log --oneline feature/lane-racer-3d ^main
 git diff main...feature/lane-racer-3d
 ```
 
-Recent tip commits: lane-flow scene (`4948ae2`), lane-flow controller (`beff1f5`), lane-flow design (`db8d2fd`), grass scroll (`24f550e`).
+Recent tip commits: conditional slide controller (`49fb4e3`), lane-flow scene (`4948ae2`), lane-flow controller (`beff1f5`), grass scroll (`24f550e`).
 
 **Do not merge to `main` without QA + sign-off.**
