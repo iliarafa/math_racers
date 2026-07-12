@@ -533,18 +533,6 @@ export default function LaneRacer() {
               position: 'relative',
             };
 
-            const activeHighlight: React.CSSProperties = {
-              position: 'absolute',
-              top: drumItemH,
-              left: 4,
-              right: 4,
-              height: drumItemH,
-              border: '1.5px solid rgba(255, 255, 255, 0.7)',
-              borderRadius: '10px',
-              pointerEvents: 'none',
-              zIndex: 1,
-            };
-
             return (
               <div
                 className="w-full max-w-sm rounded-2xl px-3 py-4"
@@ -560,7 +548,6 @@ export default function LaneRacer() {
                   <div className="flex flex-col items-center flex-1">
                     <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Level</div>
                     <div style={drumStyle} className="w-full" {...levelSwipe}>
-                      <div style={activeHighlight} />
                       {[-1, 0, 1].map(offset => {
                         const idx = getIdx(currentLevelIndex, offset, DIFFICULTY_OPTIONS.length);
                         const level = DIFFICULTY_OPTIONS[idx];
@@ -597,7 +584,6 @@ export default function LaneRacer() {
                   <div className="flex flex-col items-center flex-1">
                     <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
                     <div style={drumStyle} className="w-full" {...teamSwipe}>
-                      <div style={activeHighlight} />
                       {[-1, 0, 1].map(offset => {
                         const idx = getIdx(currentTeamIndex, offset, TEAMS.length);
                         const team = TEAMS[idx];
@@ -633,7 +619,6 @@ export default function LaneRacer() {
                   <div className="flex flex-col items-center flex-1">
                     <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
                     <div style={drumStyle} className="w-full" {...trackSwipe}>
-                      <div style={activeHighlight} />
                       {[-1, 0, 1].map(offset => {
                         const idx = getIdx(currentCircuitIndex, offset, CIRCUIT_OPTIONS.length);
                         const circuit = CIRCUIT_OPTIONS[idx];
@@ -685,8 +670,8 @@ export default function LaneRacer() {
                           fontFamily: 'Oxanium, sans-serif',
                           maxWidth: 56,
                           color: i === currentOpIndex ? '#fff' : 'rgba(255,255,255,0.45)',
-                          border: i === currentOpIndex ? '1.5px solid rgba(255,255,255,0.7)' : '1px solid rgba(255,255,255,0.12)',
-                          backgroundColor: i === currentOpIndex ? 'rgba(255,255,255,0.1)' : 'transparent',
+                          border: 'none',
+                          backgroundColor: i === currentOpIndex ? 'rgba(255,255,255,0.12)' : 'transparent',
                         }}
                         data-testid={`lr-op-${op.type}`}
                       >
