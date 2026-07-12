@@ -46,9 +46,12 @@ export interface LaneRacerRenderState {
   particles: Array<{ x: number; y: number; z: number; life: number; maxLife: number; color: string }>;
 }
 
-const LANE_TRANSITION_MS = 300;
-const LANE_LEAN_YAW = (10 * Math.PI) / 180;
-const LANE_LEAN_ROLL = (5 * Math.PI) / 180;
+const LANE_EARLY_MS = 200;
+const LANE_LATE_MS = 300;
+const LANE_EARLY_YAW = (5 * Math.PI) / 180;
+const LANE_EARLY_ROLL = (2.5 * Math.PI) / 180;
+const LANE_LATE_YAW = (10 * Math.PI) / 180;
+const LANE_LATE_ROLL = (5 * Math.PI) / 180;
 const FLASH_FRAMES = 12;
 const SHAKE_FRAMES_WRONG = 14;
 const CAR_PUNCH_FRAMES = 10;
@@ -60,6 +63,9 @@ const LANE_X = [-2.4, 0, 2.4] as const;
 
 // Match 2D engine timing: ~3.5 s from spawn to collision at BASE_SPEED (667 px canvas ref).
 const TRACK_LENGTH = COLLISION_Z - TOKEN_SPAWN_Z;
+/** Last 30% of spawn→collision: late-slide band. */
+const LATE_SLIDE_FRACTION = 0.3;
+const LATE_SLIDE_Z = COLLISION_Z - LATE_SLIDE_FRACTION * TRACK_LENGTH;
 const TARGET_CROSS_FRAMES = 210;
 const SCROLL_STEP = TRACK_LENGTH / (TARGET_CROSS_FRAMES * BASE_SPEED);
 
@@ -85,6 +91,9 @@ export class LaneRacerController3D {
   private carRoll = 0;
   private laneTransitionStart = 0;
   private laneTransitionFrom = 1;
+  private activeTransitionMs = LANE_EARLY_MS;
+  private activeLeanYaw = LANE_EARLY_YAW;
+  private activeLeanRoll = LANE_EARLY_ROLL;
   private speed = BASE_SPEED;
   private worldScrollZ = 0;
   private scrollDelta = 0;
@@ -155,17 +164,34 @@ export class LaneRacerController3D {
 
   moveLeft() {
     if (this.carLane > 0) {
-      this.laneTransitionFrom = this.carLaneVisual;
-      this.laneTransitionStart = performance.now();
+      this.beginLaneTransition();
       this.carLane--;
     }
   }
 
   moveRight() {
     if (this.carLane < 2) {
-      this.laneTransitionFrom = this.carLaneVisual;
-      this.laneTransitionStart = performance.now();
+      this.beginLaneTransition();
       this.carLane++;
+    }
+  }
+
+  private isLateSlideWindow(): boolean {
+    if (this.tokens.length === 0) return false;
+    return this.tokens[0].z >= LATE_SLIDE_Z;
+  }
+
+  private beginLaneTransition() {
+    this.laneTransitionFrom = this.carLaneVisual;
+    this.laneTransitionStart = performance.now();
+    if (this.isLateSlideWindow()) {
+      this.activeTransitionMs = LANE_LATE_MS;
+      this.activeLeanYaw = LANE_LATE_YAW;
+      this.activeLeanRoll = LANE_LATE_ROLL;
+    } else {
+      this.activeTransitionMs = LANE_EARLY_MS;
+      this.activeLeanYaw = LANE_EARLY_YAW;
+      this.activeLeanRoll = LANE_EARLY_ROLL;
     }
   }
 
@@ -216,7 +242,7 @@ export class LaneRacerController3D {
     this.worldScrollZ += scrollAmount;
 
     const transitionProgress = Math.min(
-      (timestamp - this.laneTransitionStart) / LANE_TRANSITION_MS,
+      (timestamp - this.laneTransitionStart) / this.activeTransitionMs,
       1,
     );
     const eased = 1 - Math.pow(1 - transitionProgress, 3);
@@ -229,8 +255,8 @@ export class LaneRacerController3D {
     } else {
       const dir = Math.sign(this.carLane - this.laneTransitionFrom) || 0;
       const envelope = Math.sin(Math.PI * transitionProgress);
-      this.carYaw = dir * LANE_LEAN_YAW * envelope;
-      this.carRoll = -dir * LANE_LEAN_ROLL * envelope;
+      this.carYaw = dir * this.activeLeanYaw * envelope;
+      this.carRoll = -dir * this.activeLeanRoll * envelope;
     }
 
     if (this.flashFrames > 0) this.flashFrames -= dt;
