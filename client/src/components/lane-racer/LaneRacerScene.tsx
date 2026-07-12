@@ -587,7 +587,9 @@ function AnimatedPlayerCar({ controller, teamId }: { controller: LaneRacerContro
   useFrame(() => {
     const rs = controller.renderState;
     if (!groupRef.current) return;
-    groupRef.current.position.set(laneXForIndex(rs.carLaneVisual), 0, 1.2);
+    groupRef.current.position.set(rs.carX, 0, 1.2);
+    groupRef.current.rotation.y = rs.carYaw;
+    groupRef.current.rotation.z = rs.carRoll;
     groupRef.current.scale.setScalar(rs.carPunchScale);
   });
 
