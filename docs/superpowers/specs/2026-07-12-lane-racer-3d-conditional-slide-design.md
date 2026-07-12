@@ -17,7 +17,7 @@ Keep continuous lane motion from the lane-flow polish, but reserve the long slid
 |--------|----------|
 | Near trigger | Distance to answer row (A) — last ~30% of spawn→collision |
 | Early feel | Snap+grip — 100ms, ease-out quintic, yaw 7° / roll 3.5° (revised from soft 200ms flow) |
-| Empty track | Always soft flow (A) — no late slide without live tokens |
+| Empty track | Always early snap+grip (A) — no late slide without live tokens |
 | Approach | Mode chosen at input time (approach 1) |
 | Scope | 3D controller only; scene already consumes `carX` / lean |
 | Gameplay | Integer `carLane` still drives collision |
