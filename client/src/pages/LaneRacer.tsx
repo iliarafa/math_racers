@@ -738,27 +738,107 @@ export default function LaneRacer() {
     );
   }
 
-  // Countdown — F1 starting lights
-  if (gameStatus === 'countdown') {
+  // Countdown + racing share one fullscreen shell so the 3D canvas (and HUD
+  // layout) are primed under the lights — no remount fight at lights-out.
+  if (gameStatus === 'countdown' || gameStatus === 'racing') {
+    const isRacing = gameStatus === 'racing';
     return (
-      <GameLayout lockViewport hideHeader>
-        <div className="h-full flex items-center justify-center bg-white">
-          <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
-            <div className="flex gap-2 md:gap-3 justify-center">
-              {lights.map((isOn, i) => (
-                <div
-                  key={i}
-                  className={`w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4 ${
-                    isOn
-                      ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]"
-                      : "bg-zinc-800 border-zinc-700"
-                  }`}
-                />
-              ))}
-            </div>
+      <div ref={containerRef} className="fixed inset-0 z-50 flex flex-col bg-black">
+        {/* Fixed-height HUD strips keep the canvas size stable from first paint */}
+        <div
+          className="flex justify-between items-center px-3 py-2 shrink-0"
+          style={{ background: 'black', paddingTop: 'calc(env(safe-area-inset-top) + 8px)', minHeight: 44 }}
+        >
+          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
+            Q {isRacing ? questionNum : 0}/{raceLength}
+          </div>
+          <div className="text-2xl font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
+            {isRacing
+              ? `${Math.floor(elapsedMs / 60000)}:${String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0')}.${String(elapsedMs % 1000).padStart(3, '0')}`
+              : '0:00.000'}
+          </div>
+          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: '#22c55e' }}>
+            ✓ {isRacing ? correctCount : 0}
           </div>
         </div>
-      </GameLayout>
+
+        <div
+          className="w-full text-center py-4 font-bold shrink-0"
+          style={{
+            fontFamily: 'Oxanium, sans-serif',
+            fontSize: '2.8rem',
+            background: 'black',
+            color: 'white',
+            minHeight: 80,
+            lineHeight: 1.1,
+          }}
+        >
+          {isRacing ? (questionDisplay || '\u00A0') : '\u00A0'}
+        </div>
+
+        <div
+          className="shrink-0"
+          style={{ background: 'black', padding: '0 12px 8px', display: 'flex', alignItems: 'center', gap: 8, minHeight: 40 }}
+        >
+          <div style={{ position: 'relative', flex: 1, height: 6, background: 'rgba(255,255,255,0.16)', borderRadius: 4 }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${(isRacing ? playerProgress : 0) * 100}%`, background: progressColor, borderRadius: 4, boxShadow: `0 0 6px ${progressColor}`, transition: isRacing ? 'width 0.4s ease-out' : 'none' }} />
+            <img src={TEAM_PREVIEW_URLS[rivalTeamId]} alt="rival" style={{ position: 'absolute', top: '50%', left: `${(isRacing ? rivalProg : 0) * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 1 }} />
+            <img src={TEAM_PREVIEW_URLS[selectedTeam]} alt="you" style={{ position: 'absolute', top: '50%', left: `${(isRacing ? playerProgress : 0) * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 2, transition: isRacing ? 'left 0.4s ease-out' : 'none' }} />
+          </div>
+          <span style={{ color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Oxanium, sans-serif' }}>
+            P{isRacing ? position : 1}
+          </span>
+        </div>
+
+        <div ref={canvasWrapperRef} className="relative flex-1 min-h-0 overflow-hidden bg-black">
+          {renderMode === '3d' ? (
+            <Suspense
+              fallback={
+                <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: FOG_COLOR }}>
+                  <span className="text-white/60 text-sm uppercase tracking-widest" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    Loading 3D…
+                  </span>
+                </div>
+              }
+            >
+              <LaneRacerCanvas3D
+                ref={engineRef}
+                callbacks={engineCallbacks}
+                totalQuestions={raceLength}
+                teamId={selectedTeam}
+                difficulty={selectedDifficulty}
+                paused={!isRacing}
+              />
+            </Suspense>
+          ) : (
+            isRacing ? (
+              <canvas
+                ref={canvasRef}
+                style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
+              />
+            ) : null
+          )}
+        </div>
+
+        {gameStatus === 'countdown' && (
+          <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black">
+            <div className="bg-zinc-950 rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
+              <div className="flex gap-2 md:gap-3 justify-center">
+                {lights.map((isOn, i) => (
+                  <div
+                    key={i}
+                    className={`w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4 ${
+                      isOn
+                        ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]"
+                        : "bg-zinc-800 border-zinc-700"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -908,75 +988,5 @@ export default function LaneRacer() {
     );
   }
 
-  // Racing screen
-  return (
-    <GameLayout lockViewport hideHeader>
-      <div ref={containerRef} className="fixed inset-0 flex flex-col bg-white" style={{ zIndex: 50 }}>
-        {/* HUD — top */}
-        <div className="flex justify-between items-center px-3 py-2" style={{ background: 'black', paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
-          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
-            Q {questionNum}/{raceLength}
-          </div>
-          <div className="text-2xl font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
-            {Math.floor(elapsedMs / 60000)}:{String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0')}.{String(elapsedMs % 1000).padStart(3, '0')}
-          </div>
-          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: '#22c55e' }}>
-            ✓ {correctCount}
-          </div>
-        </div>
-
-        {/* Question bar */}
-        <div
-          className="w-full text-center py-4 font-bold"
-          style={{
-            fontFamily: 'Oxanium, sans-serif',
-            fontSize: '2.8rem',
-            background: 'black',
-            color: 'white',
-            minHeight: '80px',
-          }}
-        >
-          {questionDisplay || ''}
-        </div>
-
-        {/* Rival progress + position */}
-        <div style={{ background: 'black', padding: '0 12px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ position: 'relative', flex: 1, height: 6, background: 'rgba(255,255,255,0.16)', borderRadius: 4 }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${playerProgress * 100}%`, background: progressColor, borderRadius: 4, boxShadow: `0 0 6px ${progressColor}`, transition: 'width 0.4s ease-out' }} />
-            <img src={TEAM_PREVIEW_URLS[rivalTeamId]} alt="rival" style={{ position: 'absolute', top: '50%', left: `${rivalProg * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 1 }} />
-            <img src={TEAM_PREVIEW_URLS[selectedTeam]} alt="you" style={{ position: 'absolute', top: '50%', left: `${playerProgress * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 2, transition: 'left 0.4s ease-out' }} />
-          </div>
-          <span style={{ color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Oxanium, sans-serif' }}>P{position}</span>
-        </div>
-
-        {/* Game view — 2D canvas or 3D scene */}
-        <div ref={canvasWrapperRef} className="flex-1 min-h-0 overflow-hidden bg-black">
-          {renderMode === '3d' ? (
-            <Suspense
-              fallback={
-                <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: FOG_COLOR }}>
-                  <span className="text-white/60 text-sm uppercase tracking-widest" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-                    Loading 3D…
-                  </span>
-                </div>
-              }
-            >
-              <LaneRacerCanvas3D
-                ref={engineRef}
-                callbacks={engineCallbacks}
-                totalQuestions={raceLength}
-                teamId={selectedTeam}
-                difficulty={selectedDifficulty}
-              />
-            </Suspense>
-          ) : (
-            <canvas
-              ref={canvasRef}
-              style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
-            />
-          )}
-        </div>
-      </div>
-    </GameLayout>
-  );
+  return null;
 }

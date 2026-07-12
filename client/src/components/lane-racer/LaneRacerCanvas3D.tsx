@@ -22,6 +22,8 @@ interface LaneRacerCanvas3DProps {
   totalQuestions: number;
   teamId: TeamId;
   difficulty: Difficulty;
+  /** When true, game loop holds (used to prime WebGL under starting lights). */
+  paused?: boolean;
 }
 
 function SceneRoot({
@@ -139,7 +141,7 @@ function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
 }
 
 export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3DProps>(
-  function LaneRacerCanvas3D({ callbacks, totalQuestions, teamId, difficulty }, ref) {
+  function LaneRacerCanvas3D({ callbacks, totalQuestions, teamId, difficulty, paused = false }, ref) {
     const controller = useMemo(
       () => new LaneRacerController3D(callbacks, totalQuestions, difficulty),
       [callbacks, totalQuestions, difficulty],
@@ -156,6 +158,11 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
         controller.setStructureChangeListener(null);
       };
     }, [controller]);
+
+    useEffect(() => {
+      if (paused) controller.pause();
+      else controller.resume();
+    }, [paused, controller]);
 
     useImperativeHandle(ref, () => ({
       moveLeft: () => controllerRef.current.moveLeft(),
