@@ -2,11 +2,11 @@
 
 **Branch:** `feature/lane-racer-3d`  
 **Status:** Playable POC — not merge-ready  
-**Last updated:** 2026-07-08 (EOD) — resume here tomorrow
+**Last updated:** 2026-07-12
 
 ---
 
-## Resume tomorrow (start here)
+## Resume here (start here)
 
 ```bash
 git checkout feature/lane-racer-3d
@@ -14,7 +14,12 @@ npm run dev -- --port 8081
 # → http://localhost:8081/lane-racer → enable 3D → Start
 ```
 
-### Done this session (2026-07-08)
+### Done this session (2026-07-12)
+- Continuous 3D lane slide + yaw/roll lean (`LANE_TRANSITION_MS` 300, `carX`/`carYaw`/`carRoll`)
+- Controller: `laneXVisual()`, eased `carLaneVisual` → continuous X; peak yaw 10° / roll 5° with `sin(π·t)` envelope
+- Scene: `AnimatedPlayerCar` driven from `carX` + rotations (integer `carLane` collision unchanged)
+
+### Done earlier on branch
 - Chase-cam F1 rear car polish (thin wing, raised diffuser, darker tilted front wing)
 - Soft atmosphere: gradient sky, speckled grass, subtle fog (`FOG_COLOR` `#7a9a8e`, near 32 / far 255)
 - Shared fog/clear constants in `client/src/components/lane-racer/atmosphere.ts`
@@ -29,6 +34,7 @@ npm run dev -- --port 8081
 
 ### Do not reopen without reason
 - Car silhouette (v1 locked)
+- Lane-flow v1 locked unless motion still feels stiff (then spring approach 2)
 - Soft atmosphere approach (gradient + grass + fog; no props in that pass)
 - 2D engine removal
 - Power-ups / championship hooks in Lane Racer
@@ -105,7 +111,8 @@ npm run build   # Three.js lazy-loaded on 3D path
 - [ ] Road, dashes, kerbs, **grass**, tokens scroll together
 - [ ] Soft horizon (no hard dark fog strip under sky)
 - [ ] Answer numbers crisp at spawn
-- [ ] Lane switch + finish + leaderboard
+- [ ] Lane switch: continuous slide (~300ms) + lean; mash L/R mid-slide OK
+- [ ] Finish + leaderboard
 - [ ] Mobile WebGL acceptable
 
 ---
@@ -119,8 +126,9 @@ npm run build   # Three.js lazy-loaded on 3D path
 
 ### Visual polish
 4. ~~Car~~ — medium F1 silhouette done; GLB optional later
-5. ~~Atmosphere~~ — gradient sky, scrolling speckled grass, fog done; **props / curves still open**
-6. Token scale at spawn — optional
+5. ~~Atmosphere~~ — gradient sky, scrolling speckled grass, fog done; **props still open**
+6. ~~Lane-flow~~ — continuous `carX` + yaw/roll lean done; spring tuning only if stiff
+7. Token scale at spawn — optional
 
 ### Merge blockers (before `main`)
 - [x] Lazy-load 3D route chunk
@@ -139,6 +147,7 @@ npm run build   # Three.js lazy-loaded on 3D path
 | Same game rules as 2D | Arcade parity |
 | Unified `worldScrollZ` | Road / markings / kerbs / grass / numbers move together |
 | Soft atmosphere before props | Depth first; roadside dressing later |
+| Continuous lane X + lean | Integer `carLane` for collision; visual slide via `carLaneVisual` → `carX` |
 | Rival stays DOM ghost | Not a 3D opponent in v1 |
 
 ---
@@ -149,6 +158,8 @@ npm run build   # Three.js lazy-loaded on 3D path
 - Car polish: `docs/superpowers/specs/2026-07-08-lane-racer-3d-car-polish-design.md`
 - Atmosphere: `docs/superpowers/specs/2026-07-08-lane-racer-3d-atmosphere-design.md`
 - Atmosphere plan: `docs/superpowers/plans/2026-07-08-lane-racer-3d-atmosphere.md`
+- Lane-flow: `docs/superpowers/specs/2026-07-12-lane-racer-3d-lane-flow-design.md`
+- Lane-flow plan: `docs/superpowers/plans/2026-07-12-lane-racer-3d-lane-flow.md`
 
 ---
 
@@ -159,6 +170,6 @@ git log --oneline feature/lane-racer-3d ^main
 git diff main...feature/lane-racer-3d
 ```
 
-Recent tip commits: grass scroll (`24f550e`), fog soften (`b3b2734`), atmosphere (`ba1cf6e`), car rear (`7cc1a23`).
+Recent tip commits: lane-flow scene (`4948ae2`), lane-flow controller (`beff1f5`), lane-flow design (`db8d2fd`), grass scroll (`24f550e`).
 
 **Do not merge to `main` without QA + sign-off.**
