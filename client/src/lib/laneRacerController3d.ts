@@ -46,16 +46,16 @@ export interface LaneRacerRenderState {
   particles: Array<{ x: number; y: number; z: number; life: number; maxLife: number; color: string }>;
 }
 
-/** Early snap+grip: short plant onto the lane (not a soft slide). */
-const LANE_EARLY_MS = 100;
+/** Early: flowing continuous X, flat (no lean). Late slide keeps lean. */
+const LANE_EARLY_MS = 250;
 const LANE_LATE_MS = 300;
 /** Early stays flat — lean is reserved for late slides. */
 const LANE_EARLY_YAW = 0;
 const LANE_EARLY_ROLL = 0;
 const LANE_LATE_YAW = (10 * Math.PI) / 180;
 const LANE_LATE_ROLL = (5 * Math.PI) / 180;
-/** Ease-out power: early = quintic (snap), late = cubic (slide). */
-const LANE_EARLY_EASE_POWER = 5;
+/** Ease-out power: both modes cubic for continuous flow; late is longer + leans. */
+const LANE_EARLY_EASE_POWER = 3;
 const LANE_LATE_EASE_POWER = 3;
 const FLASH_FRAMES = 12;
 const SHAKE_FRAMES_WRONG = 14;
