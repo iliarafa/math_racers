@@ -54,9 +54,6 @@ const LANE_EARLY_YAW = 0;
 const LANE_EARLY_ROLL = 0;
 const LANE_LATE_YAW = (10 * Math.PI) / 180;
 const LANE_LATE_ROLL = (5 * Math.PI) / 180;
-/** Ease-out power: both modes cubic for continuous flow; late is longer + leans. */
-const LANE_EARLY_EASE_POWER = 3;
-const LANE_LATE_EASE_POWER = 3;
 const FLASH_FRAMES = 12;
 const SHAKE_FRAMES_WRONG = 14;
 const CAR_PUNCH_FRAMES = 10;
@@ -99,7 +96,6 @@ export class LaneRacerController3D {
   private activeTransitionMs = LANE_EARLY_MS;
   private activeLeanYaw = LANE_EARLY_YAW;
   private activeLeanRoll = LANE_EARLY_ROLL;
-  private activeEasePower = LANE_EARLY_EASE_POWER;
   private speed = BASE_SPEED;
   private worldScrollZ = 0;
   private scrollDelta = 0;
@@ -194,12 +190,10 @@ export class LaneRacerController3D {
       this.activeTransitionMs = LANE_LATE_MS;
       this.activeLeanYaw = LANE_LATE_YAW;
       this.activeLeanRoll = LANE_LATE_ROLL;
-      this.activeEasePower = LANE_LATE_EASE_POWER;
     } else {
       this.activeTransitionMs = LANE_EARLY_MS;
       this.activeLeanYaw = LANE_EARLY_YAW;
       this.activeLeanRoll = LANE_EARLY_ROLL;
-      this.activeEasePower = LANE_EARLY_EASE_POWER;
     }
   }
 
@@ -253,7 +247,9 @@ export class LaneRacerController3D {
       (timestamp - this.laneTransitionStart) / this.activeTransitionMs,
       1,
     );
-    const eased = 1 - Math.pow(1 - transitionProgress, this.activeEasePower);
+    // Smoothstep (ease-in-out): soft leave + soft land — avoids ease-out "curb bounce".
+    const eased =
+      transitionProgress * transitionProgress * (3 - 2 * transitionProgress);
     this.carLaneVisual =
       this.laneTransitionFrom + (this.carLane - this.laneTransitionFrom) * eased;
 
