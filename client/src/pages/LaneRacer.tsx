@@ -539,7 +539,7 @@ export default function LaneRacer() {
               left: 4,
               right: 4,
               height: drumItemH,
-              border: '1.5px solid rgba(0, 210, 190, 0.6)',
+              border: '1.5px solid rgba(255, 255, 255, 0.7)',
               borderRadius: '10px',
               pointerEvents: 'none',
               zIndex: 1,
@@ -685,8 +685,8 @@ export default function LaneRacer() {
                           fontFamily: 'Oxanium, sans-serif',
                           maxWidth: 56,
                           color: i === currentOpIndex ? '#fff' : 'rgba(255,255,255,0.45)',
-                          border: i === currentOpIndex ? '1.5px solid rgba(0,210,190,0.6)' : '1px solid rgba(255,255,255,0.12)',
-                          backgroundColor: i === currentOpIndex ? 'rgba(0,210,190,0.12)' : 'transparent',
+                          border: i === currentOpIndex ? '1.5px solid rgba(255,255,255,0.7)' : '1px solid rgba(255,255,255,0.12)',
+                          backgroundColor: i === currentOpIndex ? 'rgba(255,255,255,0.1)' : 'transparent',
                         }}
                         data-testid={`lr-op-${op.type}`}
                       >
@@ -696,22 +696,53 @@ export default function LaneRacer() {
                   </div>
                 </div>
 
-                {/* 3D mode toggle */}
-                <div className="mt-3 pt-3 border-t border-white/10 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
-                    className="px-6 py-2 rounded-lg font-bold text-sm transition-all"
-                    style={{
-                      fontFamily: 'Oxanium, sans-serif',
-                      color: renderMode === '3d' ? '#fff' : 'rgba(255,255,255,0.45)',
-                      border: renderMode === '3d' ? '1.5px solid rgba(0,210,190,0.6)' : '1px solid rgba(255,255,255,0.12)',
-                      backgroundColor: renderMode === '3d' ? 'rgba(0,210,190,0.12)' : 'transparent',
-                    }}
-                    data-testid="lr-view-3d"
+                {/* View mode — full-width 2D / 3D switch (not a lonely chip) */}
+                <div className="mt-3 pt-3 border-t border-white/10">
+                  <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    View
+                  </div>
+                  <div
+                    className="flex w-full rounded-xl overflow-hidden"
+                    style={{ border: '1.5px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.35)' }}
+                    role="group"
+                    aria-label="Race view mode"
                   >
-                    3D
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => selectRenderMode('2d')}
+                      className="flex-1 py-3 font-bold text-sm uppercase tracking-wider transition-all"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: renderMode === '2d' ? '#0a0a0a' : 'rgba(255,255,255,0.45)',
+                        backgroundColor: renderMode === '2d' ? '#ffffff' : 'transparent',
+                      }}
+                      data-testid="lr-view-2d"
+                      aria-pressed={renderMode === '2d'}
+                    >
+                      2D
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => selectRenderMode('3d')}
+                      className="flex-1 py-3 font-bold text-sm uppercase tracking-wider transition-all"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: renderMode === '3d' ? '#0a0a0a' : 'rgba(255,255,255,0.45)',
+                        backgroundColor: renderMode === '3d' ? '#ffffff' : 'transparent',
+                        borderLeft: '1px solid rgba(255,255,255,0.2)',
+                      }}
+                      data-testid="lr-view-3d"
+                      aria-pressed={renderMode === '3d'}
+                    >
+                      3D Chase
+                    </button>
+                  </div>
+                  <p
+                    className="mt-2 text-center text-[10px] uppercase tracking-widest"
+                    style={{ fontFamily: 'Oxanium, sans-serif', color: 'rgba(255,255,255,0.4)' }}
+                  >
+                    {renderMode === '3d' ? 'Behind-the-car camera' : 'Classic top-down race'}
+                  </p>
                 </div>
               </div>
             );
