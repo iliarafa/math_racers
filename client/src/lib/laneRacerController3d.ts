@@ -49,8 +49,9 @@ export interface LaneRacerRenderState {
 /** Early snap+grip: short plant onto the lane (not a soft slide). */
 const LANE_EARLY_MS = 100;
 const LANE_LATE_MS = 300;
-const LANE_EARLY_YAW = (7 * Math.PI) / 180;
-const LANE_EARLY_ROLL = (3.5 * Math.PI) / 180;
+/** Early stays flat — lean is reserved for late slides. */
+const LANE_EARLY_YAW = 0;
+const LANE_EARLY_ROLL = 0;
 const LANE_LATE_YAW = (10 * Math.PI) / 180;
 const LANE_LATE_ROLL = (5 * Math.PI) / 180;
 /** Ease-out power: early = quintic (snap), late = cubic (slide). */

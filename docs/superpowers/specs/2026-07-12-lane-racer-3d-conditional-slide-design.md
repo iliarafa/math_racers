@@ -16,7 +16,7 @@ Keep continuous lane motion from the lane-flow polish, but reserve the long slid
 | Choice | Decision |
 |--------|----------|
 | Near trigger | Distance to answer row (A) — last ~30% of spawn→collision |
-| Early feel | Snap+grip — 100ms, ease-out quintic, yaw 7° / roll 3.5° (revised from soft 200ms flow) |
+| Early feel | Snap+grip — 100ms, ease-out quintic, **no lean** (lean only on late slide) |
 | Empty track | Always early snap+grip (A) — no late slide without live tokens |
 | Approach | Mode chosen at input time (approach 1) |
 | Scope | 3D controller only; scene already consumes `carX` / lean |
@@ -32,7 +32,7 @@ Always-on 300ms slide + full lean makes every lane change feel like a last-secon
 
 | Mode | When | Duration | Ease | Yaw peak | Roll peak |
 |------|------|----------|------|----------|-----------|
-| Early (snap+grip) | No tokens, or token `z` below near band | 100ms | ease-out quintic `1-(1-t)^5` | 7° | 3.5° |
+| Early (snap+grip) | No tokens, or token `z` below near band | 100ms | ease-out quintic `1-(1-t)^5` | 0° | 0° |
 | Late (slide) | Tokens present and `z >= LATE_SLIDE_Z` | 300ms | ease-out cubic `1-(1-t)^3` | 10° | 5° |
 
 Shared for both modes:
@@ -66,7 +66,7 @@ On `moveLeft` / `moveRight`:
 
 ## Success criteria
 
-1. Far from tiles or empty track: snap+grip ~100ms plant with short lean — not the full slide.
+1. Far from tiles or empty track: snap ~100ms plant, flat (no lean) — not the full slide.
 2. Near tiles (past the distance band): full ~300ms slide with full lean.
 3. Collision still fair on discrete lanes; 2D unchanged.
 4. Mode switches cleanly on mid-slide re-input when distance crosses the band.
