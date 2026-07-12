@@ -16,8 +16,8 @@ npm run dev -- --port 8081
 
 ### Done this session (2026-07-12)
 - **Conditional lane slide** (supersedes always-on 300ms slide): early vs late chosen at input in `beginLaneTransition()`
-  - **Early** (token far / empty track): 200ms, yaw 5° / roll 2.5° (`LANE_EARLY_*`)
-  - **Late** (token in last 30% of track): 300ms, yaw 10° / roll 5° (`LANE_LATE_*`); gate `LATE_SLIDE_Z = COLLISION_Z - 0.3 * TRACK_LENGTH`
+  - **Early snap+grip** (token far / empty track): **100ms**, ease-out **quintic**, yaw **7°** / roll **3.5°** — plants on the lane (not a soft slide)
+  - **Late slide** (token in last 30% of track): 300ms, ease-out cubic, yaw 10° / roll 5°; gate `LATE_SLIDE_Z = COLLISION_Z - 0.3 * TRACK_LENGTH`
 - Controller: `laneXVisual()`, eased `carLaneVisual` → continuous `carX`/`carYaw`/`carRoll`; mode re-picked on each L/R input
 - Scene: `AnimatedPlayerCar` driven from `carX` + rotations (integer `carLane` collision unchanged)
 
@@ -114,7 +114,7 @@ npm run build   # Three.js lazy-loaded on 3D path
 - [ ] Road, dashes, kerbs, **grass**, tokens scroll together
 - [ ] Soft horizon (no hard dark fog strip under sky)
 - [ ] Answer numbers crisp at spawn
-- [ ] Lane switch: early (200ms / half lean) far from token; late (300ms / full lean) in last 30%; mash L/R mid-slide OK
+- [ ] Lane switch: early snap+grip (100ms / quintic) far from token; late slide (300ms / cubic) in last 30%; mash L/R mid-slide OK
 - [ ] Finish + leaderboard
 - [ ] Mobile WebGL acceptable
 

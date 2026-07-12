@@ -46,12 +46,16 @@ export interface LaneRacerRenderState {
   particles: Array<{ x: number; y: number; z: number; life: number; maxLife: number; color: string }>;
 }
 
-const LANE_EARLY_MS = 200;
+/** Early snap+grip: short plant onto the lane (not a soft slide). */
+const LANE_EARLY_MS = 100;
 const LANE_LATE_MS = 300;
-const LANE_EARLY_YAW = (5 * Math.PI) / 180;
-const LANE_EARLY_ROLL = (2.5 * Math.PI) / 180;
+const LANE_EARLY_YAW = (7 * Math.PI) / 180;
+const LANE_EARLY_ROLL = (3.5 * Math.PI) / 180;
 const LANE_LATE_YAW = (10 * Math.PI) / 180;
 const LANE_LATE_ROLL = (5 * Math.PI) / 180;
+/** Ease-out power: early = quintic (snap), late = cubic (slide). */
+const LANE_EARLY_EASE_POWER = 5;
+const LANE_LATE_EASE_POWER = 3;
 const FLASH_FRAMES = 12;
 const SHAKE_FRAMES_WRONG = 14;
 const CAR_PUNCH_FRAMES = 10;
@@ -94,6 +98,7 @@ export class LaneRacerController3D {
   private activeTransitionMs = LANE_EARLY_MS;
   private activeLeanYaw = LANE_EARLY_YAW;
   private activeLeanRoll = LANE_EARLY_ROLL;
+  private activeEasePower = LANE_EARLY_EASE_POWER;
   private speed = BASE_SPEED;
   private worldScrollZ = 0;
   private scrollDelta = 0;
@@ -188,10 +193,12 @@ export class LaneRacerController3D {
       this.activeTransitionMs = LANE_LATE_MS;
       this.activeLeanYaw = LANE_LATE_YAW;
       this.activeLeanRoll = LANE_LATE_ROLL;
+      this.activeEasePower = LANE_LATE_EASE_POWER;
     } else {
       this.activeTransitionMs = LANE_EARLY_MS;
       this.activeLeanYaw = LANE_EARLY_YAW;
       this.activeLeanRoll = LANE_EARLY_ROLL;
+      this.activeEasePower = LANE_EARLY_EASE_POWER;
     }
   }
 
@@ -245,7 +252,7 @@ export class LaneRacerController3D {
       (timestamp - this.laneTransitionStart) / this.activeTransitionMs,
       1,
     );
-    const eased = 1 - Math.pow(1 - transitionProgress, 3);
+    const eased = 1 - Math.pow(1 - transitionProgress, this.activeEasePower);
     this.carLaneVisual =
       this.laneTransitionFrom + (this.carLane - this.laneTransitionFrom) * eased;
 
