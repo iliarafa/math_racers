@@ -34,8 +34,17 @@ function SceneRoot({
   structureVersion: number;
 }) {
   const { camera } = useThree();
+  /** Skip first frame: Canvas mounts mid-race with default lookAt + a spiked delta. */
+  const primedRef = useRef(false);
 
   useFrame((_, delta) => {
+    if (!primedRef.current) {
+      primedRef.current = true;
+      camera.position.set(0, 3.6, 8.2);
+      camera.lookAt(0, 0.45, 0.2);
+      return;
+    }
+
     controller.tick(delta);
     const shake = controller.renderState.shakeMagnitude;
     // Slightly elevated rear chase — matches the F1 rear-view reference framing
@@ -167,8 +176,10 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
           gl={{ antialias: true, alpha: false }}
           dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)]}
           camera={{ position: [0, 3.6, 8.2], fov: 48, near: 0.1, far: 600 }}
-          onCreated={({ gl }) => {
+          onCreated={({ gl, camera }) => {
             gl.setClearColor(FOG_COLOR);
+            camera.position.set(0, 3.6, 8.2);
+            camera.lookAt(0, 0.45, 0.2);
           }}
         >
           <SceneRoot controller={controller} teamId={teamId} structureVersion={structureVersion} />

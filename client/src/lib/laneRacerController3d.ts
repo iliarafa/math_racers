@@ -91,7 +91,7 @@ export class LaneRacerController3D {
   private carLaneVisual = 1;
   private carYaw = 0;
   private carRoll = 0;
-  private laneTransitionStart = 0;
+  private laneTransitionStart = performance.now();
   private laneTransitionFrom = 1;
   private activeTransitionMs = LANE_EARLY_MS;
   private activeLeanYaw = LANE_EARLY_YAW;
