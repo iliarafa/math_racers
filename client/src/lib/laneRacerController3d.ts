@@ -25,6 +25,12 @@ export interface AnswerToken3D {
 export interface LaneRacerRenderState {
   carLane: number;
   carLaneVisual: number;
+  /** Continuous world X from carLaneVisual (not discrete lane centers). */
+  carX: number;
+  /** Yaw (rad) during lane change — 0 when settled. */
+  carYaw: number;
+  /** Roll (rad) during lane change — 0 when settled. */
+  carRoll: number;
   /** Accumulated world scroll (same units as token.z). */
   worldScrollZ: number;
   /** Scroll applied this frame — same delta used for tokens and road geometry. */
@@ -40,7 +46,9 @@ export interface LaneRacerRenderState {
   particles: Array<{ x: number; y: number; z: number; life: number; maxLife: number; color: string }>;
 }
 
-const LANE_TRANSITION_MS = 150;
+const LANE_TRANSITION_MS = 300;
+const LANE_LEAN_YAW = (10 * Math.PI) / 180;
+const LANE_LEAN_ROLL = (5 * Math.PI) / 180;
 const FLASH_FRAMES = 12;
 const SHAKE_FRAMES_WRONG = 14;
 const CAR_PUNCH_FRAMES = 10;
@@ -61,6 +69,11 @@ export function laneXForIndex(lane: number): number {
   return LANE_X[lane] ?? 0;
 }
 
+/** Continuous X across lanes 0..2 (fractional lane values interpolate). */
+export function laneXVisual(lane: number): number {
+  return LANE_X[0] + lane * (LANE_X[1] - LANE_X[0]);
+}
+
 export class LaneRacerController3D {
   private callbacks: LaneRacerEngineCallbacks;
   private totalQuestions: number;
@@ -68,6 +81,8 @@ export class LaneRacerController3D {
 
   private carLane = 1;
   private carLaneVisual = 1;
+  private carYaw = 0;
+  private carRoll = 0;
   private laneTransitionStart = 0;
   private laneTransitionFrom = 1;
   private speed = BASE_SPEED;
@@ -92,6 +107,9 @@ export class LaneRacerController3D {
   readonly renderState: LaneRacerRenderState = {
     carLane: 1,
     carLaneVisual: 1,
+    carX: laneXVisual(1),
+    carYaw: 0,
+    carRoll: 0,
     worldScrollZ: 0,
     scrollDelta: 0,
     tokens: [],
@@ -197,9 +215,23 @@ export class LaneRacerController3D {
     this.scrollDelta = scrollAmount;
     this.worldScrollZ += scrollAmount;
 
-    const transitionProgress = Math.min((timestamp - this.laneTransitionStart) / LANE_TRANSITION_MS, 1);
+    const transitionProgress = Math.min(
+      (timestamp - this.laneTransitionStart) / LANE_TRANSITION_MS,
+      1,
+    );
     const eased = 1 - Math.pow(1 - transitionProgress, 3);
-    this.carLaneVisual = this.laneTransitionFrom + (this.carLane - this.laneTransitionFrom) * eased;
+    this.carLaneVisual =
+      this.laneTransitionFrom + (this.carLane - this.laneTransitionFrom) * eased;
+
+    if (transitionProgress >= 1) {
+      this.carYaw = 0;
+      this.carRoll = 0;
+    } else {
+      const dir = Math.sign(this.carLane - this.laneTransitionFrom) || 0;
+      const envelope = Math.sin(Math.PI * transitionProgress);
+      this.carYaw = dir * LANE_LEAN_YAW * envelope;
+      this.carRoll = -dir * LANE_LEAN_ROLL * envelope;
+    }
 
     if (this.flashFrames > 0) this.flashFrames -= dt;
     if (this.shakeFrames > 0) this.shakeFrames -= dt;
@@ -244,6 +276,9 @@ export class LaneRacerController3D {
     const rs = this.renderState;
     rs.carLane = this.carLane;
     rs.carLaneVisual = this.carLaneVisual;
+    rs.carX = laneXVisual(this.carLaneVisual);
+    rs.carYaw = this.carYaw;
+    rs.carRoll = this.carRoll;
     rs.worldScrollZ = this.worldScrollZ;
     rs.scrollDelta = this.scrollDelta;
     rs.tokens = this.tokens;
