@@ -1,111 +1,106 @@
-# Next Session Handoff — Selection Chrome Consistency
+# Next Session Handoff — Grand Prix Weekend Rotation
 
-**Branch:** `feature/lane-racer-3d` (pushed to `origin`)  
-**Base:** `main`  
+**Branch:** `main` (synced with `origin/main`)  
+**Tip:** `2c66828` — Merge `feature/lane-racer-3d`  
 **Last updated:** 2026-07-12 (EOD)  
-**Status:** 3D Lane Racer playable POC; selection polish started on Lane Racer only
+**Status:** Lane Racer 3D + selection chrome shipped; app still themed to Round 9 / Silverstone
 
 ---
 
 ## Resume here (start here)
 
 ```bash
-git checkout feature/lane-racer-3d
+git checkout main
+git pull
 npm run dev -- --port 8081
 ```
 
 ### First order of business (do this first)
 
-**Apply Lane Racer selection-drum styling to every mode that uses a selection drum (or the same “selected = outlined box” pattern), for visual consistency.**
+**Rotate the app to the next Grand Prix weekend using the `/weekend` skill.**
 
-**Design rule (locked on Lane Racer setup):**
-- **No selection outlines / rings / cyan borders** around the active tile
-- Selection is shown by **activated content only** — full opacity, stronger type/color, neighbors faded
-- Keep structural chrome if needed (card glass border, View mode card frame) — those are containers, not “selected item” outlines
+**Skill (mandatory):** `.claude/skills/weekend/SKILL.md`  
+Follow its steps **in order**. Prefer that skill (and the two template commits below) over stale docs.
 
-**Reference (already done):** `client/src/pages/LaneRacer.tsx` setup “Combination Lock” drums + math ops  
-- Removed `activeHighlight` border boxes  
-- Math ops: no selected border; light fill + brighter text only  
-- View control: tap-to-toggle **mode card** (`3D Chase` / `2D`), not a segmented pill
-
-**Audit inventory (as of 2026-07-12):**
-
-| Surface | Pattern today | Action |
-|---------|---------------|--------|
-| **Lane Racer** setup drums | Content activation only | Done — reference |
-| **Lane Racer** math ops | Soft fill, no outline | Done |
-| **Career / Game** (`Game.tsx`) | No 3-row drum; weather + ops use `ring-2` selected chips | Apply same rule: drop rings; show selection via opacity / fill / icon emphasis |
-| **Multiplayer** (`Multiplayer.tsx`) | Weather + ops use `ring-2` | Same as Game |
-| Other pages | No combination-lock drums found | Re-audit if a drum was added elsewhere |
-
-**Acceptance for first order:**
-1. No mode’s primary picker uses a cyan/teal or colored **outline ring** to mark the selected drum/chip when a faded/bright content treatment is enough  
-2. Lane Racer, Career (Game), and Multiplayer feel consistent when picking series/track-adjacent options and math/weather chips  
-3. `npm run check` passes; spot-check setup screens on phone + desktop
-
-**Suggested approach:**
-1. Grep for `ring-2`, `activeHighlight`, `0,210,190`, `1.5px solid` in `client/src/pages/`  
-2. Patch Game + Multiplayer weather/operation selected styles to match Lane Racer math ops (no ring)  
-3. If any true drum clones appear, copy Lane Racer’s opacity/size activation pattern  
-4. Optional follow-up: extract a tiny shared helper/component for “drum row” / “chip selected” so styles don’t drift  
+**Templates (trust these over SESSION_NOTES.md):**
+- Existing circuit: `d17e8a0` — Round 9 / Silverstone
+- New circuit: `caad87e` — Round 8 / Austria
 
 ---
 
-## Done this session (context for next agent)
+## Current theming (as of handoff)
 
-### Lane Racer 3D motion & start
-- Continuous `carX` + conditional early/late lane feel (`laneRacerController3d.ts`)
-  - Early: 250ms ease-in-out smoothstep, **no lean**
-  - Late (token `z >= LATE_SLIDE_Z`): 300ms, yaw 10° / roll 5°
-- Soft land (no curb-bounce ease-out)
-- Race start: 3D primed under starting lights (shared countdown+racing shell); camera lookAt + first-frame skip
-- Specs/plans under `docs/superpowers/specs/` and `docs/superpowers/plans/` for lane-flow + conditional slide
-
-### Lane Racer setup UI
-- Selection outlines removed (drums + math)
-- View: mode card **3D Chase** / **2D** (choice **B** from visual brainstorm)
-
-### Git
-- Branch pushed: `origin/feature/lane-racer-3d`
-- Tip includes setup UI commits through mode card (`24a53b6` and later as landed)
+| Field | Value |
+|-------|--------|
+| Round | **9** |
+| Circuit | **Silverstone** (`silverstone`) |
+| Country | United Kingdom |
+| Version | **1.3.8** |
+| Config | `client/src/lib/currentGrandPrix.ts` |
 
 ---
 
-## After first order — Lane Racer 3D backlog
+## Likely next weekend (confirm with user before coding)
 
-Do **not** start these until selection consistency is signed off (unless user redirects).
+Per the **2026 F1 calendar**, after Silverstone (British GP) comes:
 
-1. **Merge QA** — phone + desktop, 2D regression, user sign-off on 3D feel  
-2. **Roadside props** — billboards / barriers (atmosphere done; props deferred)  
-3. **Token readability** — spawn scale / contrast  
-4. **Rival** — DOM progress ghost only; 3D opponent optional later  
+| App round | Circuit | `circuitId` | Real weekend |
+|-----------|---------|-------------|--------------|
+| **10** (increment from 9) | **Spa / Belgian GP** | `spa` | 17–19 Jul 2026 |
 
-### Do not reopen without reason
-- Car silhouette v1  
-- Soft atmosphere approach  
-- Conditional slide timing/lean peaks (tune `LATE_SLIDE_FRACTION` only if band feels wrong)  
-- 2D engine removal  
+**Confirm with the user** that Round 10 = Spa before starting — app round numbering is sequential and may not match real F1 round numbers 1:1.
 
-### Related docs
-- `docs/lane-racer-3d-handoff.md` — full 3D POC handoff  
-- `docs/superpowers/specs/2026-07-12-lane-racer-3d-conditional-slide-design.md`  
-- `docs/superpowers/specs/2026-07-12-lane-racer-3d-lane-flow-design.md`  
+### Path: existing circuit (if Spa)
+
+`spa` already exists in `SIM_LAP_COUNTS` / `CIRCUITS` (`gameLogic.ts` → 44 laps).  
+Flag `flag_belgium.png` and silhouettes `circuit_spa_black.png` / `circuit_spa_red.png` already exist.
+
+**Skip skill Step 3** (no gameLogic / LaneRacer circuit add).
+
+**Still needed:**
+1. Colored **detail map** asset → `client/src/assets/spa_detail_track.png`  
+   - None in repo today (`austria` / `catalunya` / `silverstone` detail maps only)  
+   - Ask user for the map; if `.avif`/`.webp`, convert with `sips` to PNG  
+2. Update `currentGrandPrix.ts` (round 10, spa, Belgium flag colors, blurb, rain ~0.55–0.65 typical for Spa)  
+3. Add `GP_HISTORY['spa']` in `grandPrixHistory.ts` with **verified 2025** race + quali (20 drivers each, all `{ name, team, time }`)  
+4. Patch version bump **1.3.8 → 1.3.9** (package.json, capacitor.config.ts, pbxproj ×2)  
+5. Verify web → cap sync/run iOS → **commit only, no push** (user pushes)
 
 ---
 
-## How to verify first-order work
+## How to run the weekend skill
 
-```bash
-npm run check
-npm run dev -- --port 8081
-```
+1. Invoke / read `.claude/skills/weekend/SKILL.md` and follow Steps 0→8  
+2. **Step 0 first:** confirm round + circuit with user; web-search real prior-year race + quali (never invent)  
+3. Asset intake for Spa detail map before editing history  
+4. After code: `npm run check` + `npm run build` + spot-check Welcome FP card, GP hero, `/grand-prix` briefing  
+5. Commit message style of `d17e8a0`:  
+   `Update Free Practice and Grand Prix to Round 10 / Spa` (+ bullets). **Do not `git push`.**
 
-- `/lane-racer` — drums/math already outline-free; View mode card still clear  
-- `/game` (Career / Free Practice / GP / PST setup) — weather & math chips without selection rings  
-- `/multiplayer` host setup — same for weather & ops  
+---
+
+## Done this session (context — do not reopen)
+
+### Merged to `main` + pushed + Vercel production live
+- Lane Racer optional **3D Chase** (Three.js lazy chunk), conditional early/late lane slide, soft atmosphere  
+- Setup selection chrome: **no outline rings** — content activation only (Lane Racer, Game weather, Multiplayer weather/ops, Deploy Harvest archived UI)  
+- Merge commit: `2c66828`; production deploy succeeded for that SHA
+
+### Backlog (after weekend rotation — optional)
+- Lane Racer 3D merge QA polish / roadside props / token readability / 3D rival (see `docs/lane-racer-3d-handoff.md`)  
+- Do **not** start 3D backlog until weekend rotation is signed off unless user redirects
+
+---
+
+## Related docs
+
+- `.claude/skills/weekend/SKILL.md` — **source of truth for this task**  
+- `update_gp.md` — longer runbook (skill supersedes when they disagree)  
+- `docs/lane-racer-3d-handoff.md` — 3D POC notes (not next)  
+- Ignore `SESSION_NOTES.md` for GP rotation (stale Round-5 inline config)
 
 ---
 
 ## Note for the next agent
 
-Lane Racer is currently the **only** true 3-column selection drum. “All modes that feature a selection drum” still means **audit + fix every analogous selected-item chrome** (especially `ring-2` chips in Game/Multiplayer) so the product doesn’t look like Lane Racer is on a different design system. If you find another drum, treat Lane Racer’s setup block as the source of truth.
+Start by confirming **Round 10 / Spa (Belgium)** with the user and requesting the Spa detail track map. Then run the weekend skill end-to-end on `main`. Commit locally; leave push to the user so Vercel deploys when they choose.
