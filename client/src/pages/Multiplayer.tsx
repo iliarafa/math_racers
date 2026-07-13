@@ -195,6 +195,16 @@ export default function Multiplayer() {
     guestMistakes: number;
   } | null>(null);
 
+  // Server-authoritative dynamic difficulty display (HUD only, no client bank)
+  const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
+  const difficultyLabel =
+    DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
+  const difficultyColor =
+    dynamicDifficultyDisplay === 'hard' ? '#ef4444'
+      : dynamicDifficultyDisplay === 'medium' ? '#38bdf8'
+        : dynamicDifficultyDisplay === 'easy' ? '#e5e5e5'
+          : '#22c55e';
+
   // Power-ups state
   const [powerUpsEnabled, setPowerUpsEnabled] = useState(true);
   const [overtakeEnergy, setOvertakeEnergy] = useState(0);
@@ -345,15 +355,51 @@ export default function Multiplayer() {
         if (message.aeroZones) {
           setAeroZones(message.aeroZones);
         }
-        // Sync questions so both players answer the same set
-        if (message.questions) {
-          setQuestions(message.questions.map((q: any) => ({ display: q.display, answer: q.answer })));
+        // Server-authoritative difficulty for the new race
+        if (message.difficulty) {
+          setDynamicDifficultyDisplay(message.difficulty as Difficulty);
         }
+        // Sync questions so both players answer the same set - accept either
+        // legacy full arrays or server-minted indexed patches.
+        if (message.questions) {
+          if (message.questions.length && message.questions[0]?.index !== undefined) {
+            const next: Question[] = [];
+            for (const q of message.questions) {
+              next[q.index] = { display: q.display, answer: q.answer, botTime: 0 };
+            }
+            setQuestions(next);
+          } else {
+            setQuestions(message.questions.map((q: any) => ({
+              display: q.display,
+              answer: q.answer,
+              botTime: 0,
+            })));
+          }
+        }
+        setCurrentQuestionIndex(0);
         setGameStatus("countdown");
         setCountdownValue(5);
         break;
       case "countdown":
         setCountdownValue(message.count);
+        break;
+      case "difficulty_sync":
+        if (message.difficulty) {
+          setDynamicDifficultyDisplay(message.difficulty as Difficulty);
+        }
+        break;
+      case "questions_patch":
+        if (Array.isArray(message.questions)) {
+          setQuestions(prev => {
+            const next = prev.slice();
+            for (const q of message.questions) {
+              if (typeof q.index === 'number') {
+                next[q.index] = { display: q.display, answer: q.answer, botTime: 0 };
+              }
+            }
+            return next;
+          });
+        }
         break;
       case "race_start":
         if (soundEnabledRef.current) {
@@ -552,11 +598,6 @@ export default function Multiplayer() {
     setSelectedDriver(driver);
 
     try {
-      const tempQuestions: Question[] = [];
-      for (let i = 0; i < getRaceLength(circuit.id, state.simMode); i++) {
-        tempQuestions.push(generateQuestion(circuit.id, driver.difficulty, false, 0, undefined, selectedOperation));
-      }
-      
       const response = await fetch("/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -565,7 +606,7 @@ export default function Multiplayer() {
           hostName: playerName,
           circuitId: circuit.id,
           driverId: driver.id,
-          questions: tempQuestions.map(q => ({ display: q.display, answer: q.answer }))
+          raceLength: getRaceLength(circuit.id, state.simMode),
         })
       });
       
@@ -577,7 +618,6 @@ export default function Multiplayer() {
       
       const data = await response.json();
       setRoomCode(data.roomCode);
-      setQuestions(tempQuestions);
       setIsHost(true);
       isHostRef.current = true;
       setGameStatus("waiting");
@@ -619,7 +659,7 @@ export default function Multiplayer() {
       setSelectedCircuit(CIRCUITS.find(c => c.id === data.room.circuitId) || CIRCUITS[0]);
       setSelectedDriver(DRIVERS.find(d => d.id === data.room.driverId) || DRIVERS[0]);
       if (data.room.questions) {
-        setQuestions(data.room.questions.map((q: any) => ({ display: q.display, answer: q.answer })));
+        setQuestions(data.room.questions.map((q: any) => ({ display: q.display, answer: q.answer, botTime: 0 })));
       }
       setIsHost(false);
       isHostRef.current = false;
@@ -643,19 +683,15 @@ export default function Multiplayer() {
       wetRace = Math.random() < rainProbability;
     }
     setIsWetRace(wetRace);
-
-    // Generate questions based on selected circuit with weather modifier
-    const newQuestions: Question[] = [];
-    for (let i = 0; i < raceLength; i++) {
-      newQuestions.push(generateQuestion(selectedCircuit.id, driver.difficulty, wetRace, 0, undefined, selectedOperation));
-    }
-    setQuestions(newQuestions);
+    setQuestions([]);
+    setDynamicDifficultyDisplay('beginner');
 
     // Generate AERO zones if power-ups enabled
     const zones = powerUpsEnabled ? getAeroZones(raceLength, state.simMode) : [];
     setAeroZones(zones);
 
-    // Update room with selected circuit and questions, then start countdown
+    // Update room with selected circuit, then start countdown - server mints
+    // the shared question bank and drives dynamic difficulty.
     try {
       await fetch(`/api/rooms/${roomCode}/update`, {
         method: "PUT",
@@ -665,7 +701,6 @@ export default function Multiplayer() {
           driverId: driver.id,
           weather: selectedWeather,
           operation: selectedOperation,
-          questions: newQuestions.map(q => ({ display: q.display, answer: q.answer })),
           powerUpsEnabled
         })
       });
@@ -678,7 +713,6 @@ export default function Multiplayer() {
         weather: selectedWeather,
         operation: selectedOperation,
         powerUpsEnabled,
-        questions: newQuestions.map(q => ({ display: q.display, answer: q.answer })),
         raceLength,
         aeroZones: zones
       }));
@@ -864,7 +898,8 @@ export default function Multiplayer() {
           aeroBonus: aeroActive,
           overtakeBonus: overtakeActive,
           sectorColor,
-          responseTime
+          responseTime,
+          correct: true
         }));
       }
 
@@ -974,7 +1009,8 @@ export default function Multiplayer() {
           wsRef.current.send(JSON.stringify({
             type: "mistake_update",
             roomCode,
-            mistakes: newMistakes
+            mistakes: newMistakes,
+            responseTime
           }));
         }
         
@@ -997,7 +1033,9 @@ export default function Multiplayer() {
             roomCode,
             progress: newProgress,
             mistakes: newMistakes,
-            sectorColor: 'red'
+            sectorColor: 'red',
+            responseTime,
+            correct: false
           }));
         }
         
@@ -1636,10 +1674,18 @@ export default function Multiplayer() {
               {formatTime(elapsedTime)}
             </div>
 
+            {/* Difficulty HUD strip - mirrors server-authoritative difficulty */}
+            <div
+              className="text-xs uppercase tracking-wider font-bold text-center py-1 shrink-0 mt-1 w-full"
+              style={{ fontFamily: 'Oxanium, sans-serif', color: difficultyColor, background: 'black' }}
+            >
+              {difficultyLabel}
+            </div>
+
             {/* Expression and Answer with Penalty Overlay */}
             <div className="relative">
               <div className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-2">
-                {currentQuestion?.display}
+                {currentQuestion ? currentQuestion.display : "..."}
               </div>
 
               <div
@@ -1929,10 +1975,10 @@ export default function Multiplayer() {
               <button
                 type="button"
                 onClick={() => handleSubmit()}
-                disabled={!answer || feedback !== "idle"}
+                disabled={!answer || feedback !== "idle" || !currentQuestion}
                 className={cn(
                   "h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none",
-                  answer && feedback === "idle"
+                  answer && feedback === "idle" && currentQuestion
                     ? "bg-green-600 text-white hover:bg-green-500"
                     : "bg-muted text-muted-foreground"
                 )}
