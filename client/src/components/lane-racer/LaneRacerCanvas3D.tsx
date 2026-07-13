@@ -14,6 +14,7 @@ import {
   type LaneRacerEngineCallbacks,
   type LaneRacerEngineRef,
 } from '@/lib/laneRacerController3d';
+import { isNativePlatform } from '@/lib/purchases';
 import { FOG_COLOR } from './atmosphere';
 import { LaneRacerSceneKeyed } from './LaneRacerScene';
 
@@ -26,26 +27,8 @@ interface LaneRacerCanvas3DProps {
   paused?: boolean;
 }
 
-/** Soft lateral chase is phone-portrait only — desktop/web keeps a fixed center cam. */
-function useMobilePortraitSoftFollow(): boolean {
-  const [enabled, setEnabled] = useState(false);
-  useEffect(() => {
-    const update = () => {
-      const mobile = window.innerWidth < 768;
-      const portrait = window.innerHeight >= window.innerWidth;
-      setEnabled(mobile && portrait);
-    };
-    update();
-    window.addEventListener('resize', update);
-    const mql = window.matchMedia('(orientation: portrait)');
-    mql.addEventListener('change', update);
-    return () => {
-      window.removeEventListener('resize', update);
-      mql.removeEventListener('change', update);
-    };
-  }, []);
-  return enabled;
-}
+/** Soft lateral chase is native (Capacitor) only — browser/web keeps a fixed center cam. */
+const NATIVE_SOFT_FOLLOW = isNativePlatform();
 
 function SceneRoot({
   controller,
@@ -186,7 +169,7 @@ function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
 
 export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3DProps>(
   function LaneRacerCanvas3D({ callbacks, totalQuestions, teamId, difficulty, paused = false }, ref) {
-    const softFollow = useMobilePortraitSoftFollow();
+    const softFollow = NATIVE_SOFT_FOLLOW;
     const controller = useMemo(
       () => new LaneRacerController3D(callbacks, totalQuestions, difficulty),
       [callbacks, totalQuestions, difficulty],
