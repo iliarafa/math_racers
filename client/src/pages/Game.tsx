@@ -885,16 +885,19 @@ export default function Game() {
       setAeroAvailable(false);
       setAeroActive(false);
 
-      // Set difficulty for Grand Prix phases
+      const isDynamicPractice =
+        (isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting;
+
       const raceDifficulty = (isGrandPrix && grandPrixLockedDifficulty && grandPrixPhase !== 'rw_practice')
         ? grandPrixLockedDifficulty
-        : selectedDriver.difficulty;
+        : isDynamicPractice
+          ? 'beginner'
+          : selectedDriver.difficulty;
       currentDifficultyRef.current = raceDifficulty;
 
-      // Initialize dynamic difficulty for Grand Prix practice and Pre-Season Testing
-      if ((isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting) {
-        dynamicDifficultyRef.current = initDynamicDifficulty(selectedDriver.difficulty);
-        setDynamicDifficultyDisplay(selectedDriver.difficulty);
+      if (isDynamicPractice) {
+        dynamicDifficultyRef.current = initDynamicDifficulty('beginner');
+        setDynamicDifficultyDisplay('beginner');
       }
 
       // Reset pole position used flag for Grand Prix race
