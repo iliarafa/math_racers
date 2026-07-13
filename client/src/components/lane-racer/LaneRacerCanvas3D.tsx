@@ -38,28 +38,38 @@ function SceneRoot({
   const { camera } = useThree();
   /** Skip first frame: Canvas mounts mid-race with default lookAt + a spiked delta. */
   const primedRef = useRef(false);
+  /** Soft lateral chase so side lanes stay framed on portrait without widening FOV. */
+  const camXRef = useRef(0);
 
   useFrame((_, delta) => {
+    const carX = controller.renderState.carX;
+
     if (!primedRef.current) {
       primedRef.current = true;
-      camera.position.set(0, 3.6, 8.2);
-      camera.lookAt(0, 0.45, 0.2);
+      camXRef.current = carX;
+      camera.position.set(carX, 3.6, 8.2);
+      camera.lookAt(carX, 0.45, 0.2);
       return;
     }
 
     controller.tick(delta);
+    // Framerate-independent ease — keeps the car framed; slight lag feels chase-like
+    const follow = 1 - Math.exp(-10 * Math.min(delta, 0.05));
+    camXRef.current += (controller.renderState.carX - camXRef.current) * follow;
+    const cx = camXRef.current;
+
     const shake = controller.renderState.shakeMagnitude;
     // Slightly elevated rear chase — matches the F1 rear-view reference framing
     if (shake > 0) {
       camera.position.set(
-        (Math.random() - 0.5) * shake,
+        cx + (Math.random() - 0.5) * shake,
         3.6 + (Math.random() - 0.5) * shake,
         8.2 + (Math.random() - 0.5) * shake * 0.5,
       );
     } else {
-      camera.position.set(0, 3.6, 8.2);
+      camera.position.set(cx, 3.6, 8.2);
     }
-    camera.lookAt(0, 0.45, 0.2);
+    camera.lookAt(cx, 0.45, 0.2);
   });
 
   return <LaneRacerSceneKeyed controller={controller} teamId={teamId} structureVersion={structureVersion} />;
