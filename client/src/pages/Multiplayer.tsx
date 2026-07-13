@@ -686,6 +686,10 @@ export default function Multiplayer() {
     setQuestions([]);
     setDynamicDifficultyDisplay('beginner');
 
+    // Send the resolved wet/dry weather (not the literal 'random' selection)
+    // so the server mints the shared question bank with matching difficulty.
+    const resolvedWeather: 'dry' | 'wet' = wetRace ? 'wet' : 'dry';
+
     // Generate AERO zones if power-ups enabled
     const zones = powerUpsEnabled ? getAeroZones(raceLength, state.simMode) : [];
     setAeroZones(zones);
@@ -699,7 +703,7 @@ export default function Multiplayer() {
         body: JSON.stringify({
           circuitId: selectedCircuit.id,
           driverId: driver.id,
-          weather: selectedWeather,
+          weather: resolvedWeather,
           operation: selectedOperation,
           powerUpsEnabled
         })
@@ -710,7 +714,7 @@ export default function Multiplayer() {
         roomCode,
         circuitId: selectedCircuit.id,
         driverId: driver.id,
-        weather: selectedWeather,
+        weather: resolvedWeather,
         operation: selectedOperation,
         powerUpsEnabled,
         raceLength,
