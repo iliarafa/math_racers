@@ -1,7 +1,7 @@
 # Next Session Handoff — Multiplayer Dynamic Difficulty
 
 **Branch:** `feature/multiplayer-dynamic-difficulty`
-**Tip:** `e548210` — Finish MP dynamic difficulty wiring and refresh session handoff
+**Tip:** `54510fc` — Fix MP start_countdown to send resolved wet/dry weather
 **Last updated:** 2026-07-13
 **Status:** Multiplayer shared dynamic difficulty **shipped** — server-owned, one shared track per room, freeze-on-first-touch per question slot. Host and guest race the same live-adapting question bank instead of a fixed Karting bank.
 
