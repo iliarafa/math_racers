@@ -26,37 +26,71 @@ interface LaneRacerCanvas3DProps {
   paused?: boolean;
 }
 
+/** Soft lateral chase is phone-portrait only — desktop/web keeps a fixed center cam. */
+function useMobilePortraitSoftFollow(): boolean {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    const update = () => {
+      const mobile = window.innerWidth < 768;
+      const portrait = window.innerHeight >= window.innerWidth;
+      setEnabled(mobile && portrait);
+    };
+    update();
+    window.addEventListener('resize', update);
+    const mql = window.matchMedia('(orientation: portrait)');
+    mql.addEventListener('change', update);
+    return () => {
+      window.removeEventListener('resize', update);
+      mql.removeEventListener('change', update);
+    };
+  }, []);
+  return enabled;
+}
+
 function SceneRoot({
   controller,
   teamId,
   structureVersion,
+  softFollow,
 }: {
   controller: LaneRacerController3D;
   teamId: TeamId;
   structureVersion: number;
+  softFollow: boolean;
 }) {
   const { camera } = useThree();
   /** Skip first frame: Canvas mounts mid-race with default lookAt + a spiked delta. */
   const primedRef = useRef(false);
   /** Soft lateral chase so side lanes stay framed on portrait without widening FOV. */
   const camXRef = useRef(0);
+  const softFollowRef = useRef(softFollow);
+  softFollowRef.current = softFollow;
 
   useFrame((_, delta) => {
     const carX = controller.renderState.carX;
+    const followEnabled = softFollowRef.current;
 
     if (!primedRef.current) {
       primedRef.current = true;
-      camXRef.current = carX;
-      camera.position.set(carX, 3.6, 8.2);
-      camera.lookAt(carX, 0.45, 0.2);
+      const startX = followEnabled ? carX : 0;
+      camXRef.current = startX;
+      camera.position.set(startX, 3.6, 8.2);
+      camera.lookAt(startX, 0.45, 0.2);
       return;
     }
 
     controller.tick(delta);
-    // Framerate-independent ease — keeps the car framed; slight lag feels chase-like
-    const follow = 1 - Math.exp(-10 * Math.min(delta, 0.05));
-    camXRef.current += (controller.renderState.carX - camXRef.current) * follow;
-    const cx = camXRef.current;
+
+    let cx: number;
+    if (followEnabled) {
+      // Framerate-independent ease — keeps the car framed; slight lag feels chase-like
+      const follow = 1 - Math.exp(-10 * Math.min(delta, 0.05));
+      camXRef.current += (carX - camXRef.current) * follow;
+      cx = camXRef.current;
+    } else {
+      camXRef.current = 0;
+      cx = 0;
+    }
 
     const shake = controller.renderState.shakeMagnitude;
     // Slightly elevated rear chase — matches the F1 rear-view reference framing
@@ -152,6 +186,7 @@ function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
 
 export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3DProps>(
   function LaneRacerCanvas3D({ callbacks, totalQuestions, teamId, difficulty, paused = false }, ref) {
+    const softFollow = useMobilePortraitSoftFollow();
     const controller = useMemo(
       () => new LaneRacerController3D(callbacks, totalQuestions, difficulty),
       [callbacks, totalQuestions, difficulty],
@@ -199,7 +234,12 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
             camera.lookAt(0, 0.45, 0.2);
           }}
         >
-          <SceneRoot controller={controller} teamId={teamId} structureVersion={structureVersion} />
+          <SceneRoot
+            controller={controller}
+            teamId={teamId}
+            structureVersion={structureVersion}
+            softFollow={softFollow}
+          />
         </Canvas>
         <HudOverlay controller={controller} />
       </div>
