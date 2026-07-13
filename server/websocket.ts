@@ -4,6 +4,7 @@ import { log } from "./index";
 import {
   initDynamicDifficulty,
   generateQuestion,
+  updateDynamicDifficulty,
   type DynamicDifficultyState,
   type Difficulty,
 } from "@shared/mathEngine";
@@ -323,7 +324,7 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
   }, 1000);
 }
 
-function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progress: number; mistakes: number; aeroBonus?: boolean; overtakeBonus?: boolean; sectorColor?: string; responseTime?: number }) {
+function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progress: number; mistakes: number; aeroBonus?: boolean; overtakeBonus?: boolean; sectorColor?: string; responseTime?: number; correct?: boolean }) {
   const room = rooms.get(message.roomCode);
   if (!room || room.status !== "racing") return;
 
@@ -387,9 +388,36 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
     guestSectorColors: room.guestSectorColors,
     sectorBestTimes: room.sectorBestTimes
   });
+
+  // Server-authoritative dynamic difficulty: update FIRST, then advance this
+  // player's question slot, then mint the next slot if it doesn't exist yet.
+  const operationType = room.operation || 'Addition';
+  if (room.dynamicDifficulty && typeof message.responseTime === 'number') {
+    const wasCorrect = message.correct !== false; // default true for older clients mid-deploy
+    room.dynamicDifficulty = updateDynamicDifficulty(
+      room.dynamicDifficulty,
+      wasCorrect,
+      message.responseTime,
+      operationType,
+      false // slowerThanBot — MP v1
+    );
+    broadcastDifficulty(message.roomCode, room);
+  }
+
+  const isHostPlayer = clientInfo.playerId === room.hostId;
+  if (isHostPlayer) {
+    room.hostQuestionIndex += 1;
+  } else {
+    room.guestQuestionIndex += 1;
+  }
+  const nextSlot = isHostPlayer ? room.hostQuestionIndex : room.guestQuestionIndex;
+  const minted = mintSlotIfNeeded(room, nextSlot);
+  if (minted) {
+    broadcastQuestionsPatch(message.roomCode, [minted]);
+  }
 }
 
-function handleMistakeUpdate(ws: WebSocket, message: { roomCode: string; mistakes: number }) {
+function handleMistakeUpdate(ws: WebSocket, message: { roomCode: string; mistakes: number; responseTime?: number }) {
   const room = rooms.get(message.roomCode);
   if (!room || room.status !== "racing") return;
 
@@ -412,6 +440,19 @@ function handleMistakeUpdate(ws: WebSocket, message: { roomCode: string; mistake
     hostSectorColors: room.hostSectorColors,
     guestSectorColors: room.guestSectorColors
   });
+
+  // Mistake-only retry: still feeds the shared difficulty model as a wrong
+  // answer, but never advances or mints a question slot.
+  if (room.dynamicDifficulty && typeof message.responseTime === 'number') {
+    room.dynamicDifficulty = updateDynamicDifficulty(
+      room.dynamicDifficulty,
+      false,
+      message.responseTime,
+      room.operation || 'Addition',
+      false
+    );
+    broadcastDifficulty(message.roomCode, room);
+  }
 }
 
 function handleRaceFinished(ws: WebSocket, message: { roomCode: string; finishTime: number; mistakes: number; finalProgress: number; crashed?: boolean }) {
