@@ -578,13 +578,13 @@ export default function Multiplayer() {
   useEffect(() => {
     if (overtakeActive && selectedCircuit && selectedDriver) {
       // Generate a harder question for the current position
-      const harderDifficulty = getHarderDifficulty('beginner');
+      const harderDifficulty = getHarderDifficulty(dynamicDifficultyDisplay);
       const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace, 0, undefined, selectedOperation);
       setOvertakeQuestion(harderQ);
     } else {
       setOvertakeQuestion(null);
     }
-  }, [overtakeActive, selectedCircuit, selectedDriver, isWetRace, selectedOperation]);
+  }, [overtakeActive, selectedCircuit, selectedDriver, isWetRace, selectedOperation, dynamicDifficultyDisplay]);
   
   const createRoom = async () => {
     if (!playerName.trim()) {
@@ -866,8 +866,7 @@ export default function Multiplayer() {
       // Harvest energy if power-ups enabled and NOT using overtake
       if (powerUpsEnabled && !overtakeActive) {
         const circuit = selectedCircuit || CIRCUITS[0];
-        const driverDifficulty: Difficulty = 'beginner';
-        const energyGain = calculateEnergyHarvest(responseTime, driverDifficulty, circuit.type);
+        const energyGain = calculateEnergyHarvest(responseTime, dynamicDifficultyDisplay, circuit.type);
         const newEnergy = Math.min(100, overtakeEnergy + energyGain);
         setOvertakeEnergy(newEnergy);
 
@@ -924,7 +923,7 @@ export default function Multiplayer() {
           setQuestionAttempts(0);
           // Generate new harder question if overtake still active
           if (overtakeActive && selectedCircuit && selectedDriver) {
-            const harderDifficulty = getHarderDifficulty('beginner');
+            const harderDifficulty = getHarderDifficulty(dynamicDifficultyDisplay);
             const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace, 0, undefined, selectedOperation);
             setOvertakeQuestion(harderQ);
           }
@@ -2038,7 +2037,14 @@ export default function Multiplayer() {
           >
             {isWinner ? "YOU WIN!" : "YOU LOSE"}
           </motion.div>
-          
+
+          <p
+            className="text-sm uppercase tracking-wide font-bold"
+            style={{ fontFamily: 'Oxanium, sans-serif', color: difficultyColor }}
+          >
+            Difficulty: {difficultyLabel}
+          </p>
+
           <div className="bg-secondary rounded-xl p-6 w-full max-w-sm md:max-w-lg">
             <div className="grid grid-cols-3 gap-4 text-center">
               <div></div>
