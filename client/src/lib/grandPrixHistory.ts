@@ -1,6 +1,7 @@
 import catalunyaDetail from "@/assets/catalunya_detail_track.png";
 import austriaDetail from "@/assets/austria_detail_track.png";
 import silverstoneDetail from "@/assets/silverstone_detail_track.png";
+import spaDetail from "@/assets/spa_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -23,6 +24,64 @@ export type GrandPrixHistory = {
 };
 
 export const GP_HISTORY: Record<string, GrandPrixHistory> = {
+  spa: {
+    officialName: 'FORMULA 1 BELGIAN GRAND PRIX 2026',
+    firstHeld: 1950,
+    trackLength: '7.004 km',
+    laps: 44,
+    lapRecord: { driver: 'Sergio Pérez', time: '1:44.701', year: 2024 },
+    mostWins: { driver: 'Michael Schumacher', count: 6 },
+    summary:
+      'Spa-Francorchamps is the longest lap on the Formula 1 calendar and one of its most dramatic: a roller-coaster through the Ardennes forests with big elevation changes, blind crests and the legendary Eau Rouge–Raidillon climb. First raced as a championship Grand Prix in 1950, it rewards bravery through Pouhon and Blanchimont and often throws wet weather into the mix. A win at the Belgian Grand Prix is one of the most celebrated trophies of the season.',
+    detailMapImage: spaDetail,
+    lastYear: {
+      season: 2025,
+      race: [
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:25:22.601' },
+        { name: 'Lando Norris', team: 'McLaren', time: '+3.415' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+20.185' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '+21.731' },
+        { name: 'George Russell', team: 'Mercedes', time: '+34.863' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+39.926' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+40.679' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+52.033' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+56.434' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1:12.714' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+1:13.145' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '+1:13.628' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+1:15.395' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+1:19.831' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1:26.063' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+1:26.721' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+1:27.924' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+1:32.024' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1:35.250' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+1 lap' },
+      ],
+      quali: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:40.562' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:40.647' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:40.900' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:40.903' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:41.201' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:41.260' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:41.284' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:41.310' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:41.328' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:42.387' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:41.525' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:41.617' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:41.633' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:41.707' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:41.758' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:41.939' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:42.022' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:42.139' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:42.385' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:42.502' },
+      ],
+    },
+  },
   silverstone: {
     officialName: 'FORMULA 1 BRITISH GRAND PRIX 2026',
     firstHeld: 1950,
