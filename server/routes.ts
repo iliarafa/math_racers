@@ -19,7 +19,7 @@ export async function registerRoutes(
   // Create a new multiplayer room
   app.post("/api/rooms", async (req, res) => {
     try {
-      const { hostId, hostName, circuitId, driverId, questions } = req.body;
+      const { hostId, hostName, circuitId, driverId, questions, raceLength: bodyRaceLength } = req.body;
       
       if (!hostId || !hostName || !circuitId || !driverId) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -45,7 +45,7 @@ export async function registerRoutes(
       });
 
       // Update with questions
-      const raceLength = questions?.length || 20;
+      const raceLength = bodyRaceLength || questions?.length || 20;
       if (questions) {
         await storage.updateRoom(roomCode, { questions });
       }

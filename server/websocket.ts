@@ -1,6 +1,12 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { Server } from "http";
 import { log } from "./index";
+import {
+  initDynamicDifficulty,
+  generateQuestion,
+  type DynamicDifficultyState,
+  type Difficulty,
+} from "@shared/mathEngine";
 
 interface GameRoom {
   hostWs: WebSocket | null;
@@ -38,6 +44,15 @@ interface GameRoom {
   guestSectorColors: string[];
   // Per-sector best times for F1-style competitive timing
   sectorBestTimes: Array<{ bestTime: number; holder: 'host' | 'guest' } | null>;
+  // Server-authoritative dynamic difficulty + shared question bank
+  circuitId: string | null;
+  operation: string | null;
+  isWet: boolean;
+  dynamicDifficulty: DynamicDifficultyState | null;
+  /** Sparse bank: index = question slot (currentQuestionIndex semantics) */
+  questionsBySlot: Array<{ display: string; answer: number } | undefined>;
+  hostQuestionIndex: number;
+  guestQuestionIndex: number;
 }
 
 const rooms = new Map<string, GameRoom>();
@@ -185,6 +200,13 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
       hostSectorColors: [],
       guestSectorColors: [],
       sectorBestTimes: [],
+      circuitId: null,
+      operation: null,
+      isWet: false,
+      dynamicDifficulty: null,
+      questionsBySlot: [],
+      hostQuestionIndex: 0,
+      guestQuestionIndex: 0,
     });
   }
 
@@ -244,6 +266,16 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
   room.guestSectorColors = [];
   room.sectorBestTimes = [];
 
+  // Persist race config and (re)initialize server-authoritative dynamic difficulty
+  room.circuitId = circuitId ?? room.circuitId;
+  room.operation = operation ?? room.operation;
+  room.isWet = weather === "wet";
+  room.dynamicDifficulty = initDynamicDifficulty("beginner");
+  room.questionsBySlot = [];
+  room.hostQuestionIndex = 0;
+  room.guestQuestionIndex = 0;
+  const slot0 = mintSlotIfNeeded(room, 0);
+
   // Use client-sent AERO zones (respects sim mode), fallback to default 2 zones
   if (room.powerUpsEnabled) {
     if (clientAeroZones && Array.isArray(clientAeroZones) && clientAeroZones.length > 0) {
@@ -258,7 +290,9 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
     room.aeroZones = [];
   }
 
-  // Broadcast countdown start with circuit info so guest can update their selection
+  // Broadcast countdown start with circuit info so guest can update their selection.
+  // Prefer server-minted questions over the client-supplied bank (questions arg is
+  // ignored for the shared race bank, kept only to avoid breaking the message switch).
   broadcastToRoom(roomCode, {
     type: "countdown_start",
     circuitId,
@@ -267,7 +301,10 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
     operation,
     powerUpsEnabled: room.powerUpsEnabled,
     aeroZones: room.aeroZones,
-    questions
+    difficulty: room.dynamicDifficulty?.currentDifficulty ?? "beginner",
+    questions: slot0
+      ? [{ index: 0, display: slot0.display, answer: slot0.answer }]
+      : [],
   });
 
   let count = 5;
@@ -280,6 +317,8 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
       room.status = "racing";
       room.raceStartTime = Date.now();
       broadcastToRoom(roomCode, { type: "race_start" });
+      broadcastDifficulty(roomCode, room);
+      if (slot0) broadcastQuestionsPatch(roomCode, [slot0]);
     }
   }, 1000);
 }
@@ -629,6 +668,41 @@ function broadcastToRoom(roomCode: string, message: any) {
   }
 }
 
+function mintSlotIfNeeded(room: GameRoom, slot: number): { index: number; display: string; answer: number } | null {
+  if (slot < 0) return null;
+  if (room.questionsBySlot[slot]) {
+    const q = room.questionsBySlot[slot]!;
+    return { index: slot, display: q.display, answer: q.answer };
+  }
+  if (!room.circuitId || !room.dynamicDifficulty) return null;
+  const generated = generateQuestion(
+    room.circuitId,
+    room.dynamicDifficulty.currentDifficulty,
+    room.isWet,
+    0,
+    room.questionsBySlot[slot - 1]?.display,
+    room.operation || undefined
+  );
+  room.questionsBySlot[slot] = { display: generated.display, answer: generated.answer };
+  return { index: slot, display: generated.display, answer: generated.answer };
+}
+
+function broadcastDifficulty(roomCode: string, room: GameRoom) {
+  if (!room.dynamicDifficulty) return;
+  broadcastToRoom(roomCode, {
+    type: "difficulty_sync",
+    difficulty: room.dynamicDifficulty.currentDifficulty as Difficulty,
+  });
+}
+
+function broadcastQuestionsPatch(
+  roomCode: string,
+  patches: Array<{ index: number; display: string; answer: number }>
+) {
+  if (patches.length === 0) return;
+  broadcastToRoom(roomCode, { type: "questions_patch", questions: patches });
+}
+
 export function createRoom(roomCode: string, hostId: string, raceLength: number = 20): void {
   rooms.set(roomCode, {
     hostWs: null,
@@ -664,6 +738,13 @@ export function createRoom(roomCode: string, hostId: string, raceLength: number 
     hostSectorColors: [],
     guestSectorColors: [],
     sectorBestTimes: [],
+    circuitId: null,
+    operation: null,
+    isWet: false,
+    dynamicDifficulty: null,
+    questionsBySlot: [],
+    hostQuestionIndex: 0,
+    guestQuestionIndex: 0,
   });
 }
 
