@@ -681,53 +681,36 @@ export default function LaneRacer() {
                   </div>
                 </div>
 
-                {/* View mode — full-width 2D / 3D switch (not a lonely chip) */}
+                {/* View mode — mode card (tap to toggle) */}
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                     View
                   </div>
-                  <div
-                    className="flex w-full rounded-xl overflow-hidden"
-                    style={{ border: '1.5px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(0,0,0,0.35)' }}
-                    role="group"
-                    aria-label="Race view mode"
+                  <button
+                    type="button"
+                    onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
+                    className="w-full rounded-xl py-4 px-3 transition-all"
+                    style={{
+                      fontFamily: 'Oxanium, sans-serif',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      border: 'none',
+                    }}
+                    data-testid="lr-view-3d"
+                    aria-label={renderMode === '3d' ? 'Switch to 2D view' : 'Switch to 3D chase view'}
                   >
-                    <button
-                      type="button"
-                      onClick={() => selectRenderMode('2d')}
-                      className="flex-1 py-3 font-bold text-sm uppercase tracking-wider transition-all"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: renderMode === '2d' ? '#0a0a0a' : 'rgba(255,255,255,0.45)',
-                        backgroundColor: renderMode === '2d' ? '#ffffff' : 'transparent',
-                      }}
-                      data-testid="lr-view-2d"
-                      aria-pressed={renderMode === '2d'}
+                    <div
+                      className="text-center font-extrabold uppercase tracking-wider"
+                      style={{ fontSize: '1.35rem', color: '#fff', letterSpacing: '0.1em' }}
                     >
-                      2D
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => selectRenderMode('3d')}
-                      className="flex-1 py-3 font-bold text-sm uppercase tracking-wider transition-all"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: renderMode === '3d' ? '#0a0a0a' : 'rgba(255,255,255,0.45)',
-                        backgroundColor: renderMode === '3d' ? '#ffffff' : 'transparent',
-                        borderLeft: '1px solid rgba(255,255,255,0.2)',
-                      }}
-                      data-testid="lr-view-3d"
-                      aria-pressed={renderMode === '3d'}
+                      {renderMode === '3d' ? '3D Chase' : '2D'}
+                    </div>
+                    <p
+                      className="mt-2 text-center text-[10px] uppercase tracking-widest"
+                      style={{ color: 'rgba(255,255,255,0.4)' }}
                     >
-                      3D Chase
-                    </button>
-                  </div>
-                  <p
-                    className="mt-2 text-center text-[10px] uppercase tracking-widest"
-                    style={{ fontFamily: 'Oxanium, sans-serif', color: 'rgba(255,255,255,0.4)' }}
-                  >
-                    {renderMode === '3d' ? 'Behind-the-car camera' : 'Classic top-down race'}
-                  </p>
+                      {renderMode === '3d' ? 'Tap to switch · Behind-the-car camera' : 'Tap to switch · Classic top-down race'}
+                    </p>
+                  </button>
                 </div>
               </div>
             );
