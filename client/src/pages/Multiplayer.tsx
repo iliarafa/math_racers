@@ -141,6 +141,7 @@ const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
   "monza": 0.20,
 };
 
+const KARTING_DRIVER = DRIVERS.find(d => d.id === 'karting') ?? DRIVERS[0];
 
 export default function Multiplayer() {
   const { state, addCoins, addCareerPoints } = useGameState();
@@ -163,10 +164,7 @@ export default function Multiplayer() {
   // Game state
   const [gameStatus, setGameStatus] = useState<GameStatus>("lobby");
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(CIRCUITS[0]);
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(() => {
-    const savedId = localStorage.getItem('lastSelectedDriverId');
-    return (savedId && DRIVERS.find(d => d.id === savedId)) || DRIVERS[0];
-  });
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(KARTING_DRIVER);
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
   const [selectedOperation, setSelectedOperation] = useState('Addition');
   const [isWetRace, setIsWetRace] = useState(false);
@@ -534,7 +532,7 @@ export default function Multiplayer() {
   useEffect(() => {
     if (overtakeActive && selectedCircuit && selectedDriver) {
       // Generate a harder question for the current position
-      const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
+      const harderDifficulty = getHarderDifficulty('beginner');
       const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace, 0, undefined, selectedOperation);
       setOvertakeQuestion(harderQ);
     } else {
@@ -549,7 +547,7 @@ export default function Multiplayer() {
     }
     
     const circuit = selectedCircuit || CIRCUITS[0];
-    const driver = selectedDriver || DRIVERS[0];
+    const driver = KARTING_DRIVER;
     setSelectedCircuit(circuit);
     setSelectedDriver(driver);
 
@@ -633,7 +631,10 @@ export default function Multiplayer() {
   };
   
   const startRace = async () => {
-    if (!wsRef.current || !selectedCircuit || !selectedDriver) return;
+    if (!wsRef.current || !selectedCircuit) return;
+
+    const driver = KARTING_DRIVER;
+    setSelectedDriver(driver);
 
     // Resolve weather for question generation
     let wetRace = selectedWeather === 'wet';
@@ -646,7 +647,7 @@ export default function Multiplayer() {
     // Generate questions based on selected circuit with weather modifier
     const newQuestions: Question[] = [];
     for (let i = 0; i < raceLength; i++) {
-      newQuestions.push(generateQuestion(selectedCircuit.id, selectedDriver.difficulty, wetRace, 0, undefined, selectedOperation));
+      newQuestions.push(generateQuestion(selectedCircuit.id, driver.difficulty, wetRace, 0, undefined, selectedOperation));
     }
     setQuestions(newQuestions);
 
@@ -661,7 +662,7 @@ export default function Multiplayer() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           circuitId: selectedCircuit.id,
-          driverId: selectedDriver.id,
+          driverId: driver.id,
           weather: selectedWeather,
           operation: selectedOperation,
           questions: newQuestions.map(q => ({ display: q.display, answer: q.answer })),
@@ -673,7 +674,7 @@ export default function Multiplayer() {
         type: "start_countdown",
         roomCode,
         circuitId: selectedCircuit.id,
-        driverId: selectedDriver.id,
+        driverId: driver.id,
         weather: selectedWeather,
         operation: selectedOperation,
         powerUpsEnabled,
@@ -831,8 +832,8 @@ export default function Multiplayer() {
       // Harvest energy if power-ups enabled and NOT using overtake
       if (powerUpsEnabled && !overtakeActive) {
         const circuit = selectedCircuit || CIRCUITS[0];
-        const driverDifficulty = selectedDriver?.difficulty || 'easy';
-        const energyGain = calculateEnergyHarvest(responseTime, driverDifficulty as Difficulty, circuit.type);
+        const driverDifficulty: Difficulty = 'beginner';
+        const energyGain = calculateEnergyHarvest(responseTime, driverDifficulty, circuit.type);
         const newEnergy = Math.min(100, overtakeEnergy + energyGain);
         setOvertakeEnergy(newEnergy);
 
@@ -888,7 +889,7 @@ export default function Multiplayer() {
           setQuestionAttempts(0);
           // Generate new harder question if overtake still active
           if (overtakeActive && selectedCircuit && selectedDriver) {
-            const harderDifficulty = getHarderDifficulty(selectedDriver.difficulty);
+            const harderDifficulty = getHarderDifficulty('beginner');
             const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace, 0, undefined, selectedOperation);
             setOvertakeQuestion(harderQ);
           }
