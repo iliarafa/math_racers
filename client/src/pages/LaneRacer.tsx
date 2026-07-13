@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
@@ -7,6 +7,16 @@ import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LE
 import type { Difficulty } from "@/lib/gameLogic";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
+import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
+import { FOG_COLOR } from "@/components/lane-racer/atmosphere";
+
+const LaneRacerCanvas3D = lazy(() =>
+  import("@/components/lane-racer/LaneRacerCanvas3D").then(m => ({ default: m.LaneRacerCanvas3D })),
+);
+
+function preloadLaneRacer3D() {
+  void import("@/components/lane-racer/LaneRacerCanvas3D");
+}
 import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import flagItaly from "@/assets/flag_italy.png";
@@ -36,6 +46,9 @@ const CIRCUIT_MAP_IMAGES: { [id: string]: string } = {
 };
 
 type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
+type RendererMode = '2d' | '3d';
+
+const RENDERER_STORAGE_KEY = 'laneRacerRenderer';
 
 const DIFFICULTY_OPTIONS: { label: string; value: Difficulty }[] = [
   { label: 'Karting', value: 'beginner' },
@@ -127,9 +140,13 @@ export default function LaneRacer() {
     difficultyAchieved: string;
   } | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [renderMode, setRenderMode] = useState<RendererMode>(() => {
+    const saved = localStorage.getItem(RENDERER_STORAGE_KEY);
+    return saved === '3d' ? '3d' : '2d';
+  });
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineRef = useRef<LaneRacerEngine | null>(null);
+  const engineRef = useRef<LaneRacerEngineRef | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef(0);
@@ -241,14 +258,31 @@ export default function LaneRacer() {
     };
   }, [gameStatus]);
 
-  // Initialize engine when racing starts
+  const selectRenderMode = (mode: RendererMode) => {
+    setRenderMode(mode);
+    localStorage.setItem(RENDERER_STORAGE_KEY, mode);
+    if (mode === '3d') preloadLaneRacer3D();
+  };
+
+  // Warm the 3D chunk when the saved preference is already 3D
   useEffect(() => {
-    if (gameStatus !== 'racing' || !canvasRef.current) return;
+    if (renderMode === '3d') preloadLaneRacer3D();
+  }, [renderMode]);
+
+  const engineCallbacks = useMemo(() => ({
+    onCorrect: handleCorrect,
+    onWrong: handleWrong,
+    onMiss: handleMiss,
+    onFinished: handleFinished,
+  }), [handleCorrect, handleWrong, handleMiss, handleFinished]);
+
+  // Initialize 2D canvas engine when racing in classic mode
+  useEffect(() => {
+    if (gameStatus !== 'racing' || renderMode !== '2d' || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const wrapper = canvasWrapperRef.current;
 
-    // Size canvas to fill the wrapper (below question bar + HUD)
     const resize = () => {
       if (!wrapper) return;
       const wrapW = wrapper.clientWidth;
@@ -256,10 +290,8 @@ export default function LaneRacer() {
       const isTablet = Math.min(window.screen.width, window.screen.height) >= 700;
       let w;
       if (wrapW > wrapper.clientHeight) {
-        // Landscape window (desktop browser): letterbox to a 9:16 portrait field
         w = Math.min(wrapW, Math.round(h * 9 / 16));
       } else {
-        // Portrait (phones / tablets) — unchanged
         w = isTablet ? wrapW : Math.min(wrapW, 500);
       }
       canvas.width = w;
@@ -279,9 +311,6 @@ export default function LaneRacer() {
     engineRef.current = engine;
     startTimeRef.current = Date.now();
 
-    // Measure the actual bottom safe-area inset (home indicator height) by
-    // reading a probe element whose padding-bottom is env(safe-area-inset-bottom).
-    // The padding resolves to a real px value, then we add a small visual margin.
     const measureSafeBottom = () => {
       const probe = document.createElement('div');
       probe.style.cssText = 'position:fixed;visibility:hidden;padding-bottom:env(safe-area-inset-bottom);';
@@ -295,9 +324,6 @@ export default function LaneRacer() {
 
     window.addEventListener('resize', resize);
     window.addEventListener('resize', measureSafeBottom);
-    // Keep the canvas matched to the wrapper's current size — the wrapper can
-    // shrink after mount (layout settle), which would otherwise leave the
-    // canvas overflowing and the bottom HUD (speedometer) clipped.
     const resizeObserver = new ResizeObserver(resize);
     if (wrapper) resizeObserver.observe(wrapper);
     return () => {
@@ -307,7 +333,20 @@ export default function LaneRacer() {
       window.removeEventListener('resize', measureSafeBottom);
       resizeObserver.disconnect();
     };
-  }, [gameStatus, raceLength, handleCorrect, handleWrong, handleMiss, handleFinished]);
+  }, [gameStatus, renderMode, raceLength, selectedTeam, selectedDifficulty, handleCorrect, handleWrong, handleMiss, handleFinished]);
+
+  // Track race start time for 3D mode (2D sets this in its init effect above)
+  useEffect(() => {
+    if (gameStatus === 'racing' && renderMode === '3d') {
+      startTimeRef.current = Date.now();
+    }
+    return () => {
+      if (gameStatus === 'racing' && renderMode === '3d') {
+        engineRef.current?.destroy();
+        engineRef.current = null;
+      }
+    };
+  }, [gameStatus, renderMode]);
 
   // Spawn questions when engine needs them
   useEffect(() => {
@@ -341,8 +380,8 @@ export default function LaneRacer() {
   // Touch controls
   useEffect(() => {
     if (gameStatus !== 'racing') return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const wrapper = canvasWrapperRef.current;
+    if (!wrapper) return;
 
     const handleTouchStart = (e: TouchEvent) => {
       const touch = e.touches[0];
@@ -354,7 +393,7 @@ export default function LaneRacer() {
       const start = touchStartRef.current;
       if (!start) {
         // Tap — use left/right half
-        const rect = canvas.getBoundingClientRect();
+        const rect = wrapper.getBoundingClientRect();
         const tapX = touch.clientX - rect.left;
         if (tapX < rect.width / 2) {
           engineRef.current?.moveLeft();
@@ -374,11 +413,11 @@ export default function LaneRacer() {
       touchStartRef.current = null;
     };
 
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+    wrapper.addEventListener('touchstart', handleTouchStart, { passive: true });
+    wrapper.addEventListener('touchend', handleTouchEnd, { passive: true });
     return () => {
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('touchend', handleTouchEnd);
+      wrapper.removeEventListener('touchstart', handleTouchStart);
+      wrapper.removeEventListener('touchend', handleTouchEnd);
     };
   }, [gameStatus, state.soundEnabled]);
 
@@ -494,18 +533,6 @@ export default function LaneRacer() {
               position: 'relative',
             };
 
-            const activeHighlight: React.CSSProperties = {
-              position: 'absolute',
-              top: drumItemH,
-              left: 4,
-              right: 4,
-              height: drumItemH,
-              border: '1.5px solid rgba(0, 210, 190, 0.6)',
-              borderRadius: '10px',
-              pointerEvents: 'none',
-              zIndex: 1,
-            };
-
             return (
               <div
                 className="w-full max-w-sm rounded-2xl px-3 py-4"
@@ -521,7 +548,6 @@ export default function LaneRacer() {
                   <div className="flex flex-col items-center flex-1">
                     <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Level</div>
                     <div style={drumStyle} className="w-full" {...levelSwipe}>
-                      <div style={activeHighlight} />
                       {[-1, 0, 1].map(offset => {
                         const idx = getIdx(currentLevelIndex, offset, DIFFICULTY_OPTIONS.length);
                         const level = DIFFICULTY_OPTIONS[idx];
@@ -558,7 +584,6 @@ export default function LaneRacer() {
                   <div className="flex flex-col items-center flex-1">
                     <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
                     <div style={drumStyle} className="w-full" {...teamSwipe}>
-                      <div style={activeHighlight} />
                       {[-1, 0, 1].map(offset => {
                         const idx = getIdx(currentTeamIndex, offset, TEAMS.length);
                         const team = TEAMS[idx];
@@ -594,7 +619,6 @@ export default function LaneRacer() {
                   <div className="flex flex-col items-center flex-1">
                     <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
                     <div style={drumStyle} className="w-full" {...trackSwipe}>
-                      <div style={activeHighlight} />
                       {[-1, 0, 1].map(offset => {
                         const idx = getIdx(currentCircuitIndex, offset, CIRCUIT_OPTIONS.length);
                         const circuit = CIRCUIT_OPTIONS[idx];
@@ -646,8 +670,8 @@ export default function LaneRacer() {
                           fontFamily: 'Oxanium, sans-serif',
                           maxWidth: 56,
                           color: i === currentOpIndex ? '#fff' : 'rgba(255,255,255,0.45)',
-                          border: i === currentOpIndex ? '1.5px solid rgba(0,210,190,0.6)' : '1px solid rgba(255,255,255,0.12)',
-                          backgroundColor: i === currentOpIndex ? 'rgba(0,210,190,0.12)' : 'transparent',
+                          border: 'none',
+                          backgroundColor: i === currentOpIndex ? 'rgba(255,255,255,0.12)' : 'transparent',
                         }}
                         data-testid={`lr-op-${op.type}`}
                       >
@@ -655,6 +679,38 @@ export default function LaneRacer() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                {/* View mode — mode card (tap to toggle) */}
+                <div className="mt-3 pt-3 border-t border-white/10">
+                  <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    View
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
+                    className="w-full rounded-xl py-4 px-3 transition-all"
+                    style={{
+                      fontFamily: 'Oxanium, sans-serif',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      border: 'none',
+                    }}
+                    data-testid="lr-view-3d"
+                    aria-label={renderMode === '3d' ? 'Switch to 2D view' : 'Switch to 3D chase view'}
+                  >
+                    <div
+                      className="text-center font-extrabold uppercase tracking-wider"
+                      style={{ fontSize: '1.35rem', color: '#fff', letterSpacing: '0.1em' }}
+                    >
+                      {renderMode === '3d' ? '3D Chase' : '2D'}
+                    </div>
+                    <p
+                      className="mt-2 text-center text-[10px] uppercase tracking-widest"
+                      style={{ color: 'rgba(255,255,255,0.4)' }}
+                    >
+                      {renderMode === '3d' ? 'Tap to switch · Behind-the-car camera' : 'Tap to switch · Classic top-down race'}
+                    </p>
+                  </button>
                 </div>
               </div>
             );
@@ -681,27 +737,107 @@ export default function LaneRacer() {
     );
   }
 
-  // Countdown — F1 starting lights
-  if (gameStatus === 'countdown') {
+  // Countdown + racing share one fullscreen shell so the 3D canvas (and HUD
+  // layout) are primed under the lights — no remount fight at lights-out.
+  if (gameStatus === 'countdown' || gameStatus === 'racing') {
+    const isRacing = gameStatus === 'racing';
     return (
-      <GameLayout lockViewport hideHeader>
-        <div className="h-full flex items-center justify-center bg-white">
-          <div className="bg-black rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
-            <div className="flex gap-2 md:gap-3 justify-center">
-              {lights.map((isOn, i) => (
-                <div
-                  key={i}
-                  className={`w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4 ${
-                    isOn
-                      ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]"
-                      : "bg-zinc-800 border-zinc-700"
-                  }`}
-                />
-              ))}
-            </div>
+      <div ref={containerRef} className="fixed inset-0 z-50 flex flex-col bg-black">
+        {/* Fixed-height HUD strips keep the canvas size stable from first paint */}
+        <div
+          className="flex justify-between items-center px-3 py-2 shrink-0"
+          style={{ background: 'black', paddingTop: 'calc(env(safe-area-inset-top) + 8px)', minHeight: 44 }}
+        >
+          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
+            Q {isRacing ? questionNum : 0}/{raceLength}
+          </div>
+          <div className="text-2xl font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
+            {isRacing
+              ? `${Math.floor(elapsedMs / 60000)}:${String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0')}.${String(elapsedMs % 1000).padStart(3, '0')}`
+              : '0:00.000'}
+          </div>
+          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: '#22c55e' }}>
+            ✓ {isRacing ? correctCount : 0}
           </div>
         </div>
-      </GameLayout>
+
+        <div
+          className="w-full text-center py-4 font-bold shrink-0"
+          style={{
+            fontFamily: 'Oxanium, sans-serif',
+            fontSize: '2.8rem',
+            background: 'black',
+            color: 'white',
+            minHeight: 80,
+            lineHeight: 1.1,
+          }}
+        >
+          {isRacing ? (questionDisplay || '\u00A0') : '\u00A0'}
+        </div>
+
+        <div
+          className="shrink-0"
+          style={{ background: 'black', padding: '0 12px 8px', display: 'flex', alignItems: 'center', gap: 8, minHeight: 40 }}
+        >
+          <div style={{ position: 'relative', flex: 1, height: 6, background: 'rgba(255,255,255,0.16)', borderRadius: 4 }}>
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${(isRacing ? playerProgress : 0) * 100}%`, background: progressColor, borderRadius: 4, boxShadow: `0 0 6px ${progressColor}`, transition: isRacing ? 'width 0.4s ease-out' : 'none' }} />
+            <img src={TEAM_PREVIEW_URLS[rivalTeamId]} alt="rival" style={{ position: 'absolute', top: '50%', left: `${(isRacing ? rivalProg : 0) * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 1 }} />
+            <img src={TEAM_PREVIEW_URLS[selectedTeam]} alt="you" style={{ position: 'absolute', top: '50%', left: `${(isRacing ? playerProgress : 0) * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 2, transition: isRacing ? 'left 0.4s ease-out' : 'none' }} />
+          </div>
+          <span style={{ color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Oxanium, sans-serif' }}>
+            P{isRacing ? position : 1}
+          </span>
+        </div>
+
+        <div ref={canvasWrapperRef} className="relative flex-1 min-h-0 overflow-hidden bg-black">
+          {renderMode === '3d' ? (
+            <Suspense
+              fallback={
+                <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: FOG_COLOR }}>
+                  <span className="text-white/60 text-sm uppercase tracking-widest" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    Loading 3D…
+                  </span>
+                </div>
+              }
+            >
+              <LaneRacerCanvas3D
+                ref={engineRef}
+                callbacks={engineCallbacks}
+                totalQuestions={raceLength}
+                teamId={selectedTeam}
+                difficulty={selectedDifficulty}
+                paused={!isRacing}
+              />
+            </Suspense>
+          ) : (
+            isRacing ? (
+              <canvas
+                ref={canvasRef}
+                style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
+              />
+            ) : null
+          )}
+        </div>
+
+        {gameStatus === 'countdown' && (
+          <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black">
+            <div className="bg-zinc-950 rounded-xl p-4 md:p-6 shadow-2xl border-4 border-zinc-800">
+              <div className="flex gap-2 md:gap-3 justify-center">
+                {lights.map((isOn, i) => (
+                  <div
+                    key={i}
+                    className={`w-10 h-10 md:w-16 md:h-16 rounded-full transition-all duration-100 border-2 md:border-4 ${
+                      isOn
+                        ? "bg-red-600 border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.8)] md:shadow-[0_0_30px_rgba(220,38,38,0.8)]"
+                        : "bg-zinc-800 border-zinc-700"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -851,55 +987,5 @@ export default function LaneRacer() {
     );
   }
 
-  // Racing screen
-  return (
-    <GameLayout lockViewport hideHeader>
-      <div ref={containerRef} className="fixed inset-0 flex flex-col bg-white" style={{ zIndex: 50 }}>
-        {/* HUD — top */}
-        <div className="flex justify-between items-center px-3 py-2" style={{ background: 'black', paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
-          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
-            Q {questionNum}/{raceLength}
-          </div>
-          <div className="text-2xl font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: 'white' }}>
-            {Math.floor(elapsedMs / 60000)}:{String(Math.floor((elapsedMs % 60000) / 1000)).padStart(2, '0')}.{String(elapsedMs % 1000).padStart(3, '0')}
-          </div>
-          <div className="text-xs font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: '#22c55e' }}>
-            ✓ {correctCount}
-          </div>
-        </div>
-
-        {/* Question bar */}
-        <div
-          className="w-full text-center py-4 font-bold"
-          style={{
-            fontFamily: 'Oxanium, sans-serif',
-            fontSize: '2.8rem',
-            background: 'black',
-            color: 'white',
-            minHeight: '80px',
-          }}
-        >
-          {questionDisplay || ''}
-        </div>
-
-        {/* Rival progress + position */}
-        <div style={{ background: 'black', padding: '0 12px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ position: 'relative', flex: 1, height: 6, background: 'rgba(255,255,255,0.16)', borderRadius: 4 }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${playerProgress * 100}%`, background: progressColor, borderRadius: 4, boxShadow: `0 0 6px ${progressColor}`, transition: 'width 0.4s ease-out' }} />
-            <img src={TEAM_PREVIEW_URLS[rivalTeamId]} alt="rival" style={{ position: 'absolute', top: '50%', left: `${rivalProg * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 1 }} />
-            <img src={TEAM_PREVIEW_URLS[selectedTeam]} alt="you" style={{ position: 'absolute', top: '50%', left: `${playerProgress * 100}%`, height: 32, transform: 'translate(-50%, -50%) rotate(90deg)', transformOrigin: 'center', filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.6))', pointerEvents: 'none', zIndex: 2, transition: 'left 0.4s ease-out' }} />
-          </div>
-          <span style={{ color: '#fff', fontWeight: 800, fontSize: 12, fontFamily: 'Oxanium, sans-serif' }}>P{position}</span>
-        </div>
-
-        {/* Canvas */}
-        <div ref={canvasWrapperRef} className="flex-1 min-h-0 overflow-hidden bg-black">
-          <canvas
-            ref={canvasRef}
-            style={{ imageRendering: 'pixelated', display: 'block', margin: '0 auto' }}
-          />
-        </div>
-      </div>
-    </GameLayout>
-  );
+  return null;
 }
