@@ -1418,50 +1418,50 @@ export default function Multiplayer() {
               </div>
             </div>
 
-            {/* Weather Toggle */}
+            {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
             <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
               <button
                 onClick={() => setSelectedWeather('dry')}
                 className={cn(
                   "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'dry' 
-                    ? "bg-yellow-500/20 ring-2 ring-yellow-500" 
-                    : "bg-transparent hover:bg-white/5"
+                  selectedWeather === 'dry'
+                    ? "bg-yellow-500/20"
+                    : "bg-transparent opacity-40 hover:opacity-70 hover:bg-black/5"
                 )}
                 data-testid="weather-dry"
               >
                 <img src={weatherSun} alt="Dry" className="w-8 h-8" />
-                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Standard</span>
+                <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'dry' ? "text-gray-900" : "text-gray-500")}>Standard</span>
               </button>
               <button
                 onClick={() => setSelectedWeather('wet')}
                 className={cn(
                   "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'wet' 
-                    ? "bg-blue-500/20 ring-2 ring-blue-500" 
-                    : "bg-transparent hover:bg-white/5"
+                  selectedWeather === 'wet'
+                    ? "bg-blue-500/20"
+                    : "bg-transparent opacity-40 hover:opacity-70 hover:bg-black/5"
                 )}
                 data-testid="weather-wet"
               >
                 <img src={weatherRain} alt="Wet" className="w-8 h-8" />
-                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Harder</span>
+                <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'wet' ? "text-gray-900" : "text-gray-500")}>Harder</span>
               </button>
               <button
                 onClick={() => setSelectedWeather('random')}
                 className={cn(
                   "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'random' 
-                    ? "bg-purple-500/20 ring-2 ring-purple-500" 
-                    : "bg-transparent hover:bg-white/5"
+                  selectedWeather === 'random'
+                    ? "bg-purple-500/20"
+                    : "bg-transparent opacity-40 hover:opacity-70 hover:bg-black/5"
                 )}
                 data-testid="weather-random"
               >
                 <img src={weatherRandom} alt="Random" className="w-8 h-8" />
-                <span className="text-[9px] text-gray-500 uppercase tracking-wide">Surprise</span>
+                <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'random' ? "text-gray-900" : "text-gray-500")}>Surprise</span>
               </button>
             </div>
 
-            {/* Operation Toggle */}
+            {/* Operation Toggle — soft fill + type weight (no outline rings) */}
             <div className="flex justify-center gap-2 pt-2 mt-2 border-t border-gray-300 flex-wrap">
               {OPERATION_OPTIONS.map(op => (
                 <button
@@ -1470,8 +1470,8 @@ export default function Multiplayer() {
                   className={cn(
                     "min-w-[44px] px-3 py-2 rounded-lg transition-all text-sm font-bold",
                     selectedOperation === op.type
-                      ? "bg-green-500/20 ring-2 ring-green-500 text-white"
-                      : "bg-transparent text-gray-400 hover:bg-white/5"
+                      ? "bg-black/10 text-gray-900"
+                      : "bg-transparent text-gray-400 opacity-45 hover:opacity-70 hover:bg-black/5"
                   )}
                   data-testid={`mp-op-${op.type}`}
                 >

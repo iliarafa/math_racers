@@ -2342,43 +2342,43 @@ export default function Game() {
                   </div>
                 </div>
 
-                {/* Weather Toggle */}
+                {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
                 <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
                   <button
                     onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
                       "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                       selectedWeather === 'dry'
-                        ? "bg-yellow-500/20 ring-2 ring-yellow-500"
-                        : "bg-transparent hover:bg-white/5"
+                        ? "bg-yellow-500/20"
+                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
                     )}
                   >
                     <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(10) hue-rotate(3deg) brightness(0.95)' : undefined }} />
-                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
+                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'dry' ? "text-white" : "text-white/50")}>Dry</span>
                   </button>
                   <button
                     onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
                       "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                       selectedWeather === 'wet'
-                        ? "bg-blue-500/20 ring-2 ring-blue-500"
-                        : "bg-transparent hover:bg-white/5"
+                        ? "bg-blue-500/20"
+                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
                     )}
                   >
                     <img src={weatherRain} alt="Wet" className="w-8 h-8" style={{ filter: selectedWeather === 'wet' ? 'invert(1) sepia(1) saturate(5) hue-rotate(190deg)' : undefined }} />
-                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Wet</span>
+                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'wet' ? "text-white" : "text-white/50")}>Wet</span>
                   </button>
                   <button
                     onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
                       "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                       selectedWeather === 'random'
-                        ? "bg-purple-500/20 ring-2 ring-purple-500"
-                        : "bg-transparent hover:bg-white/5"
+                        ? "bg-purple-500/20"
+                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
                     )}
                   >
                     <img src={weatherRandom} alt="Random" className="w-8 h-8" style={{ filter: selectedWeather === 'random' ? 'invert(1) sepia(1) saturate(5) hue-rotate(250deg)' : undefined }} />
-                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Random</span>
+                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'random' ? "text-white" : "text-white/50")}>Random</span>
                   </button>
                 </div>
               </motion.div>
@@ -2435,43 +2435,43 @@ export default function Game() {
                   </div>
                 </div>
 
-                {/* Weather Toggle */}
+                {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
                 <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
                   <button
                     onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
                       "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                       selectedWeather === 'dry'
-                        ? "bg-yellow-500/20 ring-2 ring-yellow-500"
-                        : "bg-transparent hover:bg-white/5"
+                        ? "bg-yellow-500/20"
+                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
                     )}
                   >
                     <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(10) hue-rotate(3deg) brightness(0.95)' : undefined }} />
-                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Dry</span>
+                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'dry' ? "text-white" : "text-white/50")}>Dry</span>
                   </button>
                   <button
                     onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
                       "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                       selectedWeather === 'wet'
-                        ? "bg-blue-500/20 ring-2 ring-blue-500"
-                        : "bg-transparent hover:bg-white/5"
+                        ? "bg-blue-500/20"
+                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
                     )}
                   >
                     <img src={weatherRain} alt="Wet" className="w-8 h-8" style={{ filter: selectedWeather === 'wet' ? 'invert(1) sepia(1) saturate(5) hue-rotate(190deg)' : undefined }} />
-                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Wet</span>
+                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'wet' ? "text-white" : "text-white/50")}>Wet</span>
                   </button>
                   <button
                     onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
                       "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
                       selectedWeather === 'random'
-                        ? "bg-purple-500/20 ring-2 ring-purple-500"
-                        : "bg-transparent hover:bg-white/5"
+                        ? "bg-purple-500/20"
+                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
                     )}
                   >
                     <img src={weatherRandom} alt="Random" className="w-8 h-8" style={{ filter: selectedWeather === 'random' ? 'invert(1) sepia(1) saturate(5) hue-rotate(250deg)' : undefined }} />
-                    <span className="text-[9px] text-white/50 uppercase tracking-wide">Random</span>
+                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'random' ? "text-white" : "text-white/50")}>Random</span>
                   </button>
                 </div>
               </motion.div>

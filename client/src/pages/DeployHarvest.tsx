@@ -517,13 +517,13 @@ export default function DeployHarvest() {
                     onClick={() => setSelectedOperation(op.type)}
                     className={`py-3 rounded-xl flex flex-col items-center justify-center transition-all ${
                       selectedOperation === op.type
-                        ? 'ring-2 ring-white bg-white/20'
-                        : 'bg-white/8 hover:bg-white/15'
+                        ? 'bg-white/20'
+                        : 'bg-white/8 opacity-45 hover:opacity-70 hover:bg-white/15'
                     }`}
-                    style={{ ...glassStyle, border: selectedOperation === op.type ? '1px solid rgba(255,255,255,0.4)' : glassStyle.border }}
+                    style={glassStyle}
                   >
-                    <span className="text-xl font-bold text-white/85">{op.symbol}</span>
-                    <span className="text-[9px] text-white/50 uppercase tracking-widest mt-1">{op.label}</span>
+                    <span className={`text-xl font-bold ${selectedOperation === op.type ? 'text-white' : 'text-white/85'}`}>{op.symbol}</span>
+                    <span className={`text-[9px] uppercase tracking-widest mt-1 ${selectedOperation === op.type ? 'text-white/80' : 'text-white/50'}`}>{op.label}</span>
                   </motion.button>
                 ))}
               </div>
@@ -540,8 +540,8 @@ export default function DeployHarvest() {
                     onClick={() => setDifficulty(d.difficulty)}
                     className={`py-3 px-2 rounded-lg text-sm font-bold transition-all ${
                       difficulty === d.difficulty
-                        ? 'bg-white text-black ring-2 ring-white'
-                        : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        ? 'bg-white text-black'
+                        : 'bg-white/10 text-white/70 opacity-45 hover:opacity-70 hover:bg-white/20'
                     }`}
                     style={oxanium}
                   >
