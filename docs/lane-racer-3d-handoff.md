@@ -16,10 +16,12 @@ npm run dev -- --port 8081
 
 ### Done this session (2026-07-12)
 - **Conditional lane slide** (supersedes always-on 300ms slide): early vs late chosen at input in `beginLaneTransition()`
-  - **Early flow** (token far / empty track): **250ms**, ease-out cubic, **no lean** — continuous lateral move, flat
+  - **Early flow** (token far / empty track): **250ms**, ease-in-out smoothstep, **no lean** — continuous lateral move, flat
   - **Late slide** (token in last 30% of track): 300ms, ease-out cubic, yaw 10° / roll 5°; gate `LATE_SLIDE_Z = COLLISION_Z - 0.3 * TRACK_LENGTH`
 - Controller: `laneXVisual()`, eased `carLaneVisual` → continuous `carX`/`carYaw`/`carRoll`; mode re-picked on each L/R input
 - Scene: `AnimatedPlayerCar` driven from `carX` + rotations (integer `carLane` collision unchanged)
+- Setup UI: selection outlines removed; View = tap-to-toggle mode card (`3D Chase` / `2D`)
+- Next-session handoff: `docs/next-session-handoff.md` (first order = selection chrome consistency)
 
 ### Done earlier on branch
 - Chase-cam F1 rear car polish (thin wing, raised diffuser, darker tilted front wing)
@@ -29,6 +31,7 @@ npm run dev -- --port 8081
 - Three.js lazy-load already in place (`LaneRacer.tsx`)
 
 ### Suggested next (pick one)
+0. **FIRST:** Selection chrome consistency across modes — see `docs/next-session-handoff.md` (remove outline/rings; selection = activated content, matching Lane Racer drums)
 1. **Merge QA** — phone + desktop, 2D regression, your sign-off on 3D vs 2D (merge blockers below)
 2. **Roadside props** — billboards / grandstands / barriers (atmosphere-only pass is done)
 3. **Token readability** — spawn scale / contrast at distance
