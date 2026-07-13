@@ -3,8 +3,22 @@ import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, generateWrongAnswers, CIRCUITS, RACE_LENGTH, SIM_LAP_COUNTS, calculateLaneRacerScore, estimateRivalRaceTimeMs, rivalProgress, rivalPosition } from "@/lib/gameLogic";
-import type { Difficulty } from "@/lib/gameLogic";
+import {
+  useGameState,
+  generateQuestion,
+  generateWrongAnswers,
+  CIRCUITS,
+  RACE_LENGTH,
+  SIM_LAP_COUNTS,
+  calculateLaneRacerScore,
+  estimateRivalRaceTimeMs,
+  rivalProgress,
+  rivalPosition,
+  DRIVERS,
+  initDynamicDifficulty,
+  updateDynamicDifficulty,
+} from "@/lib/gameLogic";
+import type { Difficulty, DynamicDifficultyState } from "@/lib/gameLogic";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
@@ -99,7 +113,10 @@ export default function LaneRacer() {
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
   const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[0]);
   const [currentCircuitIndex, setCurrentCircuitIndex] = useState(0);
-  const [selectedDifficulty] = useState<Difficulty>('beginner');
+  const dynamicDifficultyRef = useRef<DynamicDifficultyState | null>(null);
+  const currentDifficultyRef = useRef<Difficulty>('beginner');
+  const questionStartTimeRef = useRef<number>(Date.now());
+  const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
   const [currentOpIndex, setCurrentOpIndex] = useState(0);
   const selectedOperation = OPERATION_OPTIONS[currentOpIndex].type;
   const [currentTeamIndex, setCurrentTeamIndex] = useState(() => {
@@ -147,13 +164,22 @@ export default function LaneRacer() {
   const swipeStartXRef = useRef<number | null>(null);
   const teamSwipeStartXRef = useRef<number | null>(null);
 
+  const difficultyLabel =
+    DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
+  const difficultyColor =
+    dynamicDifficultyDisplay === 'hard' ? '#ef4444'
+      : dynamicDifficultyDisplay === 'medium' ? '#38bdf8'
+        : dynamicDifficultyDisplay === 'easy' ? '#e5e5e5'
+          : '#22c55e';
+
   // Auto-submit leaderboard entry when race finishes
   useEffect(() => {
     if (gameStatus !== 'finished' || submitted || showNamePrompt || pendingSubmission) return;
 
     const accuracy = questionNum > 0 ? Math.round((correctCount / questionNum) * 100) : 0;
     const mistakes = raceLength - correctCount;
-    const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, selectedDifficulty);
+    const achieved = dynamicDifficultyRef.current?.currentDifficulty ?? dynamicDifficultyDisplay;
+    const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, achieved);
 
     const submission = {
       playerId: state.playerId,
@@ -164,7 +190,7 @@ export default function LaneRacer() {
       totalTime,
       mistakes,
       accuracy,
-      difficultyAchieved: selectedDifficulty,
+      difficultyAchieved: achieved,
     };
 
     if (state.playerName) {
@@ -178,29 +204,48 @@ export default function LaneRacer() {
       setShowNamePrompt(true);
       setNameInput('');
     }
-  }, [gameStatus, submitted, showNamePrompt, pendingSubmission]);
+  }, [correctCount, dynamicDifficultyDisplay, gameStatus, pendingSubmission, questionNum, raceLength, selectedCircuit.id, selectedCircuit.name, selectedOperation, showNamePrompt, state.playerId, state.playerName, submitted, totalTime]);
 
   const spawnQuestion = useCallback(() => {
-    const q = generateQuestion(selectedCircuit.id, selectedDifficulty, false, 0, prevDisplayRef.current, selectedOperation);
+    const difficulty = currentDifficultyRef.current;
+    const q = generateQuestion(selectedCircuit.id, difficulty, false, 0, prevDisplayRef.current, selectedOperation);
     prevDisplayRef.current = q.display;
     const wrong = generateWrongAnswers(q.answer, 2);
     setQuestionDisplay(q.display);
     setQuestionNum(prev => prev + 1);
+    questionStartTimeRef.current = Date.now();
     engineRef.current?.spawnTokens(q.answer, wrong);
-  }, [selectedCircuit.id, selectedDifficulty, selectedOperation]);
+  }, [selectedCircuit.id, selectedOperation]);
+
+  const applyDynamicDifficulty = useCallback((correct: boolean) => {
+    if (!dynamicDifficultyRef.current) return;
+    const responseTime = Date.now() - questionStartTimeRef.current;
+    const updated = updateDynamicDifficulty(
+      dynamicDifficultyRef.current,
+      correct,
+      responseTime,
+      selectedOperation,
+    );
+    dynamicDifficultyRef.current = updated;
+    currentDifficultyRef.current = updated.currentDifficulty;
+    setDynamicDifficultyDisplay(updated.currentDifficulty);
+  }, [selectedOperation]);
 
   const handleCorrect = useCallback(() => {
+    applyDynamicDifficulty(true);
     setCorrectCount(prev => prev + 1);
     if (state.soundEnabled) playBeep(880, 0.1);
-  }, [state.soundEnabled]);
+  }, [applyDynamicDifficulty, state.soundEnabled]);
 
   const handleWrong = useCallback(() => {
+    applyDynamicDifficulty(false);
     if (state.soundEnabled) playBeep(220, 0.2);
-  }, [state.soundEnabled]);
+  }, [applyDynamicDifficulty, state.soundEnabled]);
 
   const handleMiss = useCallback(() => {
+    applyDynamicDifficulty(false);
     if (state.soundEnabled) playBeep(220, 0.2);
-  }, [state.soundEnabled]);
+  }, [applyDynamicDifficulty, state.soundEnabled]);
 
   const handleFinished = useCallback(() => {
     setTotalTime(Date.now() - startTimeRef.current);
@@ -209,6 +254,9 @@ export default function LaneRacer() {
 
   // Start the game
   const startGame = () => {
+    dynamicDifficultyRef.current = initDynamicDifficulty('beginner');
+    currentDifficultyRef.current = 'beginner';
+    setDynamicDifficultyDisplay('beginner');
     const length = SIM_LAP_COUNTS[selectedCircuit.id] || RACE_LENGTH;
     setRaceLength(length);
     setGameStatus('countdown');
@@ -297,7 +345,7 @@ export default function LaneRacer() {
       onWrong: handleWrong,
       onMiss: handleMiss,
       onFinished: handleFinished,
-    }, raceLength, selectedTeam, selectedDifficulty);
+    }, raceLength, selectedTeam, 'beginner');
 
     engineRef.current = engine;
     startTimeRef.current = Date.now();
@@ -324,7 +372,7 @@ export default function LaneRacer() {
       window.removeEventListener('resize', measureSafeBottom);
       resizeObserver.disconnect();
     };
-  }, [gameStatus, renderMode, raceLength, selectedTeam, selectedDifficulty, handleCorrect, handleWrong, handleMiss, handleFinished]);
+  }, [gameStatus, renderMode, raceLength, selectedTeam, handleCorrect, handleWrong, handleMiss, handleFinished]);
 
   // Track race start time for 3D mode (2D sets this in its init effect above)
   useEffect(() => {
@@ -437,8 +485,8 @@ export default function LaneRacer() {
   }, [gameStatus]);
 
   const rivalTargetMs = useMemo(
-    () => estimateRivalRaceTimeMs(raceLength, selectedDifficulty, selectedOperation),
-    [raceLength, selectedDifficulty, selectedOperation],
+    () => estimateRivalRaceTimeMs(raceLength, 'beginner', selectedOperation),
+    [raceLength, selectedOperation],
   );
   const playerProgress = raceLength > 0 ? Math.min(1, questionNum / raceLength) : 0;
   const rivalProg = rivalProgress(elapsedMs, rivalTargetMs);
@@ -712,6 +760,13 @@ export default function LaneRacer() {
         </div>
 
         <div
+          className="text-xs uppercase tracking-wider font-bold text-center py-1 shrink-0"
+          style={{ fontFamily: 'Oxanium, sans-serif', color: difficultyColor, background: 'black' }}
+        >
+          {difficultyLabel}
+        </div>
+
+        <div
           className="w-full text-center py-4 font-bold shrink-0"
           style={{
             fontFamily: 'Oxanium, sans-serif',
@@ -755,7 +810,7 @@ export default function LaneRacer() {
                 callbacks={engineCallbacks}
                 totalQuestions={raceLength}
                 teamId={selectedTeam}
-                difficulty={selectedDifficulty}
+                difficulty="beginner"
                 paused={!isRacing}
               />
             </Suspense>
@@ -799,7 +854,8 @@ export default function LaneRacer() {
     const remainingSeconds = seconds % 60;
     const timeStr = `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
     const mistakes = raceLength - correctCount;
-    const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, selectedDifficulty);
+    const achieved = dynamicDifficultyRef.current?.currentDifficulty ?? dynamicDifficultyDisplay;
+    const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, achieved);
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport darkBackground>
         <div className="flex-1 flex flex-col items-center justify-start max-w-xl mx-auto w-full overflow-y-auto p-4">
