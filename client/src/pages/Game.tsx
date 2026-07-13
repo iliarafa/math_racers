@@ -1969,7 +1969,14 @@ export default function Game() {
               <img
                 src={CURRENT_GRAND_PRIX.flagImage}
                 alt={`${CURRENT_GRAND_PRIX.country} flag`}
-                style={{ width: 30, height: 22, borderRadius: 3, objectFit: 'cover', flexShrink: 0 }}
+                style={{
+                  width: 30,
+                  height: 22,
+                  borderRadius: 3,
+                  objectFit: 'cover',
+                  flexShrink: 0,
+                  boxShadow: '0 0 0 0.5px rgba(255,255,255,0.3)',
+                }}
               />
               <div style={{ flex: 1, lineHeight: 1.1, fontFamily: 'Oxanium, sans-serif' }}>
                 <div style={{ fontSize: '9px', letterSpacing: '0.3em', fontWeight: 800, opacity: 0.85 }}>
