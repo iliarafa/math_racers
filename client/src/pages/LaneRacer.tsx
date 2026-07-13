@@ -50,13 +50,6 @@ type RendererMode = '2d' | '3d';
 
 const RENDERER_STORAGE_KEY = 'laneRacerRenderer';
 
-const DIFFICULTY_OPTIONS: { label: string; value: Difficulty }[] = [
-  { label: 'Karting', value: 'beginner' },
-  { label: 'F3', value: 'easy' },
-  { label: 'F2', value: 'medium' },
-  { label: 'F1', value: 'hard' },
-];
-
 const OPERATION_OPTIONS: { label: string; type: string }[] = [
   { label: '+', type: 'Addition' },
   { label: '−', type: 'Subtraction' },
@@ -106,8 +99,7 @@ export default function LaneRacer() {
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
   const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[0]);
   const [currentCircuitIndex, setCurrentCircuitIndex] = useState(0);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('beginner');
-  const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+  const [selectedDifficulty] = useState<Difficulty>('beginner');
   const [currentOpIndex, setCurrentOpIndex] = useState(0);
   const selectedOperation = OPERATION_OPTIONS[currentOpIndex].type;
   const [currentTeamIndex, setCurrentTeamIndex] = useState(() => {
@@ -154,7 +146,6 @@ export default function LaneRacer() {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const swipeStartXRef = useRef<number | null>(null);
   const teamSwipeStartXRef = useRef<number | null>(null);
-  const levelSwipeStartXRef = useRef<number | null>(null);
 
   // Auto-submit leaderboard entry when race finishes
   useEffect(() => {
@@ -457,10 +448,8 @@ export default function LaneRacer() {
   // Progress line color: green when ahead of the rival marker, yellow when behind
   const progressColor = position === 1 ? '#19c37d' : '#ffcc00';
 
-  // Setup — single page with series + track selection
+  // Setup — single page with team + track selection
   if (gameStatus === 'setup') {
-    const seriesColors: Record<string, string> = { beginner: '#22c55e', easy: '#000000', medium: '#00a0dc', hard: '#e10600' };
-    const levelDisplayNames: Record<string, string> = { beginner: 'KARTING', easy: 'FORMULA 3', medium: 'FORMULA 2', hard: 'FORMULA 1' };
     const displayCircuit = CIRCUIT_OPTIONS[currentCircuitIndex];
     const goToNext = () => {
       const next = (currentCircuitIndex + 1) % CIRCUIT_OPTIONS.length;
@@ -500,13 +489,11 @@ export default function LaneRacer() {
             <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Scroll to configure</div>
           </div>
 
-          {/* Combination Lock — 3 drums in glassmorphism card */}
+          {/* Combination Lock — 2 drums in glassmorphism card */}
           {(() => {
             const drumItemH = 80;
             const getIdx = (current: number, offset: number, length: number) => ((current + offset) % length + length) % length;
 
-            const goToNextLevel = () => { const n = (currentLevelIndex + 1) % DIFFICULTY_OPTIONS.length; setCurrentLevelIndex(n); setSelectedDifficulty(DIFFICULTY_OPTIONS[n].value); };
-            const goToPrevLevel = () => { const n = (currentLevelIndex - 1 + DIFFICULTY_OPTIONS.length) % DIFFICULTY_OPTIONS.length; setCurrentLevelIndex(n); setSelectedDifficulty(DIFFICULTY_OPTIONS[n].value); };
             const goToNextTeam = () => { const n = (currentTeamIndex + 1) % TEAMS.length; setCurrentTeamIndex(n); setSelectedTeam(TEAMS[n].id); localStorage.setItem('lastSelectedTeam', TEAMS[n].id); };
             const goToPrevTeam = () => { const n = (currentTeamIndex - 1 + TEAMS.length) % TEAMS.length; setCurrentTeamIndex(n); setSelectedTeam(TEAMS[n].id); localStorage.setItem('lastSelectedTeam', TEAMS[n].id); };
             const goToNextTrack = () => { const n = (currentCircuitIndex + 1) % CIRCUIT_OPTIONS.length; setCurrentCircuitIndex(n); setSelectedCircuit(CIRCUIT_OPTIONS[n]); };
@@ -522,7 +509,6 @@ export default function LaneRacer() {
               },
             });
 
-            const levelSwipe = makeSwipeHandlers(levelSwipeStartXRef, goToNextLevel, goToPrevLevel);
             const teamSwipe = makeSwipeHandlers(teamSwipeStartXRef, goToNextTeam, goToPrevTeam);
             const trackSwipe = makeSwipeHandlers(swipeStartXRef, goToNextTrack, goToPrevTrack);
 
@@ -544,42 +530,6 @@ export default function LaneRacer() {
                 }}
               >
                 <div className="flex justify-center gap-2">
-                  {/* LEVEL Drum */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Level</div>
-                    <div style={drumStyle} className="w-full" {...levelSwipe}>
-                      {[-1, 0, 1].map(offset => {
-                        const idx = getIdx(currentLevelIndex, offset, DIFFICULTY_OPTIONS.length);
-                        const level = DIFFICULTY_OPTIONS[idx];
-                        const isActive = offset === 0;
-                        return (
-                          <motion.div
-                            key={`level-${currentLevelIndex}-${offset}`}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: isActive ? 1 : 0.3, y: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="flex flex-col items-center justify-center cursor-pointer"
-                            style={{ height: drumItemH }}
-                            onClick={() => { if (offset === -1) goToPrevLevel(); else if (offset === 1) goToNextLevel(); }}
-                          >
-                            {offset === -1 && <ChevronUp size={14} className="text-white/30 mb-1" />}
-                            <span className="font-bold uppercase tracking-wider text-center" style={{
-                              fontFamily: 'Oxanium, sans-serif',
-                              fontSize: isActive ? '0.85rem' : '0.7rem',
-                              color: isActive ? (seriesColors[level.value] || '#fff') : 'rgba(255,255,255,0.5)',
-                            }}>
-                              {levelDisplayNames[level.value]}
-                            </span>
-                            {offset === 1 && <ChevronDown size={14} className="text-white/30 mt-1" />}
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Vertical divider */}
-                  <div className="w-px self-stretch" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }} />
-
                   {/* TEAM Drum */}
                   <div className="flex flex-col items-center flex-1">
                     <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
