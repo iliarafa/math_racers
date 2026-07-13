@@ -1,9 +1,9 @@
-# Next Session Handoff — Grand Prix Weekend Rotation
+# Next Session Handoff — Universal Dynamic Difficulty
 
-**Branch:** `main` (synced with `origin/main`)  
-**Tip:** `2c66828` — Merge `feature/lane-racer-3d`  
+**Branch:** `main` (synced with `origin/main` as of handoff write)  
+**Tip:** `c714aba` — Soft-follow Lane Racer 3D chase cam  
 **Last updated:** 2026-07-12 (EOD)  
-**Status:** Lane Racer 3D + selection chrome shipped; app still themed to Round 9 / Silverstone
+**Status:** Round 10 / Spa live (v1.3.9); 3D chase soft-follow on phone; next product push = difficulty UX
 
 ---
 
@@ -17,90 +17,109 @@ npm run dev -- --port 8081
 
 ### First order of business (do this first)
 
-**Rotate the app to the next Grand Prix weekend using the `/weekend` skill.**
+**Make difficulty dynamic in every race mode — same model as Free Practice (PST) — and remove difficulty / series selection from setup UI.**
 
-**Skill (mandatory):** `.claude/skills/weekend/SKILL.md`  
-Follow its steps **in order**. Prefer that skill (and the two template commits below) over stale docs.
+Players should no longer pick Karting / F3 / F2 / F1 (or equivalent) before racing. Questions adapt during the race from response time + accuracy via the existing dynamic-difficulty engine.
 
-**Templates (trust these over SESSION_NOTES.md):**
-- Existing circuit: `d17e8a0` — Round 9 / Silverstone
-- New circuit: `caad87e` — Round 8 / Austria
+**Reference implementation (source of truth):** Free Practice / Pre-Season Testing in `Game.tsx` + `initDynamicDifficulty` / `updateDynamicDifficulty` in `client/src/lib/gameLogic.ts`.
 
 ---
 
-## Current theming (as of handoff)
+## Design rule (locked intent)
 
-| Field | Value |
-|-------|--------|
-| Round | **9** |
-| Circuit | **Silverstone** (`silverstone`) |
-| Country | United Kingdom |
-| Version | **1.3.8** |
-| Config | `client/src/lib/currentGrandPrix.ts` |
+| Before | After |
+|--------|--------|
+| Player selects series / difficulty at setup | No difficulty picker |
+| Fixed difficulty for the whole race (most modes) | Difficulty adapts per answer like Free Practice |
+| Setup chrome includes a series drum / driver-difficulty control | Remove those controls; keep track / ops / weather / other real choices |
 
----
-
-## Likely next weekend (confirm with user before coding)
-
-Per the **2026 F1 calendar**, after Silverstone (British GP) comes:
-
-| App round | Circuit | `circuitId` | Real weekend |
-|-----------|---------|-------------|--------------|
-| **10** (increment from 9) | **Spa / Belgian GP** | `spa` | 17–19 Jul 2026 |
-
-**Confirm with the user** that Round 10 = Spa before starting — app round numbering is sequential and may not match real F1 round numbers 1:1.
-
-### Path: existing circuit (if Spa)
-
-`spa` already exists in `SIM_LAP_COUNTS` / `CIRCUITS` (`gameLogic.ts` → 44 laps).  
-Flag `flag_belgium.png` and silhouettes `circuit_spa_black.png` / `circuit_spa_red.png` already exist.
-
-**Skip skill Step 3** (no gameLogic / LaneRacer circuit add).
-
-**Still needed:**
-1. Colored **detail map** asset → `client/src/assets/spa_detail_track.png`  
-   - None in repo today (`austria` / `catalunya` / `silverstone` detail maps only)  
-   - Ask user for the map; if `.avif`/`.webp`, convert with `sips` to PNG  
-2. Update `currentGrandPrix.ts` (round 10, spa, Belgium flag colors, blurb, rain ~0.55–0.65 typical for Spa)  
-3. Add `GP_HISTORY['spa']` in `grandPrixHistory.ts` with **verified 2025** race + quali (20 drivers each, all `{ name, team, time }`)  
-4. Patch version bump **1.3.8 → 1.3.9** (package.json, capacitor.config.ts, pbxproj ×2)  
-5. Verify web → cap sync/run iOS → **commit only, no push** (user pushes)
+**Start difficulty:** Confirm with user if every mode should boot from `beginner` (Karting), or from a stored “last achieved” hint. Free Practice today starts from the selected driver difficulty — with selection gone, default is almost certainly `beginner` unless product says otherwise.
 
 ---
 
-## How to run the weekend skill
+## What Free Practice does today (copy this pattern)
 
-1. Invoke / read `.claude/skills/weekend/SKILL.md` and follow Steps 0→8  
-2. **Step 0 first:** confirm round + circuit with user; web-search real prior-year race + quali (never invent)  
-3. Asset intake for Spa detail map before editing history  
-4. After code: `npm run check` + `npm run build` + spot-check Welcome FP card, GP hero, `/grand-prix` briefing  
-5. Commit message style of `d17e8a0`:  
-   `Update Free Practice and Grand Prix to Round 10 / Spa` (+ bullets). **Do not `git push`.**
+1. On race start: `dynamicDifficultyRef.current = initDynamicDifficulty(startDifficulty)`
+2. On correct / wrong: `updateDynamicDifficulty(...)` → updates `currentDifficultyRef` + HUD label
+3. Questions generated with `currentDifficultyRef.current`
+4. HUD shows live series label (Karting / F3 / F2 / F1 colors) from `dynamicDifficultyDisplay`
+5. End state can record `difficultyAchieved`
 
----
-
-## Done this session (context — do not reopen)
-
-### Merged to `main` + pushed + Vercel production live
-- Lane Racer optional **3D Chase** (Three.js lazy chunk), conditional early/late lane slide, soft atmosphere  
-- Setup selection chrome: **no outline rings** — content activation only (Lane Racer, Game weather, Multiplayer weather/ops, Deploy Harvest archived UI)  
-- Merge commit: `2c66828`; production deploy succeeded for that SHA
-
-### Backlog (after weekend rotation — optional)
-- Lane Racer 3D merge QA polish / roadside props / token readability / 3D rival (see `docs/lane-racer-3d-handoff.md`)  
-- Do **not** start 3D backlog until weekend rotation is signed off unless user redirects
+Core API (`gameLogic.ts`):
+- `initDynamicDifficulty(start)`
+- `updateDynamicDifficulty(state, correct, responseTime, operationType, slowerThanBot?)`
+- Rolling score thresholds promote / demote across `beginner → easy → medium → hard`
 
 ---
 
-## Related docs
+## Audit inventory — modes & UI to change
 
-- `.claude/skills/weekend/SKILL.md` — **source of truth for this task**  
-- `update_gp.md` — longer runbook (skill supersedes when they disagree)  
-- `docs/lane-racer-3d-handoff.md` — 3D POC notes (not next)  
-- Ignore `SESSION_NOTES.md` for GP rotation (stale Round-5 inline config)
+| Surface | Difficulty today | Action |
+|---------|------------------|--------|
+| **Free Practice (PST)** | Already dynamic | Keep as reference; remove any leftover series pick if still present on path in |
+| **Career / solo (`Game.tsx`)** | Fixed from `selectedDriver` (series carousel) | Wire dynamic for full race; remove series / driver-difficulty selection from setup |
+| **Grand Prix** | Dynamic only in Practice, then **locks** for Quali + Race | Confirm with user: stay lock-after-practice, or fully dynamic all weekend phases |
+| **Multiplayer (`Multiplayer.tsx`)** | Fixed from host `selectedDriver`; questions pre-generated at that difficulty | Need server/client plan: dynamic mid-race means questions can’t all be pre-baked at one difficulty — confirm approach |
+| **Lane Racer (`LaneRacer.tsx`)** | Setup series drum (`beginner`…`hard`); fixed for race | Add dynamic updates; remove series drum from combination-lock setup |
+| **Deploy Harvest** (archived) | Series picker exists | Out of scope unless re-enabled |
+
+### Likely UI removals / adjustments
+
+- Career setup: series / driver difficulty carousel or chips  
+- Lane Racer setup: middle “series” drum column (Karting→F1)  
+- Multiplayer host setup: any series / difficulty control tied to `driverId`  
+- Empty space: tighten layout after removing a drum/column (Lane Racer especially — may become 2-column track+team or track-only + math)  
+- HUD: show live difficulty label in modes that didn’t before (match PST color treatment)  
+- Copy: blurb / regulations text that says “pick your series”
+
+### Progression / championship (open product question)
+
+Career championship currently unlocks higher series by championing circuits. If series is no longer selected:
+
+- Confirm whether championship progression still exists, changes meaning, or pauses  
+- `championedCircuits` / circuit locks may need a redesign or temporary freeze  
+
+**Do not rip out progression blindly — ask before deleting unlock logic.**
+
+---
+
+## Suggested implementation order
+
+1. **Product confirms** (quick): GP lock-after-practice? MP question generation? Career championship? Start difficulty = beginner?  
+2. **Extract or reuse** PST dynamic hooks cleanly (avoid copy-paste drift) — optional small helper used by Game + Lane Racer first  
+3. **Career solo race** — dynamic on + remove series UI  
+4. **Lane Racer** — dynamic on + remove series drum; keep rival estimate keyed off live/achieved difficulty or a neutral baseline  
+5. **Grand Prix** — per confirmed rule  
+6. **Multiplayer** — hardest; may need per-answer question generation or difficulty-tagged banks synced over WS  
+7. `npm run check` + spot-check every mode setup + in-race HUD on phone + desktop  
+
+---
+
+## Acceptance for first order
+
+1. No race mode’s primary setup asks the player to pick Karting / F3 / F2 / F1 (or equivalent)  
+2. In-race difficulty adapts using the Free Practice algorithm (or an explicitly approved variant)  
+3. HUD communicates current difficulty where it matters  
+4. Lane Racer / Career / GP / MP still start and finish cleanly; leaderboards still get a `difficultyAchieved` (or agreed substitute)  
+5. `npm run check` passes  
+
+---
+
+## Done this session (context — do not reopen without reason)
+
+- Round 10 / Spa weekend rotation (v1.3.9); transparent Spa detail map; Weekend Briefing flag hairline  
+- Lane Racer 3D: soft-follow chase cam on portrait (FOV widen rejected — cropped car + weak sign readability)  
+- Selection chrome consistency earlier; 3D branch merged  
+
+### Related
+
+- Dynamic engine: `client/src/lib/gameLogic.ts` (`initDynamicDifficulty`, `updateDynamicDifficulty`)  
+- PST wiring: `client/src/pages/Game.tsx` (search `isPreSeasonTesting` + `dynamicDifficultyRef`)  
+- Lane Racer series drum: `client/src/pages/LaneRacer.tsx` setup block  
+- Weekend skill: done for Spa; next calendar target after Spa is Hungary if rotating again  
 
 ---
 
 ## Note for the next agent
 
-Start by confirming **Round 10 / Spa (Belgium)** with the user and requesting the Spa detail track map. Then run the weekend skill end-to-end on `main`. Commit locally; leave push to the user so Vercel deploys when they choose.
+Start by confirming the open product questions (especially Grand Prix lock behavior, Multiplayer question sync, and championship progression). Then implement Career + Lane Racer first — highest UI impact, clearest PST parallel — before Multiplayer.
