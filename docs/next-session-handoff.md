@@ -57,7 +57,7 @@ Do **not** invent a new mode or reopen locked product decisions without asking.
 
 | Area | Files | State |
 |------|-------|--------|
-| Difficulty Lock Choice | `gameLogic.ts`, `Game.tsx`, `LaneRacer.tsx`, `Multiplayer.tsx`, `websocket.ts`, `Regulations.tsx`, spec | **Implemented** — commit when user asks |
+| Difficulty Lock Choice | `gameLogic.ts`, `Game.tsx`, `Multiplayer.tsx`, `websocket.ts`, `Regulations.tsx`, spec | **Implemented** — commit when user asks |
 | Spec | `docs/superpowers/specs/2026-07-14-difficulty-lock-choice-design.md` | Written (GP excluded from lock UI) |
 | Lane Racer horizontal drums | `LaneRacer.tsx` | **Done** — committed on `feature/lane-racer-horizontal-drums` (9077e64) |
 
