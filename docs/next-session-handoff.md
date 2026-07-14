@@ -1,39 +1,44 @@
-# Next Session Handoff — Multiplayer Dynamic Difficulty
+# Next Session Handoff
 
-**Branch:** `feature/multiplayer-dynamic-difficulty`
-**Tip:** `54510fc` — Fix MP start_countdown to send resolved wet/dry weather
-**Last updated:** 2026-07-13
-**Status:** Multiplayer shared dynamic difficulty **shipped** — server-owned, one shared track per room, freeze-on-first-touch per question slot. Host and guest race the same live-adapting question bank instead of a fixed Karting bank.
+**Branch:** `main` (synced with `origin/main` after push)  
+**Tip:** (updated on commit) — Refresh next-session handoff after MP merge  
+**Last updated:** 2026-07-14  
+**Status:** Multiplayer shared dynamic difficulty **shipped on `main`**. Soft-follow remains Capacitor-native only.
 
 ---
 
 ## Resume here (start here)
 
 ```bash
-git checkout feature/multiplayer-dynamic-difficulty
+git checkout main
 git pull
 npm run dev -- --port 8081
 ```
 
+Open the app at **`http://127.0.0.1:8081`** (prefer over `localhost` — server listens IPv4 only; some browsers hit `::1` and get `ERR_CONNECTION_REFUSED`).
+
 ### First order of business (do this first)
 
-Multiplayer dynamic difficulty is done. Pick one of the "Next optional" items below, or ask the user for direction before starting new work.
+**Ask the user for direction** before starting new product work. If they say “whatever’s next,” pick one **Next optional** item below after confirming scope.
+
+Do **not** invent a new mode or reopen locked decisions without asking.
 
 **Reference implementations (source of truth):**
 1. Free Practice / GP Practice — `Game.tsx` (`initDynamicDifficulty` / `updateDynamicDifficulty`, HUD label)
-2. Lane Racer — `LaneRacer.tsx` (second live solo reference; rival estimate stays beginner-baseline)
-3. Multiplayer — `Multiplayer.tsx` (server-synced live reference: `dynamicDifficultyDisplay` driven by `difficulty_sync` / `questions_patch`)
-4. Engine — `shared/mathEngine.ts` (pure, server-safe — no React) re-exported through `client/src/lib/gameLogic.ts`
-5. Server state machine — `server/websocket.ts` (`mintSlotIfNeeded`, `broadcastDifficulty`, `broadcastQuestionsPatch`, `updateDynamicDifficulty` calls in `handleProgressUpdate` / `handleMistakeUpdate`)
+2. Lane Racer — `LaneRacer.tsx` (solo live reference; rival estimate stays beginner-baseline)
+3. Multiplayer — `Multiplayer.tsx` (`dynamicDifficultyDisplay` via `difficulty_sync` / `questions_patch`)
+4. Engine — `shared/mathEngine.ts` (pure, server-safe) re-exported through `client/src/lib/gameLogic.ts`
+5. Server — `server/websocket.ts` (`mintSlotIfNeeded`, `broadcastDifficulty`, `broadcastQuestionsPatch`, answer-driven `updateDynamicDifficulty`)
 
-**Locked product decisions (from prior design — do not reopen without asking):**
+**Locked product decisions (do not reopen without asking):**
 | Topic | Decision |
 |-------|----------|
 | Start difficulty | Always `beginner` |
 | Grand Prix | Lock after Practice for Quali + Race |
 | Championship unlocks | None — no series gates |
 | Soft-follow 3D cam | **Capacitor native only** (`isNativePlatform()`). Never enable in browser / localhost |
-| Multiplayer difficulty model | **One shared track per room** (server-owned), not per-player tracks. `slowerThanBot: false` (MP doesn't model a bot). Freeze-on-first-touch: whichever player reaches a question slot first, that slot's question is locked for both |
+| Multiplayer difficulty | **One shared track per room**, server-owned. `slowerThanBot: false`. Freeze-on-first-touch per question slot |
+| MP weather on start | Host sends **resolved** `'wet' \| 'dry'` (never literal `'random'`) so server mint matches client |
 
 ---
 
@@ -41,43 +46,35 @@ Multiplayer dynamic difficulty is done. Pick one of the "Next optional" items be
 
 | Surface | Behavior |
 |---------|----------|
-| **Lane Racer** | No Level drum (Team + Track); live adaptive difficulty + HUD; score/`difficultyAchieved` from live level; rival pace locked at beginner for the race |
+| **Lane Racer** | No Level drum; live adaptive difficulty + HUD; rival pace locked at beginner |
 | **Free Practice** | Starts beginner; adapts in-race |
 | **Grand Prix Practice** | Starts beginner; adapts; Quali/Race use locked difficulty |
-| **Multiplayer** | Starts beginner; server mints question slots and owns one shared adaptive difficulty track per room; both players' answers (correct + wrong) feed the same track via `difficulty_sync`; clients no longer pre-bake questions; HUD shows live shared difficulty; energy harvest + OVERTAKE harder-overlay now read the live shared level (OVERTAKE's harder question stays a client-local overlay, never written back into the shared bank); finished screen shows `Difficulty: {label}` |
+| **Multiplayer** | Server mints slots + owns one shared adaptive track; both players’ answers update it; clients do not pre-bake the bank; HUD + energy + OVERTAKE overlay use live level; finish screen shows `Difficulty: {label}`; random weather resolved before `start_countdown` |
 | **Regulations** | Race article `#Difficulty` — adaptive, not a pre-race pick |
-| **3D soft-follow** | Native Capacitor only (`LaneRacerCanvas3D.tsx` → `NATIVE_SOFT_FOLLOW`). Web/localhost = fixed center cam |
+| **3D soft-follow** | Native Capacitor only |
 
 ### Spec / plan (done)
 
 - Spec: `docs/superpowers/specs/2026-07-13-multiplayer-dynamic-difficulty-design.md`
 - Plan: `docs/superpowers/plans/2026-07-13-multiplayer-dynamic-difficulty.md`
-- Prior universal dynamic difficulty spec/plan: `docs/superpowers/specs/2026-07-12-universal-dynamic-difficulty-design.md` / `docs/superpowers/plans/2026-07-12-universal-dynamic-difficulty.md`
+- Prior solo pass: `docs/superpowers/specs/2026-07-12-universal-dynamic-difficulty-design.md` / `docs/superpowers/plans/2026-07-12-universal-dynamic-difficulty.md`
 
 ---
 
 ## Next optional (pick one, confirm with user first)
 
-1. **Opponent-paced `slowerThanBot`** — MP currently hardcodes `slowerThanBot: false` in both `updateDynamicDifficulty` call sites in `server/websocket.ts` (no bot to be slower than). If product wants difficulty to also react to being behind the human opponent (not just raw speed/accuracy), design what "slower than opponent" means for two live humans before wiring it.
-2. **Reconnect resilience** — if a client drops mid-race and rejoins, confirm `dynamicDifficultyDisplay` / question bank rehydrate correctly from server state (`difficulty_sync` + `questions_patch` replay or a snapshot-on-rejoin). Not exercised this session.
-3. **Dead-code cleanup from prior handoff** — Orphaned Lane Racer setup helpers (`displayCircuit` / unused swipe helpers); the dead `Multiplayer.tsx` `joinRoom` → `data.room.questions` legacy hydration path (REST bank is never populated anymore, kept only for backward-compat safety); Regulations Free Practice table header still says `"Series"`; Garage "grouped by series" wording.
+1. **Opponent-paced `slowerThanBot`** — MP hardcodes `false` today; needs a product definition of “slower than human opponent” before coding  
+2. **Reconnect resilience** — rehydrate difficulty + question bank on mid-race rejoin (`difficulty_sync` / `questions_patch` snapshot)  
+3. **Dead-code / copy cleanup** — Lane Racer orphaned setup helpers; dead `joinRoom` → `data.room.questions` path; Regulations FP table header `"Series"`; Garage “grouped by series” wording  
+4. **Manual host/guest play-test** — long race promotion/demotion, OVERTAKE under rapid answers, sim-mode, IPv4 URL if browser flakes  
 
 ### Out of scope unless asked
-- Deploy/Harvest re-enable
-- Championship / circuit unlock redesign
-- Making GP Quali/Race fully dynamic
-- Soft-follow in the web browser (still native-only)
-- Per-player (non-shared) MP difficulty tracks
-- New leaderboard/DB fields for MP `difficultyAchieved` (finished screen shows it in the UI only, no persistence added)
-
----
-
-## Minor follow-ups (optional polish)
-
-- Orphaned Lane Racer setup helpers (`displayCircuit` / unused swipe helpers) — dead code cleanup
-- Regulations Free Practice table header still says `"Series"`; Garage "grouped by series" wording
-- `Multiplayer.tsx`'s legacy `joinRoom` → `data.room.questions` hydration path could be removed in a later cleanup pass (effectively dead since the REST bank is never populated anymore)
-- Manual two-client (host/guest) browser play-test recommended beyond this session's spot-check: long-race promotion/demotion under real network latency, OVERTAKE energy sync across many rapid answers, sim-mode long races
+- Deploy/Harvest re-enable  
+- Championship / circuit unlock redesign  
+- Making GP Quali/Race fully dynamic  
+- Soft-follow in the web browser  
+- Per-player (non-shared) MP difficulty tracks  
+- Persisting MP `difficultyAchieved` to DB/leaderboard  
 
 ---
 
@@ -85,17 +82,15 @@ Multiplayer dynamic difficulty is done. Pick one of the "Next optional" items be
 
 | File | Role |
 |------|------|
-| `shared/mathEngine.ts` | Pure, server-safe engine: `Difficulty`, `Question`, `generateQuestion`, `initDynamicDifficulty`, `updateDynamicDifficulty`, `getHarderDifficulty`, `calculateEnergyHarvest`, etc. |
-| `client/src/lib/gameLogic.ts` | Re-exports `shared/mathEngine.ts`; keeps UI-facing types/constants (`Driver`, `Circuit`, `DRIVERS`, `CIRCUITS`, `useGameState`, etc.) |
-| `client/src/pages/Game.tsx` | PST + GP Practice dynamic; beginner init |
-| `client/src/pages/LaneRacer.tsx` | Solo arcade dynamic + HUD |
-| `client/src/pages/Multiplayer.tsx` | Server-synced live difficulty: `dynamicDifficultyDisplay` state, `difficulty_sync`/`questions_patch` consumption, HUD strip, energy/OVERTAKE reads, finished-screen `Difficulty:` line |
-| `server/websocket.ts` | MP state machine — owns `dynamicDifficulty` per room, mints question slots (`mintSlotIfNeeded`), broadcasts `difficulty_sync` / `questions_patch` |
-| `server/routes.ts` | `POST /api/rooms` accepts `raceLength` (client no longer sends a pre-baked `questions` bank) |
-| `client/src/components/lane-racer/LaneRacerCanvas3D.tsx` | Soft-follow gated by `isNativePlatform()` |
+| `shared/mathEngine.ts` | Pure engine: difficulty + `generateQuestion` + energy helpers |
+| `client/src/lib/gameLogic.ts` | Re-exports math engine; UI `CIRCUITS` / `DRIVERS` / `useGameState` |
+| `client/src/pages/Multiplayer.tsx` | Client sync, HUD, energy/OVERTAKE, resolved weather on start |
+| `server/websocket.ts` | Room dynamic state, mint/patch, shared difficulty updates |
+| `server/routes.ts` | `POST /api/rooms` accepts `raceLength` (no pre-baked questions required) |
+| `docs/next-session-handoff.md` | This file |
 
 ---
 
 ## Note for the next agent
 
-Multiplayer dynamic difficulty is complete end to end (server mint/sync → client consume/HUD → energy/OVERTAKE → finished-screen label). Do not re-enable soft-follow on web. Do not unlock GP Quali/Race dynamic without product say-so. If picking up "Next optional" work, confirm scope with the user first — none of those three items were requested yet, they're just the logical next steps.
+MP dynamic difficulty is done on `main`. Ask what product work comes next. Prefer `http://127.0.0.1:8081` for local browser. Do not re-enable web soft-follow or unlock GP Quali/Race dynamic without product say-so.
