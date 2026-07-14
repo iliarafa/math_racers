@@ -628,7 +628,7 @@ export default function LaneRacer() {
         <div className="relative z-10 flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="text-center">
             <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Lane Racer</h2>
-            <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Tap to configure</div>
+            <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Swipe to configure</div>
           </div>
 
           <div
@@ -674,50 +674,50 @@ export default function LaneRacer() {
               />
             </div>
 
-            {/* Track — horizontal */}
+            {/* Track — horizontal drum */}
             <div className="mt-4 pt-4">
               <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
-              <div className="flex justify-center flex-wrap gap-x-2 gap-y-2">
-                {CIRCUIT_OPTIONS.map((circuit, i) => {
-                  const active = currentCircuitIndex === i;
+              <HorizontalDrum
+                length={CIRCUIT_OPTIONS.length}
+                currentIndex={currentCircuitIndex}
+                onPrev={() => {
+                  const n = getWrappedIndex(currentCircuitIndex, -1, CIRCUIT_OPTIONS.length);
+                  setCurrentCircuitIndex(n);
+                  setSelectedCircuit(CIRCUIT_OPTIONS[n]);
+                }}
+                onNext={() => {
+                  const n = getWrappedIndex(currentCircuitIndex, 1, CIRCUIT_OPTIONS.length);
+                  setCurrentCircuitIndex(n);
+                  setSelectedCircuit(CIRCUIT_OPTIONS[n]);
+                }}
+                testIdPrefix="lr-track"
+                ariaLabelPrev="Previous track"
+                ariaLabelNext="Next track"
+                renderItem={(idx, isActive) => {
+                  const circuit = CIRCUIT_OPTIONS[idx];
                   return (
-                    <button
-                      key={circuit.id}
-                      type="button"
-                      onClick={() => {
-                        setCurrentCircuitIndex(i);
-                        setSelectedCircuit(circuit);
-                      }}
-                      className="flex flex-col items-center gap-1 py-1 px-1.5 transition-all outline-none focus:outline-none focus-visible:outline-none"
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        opacity: active ? 1 : 0.35,
-                        minWidth: 56,
-                      }}
-                      data-testid={`lr-track-${circuit.id}`}
-                    >
+                    <div className="flex flex-col items-center gap-1" data-testid={`lr-track-${circuit.id}`}>
                       {CIRCUIT_MAP_IMAGES[circuit.id] && (
                         <img
                           src={CIRCUIT_MAP_IMAGES[circuit.id]}
                           alt={circuit.name}
-                          className="h-7 object-contain"
-                          style={{ filter: 'invert(1)', maxWidth: 48 }}
+                          className="h-8 object-contain"
+                          style={{ filter: 'invert(1)', opacity: isActive ? 1 : 0.5, maxWidth: 56 }}
                         />
                       )}
                       <span
                         className="text-[9px] font-bold uppercase tracking-wider"
                         style={{
                           fontFamily: 'Oxanium, sans-serif',
-                          color: active ? '#fff' : SETUP_INACTIVE_TEXT,
+                          color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
                         }}
                       >
                         {circuit.name}
                       </span>
-                    </button>
+                    </div>
                   );
-                })}
-              </div>
+                }}
+              />
             </div>
 
             {/* Difficulty: Adaptive (default) or Locked level */}
@@ -788,30 +788,33 @@ export default function LaneRacer() {
               </div>
             </div>
 
-            {/* MATH operation row */}
+            {/* Math — horizontal drum */}
             <div className="mt-4 pt-4">
               <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Math</div>
-              <div className="flex justify-center gap-1.5">
-                {OPERATION_OPTIONS.map((op, i) => (
-                  <button
-                    key={op.type}
-                    type="button"
-                    onClick={() => setCurrentOpIndex(i)}
-                    className="flex-1 py-2 font-bold text-sm transition-all outline-none focus:outline-none focus-visible:outline-none"
-                    style={{
-                      fontFamily: 'Oxanium, sans-serif',
-                      maxWidth: 56,
-                      color: i === currentOpIndex ? '#fff' : SETUP_INACTIVE_TEXT,
-                      border: 'none',
-                      background: 'transparent',
-                      opacity: i === currentOpIndex ? 1 : 0.45,
-                    }}
-                    data-testid={`lr-op-${op.type}`}
-                  >
-                    {op.label}
-                  </button>
-                ))}
-              </div>
+              <HorizontalDrum
+                length={OPERATION_OPTIONS.length}
+                currentIndex={currentOpIndex}
+                onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
+                onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
+                testIdPrefix="lr-op"
+                ariaLabelPrev="Previous operation"
+                ariaLabelNext="Next operation"
+                renderItem={(idx, isActive) => {
+                  const op = OPERATION_OPTIONS[idx];
+                  return (
+                    <span
+                      className="font-bold text-sm uppercase tracking-wider"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
+                      }}
+                      data-testid={`lr-op-${op.type}`}
+                    >
+                      {op.label}
+                    </span>
+                  );
+                }}
+              />
             </div>
 
             {/* Chase Cam — optional view (no VIEW label) */}
