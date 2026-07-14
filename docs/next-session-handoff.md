@@ -1,7 +1,7 @@
 # Next Session Handoff
 
 **Branch:** `main` (synced with `origin/main` after push)  
-**Tip:** (updated on commit) — Refresh next-session handoff after MP merge  
+**Tip:** `4456597` — Refresh next-session handoff after MP merge to main  
 **Last updated:** 2026-07-14  
 **Status:** Multiplayer shared dynamic difficulty **shipped on `main`**. Soft-follow remains Capacitor-native only.
 
