@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import {
   useGameState,
@@ -17,20 +17,20 @@ import {
   DRIVERS,
   initDynamicDifficulty,
   updateDynamicDifficulty,
+  loadDifficultyMode,
+  loadLockedDifficulty,
+  saveDifficultyPrefs,
+  DIFFICULTY_MODE_COLORS,
+  LOCKED_LEVEL_COLORS,
+  SETUP_INACTIVE_TEXT,
+  CHASE_CAM_ACTIVE_COLOR,
 } from "@/lib/gameLogic";
-import type { Difficulty, DynamicDifficultyState } from "@/lib/gameLogic";
+import type { Difficulty, DynamicDifficultyState, DifficultyMode } from "@/lib/gameLogic";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
 import { FOG_COLOR } from "@/components/lane-racer/atmosphere";
-
-const LaneRacerCanvas3D = lazy(() =>
-  import("@/components/lane-racer/LaneRacerCanvas3D").then(m => ({ default: m.LaneRacerCanvas3D })),
-);
-
-function preloadLaneRacer3D() {
-  void import("@/components/lane-racer/LaneRacerCanvas3D");
-}
+import { cn } from "@/lib/utils";
 import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import flagItaly from "@/assets/flag_italy.png";
@@ -51,6 +51,14 @@ import flagUs from "@/assets/flag_us.jpg";
 import flagCanada from "@/assets/flag_canada.png";
 import flagSpain from "@/assets/flag_spain.png";
 import flagAustria from "@/assets/flag_austria.png";
+
+const LaneRacerCanvas3D = lazy(() =>
+  import("@/components/lane-racer/LaneRacerCanvas3D").then(m => ({ default: m.LaneRacerCanvas3D })),
+);
+
+function preloadLaneRacer3D() {
+  void import("@/components/lane-racer/LaneRacerCanvas3D");
+}
 
 const FLAG_IMAGES: { [id: string]: string } = {
   monza: flagItaly, spa: flagBelgium, monaco: flagMonaco, suzuka: flagJapan, silverstone: flagUK, miami: flagUs, canada: flagCanada, barcelona: flagSpain, austria: flagAustria,
@@ -83,6 +91,76 @@ const CIRCUIT_OPTIONS = CIRCUITS.map(c => ({
   name: c.name,
   type: c.type,
 }));
+
+function getWrappedIndex(current: number, offset: number, length: number): number {
+  return ((current + offset) % length + length) % length;
+}
+
+function HorizontalDrum({
+  length,
+  currentIndex,
+  onPrev,
+  onNext,
+  renderItem,
+  testIdPrefix,
+}: {
+  length: number;
+  currentIndex: number;
+  onPrev: () => void;
+  onNext: () => void;
+  renderItem: (index: number, isActive: boolean) => React.ReactNode;
+  testIdPrefix: string;
+}) {
+  const swipeStartXRef = useRef<number | null>(null);
+  const itemH = 80;
+
+  const swipeHandlers = {
+    onTouchStart: (e: React.TouchEvent) => {
+      swipeStartXRef.current = e.touches[0].clientX;
+    },
+    onTouchEnd: (e: React.TouchEvent) => {
+      if (swipeStartXRef.current === null) return;
+      const diff = swipeStartXRef.current - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 30) {
+        diff > 0 ? onNext() : onPrev();
+      }
+      swipeStartXRef.current = null;
+    },
+  };
+
+  return (
+    <div
+      className="w-full flex items-stretch"
+      style={{ height: itemH, overflow: 'hidden', touchAction: 'none', position: 'relative' }}
+      {...swipeHandlers}
+      data-testid={`${testIdPrefix}-drum`}
+    >
+      {([-1, 0, 1] as const).map((offset) => {
+        const idx = getWrappedIndex(currentIndex, offset, length);
+        const isActive = offset === 0;
+        return (
+          <motion.div
+            key={`${testIdPrefix}-${currentIndex}-${offset}`}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: isActive ? 1 : 0.3, x: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex-1 flex items-center justify-center cursor-pointer gap-1"
+            style={{ height: itemH }}
+            onClick={() => {
+              if (offset === -1) onPrev();
+              else if (offset === 1) onNext();
+            }}
+            data-testid={`${testIdPrefix}-slot-${offset}`}
+          >
+            {offset === -1 && <ChevronLeft size={14} className="text-white/30 shrink-0" />}
+            {renderItem(idx, isActive)}
+            {offset === 1 && <ChevronRight size={14} className="text-white/30 shrink-0" />}
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
 
 // Web Audio helpers
 let audioCtx: AudioContext | null = null;
@@ -117,6 +195,8 @@ export default function LaneRacer() {
   const currentDifficultyRef = useRef<Difficulty>('beginner');
   const questionStartTimeRef = useRef<number>(Date.now());
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
+  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadDifficultyMode());
+  const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLockedDifficulty());
   const [currentOpIndex, setCurrentOpIndex] = useState(0);
   const selectedOperation = OPERATION_OPTIONS[currentOpIndex].type;
   const [currentTeamIndex, setCurrentTeamIndex] = useState(() => {
@@ -161,8 +241,6 @@ export default function LaneRacer() {
   const startTimeRef = useRef(0);
   const prevDisplayRef = useRef<string | undefined>(undefined);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
-  const swipeStartXRef = useRef<number | null>(null);
-  const teamSwipeStartXRef = useRef<number | null>(null);
 
   const difficultyLabel =
     DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
@@ -178,7 +256,10 @@ export default function LaneRacer() {
 
     const accuracy = questionNum > 0 ? Math.round((correctCount / questionNum) * 100) : 0;
     const mistakes = raceLength - correctCount;
-    const achieved = dynamicDifficultyRef.current?.currentDifficulty ?? dynamicDifficultyDisplay;
+    const achieved =
+      difficultyMode === 'locked'
+        ? lockedDifficulty
+        : (dynamicDifficultyRef.current?.currentDifficulty ?? dynamicDifficultyDisplay);
     const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, achieved);
 
     const submission = {
@@ -204,7 +285,7 @@ export default function LaneRacer() {
       setShowNamePrompt(true);
       setNameInput('');
     }
-  }, [correctCount, dynamicDifficultyDisplay, gameStatus, pendingSubmission, questionNum, raceLength, selectedCircuit.id, selectedCircuit.name, selectedOperation, showNamePrompt, state.playerId, state.playerName, submitted, totalTime]);
+  }, [correctCount, difficultyMode, dynamicDifficultyDisplay, gameStatus, lockedDifficulty, pendingSubmission, questionNum, raceLength, selectedCircuit.id, selectedCircuit.name, selectedOperation, showNamePrompt, state.playerId, state.playerName, submitted, totalTime]);
 
   const spawnQuestion = useCallback(() => {
     const difficulty = currentDifficultyRef.current;
@@ -218,7 +299,7 @@ export default function LaneRacer() {
   }, [selectedCircuit.id, selectedOperation]);
 
   const applyDynamicDifficulty = useCallback((correct: boolean) => {
-    if (!dynamicDifficultyRef.current) return;
+    if (difficultyMode !== 'adaptive' || !dynamicDifficultyRef.current) return;
     const responseTime = Date.now() - questionStartTimeRef.current;
     const updated = updateDynamicDifficulty(
       dynamicDifficultyRef.current,
@@ -229,7 +310,7 @@ export default function LaneRacer() {
     dynamicDifficultyRef.current = updated;
     currentDifficultyRef.current = updated.currentDifficulty;
     setDynamicDifficultyDisplay(updated.currentDifficulty);
-  }, [selectedOperation]);
+  }, [difficultyMode, selectedOperation]);
 
   const handleCorrect = useCallback(() => {
     applyDynamicDifficulty(true);
@@ -254,9 +335,15 @@ export default function LaneRacer() {
 
   // Start the game
   const startGame = () => {
-    dynamicDifficultyRef.current = initDynamicDifficulty('beginner');
-    currentDifficultyRef.current = 'beginner';
-    setDynamicDifficultyDisplay('beginner');
+    if (difficultyMode === 'locked') {
+      dynamicDifficultyRef.current = null;
+      currentDifficultyRef.current = lockedDifficulty;
+      setDynamicDifficultyDisplay(lockedDifficulty);
+    } else {
+      dynamicDifficultyRef.current = initDynamicDifficulty('beginner');
+      currentDifficultyRef.current = 'beginner';
+      setDynamicDifficultyDisplay('beginner');
+    }
     const length = SIM_LAP_COUNTS[selectedCircuit.id] || RACE_LENGTH;
     setRaceLength(length);
     setGameStatus('countdown');
@@ -315,6 +402,9 @@ export default function LaneRacer() {
     onFinished: handleFinished,
   }), [handleCorrect, handleWrong, handleMiss, handleFinished]);
 
+  // Adaptive: rival/engine pace stay beginner-baseline. Locked: pace at locked level.
+  const paceDifficulty = difficultyMode === 'locked' ? lockedDifficulty : 'beginner';
+
   // Initialize 2D canvas engine when racing in classic mode
   useEffect(() => {
     if (gameStatus !== 'racing' || renderMode !== '2d' || !canvasRef.current) return;
@@ -345,7 +435,7 @@ export default function LaneRacer() {
       onWrong: handleWrong,
       onMiss: handleMiss,
       onFinished: handleFinished,
-    }, raceLength, selectedTeam, 'beginner');
+    }, raceLength, selectedTeam, paceDifficulty);
 
     engineRef.current = engine;
     startTimeRef.current = Date.now();
@@ -372,7 +462,7 @@ export default function LaneRacer() {
       window.removeEventListener('resize', measureSafeBottom);
       resizeObserver.disconnect();
     };
-  }, [gameStatus, renderMode, raceLength, selectedTeam, handleCorrect, handleWrong, handleMiss, handleFinished]);
+  }, [gameStatus, renderMode, raceLength, selectedTeam, paceDifficulty, handleCorrect, handleWrong, handleMiss, handleFinished]);
 
   // Track race start time for 3D mode (2D sets this in its init effect above)
   useEffect(() => {
@@ -485,8 +575,8 @@ export default function LaneRacer() {
   }, [gameStatus]);
 
   const rivalTargetMs = useMemo(
-    () => estimateRivalRaceTimeMs(raceLength, 'beginner', selectedOperation),
-    [raceLength, selectedOperation],
+    () => estimateRivalRaceTimeMs(raceLength, paceDifficulty, selectedOperation),
+    [raceLength, paceDifficulty, selectedOperation],
   );
   const playerProgress = raceLength > 0 ? Math.min(1, questionNum / raceLength) : 0;
   const rivalProg = rivalProgress(elapsedMs, rivalTargetMs);
@@ -498,25 +588,6 @@ export default function LaneRacer() {
 
   // Setup — single page with team + track selection
   if (gameStatus === 'setup') {
-    const displayCircuit = CIRCUIT_OPTIONS[currentCircuitIndex];
-    const goToNext = () => {
-      const next = (currentCircuitIndex + 1) % CIRCUIT_OPTIONS.length;
-      setCurrentCircuitIndex(next);
-      setSelectedCircuit(CIRCUIT_OPTIONS[next]);
-    };
-    const goToPrev = () => {
-      const prev = (currentCircuitIndex - 1 + CIRCUIT_OPTIONS.length) % CIRCUIT_OPTIONS.length;
-      setCurrentCircuitIndex(prev);
-      setSelectedCircuit(CIRCUIT_OPTIONS[prev]);
-    };
-    const handleSwipeStart = (e: React.TouchEvent) => { swipeStartXRef.current = e.touches[0].clientX; };
-    const handleSwipeEnd = (e: React.TouchEvent) => {
-      if (swipeStartXRef.current === null) return;
-      const diff = swipeStartXRef.current - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 50) { diff > 0 ? goToNext() : goToPrev(); }
-      swipeStartXRef.current = null;
-    };
-
     return (
       <div className="h-screen flex flex-col relative overflow-hidden">
 
@@ -534,185 +605,226 @@ export default function LaneRacer() {
         <div className="relative z-10 flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="text-center">
             <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Lane Racer</h2>
-            <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Scroll to configure</div>
+            <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Tap to configure</div>
           </div>
 
-          {/* Combination Lock — 2 drums in glassmorphism card */}
-          {(() => {
-            const drumItemH = 80;
-            const getIdx = (current: number, offset: number, length: number) => ((current + offset) % length + length) % length;
-
-            const goToNextTeam = () => { const n = (currentTeamIndex + 1) % TEAMS.length; setCurrentTeamIndex(n); setSelectedTeam(TEAMS[n].id); localStorage.setItem('lastSelectedTeam', TEAMS[n].id); };
-            const goToPrevTeam = () => { const n = (currentTeamIndex - 1 + TEAMS.length) % TEAMS.length; setCurrentTeamIndex(n); setSelectedTeam(TEAMS[n].id); localStorage.setItem('lastSelectedTeam', TEAMS[n].id); };
-            const goToNextTrack = () => { const n = (currentCircuitIndex + 1) % CIRCUIT_OPTIONS.length; setCurrentCircuitIndex(n); setSelectedCircuit(CIRCUIT_OPTIONS[n]); };
-            const goToPrevTrack = () => { const n = (currentCircuitIndex - 1 + CIRCUIT_OPTIONS.length) % CIRCUIT_OPTIONS.length; setCurrentCircuitIndex(n); setSelectedCircuit(CIRCUIT_OPTIONS[n]); };
-
-            const makeSwipeHandlers = (ref: React.MutableRefObject<number | null>, onNext: () => void, onPrev: () => void) => ({
-              onTouchStart: (e: React.TouchEvent) => { ref.current = e.touches[0].clientY; },
-              onTouchEnd: (e: React.TouchEvent) => {
-                if (ref.current === null) return;
-                const diff = ref.current - e.changedTouches[0].clientY;
-                if (Math.abs(diff) > 30) { diff > 0 ? onNext() : onPrev(); }
-                ref.current = null;
-              },
-            });
-
-            const teamSwipe = makeSwipeHandlers(teamSwipeStartXRef, goToNextTeam, goToPrevTeam);
-            const trackSwipe = makeSwipeHandlers(swipeStartXRef, goToNextTrack, goToPrevTrack);
-
-            const drumStyle: React.CSSProperties = {
-              height: drumItemH * 3,
-              overflow: 'hidden',
-              touchAction: 'none',
-              position: 'relative',
-            };
-
-            return (
-              <div
-                className="w-full max-w-sm rounded-2xl px-3 py-4"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.08)',
-                  backdropFilter: 'blur(16px)',
-                  WebkitBackdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(255,255,255,0.12)',
+          <div
+            className="w-full max-w-sm rounded-2xl px-3 py-4"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255,255,255,0.12)',
+            }}
+          >
+            {/* Team — horizontal drum */}
+            <div>
+              <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
+              <HorizontalDrum
+                length={TEAMS.length}
+                currentIndex={currentTeamIndex}
+                onPrev={() => {
+                  const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
+                  setCurrentTeamIndex(n);
+                  setSelectedTeam(TEAMS[n].id);
+                  localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
                 }}
-              >
-                <div className="flex justify-center gap-2">
-                  {/* TEAM Drum */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
-                    <div style={drumStyle} className="w-full" {...teamSwipe}>
-                      {[-1, 0, 1].map(offset => {
-                        const idx = getIdx(currentTeamIndex, offset, TEAMS.length);
-                        const team = TEAMS[idx];
-                        const isActive = offset === 0;
-                        return (
-                          <motion.div
-                            key={`team-${currentTeamIndex}-${offset}`}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: isActive ? 1 : 0.3, y: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="flex flex-col items-center justify-center cursor-pointer"
-                            style={{ height: drumItemH }}
-                            onClick={() => { if (offset === -1) goToPrevTeam(); else if (offset === 1) goToNextTeam(); }}
-                          >
-                            {offset === -1 && <ChevronUp size={14} className="text-white/30 mb-1" />}
-                            <img
-                              src={TEAM_PREVIEW_URLS[team.id]}
-                              alt={team.name}
-                              className="w-12 h-12 object-contain"
-                              style={{ transform: 'rotate(90deg)' }}
-                            />
-                            {offset === 1 && <ChevronDown size={14} className="text-white/30 mt-1" />}
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                onNext={() => {
+                  const n = getWrappedIndex(currentTeamIndex, 1, TEAMS.length);
+                  setCurrentTeamIndex(n);
+                  setSelectedTeam(TEAMS[n].id);
+                  localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
+                }}
+                testIdPrefix="lr-team"
+                renderItem={(idx, isActive) => {
+                  const team = TEAMS[idx];
+                  return (
+                    <img
+                      src={TEAM_PREVIEW_URLS[team.id]}
+                      alt={team.name}
+                      className="w-12 h-12 object-contain"
+                      style={{ transform: 'rotate(90deg)', opacity: isActive ? 1 : 0.5 }}
+                      data-testid={`lr-team-${team.id}`}
+                    />
+                  );
+                }}
+              />
+            </div>
 
-                  {/* Vertical divider */}
-                  <div className="w-px self-stretch" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }} />
-
-                  {/* TRACK Drum */}
-                  <div className="flex flex-col items-center flex-1">
-                    <div className="text-xs md:text-sm uppercase tracking-widest text-white/80 mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
-                    <div style={drumStyle} className="w-full" {...trackSwipe}>
-                      {[-1, 0, 1].map(offset => {
-                        const idx = getIdx(currentCircuitIndex, offset, CIRCUIT_OPTIONS.length);
-                        const circuit = CIRCUIT_OPTIONS[idx];
-                        const isActive = offset === 0;
-                        return (
-                          <motion.div
-                            key={`track-${currentCircuitIndex}-${offset}`}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: isActive ? 1 : 0.3, y: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="flex flex-col items-center justify-center cursor-pointer"
-                            style={{ height: drumItemH }}
-                            onClick={() => { if (offset === -1) goToPrevTrack(); else if (offset === 1) goToNextTrack(); }}
-                          >
-                            {offset === -1 && <ChevronUp size={14} className="text-white/30 mb-1" />}
-                            {CIRCUIT_MAP_IMAGES[circuit.id] && (
-                              <img
-                                src={CIRCUIT_MAP_IMAGES[circuit.id]}
-                                alt={circuit.name}
-                                className="h-8 md:h-10 object-contain"
-                                style={{ filter: 'invert(1)', opacity: isActive ? 1 : 0.5, maxWidth: '60px' }}
-                              />
-                            )}
-                            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider mt-1" style={{
-                              fontFamily: 'Oxanium, sans-serif',
-                              color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
-                            }}>
-                              {circuit.name}
-                            </span>
-                            {offset === 1 && <ChevronDown size={14} className="text-white/30 mt-1" />}
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* MATH operation row */}
-                <div className="mt-3 pt-3 border-t border-white/10">
-                  <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Math</div>
-                  <div className="flex justify-center gap-1.5">
-                    {OPERATION_OPTIONS.map((op, i) => (
-                      <button
-                        key={op.type}
-                        onClick={() => setCurrentOpIndex(i)}
-                        className="flex-1 py-2 rounded-lg font-bold text-sm transition-all"
+            {/* Track — horizontal */}
+            <div className="mt-4 pt-4">
+              <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
+              <div className="flex justify-center flex-wrap gap-x-2 gap-y-2">
+                {CIRCUIT_OPTIONS.map((circuit, i) => {
+                  const active = currentCircuitIndex === i;
+                  return (
+                    <button
+                      key={circuit.id}
+                      type="button"
+                      onClick={() => {
+                        setCurrentCircuitIndex(i);
+                        setSelectedCircuit(circuit);
+                      }}
+                      className="flex flex-col items-center gap-1 py-1 px-1.5 transition-all outline-none focus:outline-none focus-visible:outline-none"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        opacity: active ? 1 : 0.35,
+                        minWidth: 56,
+                      }}
+                      data-testid={`lr-track-${circuit.id}`}
+                    >
+                      {CIRCUIT_MAP_IMAGES[circuit.id] && (
+                        <img
+                          src={CIRCUIT_MAP_IMAGES[circuit.id]}
+                          alt={circuit.name}
+                          className="h-7 object-contain"
+                          style={{ filter: 'invert(1)', maxWidth: 48 }}
+                        />
+                      )}
+                      <span
+                        className="text-[9px] font-bold uppercase tracking-wider"
                         style={{
                           fontFamily: 'Oxanium, sans-serif',
-                          maxWidth: 56,
-                          color: i === currentOpIndex ? '#fff' : 'rgba(255,255,255,0.45)',
-                          border: 'none',
-                          backgroundColor: i === currentOpIndex ? 'rgba(255,255,255,0.12)' : 'transparent',
+                          color: active ? '#fff' : SETUP_INACTIVE_TEXT,
                         }}
-                        data-testid={`lr-op-${op.type}`}
                       >
-                        {op.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                        {circuit.name}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-                {/* View mode — mode card (tap to toggle) */}
-                <div className="mt-3 pt-3 border-t border-white/10">
-                  <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-                    View
-                  </div>
+            {/* Difficulty: Adaptive (default) or Locked level */}
+            <div className="mt-4 pt-4">
+              <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Difficulty</div>
+              <div className="flex justify-center gap-2 mb-2">
+                {([
+                  ['adaptive', 'Adaptive'],
+                  ['locked', 'Locked'],
+                ] as const).map(([mode, label]) => {
+                  const active = difficultyMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => {
+                        setDifficultyMode(mode);
+                        saveDifficultyPrefs(mode, lockedDifficulty);
+                      }}
+                      className="px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all outline-none focus:outline-none focus-visible:outline-none"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: active ? DIFFICULTY_MODE_COLORS[mode] : SETUP_INACTIVE_TEXT,
+                        background: 'transparent',
+                        border: 'none',
+                        opacity: active ? 1 : 0.45,
+                      }}
+                      data-testid={`lr-difficulty-${mode}`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Always render so layout below doesn't jump when switching modes */}
+              <div
+                className={cn(
+                  "flex justify-center flex-wrap gap-1.5",
+                  difficultyMode !== 'locked' && "invisible pointer-events-none"
+                )}
+                aria-hidden={difficultyMode !== 'locked'}
+              >
+                {DRIVERS.map((d) => {
+                  const active = lockedDifficulty === d.difficulty;
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      tabIndex={difficultyMode === 'locked' ? 0 : -1}
+                      onClick={() => {
+                        setLockedDifficulty(d.difficulty);
+                        saveDifficultyPrefs('locked', d.difficulty);
+                      }}
+                      className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all outline-none focus:outline-none focus-visible:outline-none"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: active ? LOCKED_LEVEL_COLORS[d.difficulty] : SETUP_INACTIVE_TEXT,
+                        background: 'transparent',
+                        border: 'none',
+                        opacity: active ? 1 : 0.45,
+                      }}
+                      data-testid={`lr-locked-level-${d.id}`}
+                    >
+                      {d.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* MATH operation row */}
+            <div className="mt-4 pt-4">
+              <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Math</div>
+              <div className="flex justify-center gap-1.5">
+                {OPERATION_OPTIONS.map((op, i) => (
                   <button
+                    key={op.type}
                     type="button"
-                    onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
-                    className="w-full rounded-xl py-4 px-3 transition-all"
+                    onClick={() => setCurrentOpIndex(i)}
+                    className="flex-1 py-2 font-bold text-sm transition-all outline-none focus:outline-none focus-visible:outline-none"
                     style={{
                       fontFamily: 'Oxanium, sans-serif',
-                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      maxWidth: 56,
+                      color: i === currentOpIndex ? '#fff' : SETUP_INACTIVE_TEXT,
                       border: 'none',
+                      background: 'transparent',
+                      opacity: i === currentOpIndex ? 1 : 0.45,
                     }}
-                    data-testid="lr-view-3d"
-                    aria-label={renderMode === '3d' ? 'Switch to 2D view' : 'Switch to 3D chase view'}
+                    data-testid={`lr-op-${op.type}`}
                   >
-                    <div
-                      className="text-center font-extrabold uppercase tracking-wider"
-                      style={{ fontSize: '1.35rem', color: '#fff', letterSpacing: '0.1em' }}
-                    >
-                      {renderMode === '3d' ? '3D Chase' : '2D'}
-                    </div>
-                    <p
-                      className="mt-2 text-center text-[10px] uppercase tracking-widest"
-                      style={{ color: 'rgba(255,255,255,0.4)' }}
-                    >
-                      {renderMode === '3d' ? 'Tap to switch · Behind-the-car camera' : 'Tap to switch · Classic top-down race'}
-                    </p>
+                    {op.label}
                   </button>
-                </div>
+                ))}
               </div>
-            );
-          })()}
+            </div>
+
+            {/* Chase Cam — optional view (no VIEW label) */}
+            <div className="mt-4 pt-4">
+              <button
+                type="button"
+                onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
+                className="w-full py-3 px-3 transition-all outline-none focus:outline-none focus-visible:outline-none"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  background: 'transparent',
+                  border: 'none',
+                }}
+                data-testid="lr-view-3d"
+                aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
+              >
+                <div
+                  className="text-center font-extrabold uppercase tracking-wider"
+                  style={{
+                    fontSize: '1.35rem',
+                    color: renderMode === '3d' ? CHASE_CAM_ACTIVE_COLOR : SETUP_INACTIVE_TEXT,
+                    letterSpacing: '0.1em',
+                    opacity: renderMode === '3d' ? 1 : 0.45,
+                  }}
+                >
+                  Chase Cam
+                </div>
+                <p
+                  className="mt-2 text-center text-[10px] uppercase tracking-widest"
+                  style={{ color: 'rgba(255,255,255,0.4)' }}
+                >
+                  {renderMode === '3d' ? 'On · Tap to disable' : 'Tap to enable'}
+                </p>
+              </button>
+            </div>
+          </div>
 
           {/* Start Button */}
           <div className="w-full px-4">
@@ -810,7 +922,7 @@ export default function LaneRacer() {
                 callbacks={engineCallbacks}
                 totalQuestions={raceLength}
                 teamId={selectedTeam}
-                difficulty="beginner"
+                difficulty={paceDifficulty}
                 paused={!isRacing}
               />
             </Suspense>
@@ -854,7 +966,10 @@ export default function LaneRacer() {
     const remainingSeconds = seconds % 60;
     const timeStr = `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
     const mistakes = raceLength - correctCount;
-    const achieved = dynamicDifficultyRef.current?.currentDifficulty ?? dynamicDifficultyDisplay;
+    const achieved =
+      difficultyMode === 'locked'
+        ? lockedDifficulty
+        : (dynamicDifficultyRef.current?.currentDifficulty ?? dynamicDifficultyDisplay);
     const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, achieved);
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport darkBackground>
