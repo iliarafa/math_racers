@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import {
   useGameState,
@@ -105,6 +105,7 @@ function HorizontalDrum({
   testIdPrefix,
   ariaLabelPrev = 'Previous',
   ariaLabelNext = 'Next',
+  slotClassName = 'w-20',
 }: {
   length: number;
   currentIndex: number;
@@ -114,6 +115,7 @@ function HorizontalDrum({
   testIdPrefix: string;
   ariaLabelPrev?: string;
   ariaLabelNext?: string;
+  slotClassName?: string;
 }) {
   const swipeStartXRef = useRef<number | null>(null);
   const itemH = 80;
@@ -137,50 +139,51 @@ function HorizontalDrum({
 
   return (
     <div
-      className="w-full flex items-stretch"
+      className="w-full flex items-center justify-center"
       style={{ height: itemH, overflow: 'hidden', touchAction: 'none', position: 'relative' }}
       {...swipeHandlers}
       data-testid={`${testIdPrefix}-drum`}
     >
-      {([-1, 0, 1] as const).map((offset) => {
-        const idx = getWrappedIndex(currentIndex, offset, length);
-        const isActive = offset === 0;
-        const isNeighbor = offset !== 0;
-        return (
-          <motion.div
-            key={`${testIdPrefix}-${currentIndex}-${offset}`}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: isActive ? 1 : 0.3, x: 0 }}
-            transition={{ duration: 0.15 }}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-1',
-              isNeighbor && 'cursor-pointer',
-            )}
-            style={{ height: itemH }}
-            role={isNeighbor ? 'button' : undefined}
-            tabIndex={isNeighbor ? 0 : -1}
-            aria-label={offset === -1 ? ariaLabelPrev : offset === 1 ? ariaLabelNext : undefined}
-            aria-current={isActive ? true : undefined}
-            onClick={() => {
-              if (offset === -1) onPrev();
-              else if (offset === 1) onNext();
-            }}
-            onKeyDown={(e) => {
-              if (!isNeighbor) return;
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
+      <div className="flex items-center gap-3">
+        {([-1, 0, 1] as const).map((offset) => {
+          const idx = getWrappedIndex(currentIndex, offset, length);
+          const isActive = offset === 0;
+          const isNeighbor = offset !== 0;
+          return (
+            <motion.div
+              key={`${testIdPrefix}-${currentIndex}-${offset}`}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: isActive ? 1 : 0.3, x: 0 }}
+              transition={{ duration: 0.15 }}
+              className={cn(
+                slotClassName,
+                'flex items-center justify-center',
+                isNeighbor && 'cursor-pointer',
+              )}
+              style={{ height: itemH }}
+              role={isNeighbor ? 'button' : undefined}
+              tabIndex={isNeighbor ? 0 : -1}
+              aria-label={offset === -1 ? ariaLabelPrev : offset === 1 ? ariaLabelNext : undefined}
+              aria-current={isActive ? true : undefined}
+              onClick={() => {
                 if (offset === -1) onPrev();
                 else if (offset === 1) onNext();
-              }
-            }}
-            data-testid={`${testIdPrefix}-slot-${offset}`}
-          >
-            {offset === -1 && <ChevronLeft size={14} className="text-white/30 shrink-0" />}
-            {renderItem(idx, isActive)}
-            {offset === 1 && <ChevronRight size={14} className="text-white/30 shrink-0" />}
-          </motion.div>
-        );
-      })}
+              }}
+              onKeyDown={(e) => {
+                if (!isNeighbor) return;
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  if (offset === -1) onPrev();
+                  else if (offset === 1) onNext();
+                }
+              }}
+              data-testid={`${testIdPrefix}-slot-${offset}`}
+            >
+              {renderItem(idx, isActive)}
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -642,7 +645,7 @@ export default function LaneRacer() {
           >
             {/* Team — horizontal drum */}
             <div>
-              <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
+              <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
               <HorizontalDrum
                 length={TEAMS.length}
                 currentIndex={currentTeamIndex}
@@ -665,7 +668,7 @@ export default function LaneRacer() {
                     <img
                       src={TEAM_PREVIEW_URLS[team.id]}
                       alt={team.name}
-                      className="w-12 h-12 object-contain"
+                      className="w-14 h-14 object-contain"
                       style={{ transform: 'rotate(90deg)' }}
                       data-testid={`lr-team-${team.id}`}
                     />
@@ -676,7 +679,7 @@ export default function LaneRacer() {
 
             {/* Track — horizontal drum */}
             <div className="mt-4 pt-4">
-              <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
+              <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
               <HorizontalDrum
                 length={CIRCUIT_OPTIONS.length}
                 currentIndex={currentCircuitIndex}
@@ -701,12 +704,12 @@ export default function LaneRacer() {
                         <img
                           src={CIRCUIT_MAP_IMAGES[circuit.id]}
                           alt={circuit.name}
-                          className="h-8 object-contain"
-                          style={{ filter: 'invert(1)', maxWidth: 56 }}
+                          className="h-10 object-contain"
+                          style={{ filter: 'invert(1)', maxWidth: 64 }}
                         />
                       )}
                       <span
-                        className="text-[9px] font-bold uppercase tracking-wider"
+                        className="text-[10px] font-bold uppercase tracking-wider"
                         style={{
                           fontFamily: 'Oxanium, sans-serif',
                           color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
@@ -722,7 +725,7 @@ export default function LaneRacer() {
 
             {/* Difficulty: Adaptive (default) or Locked level */}
             <div className="mt-4 pt-4">
-              <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Difficulty</div>
+              <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Difficulty</div>
               <div className="flex justify-center gap-2 mb-2">
                 {([
                   ['adaptive', 'Adaptive'],
@@ -788,9 +791,9 @@ export default function LaneRacer() {
               </div>
             </div>
 
-            {/* Math — horizontal drum */}
+            {/* Operation — horizontal drum */}
             <div className="mt-4 pt-4">
-              <div className="text-xs uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Math</div>
+              <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Operation</div>
               <HorizontalDrum
                 length={OPERATION_OPTIONS.length}
                 currentIndex={currentOpIndex}
@@ -799,11 +802,12 @@ export default function LaneRacer() {
                 testIdPrefix="lr-op"
                 ariaLabelPrev="Previous operation"
                 ariaLabelNext="Next operation"
+                slotClassName="w-14"
                 renderItem={(idx, isActive) => {
                   const op = OPERATION_OPTIONS[idx];
                   return (
                     <span
-                      className="font-bold text-sm uppercase tracking-wider"
+                      className="font-bold text-2xl"
                       style={{
                         fontFamily: 'Oxanium, sans-serif',
                         color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
@@ -832,11 +836,12 @@ export default function LaneRacer() {
                 aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
               >
                 <div
-                  className="text-center font-extrabold uppercase tracking-wider"
+                  className={cn(
+                    'text-center uppercase tracking-widest font-bold',
+                    renderMode === '3d' ? 'text-base' : 'text-sm',
+                  )}
                   style={{
-                    fontSize: '1.35rem',
                     color: renderMode === '3d' ? CHASE_CAM_ACTIVE_COLOR : SETUP_INACTIVE_TEXT,
-                    letterSpacing: '0.1em',
                     opacity: renderMode === '3d' ? 1 : 0.45,
                   }}
                 >
