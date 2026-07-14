@@ -103,6 +103,8 @@ function HorizontalDrum({
   onNext,
   renderItem,
   testIdPrefix,
+  ariaLabelPrev = 'Previous',
+  ariaLabelNext = 'Next',
 }: {
   length: number;
   currentIndex: number;
@@ -110,6 +112,8 @@ function HorizontalDrum({
   onNext: () => void;
   renderItem: (index: number, isActive: boolean) => React.ReactNode;
   testIdPrefix: string;
+  ariaLabelPrev?: string;
+  ariaLabelNext?: string;
 }) {
   const swipeStartXRef = useRef<number | null>(null);
   const itemH = 80;
@@ -126,6 +130,9 @@ function HorizontalDrum({
       }
       swipeStartXRef.current = null;
     },
+    onTouchCancel: () => {
+      swipeStartXRef.current = null;
+    },
   };
 
   return (
@@ -138,17 +145,33 @@ function HorizontalDrum({
       {([-1, 0, 1] as const).map((offset) => {
         const idx = getWrappedIndex(currentIndex, offset, length);
         const isActive = offset === 0;
+        const isNeighbor = offset !== 0;
         return (
           <motion.div
             key={`${testIdPrefix}-${currentIndex}-${offset}`}
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: isActive ? 1 : 0.3, x: 0 }}
             transition={{ duration: 0.15 }}
-            className="flex-1 flex items-center justify-center cursor-pointer gap-1"
+            className={cn(
+              'flex-1 flex items-center justify-center gap-1',
+              isNeighbor && 'cursor-pointer',
+            )}
             style={{ height: itemH }}
+            role={isNeighbor ? 'button' : undefined}
+            tabIndex={isNeighbor ? 0 : -1}
+            aria-label={offset === -1 ? ariaLabelPrev : offset === 1 ? ariaLabelNext : undefined}
+            aria-current={isActive ? true : undefined}
             onClick={() => {
               if (offset === -1) onPrev();
               else if (offset === 1) onNext();
+            }}
+            onKeyDown={(e) => {
+              if (!isNeighbor) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (offset === -1) onPrev();
+                else if (offset === 1) onNext();
+              }
             }}
             data-testid={`${testIdPrefix}-slot-${offset}`}
           >
