@@ -666,7 +666,7 @@ export default function LaneRacer() {
                       src={TEAM_PREVIEW_URLS[team.id]}
                       alt={team.name}
                       className="w-12 h-12 object-contain"
-                      style={{ transform: 'rotate(90deg)', opacity: isActive ? 1 : 0.5 }}
+                      style={{ transform: 'rotate(90deg)' }}
                       data-testid={`lr-team-${team.id}`}
                     />
                   );
@@ -702,7 +702,7 @@ export default function LaneRacer() {
                           src={CIRCUIT_MAP_IMAGES[circuit.id]}
                           alt={circuit.name}
                           className="h-8 object-contain"
-                          style={{ filter: 'invert(1)', opacity: isActive ? 1 : 0.5, maxWidth: 56 }}
+                          style={{ filter: 'invert(1)', maxWidth: 56 }}
                         />
                       )}
                       <span
