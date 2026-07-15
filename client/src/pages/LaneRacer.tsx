@@ -131,6 +131,7 @@ function HorizontalDrum({
   testIdPrefix,
   ariaLabelPrev = 'Previous',
   ariaLabelNext = 'Next',
+  itemHeight = 80,
 }: {
   length: number;
   currentIndex: number;
@@ -140,9 +141,10 @@ function HorizontalDrum({
   testIdPrefix: string;
   ariaLabelPrev?: string;
   ariaLabelNext?: string;
+  itemHeight?: number;
 }) {
   const swipeStartXRef = useRef<number | null>(null);
-  const itemH = 80;
+  const itemH = itemHeight;
 
   const swipeHandlers = {
     onTouchStart: (e: React.TouchEvent) => {
