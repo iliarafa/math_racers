@@ -803,7 +803,36 @@ export default function LaneRacer() {
             </div>
 
             <div className="flex flex-col items-center">
-              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Diff</span>
+              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Operation</span>
+              <HorizontalDrum
+                length={OPERATION_OPTIONS.length}
+                currentIndex={currentOpIndex}
+                itemHeight={72}
+                onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
+                onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
+                testIdPrefix="lr-op"
+                ariaLabelPrev="Previous operation"
+                ariaLabelNext="Next operation"
+                renderItem={(idx, isActive) => {
+                  const op = OPERATION_OPTIONS[idx];
+                  return (
+                    <span
+                      className="font-bold text-4xl leading-none"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
+                      }}
+                      data-testid={`lr-op-${op.type}`}
+                    >
+                      {op.label}
+                    </span>
+                  );
+                }}
+              />
+            </div>
+
+            <div className="flex flex-col items-center">
+              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Level</span>
               <HorizontalDrum
                 length={DIFFICULTY_DRUM_OPTIONS.length}
                 currentIndex={currentDifficultyIndex}
@@ -831,35 +860,6 @@ export default function LaneRacer() {
               />
             </div>
 
-            <div className="flex flex-col items-center">
-              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Math</span>
-              <HorizontalDrum
-                length={OPERATION_OPTIONS.length}
-                currentIndex={currentOpIndex}
-                itemHeight={72}
-                onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
-                onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
-                testIdPrefix="lr-op"
-                ariaLabelPrev="Previous operation"
-                ariaLabelNext="Next operation"
-                renderItem={(idx, isActive) => {
-                  const op = OPERATION_OPTIONS[idx];
-                  return (
-                    <span
-                      className="font-bold text-2xl"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
-                      }}
-                      data-testid={`lr-op-${op.type}`}
-                    >
-                      {op.label}
-                    </span>
-                  );
-                }}
-              />
-            </div>
-
             <div>
               <button
                 type="button"
@@ -870,7 +870,7 @@ export default function LaneRacer() {
                 aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
               >
                 <div
-                  className={`text-center uppercase tracking-widest font-bold ${renderMode === '3d' ? 'text-base' : 'text-sm'}`}
+                  className="text-center text-sm uppercase tracking-widest font-bold"
                   style={{
                     color: renderMode === '3d' ? CHASE_CAM_ACTIVE_COLOR : SETUP_INACTIVE_TEXT,
                     opacity: renderMode === '3d' ? 1 : 0.45,
@@ -878,8 +878,11 @@ export default function LaneRacer() {
                 >
                   Chase Cam
                 </div>
-                <p className="mt-1 text-center text-[10px] uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                  {renderMode === '3d' ? 'On · Tap to disable' : 'Tap to enable'}
+                <p
+                  className="mt-1 text-center text-[10px] uppercase tracking-widest h-4 leading-4"
+                  style={{ color: 'rgba(255,255,255,0.28)' }}
+                >
+                  {renderMode === '3d' ? 'Tap to disable' : 'Tap to enable'}
                 </p>
               </button>
             </div>
