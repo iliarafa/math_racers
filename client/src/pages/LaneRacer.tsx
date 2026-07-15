@@ -17,9 +17,6 @@ import {
   DRIVERS,
   initDynamicDifficulty,
   updateDynamicDifficulty,
-  loadDifficultyMode,
-  loadLockedDifficulty,
-  saveDifficultyPrefs,
   DIFFICULTY_MODE_COLORS,
   LOCKED_LEVEL_COLORS,
   SETUP_INACTIVE_TEXT,
@@ -70,6 +67,31 @@ type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
 type RendererMode = '2d' | '3d';
 
 const RENDERER_STORAGE_KEY = 'laneRacerRenderer';
+const LANE_RACER_DIFFICULTY_MODE_KEY = 'laneRacerDifficultyMode';
+const LANE_RACER_LOCKED_DIFFICULTY_KEY = 'laneRacerLockedDifficulty';
+
+function loadLaneRacerDifficultyMode(): DifficultyMode {
+  try {
+    return localStorage.getItem(LANE_RACER_DIFFICULTY_MODE_KEY) === 'locked' ? 'locked' : 'adaptive';
+  } catch {
+    return 'adaptive';
+  }
+}
+
+function loadLaneRacerLockedDifficulty(): Difficulty {
+  try {
+    const v = localStorage.getItem(LANE_RACER_LOCKED_DIFFICULTY_KEY);
+    if (v === 'beginner' || v === 'easy' || v === 'medium' || v === 'hard') return v;
+  } catch { /* ignore */ }
+  return 'beginner';
+}
+
+function saveLaneRacerDifficultyPrefs(mode: DifficultyMode, locked: Difficulty) {
+  try {
+    localStorage.setItem(LANE_RACER_DIFFICULTY_MODE_KEY, mode);
+    localStorage.setItem(LANE_RACER_LOCKED_DIFFICULTY_KEY, locked);
+  } catch { /* ignore */ }
+}
 
 const OPERATION_OPTIONS: { label: string; type: string }[] = [
   { label: '+', type: 'Addition' },
@@ -130,6 +152,7 @@ function HorizontalDrum({
   ariaLabelPrev = 'Previous',
   ariaLabelNext = 'Next',
   itemHeight = 80,
+  chevronSize = 14,
 }: {
   length: number;
   currentIndex: number;
@@ -140,6 +163,7 @@ function HorizontalDrum({
   ariaLabelPrev?: string;
   ariaLabelNext?: string;
   itemHeight?: number;
+  chevronSize?: number;
 }) {
   const swipeStartXRef = useRef<number | null>(null);
   const itemH = itemHeight;
@@ -163,7 +187,7 @@ function HorizontalDrum({
 
   return (
     <div
-      className="w-full flex items-center justify-center gap-4 outline-none focus:outline-none"
+      className="w-full flex items-center justify-center gap-2 outline-none focus:outline-none"
       style={{ height: itemH, overflow: 'hidden', touchAction: 'none', position: 'relative' }}
       {...swipeHandlers}
       tabIndex={0}
@@ -181,12 +205,12 @@ function HorizontalDrum({
     >
       <button
         type="button"
-        className="shrink-0 p-1.5 text-white/45 outline-none focus:outline-none focus-visible:outline-none"
+        className="shrink-0 p-1 text-white/35 outline-none focus:outline-none focus-visible:outline-none"
         aria-label={ariaLabelPrev}
         onClick={onPrev}
         data-testid={`${testIdPrefix}-prev`}
       >
-        <ChevronLeft size={20} />
+        <ChevronLeft size={chevronSize} />
       </button>
 
       <motion.div
@@ -204,12 +228,12 @@ function HorizontalDrum({
 
       <button
         type="button"
-        className="shrink-0 p-1.5 text-white/45 outline-none focus:outline-none focus-visible:outline-none"
+        className="shrink-0 p-1 text-white/35 outline-none focus:outline-none focus-visible:outline-none"
         aria-label={ariaLabelNext}
         onClick={onNext}
         data-testid={`${testIdPrefix}-next`}
       >
-        <ChevronRight size={20} />
+        <ChevronRight size={chevronSize} />
       </button>
     </div>
   );
@@ -248,10 +272,10 @@ export default function LaneRacer() {
   const currentDifficultyRef = useRef<Difficulty>('beginner');
   const questionStartTimeRef = useRef<number>(Date.now());
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
-  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadDifficultyMode());
-  const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLockedDifficulty());
+  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadLaneRacerDifficultyMode());
+  const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLaneRacerLockedDifficulty());
   const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(() =>
-    difficultyDrumIndex(loadDifficultyMode(), loadLockedDifficulty()),
+    difficultyDrumIndex(loadLaneRacerDifficultyMode(), loadLaneRacerLockedDifficulty()),
   );
   const [currentOpIndex, setCurrentOpIndex] = useState(0);
   const selectedOperation = OPERATION_OPTIONS[currentOpIndex].type;
@@ -261,11 +285,11 @@ export default function LaneRacer() {
     setCurrentDifficultyIndex(n);
     if (opt.mode === 'adaptive') {
       setDifficultyMode('adaptive');
-      saveDifficultyPrefs('adaptive', lockedDifficulty);
+      saveLaneRacerDifficultyPrefs('adaptive', lockedDifficulty);
     } else {
       setDifficultyMode('locked');
       setLockedDifficulty(opt.locked!);
-      saveDifficultyPrefs('locked', opt.locked!);
+      saveLaneRacerDifficultyPrefs('locked', opt.locked!);
     }
   };
   const [currentTeamIndex, setCurrentTeamIndex] = useState(() => {
@@ -661,15 +685,10 @@ export default function LaneRacer() {
       backgroundColor: 'rgba(255,255,255,0.08)',
       backdropFilter: 'blur(16px)',
       WebkitBackdropFilter: 'blur(16px)',
-      border: '1px solid rgba(255,255,255,0.12)',
+      border: '1px solid rgba(255,255,255,0.16)',
     } as const;
-    const whisperLabelStyle = {
-      fontFamily: 'Oxanium, sans-serif',
-      fontSize: 9,
-      letterSpacing: '0.18em',
-      color: 'rgba(255,255,255,0.28)',
-      textTransform: 'uppercase' as const,
-    };
+    const sectionTitleClass =
+      'mb-1.5 text-center text-sm font-bold uppercase tracking-widest text-white/90';
 
     return (
       <div className="h-screen flex flex-col relative overflow-hidden">
@@ -704,7 +723,8 @@ export default function LaneRacer() {
             <HorizontalDrum
               length={CIRCUIT_OPTIONS.length}
               currentIndex={currentCircuitIndex}
-              itemHeight={100}
+              itemHeight={140}
+              chevronSize={16}
               onPrev={() => {
                 const n = getWrappedIndex(currentCircuitIndex, -1, CIRCUIT_OPTIONS.length);
                 setCurrentCircuitIndex(n);
@@ -726,12 +746,12 @@ export default function LaneRacer() {
                       <img
                         src={CIRCUIT_MAP_IMAGES[circuit.id]}
                         alt={circuit.name}
-                        className="h-14 object-contain"
-                        style={{ filter: 'invert(1)', maxWidth: 88 }}
+                        className="h-24 object-contain"
+                        style={{ filter: 'invert(1)', maxWidth: 140 }}
                       />
                     )}
                     <span
-                      className="text-sm font-bold uppercase tracking-wider"
+                      className="text-base font-bold uppercase tracking-wider"
                       style={{
                         fontFamily: 'Oxanium, sans-serif',
                         color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
@@ -745,108 +765,102 @@ export default function LaneRacer() {
             />
           </div>
 
-          <div className="w-full max-w-sm rounded-2xl px-3 py-4" style={glassCardStyle} data-testid="lr-setup">
-            <div className="flex items-center gap-2">
-              <span style={whisperLabelStyle}>Team</span>
-              <div className="flex-1">
-                <HorizontalDrum
-                  length={TEAMS.length}
-                  currentIndex={currentTeamIndex}
-                  itemHeight={56}
-                  onPrev={() => {
-                    const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
-                    setCurrentTeamIndex(n);
-                    setSelectedTeam(TEAMS[n].id);
-                    localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-                  }}
-                  onNext={() => {
-                    const n = getWrappedIndex(currentTeamIndex, 1, TEAMS.length);
-                    setCurrentTeamIndex(n);
-                    setSelectedTeam(TEAMS[n].id);
-                    localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-                  }}
-                  testIdPrefix="lr-team"
-                  ariaLabelPrev="Previous team"
-                  ariaLabelNext="Next team"
-                  renderItem={(idx) => {
-                    const team = TEAMS[idx];
-                    return (
-                      <img
-                        src={TEAM_PREVIEW_URLS[team.id]}
-                        alt={team.name}
-                        className="w-10 h-10 object-contain"
-                        style={{ transform: 'rotate(90deg)' }}
-                        data-testid={`lr-team-${team.id}`}
-                      />
-                    );
-                  }}
-                />
-              </div>
+          <div className="w-full max-w-[15rem] rounded-2xl px-4 py-5 space-y-4" style={glassCardStyle} data-testid="lr-setup">
+            <div className="flex flex-col items-center">
+              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</span>
+              <HorizontalDrum
+                length={TEAMS.length}
+                currentIndex={currentTeamIndex}
+                itemHeight={72}
+                onPrev={() => {
+                  const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
+                  setCurrentTeamIndex(n);
+                  setSelectedTeam(TEAMS[n].id);
+                  localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
+                }}
+                onNext={() => {
+                  const n = getWrappedIndex(currentTeamIndex, 1, TEAMS.length);
+                  setCurrentTeamIndex(n);
+                  setSelectedTeam(TEAMS[n].id);
+                  localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
+                }}
+                testIdPrefix="lr-team"
+                ariaLabelPrev="Previous team"
+                ariaLabelNext="Next team"
+                renderItem={(idx) => {
+                  const team = TEAMS[idx];
+                  return (
+                    <img
+                      src={TEAM_PREVIEW_URLS[team.id]}
+                      alt={team.name}
+                      className="w-14 h-14 object-contain"
+                      style={{ transform: 'rotate(90deg)' }}
+                      data-testid={`lr-team-${team.id}`}
+                    />
+                  );
+                }}
+              />
             </div>
 
-            <div className="flex items-center gap-2 mt-3">
-              <span style={whisperLabelStyle}>Diff</span>
-              <div className="flex-1">
-                <HorizontalDrum
-                  length={DIFFICULTY_DRUM_OPTIONS.length}
-                  currentIndex={currentDifficultyIndex}
-                  itemHeight={56}
-                  onPrev={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, -1, DIFFICULTY_DRUM_OPTIONS.length))}
-                  onNext={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, 1, DIFFICULTY_DRUM_OPTIONS.length))}
-                  testIdPrefix="lr-difficulty"
-                  ariaLabelPrev="Previous difficulty"
-                  ariaLabelNext="Next difficulty"
-                  renderItem={(idx, isActive) => {
-                    const opt = DIFFICULTY_DRUM_OPTIONS[idx];
-                    return (
-                      <span
-                        className="font-bold text-sm uppercase tracking-wider text-center leading-tight"
-                        style={{
-                          fontFamily: 'Oxanium, sans-serif',
-                          color: isActive ? difficultyDrumColor(opt) : SETUP_INACTIVE_TEXT,
-                        }}
-                        data-testid={`lr-difficulty-${opt.id}`}
-                      >
-                        {opt.label}
-                      </span>
-                    );
-                  }}
-                />
-              </div>
+            <div className="flex flex-col items-center">
+              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Diff</span>
+              <HorizontalDrum
+                length={DIFFICULTY_DRUM_OPTIONS.length}
+                currentIndex={currentDifficultyIndex}
+                itemHeight={72}
+                onPrev={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, -1, DIFFICULTY_DRUM_OPTIONS.length))}
+                onNext={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, 1, DIFFICULTY_DRUM_OPTIONS.length))}
+                testIdPrefix="lr-difficulty"
+                ariaLabelPrev="Previous difficulty"
+                ariaLabelNext="Next difficulty"
+                renderItem={(idx, isActive) => {
+                  const opt = DIFFICULTY_DRUM_OPTIONS[idx];
+                  return (
+                    <span
+                      className="font-bold text-base uppercase tracking-wider text-center leading-tight"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: isActive ? difficultyDrumColor(opt) : SETUP_INACTIVE_TEXT,
+                      }}
+                      data-testid={`lr-difficulty-${opt.id}`}
+                    >
+                      {opt.label}
+                    </span>
+                  );
+                }}
+              />
             </div>
 
-            <div className="flex items-center gap-2 mt-3">
-              <span style={whisperLabelStyle}>Math</span>
-              <div className="flex-1">
-                <HorizontalDrum
-                  length={OPERATION_OPTIONS.length}
-                  currentIndex={currentOpIndex}
-                  itemHeight={56}
-                  onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
-                  onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
-                  testIdPrefix="lr-op"
-                  ariaLabelPrev="Previous operation"
-                  ariaLabelNext="Next operation"
-                  renderItem={(idx, isActive) => {
-                    const op = OPERATION_OPTIONS[idx];
-                    return (
-                      <span
-                        className="font-bold text-xl"
-                        style={{
-                          fontFamily: 'Oxanium, sans-serif',
-                          color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
-                        }}
-                        data-testid={`lr-op-${op.type}`}
-                      >
-                        {op.label}
-                      </span>
-                    );
-                  }}
-                />
-              </div>
+            <div className="flex flex-col items-center">
+              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Math</span>
+              <HorizontalDrum
+                length={OPERATION_OPTIONS.length}
+                currentIndex={currentOpIndex}
+                itemHeight={72}
+                onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
+                onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
+                testIdPrefix="lr-op"
+                ariaLabelPrev="Previous operation"
+                ariaLabelNext="Next operation"
+                renderItem={(idx, isActive) => {
+                  const op = OPERATION_OPTIONS[idx];
+                  return (
+                    <span
+                      className="font-bold text-2xl"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
+                      }}
+                      data-testid={`lr-op-${op.type}`}
+                    >
+                      {op.label}
+                    </span>
+                  );
+                }}
+              />
             </div>
 
-            <div className="mt-3">
+            <div>
               <button
                 type="button"
                 onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
