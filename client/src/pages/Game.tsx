@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { TrackProgress } from "@/components/TrackProgress";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2, Trophy } from "lucide-react";
@@ -645,6 +645,9 @@ export default function Game() {
   const [grandPrixPracticeCompleted, setGrandPrixPracticeCompleted] = useState(false);
   const [grandPrixQualifyingCompleted, setGrandPrixQualifyingCompleted] = useState(false);
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
+  // Free Practice only — GP Practice is always adaptive
+  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadDifficultyMode());
+  const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLockedDifficulty());
 
   // Force sim mode on for Grand Prix and Pre-Season Testing
   const effectiveSimMode = (isGrandPrix || isPreSeasonTesting) ? true : state.simMode;
@@ -885,19 +888,27 @@ export default function Game() {
       setAeroAvailable(false);
       setAeroActive(false);
 
-      const isDynamicPractice =
-        (isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting;
+      // GP Practice is always adaptive. Free Practice may be Adaptive or Locked.
+      const isGpPractice = isGrandPrix && grandPrixPhase === 'rw_practice';
+      const isPstAdaptive = isPreSeasonTesting && difficultyMode === 'adaptive';
+      const isPstLocked = isPreSeasonTesting && difficultyMode === 'locked';
+      const isDynamicPractice = isGpPractice || isPstAdaptive;
 
       const raceDifficulty = (isGrandPrix && grandPrixLockedDifficulty && grandPrixPhase !== 'rw_practice')
         ? grandPrixLockedDifficulty
-        : isDynamicPractice
-          ? 'beginner'
-          : selectedDriver.difficulty;
+        : isPstLocked
+          ? lockedDifficulty
+          : isDynamicPractice
+            ? 'beginner'
+            : selectedDriver.difficulty;
       currentDifficultyRef.current = raceDifficulty;
 
       if (isDynamicPractice) {
         dynamicDifficultyRef.current = initDynamicDifficulty('beginner');
         setDynamicDifficultyDisplay('beginner');
+      } else if (isPstLocked) {
+        dynamicDifficultyRef.current = null;
+        setDynamicDifficultyDisplay(lockedDifficulty);
       }
 
       // Reset pole position used flag for Grand Prix race
@@ -924,7 +935,7 @@ export default function Game() {
 
       return () => clearInterval(interval);
     }
-  }, [gameStatus, selectedCircuit, selectedDriver, selectedWeather, effectiveSimMode]);
+  }, [gameStatus, selectedCircuit, selectedDriver, selectedWeather, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation]);
 
 
   // Timer Logic - only runs during racing and not paused
@@ -1085,6 +1096,9 @@ export default function Game() {
 
   const handleStartRace = () => {
     if (!selectedCircuit) return;
+    if (isPreSeasonTesting && difficultyMode === 'locked') {
+      setSelectedDriver(driverForDifficulty(lockedDifficulty));
+    }
     setBotProgress(0);
     setBotLapResults([]);
     sectorBestTimesRef.current = []; // Reset sector best times for new race
@@ -1207,8 +1221,11 @@ export default function Game() {
         setOvertakeEnergy(prev => Math.min(prev + energyGain, 100));
       }
 
-      // Update dynamic difficulty for Grand Prix practice and Pre-Season Testing
-      if (((isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting) && dynamicDifficultyRef.current) {
+      // Update dynamic difficulty for GP Practice (always) and Free Practice Adaptive only
+      const shouldAdaptDifficulty =
+        (isGrandPrix && grandPrixPhase === 'rw_practice') ||
+        (isPreSeasonTesting && difficultyMode === 'adaptive');
+      if (shouldAdaptDifficulty && dynamicDifficultyRef.current) {
         const slowerThanBot = responseTime > question.botTime;
         const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, true, responseTime, question.operation || 'Addition', slowerThanBot);
         dynamicDifficultyRef.current = updated;
@@ -1289,7 +1306,10 @@ export default function Game() {
       if (newProgress >= raceLength) {
         if (isPreSeasonTesting) {
           // PST: 100 questions done — submit score to leaderboard and finish
-          const achievedDiff = dynamicDifficultyRef.current?.currentDifficulty || 'beginner';
+          const achievedDiff =
+            difficultyMode === 'locked'
+              ? lockedDifficulty
+              : (dynamicDifficultyRef.current?.currentDifficulty || currentDifficultyRef.current || 'beginner');
           const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
           const score = calculatePSTScore(elapsedTime, mistakes, achievedDiff, raceLength);
 
@@ -1381,8 +1401,11 @@ export default function Game() {
       }
       resetStreak();
 
-      // Update dynamic difficulty for Grand Prix practice and Pre-Season Testing on wrong answer
-      if (((isGrandPrix && grandPrixPhase === 'rw_practice') || isPreSeasonTesting) && dynamicDifficultyRef.current) {
+      // Update dynamic difficulty for GP Practice (always) and Free Practice Adaptive only
+      const shouldAdaptDifficultyWrong =
+        (isGrandPrix && grandPrixPhase === 'rw_practice') ||
+        (isPreSeasonTesting && difficultyMode === 'adaptive');
+      if (shouldAdaptDifficultyWrong && dynamicDifficultyRef.current) {
         const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, false, responseTime, question.operation || 'Addition');
         dynamicDifficultyRef.current = updated;
         currentDifficultyRef.current = updated.currentDifficulty;
@@ -2084,8 +2107,8 @@ export default function Game() {
             style={{ fontFamily: 'Oxanium, sans-serif', fontSize: '0.8rem', maxWidth: '28rem' }}
           >
             {isPreSeasonTesting
-              ? '100 questions with adaptive difficulty and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.'
-              : `Practice (30 questions) adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`}
+              ? '100 questions with Adaptive difficulty (or Locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.'
+              : `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`}
           </p>
           <h3
             className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-white"
@@ -2349,6 +2372,74 @@ export default function Game() {
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     {selectedOperation}
+                  </div>
+                </div>
+
+                {/* Difficulty: Adaptive (default) or Locked level */}
+                <div className="pt-2 border-t border-white/20 mb-2">
+                  <div className="text-sm uppercase tracking-wider mb-2 text-white/50 text-center">Difficulty</div>
+                  <div className="flex justify-center gap-2 mb-2">
+                    {([
+                      ['adaptive', 'Adaptive'],
+                      ['locked', 'Locked'],
+                    ] as const).map(([mode, label]) => {
+                      const active = difficultyMode === mode;
+                      return (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => {
+                            setDifficultyMode(mode);
+                            saveDifficultyPrefs(mode, lockedDifficulty);
+                            if (state.soundEnabled) playCarouselClick();
+                          }}
+                          className="px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all"
+                          style={{
+                            fontFamily: 'Oxanium, sans-serif',
+                            color: active ? DIFFICULTY_MODE_COLORS[mode] : SETUP_INACTIVE_TEXT,
+                            background: 'transparent',
+                            opacity: active ? 1 : 0.45,
+                          }}
+                          data-testid={`button-difficulty-${mode}`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Always render so weather/CTA below don't jump when switching modes */}
+                  <div
+                    className={cn(
+                      "flex justify-center flex-wrap gap-2",
+                      difficultyMode !== 'locked' && "invisible pointer-events-none"
+                    )}
+                    aria-hidden={difficultyMode !== 'locked'}
+                  >
+                    {DRIVERS.map((d) => {
+                      const active = lockedDifficulty === d.difficulty;
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          tabIndex={difficultyMode === 'locked' ? 0 : -1}
+                          onClick={() => {
+                            setLockedDifficulty(d.difficulty);
+                            saveDifficultyPrefs('locked', d.difficulty);
+                            if (state.soundEnabled) playCarouselClick();
+                          }}
+                          className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
+                          style={{
+                            fontFamily: 'Oxanium, sans-serif',
+                            color: active ? LOCKED_LEVEL_COLORS[d.difficulty] : SETUP_INACTIVE_TEXT,
+                            background: 'transparent',
+                            opacity: active ? 1 : 0.45,
+                          }}
+                          data-testid={`button-locked-level-${d.id}`}
+                        >
+                          {d.name}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

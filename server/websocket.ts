@@ -54,6 +54,10 @@ interface GameRoom {
   questionsBySlot: Array<{ display: string; answer: number } | undefined>;
   hostQuestionIndex: number;
   guestQuestionIndex: number;
+  /** Adaptive (default) or locked fixed level for the race */
+  difficultyMode: 'adaptive' | 'locked';
+  lockedDifficulty: Difficulty;
+  guestReady: boolean;
 }
 
 const rooms = new Map<string, GameRoom>();
@@ -84,6 +88,10 @@ export function setupWebSocket(httpServer: Server) {
             room.hostWs = null;
           } else if (room.guestId === clientInfo.playerId) {
             room.guestWs = null;
+            room.guestReady = false;
+            if (room.status === "waiting") {
+              broadcastDifficultySettings(clientInfo.roomCode, room);
+            }
           }
           broadcastToRoom(clientInfo.roomCode, { type: "player_disconnected", player: isHost ? "host" : "guest" });
 
@@ -134,7 +142,7 @@ function handleMessage(ws: WebSocket, message: any) {
       handleJoinRoom(ws, message);
       break;
     case "start_countdown":
-      handleStartCountdown(message.roomCode, message.circuitId, message.driverId, message.weather, message.operation, message.powerUpsEnabled, message.questions, message.raceLength, message.aeroZones);
+      handleStartCountdown(ws, message);
       break;
     case "progress_update":
       handleProgressUpdate(ws, message);
@@ -147,6 +155,12 @@ function handleMessage(ws: WebSocket, message: any) {
       break;
     case "toggle_power_ups":
       handleTogglePowerUps(ws, message);
+      break;
+    case "set_difficulty_settings":
+      handleSetDifficultySettings(ws, message);
+      break;
+    case "set_guest_ready":
+      handleSetGuestReady(ws, message);
       break;
     case "energy_update":
       handleEnergyUpdate(ws, message);
@@ -163,6 +177,67 @@ function handleMessage(ws: WebSocket, message: any) {
   }
 }
 
+function isDifficulty(v: unknown): v is Difficulty {
+  return v === "beginner" || v === "easy" || v === "medium" || v === "hard";
+}
+
+function difficultySettingsPayload(room: GameRoom) {
+  return {
+    difficultyMode: room.difficultyMode,
+    lockedDifficulty: room.lockedDifficulty,
+    guestReady: room.guestReady,
+  };
+}
+
+function broadcastDifficultySettings(roomCode: string, room: GameRoom) {
+  broadcastToRoom(roomCode, {
+    type: "difficulty_settings",
+    ...difficultySettingsPayload(room),
+  });
+}
+
+function emptyRoomFields(partial: Partial<GameRoom> = {}): Omit<GameRoom, 'hostWs' | 'guestWs' | 'hostId' | 'guestId' | 'hostName' | 'guestName'> & Partial<GameRoom> {
+  return {
+    hostProgress: 0,
+    guestProgress: 0,
+    hostMistakes: 0,
+    guestMistakes: 0,
+    hostFinished: false,
+    guestFinished: false,
+    hostFinishTime: null,
+    guestFinishTime: null,
+    raceStartTime: null,
+    raceLength: 20,
+    status: "waiting",
+    powerUpsEnabled: true,
+    aeroZones: [],
+    hostOvertakeEnergy: 0,
+    guestOvertakeEnergy: 0,
+    hostAeroUsedZones: new Set(),
+    guestAeroUsedZones: new Set(),
+    hostOvertakeActive: false,
+    guestOvertakeActive: false,
+    hostOvertakeStartTime: null,
+    guestOvertakeStartTime: null,
+    hostOvertakeDuration: 0,
+    guestOvertakeDuration: 0,
+    hostSectorColors: [],
+    guestSectorColors: [],
+    sectorBestTimes: [],
+    circuitId: null,
+    operation: null,
+    isWet: false,
+    dynamicDifficulty: null,
+    questionsBySlot: [],
+    hostQuestionIndex: 0,
+    guestQuestionIndex: 0,
+    difficultyMode: "adaptive",
+    lockedDifficulty: "beginner",
+    guestReady: false,
+    ...partial,
+  };
+}
+
 function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: string; isHost: boolean; playerName?: string }) {
   const { roomCode, playerId, isHost, playerName } = message;
 
@@ -174,40 +249,7 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
       guestId: null,
       hostName: "",
       guestName: null,
-      hostProgress: 0,
-      guestProgress: 0,
-      hostMistakes: 0,
-      guestMistakes: 0,
-      hostFinished: false,
-      guestFinished: false,
-      hostFinishTime: null,
-      guestFinishTime: null,
-      raceStartTime: null,
-      raceLength: 20,
-      status: "waiting",
-      // Power-ups initialization
-      powerUpsEnabled: true,
-      aeroZones: [],
-      hostOvertakeEnergy: 0,
-      guestOvertakeEnergy: 0,
-      hostAeroUsedZones: new Set(),
-      guestAeroUsedZones: new Set(),
-      hostOvertakeActive: false,
-      guestOvertakeActive: false,
-      hostOvertakeStartTime: null,
-      guestOvertakeStartTime: null,
-      hostOvertakeDuration: 0,
-      guestOvertakeDuration: 0,
-      hostSectorColors: [],
-      guestSectorColors: [],
-      sectorBestTimes: [],
-      circuitId: null,
-      operation: null,
-      isWet: false,
-      dynamicDifficulty: null,
-      questionsBySlot: [],
-      hostQuestionIndex: 0,
-      guestQuestionIndex: 0,
+      ...emptyRoomFields(),
     });
   }
 
@@ -221,20 +263,70 @@ function handleJoinRoom(ws: WebSocket, message: { roomCode: string; playerId: st
     room.guestWs = ws;
     room.guestId = playerId;
     if (playerName) room.guestName = playerName;
+    room.guestReady = false;
   }
 
   clientToRoom.set(ws, { roomCode, playerId });
 
-  ws.send(JSON.stringify({ type: "joined", roomCode, isHost }));
+  ws.send(JSON.stringify({
+    type: "joined",
+    roomCode,
+    isHost,
+    ...difficultySettingsPayload(room),
+  }));
 
   if (room.hostWs && room.guestWs) {
-    broadcastToRoom(roomCode, { type: "room_ready", powerUpsEnabled: room.powerUpsEnabled, guestName: room.guestName, hostName: room.hostName });
+    broadcastToRoom(roomCode, {
+      type: "room_ready",
+      powerUpsEnabled: room.powerUpsEnabled,
+      guestName: room.guestName,
+      hostName: room.hostName,
+      ...difficultySettingsPayload(room),
+    });
   }
 }
 
-function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: string, weather?: string, operation?: string, powerUpsEnabled?: boolean, questions?: any[], raceLength?: number, clientAeroZones?: number[]) {
-  const room = rooms.get(roomCode);
+function handleStartCountdown(ws: WebSocket, message: {
+  roomCode: string;
+  circuitId?: string;
+  driverId?: string;
+  weather?: string;
+  operation?: string;
+  powerUpsEnabled?: boolean;
+  questions?: any[];
+  raceLength?: number;
+  aeroZones?: number[];
+  difficultyMode?: string;
+  lockedDifficulty?: string;
+}) {
+  const room = rooms.get(message.roomCode);
   if (!room) return;
+
+  const clientInfo = clientToRoom.get(ws);
+  if (!clientInfo || clientInfo.playerId !== room.hostId) return;
+  if (!room.guestReady) {
+    ws.send(JSON.stringify({ type: "error", message: "Guest must Ready before starting" }));
+    return;
+  }
+
+  const {
+    roomCode,
+    circuitId,
+    driverId,
+    weather,
+    operation,
+    powerUpsEnabled,
+    raceLength,
+    aeroZones: clientAeroZones,
+  } = message;
+
+  // Host may also send latest mode/level on start
+  if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
+    room.difficultyMode = message.difficultyMode;
+  }
+  if (isDifficulty(message.lockedDifficulty)) {
+    room.lockedDifficulty = message.lockedDifficulty;
+  }
 
   room.status = "countdown";
   if (raceLength !== undefined) {
@@ -267,11 +359,13 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
   room.guestSectorColors = [];
   room.sectorBestTimes = [];
 
-  // Persist race config and (re)initialize server-authoritative dynamic difficulty
+  // Persist race config and (re)initialize server-authoritative difficulty
   room.circuitId = circuitId ?? room.circuitId;
   room.operation = operation ?? room.operation;
   room.isWet = weather === "wet";
-  room.dynamicDifficulty = initDynamicDifficulty("beginner");
+  const startDifficulty =
+    room.difficultyMode === "locked" ? room.lockedDifficulty : "beginner";
+  room.dynamicDifficulty = initDynamicDifficulty(startDifficulty);
   room.questionsBySlot = [];
   room.hostQuestionIndex = 0;
   room.guestQuestionIndex = 0;
@@ -291,9 +385,6 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
     room.aeroZones = [];
   }
 
-  // Broadcast countdown start with circuit info so guest can update their selection.
-  // Prefer server-minted questions over the client-supplied bank (questions arg is
-  // ignored for the shared race bank, kept only to avoid breaking the message switch).
   broadcastToRoom(roomCode, {
     type: "countdown_start",
     circuitId,
@@ -303,6 +394,8 @@ function handleStartCountdown(roomCode: string, circuitId?: string, driverId?: s
     powerUpsEnabled: room.powerUpsEnabled,
     aeroZones: room.aeroZones,
     difficulty: room.dynamicDifficulty?.currentDifficulty ?? "beginner",
+    difficultyMode: room.difficultyMode,
+    lockedDifficulty: room.lockedDifficulty,
     questions: slot0
       ? [{ index: 0, display: slot0.display, answer: slot0.answer }]
       : [],
@@ -391,8 +484,13 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
 
   // Server-authoritative dynamic difficulty: update FIRST, then advance this
   // player's question slot, then mint the next slot if it doesn't exist yet.
+  // Locked mode: skip promotion/demotion; still mint at fixed difficulty.
   const operationType = room.operation || 'Addition';
-  if (room.dynamicDifficulty && typeof message.responseTime === 'number') {
+  if (
+    room.difficultyMode === 'adaptive' &&
+    room.dynamicDifficulty &&
+    typeof message.responseTime === 'number'
+  ) {
     const wasCorrect = message.correct !== false; // default true for older clients mid-deploy
     room.dynamicDifficulty = updateDynamicDifficulty(
       room.dynamicDifficulty,
@@ -442,8 +540,12 @@ function handleMistakeUpdate(ws: WebSocket, message: { roomCode: string; mistake
   });
 
   // Mistake-only retry: still feeds the shared difficulty model as a wrong
-  // answer, but never advances or mints a question slot.
-  if (room.dynamicDifficulty && typeof message.responseTime === 'number') {
+  // answer when Adaptive; Locked mode never promotes/demotes.
+  if (
+    room.difficultyMode === 'adaptive' &&
+    room.dynamicDifficulty &&
+    typeof message.responseTime === 'number'
+  ) {
     room.dynamicDifficulty = updateDynamicDifficulty(
       room.dynamicDifficulty,
       false,
@@ -538,10 +640,44 @@ function handleTogglePowerUps(ws: WebSocket, message: { roomCode: string; enable
   if (clientInfo.playerId !== room.hostId) return;
 
   room.powerUpsEnabled = message.enabled;
+  room.guestReady = false;
   broadcastToRoom(message.roomCode, {
     type: "power_ups_toggled",
-    enabled: message.enabled
+    enabled: message.enabled,
+    guestReady: false,
   });
+}
+
+function handleSetDifficultySettings(ws: WebSocket, message: {
+  roomCode: string;
+  difficultyMode?: string;
+  lockedDifficulty?: string;
+}) {
+  const room = rooms.get(message.roomCode);
+  if (!room || room.status !== "waiting") return;
+
+  const clientInfo = clientToRoom.get(ws);
+  if (!clientInfo || clientInfo.playerId !== room.hostId) return;
+
+  if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
+    room.difficultyMode = message.difficultyMode;
+  }
+  if (isDifficulty(message.lockedDifficulty)) {
+    room.lockedDifficulty = message.lockedDifficulty;
+  }
+  room.guestReady = false;
+  broadcastDifficultySettings(message.roomCode, room);
+}
+
+function handleSetGuestReady(ws: WebSocket, message: { roomCode: string; ready: boolean }) {
+  const room = rooms.get(message.roomCode);
+  if (!room || room.status !== "waiting") return;
+
+  const clientInfo = clientToRoom.get(ws);
+  if (!clientInfo || clientInfo.playerId !== room.guestId) return;
+
+  room.guestReady = !!message.ready;
+  broadcastDifficultySettings(message.roomCode, room);
 }
 
 function handleEnergyUpdate(ws: WebSocket, message: { roomCode: string; energy: number }) {
@@ -752,40 +888,7 @@ export function createRoom(roomCode: string, hostId: string, raceLength: number 
     guestId: null,
     hostName: "",
     guestName: null,
-    hostProgress: 0,
-    guestProgress: 0,
-    hostMistakes: 0,
-    guestMistakes: 0,
-    hostFinished: false,
-    guestFinished: false,
-    hostFinishTime: null,
-    guestFinishTime: null,
-    raceStartTime: null,
-    raceLength,
-    status: "waiting",
-    // Power-ups initialization
-    powerUpsEnabled: false,
-    aeroZones: [],
-    hostOvertakeEnergy: 0,
-    guestOvertakeEnergy: 0,
-    hostAeroUsedZones: new Set(),
-    guestAeroUsedZones: new Set(),
-    hostOvertakeActive: false,
-    guestOvertakeActive: false,
-    hostOvertakeStartTime: null,
-    guestOvertakeStartTime: null,
-    hostOvertakeDuration: 0,
-    guestOvertakeDuration: 0,
-    hostSectorColors: [],
-    guestSectorColors: [],
-    sectorBestTimes: [],
-    circuitId: null,
-    operation: null,
-    isWet: false,
-    dynamicDifficulty: null,
-    questionsBySlot: [],
-    hostQuestionIndex: 0,
-    guestQuestionIndex: 0,
+    ...emptyRoomFields({ raceLength, powerUpsEnabled: false }),
   });
 }
 

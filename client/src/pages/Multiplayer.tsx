@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight, Zap } from "lucide-react";
@@ -197,6 +197,9 @@ export default function Multiplayer() {
 
   // Server-authoritative dynamic difficulty display (HUD only, no client bank)
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
+  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadDifficultyMode());
+  const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLockedDifficulty());
+  const [guestReady, setGuestReady] = useState(false);
   const difficultyLabel =
     DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
   const difficultyColor =
@@ -204,6 +207,8 @@ export default function Multiplayer() {
       : dynamicDifficultyDisplay === 'medium' ? '#38bdf8'
         : dynamicDifficultyDisplay === 'easy' ? '#e5e5e5'
           : '#22c55e';
+  const lockedLevelLabel =
+    DRIVERS.find(d => d.difficulty === lockedDifficulty)?.name || 'Karting';
 
   // Power-ups state
   const [powerUpsEnabled, setPowerUpsEnabled] = useState(true);
@@ -315,18 +320,59 @@ export default function Multiplayer() {
   const handleWebSocketMessage = (message: any) => {
     switch (message.type) {
       case "joined":
-        // Successfully joined room
+        if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
+          setDifficultyMode(message.difficultyMode);
+        }
+        if (message.lockedDifficulty === "beginner" || message.lockedDifficulty === "easy" || message.lockedDifficulty === "medium" || message.lockedDifficulty === "hard") {
+          setLockedDifficulty(message.lockedDifficulty);
+        }
+        if (typeof message.guestReady === "boolean") {
+          setGuestReady(message.guestReady);
+        }
+        // Host pushes local solo prefs so lobby matches setup before guest Ready
+        if (isHostRef.current && wsRef.current) {
+          const mode = loadDifficultyMode();
+          const locked = loadLockedDifficulty();
+          setDifficultyMode(mode);
+          setLockedDifficulty(locked);
+          wsRef.current.send(JSON.stringify({
+            type: "set_difficulty_settings",
+            roomCode: message.roomCode,
+            difficultyMode: mode,
+            lockedDifficulty: locked,
+          }));
+        }
         break;
       case "room_ready":
         setRoomReady(true);
         if (message.powerUpsEnabled !== undefined) {
           setPowerUpsEnabled(message.powerUpsEnabled);
         }
+        if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
+          setDifficultyMode(message.difficultyMode);
+        }
+        if (message.lockedDifficulty === "beginner" || message.lockedDifficulty === "easy" || message.lockedDifficulty === "medium" || message.lockedDifficulty === "hard") {
+          setLockedDifficulty(message.lockedDifficulty);
+        }
+        if (typeof message.guestReady === "boolean") {
+          setGuestReady(message.guestReady);
+        }
         // Host gets guest's name, guest gets host's name (if not already set from REST)
         if (isHostRef.current && message.guestName) {
           setOpponentName(message.guestName);
         } else if (!isHostRef.current && message.hostName && !opponentName) {
           setOpponentName(message.hostName);
+        }
+        break;
+      case "difficulty_settings":
+        if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
+          setDifficultyMode(message.difficultyMode);
+        }
+        if (message.lockedDifficulty === "beginner" || message.lockedDifficulty === "easy" || message.lockedDifficulty === "medium" || message.lockedDifficulty === "hard") {
+          setLockedDifficulty(message.lockedDifficulty);
+        }
+        if (typeof message.guestReady === "boolean") {
+          setGuestReady(message.guestReady);
         }
         break;
       case "player_disconnected":
@@ -358,6 +404,12 @@ export default function Multiplayer() {
         // Server-authoritative difficulty for the new race
         if (message.difficulty) {
           setDynamicDifficultyDisplay(message.difficulty as Difficulty);
+        }
+        if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
+          setDifficultyMode(message.difficultyMode);
+        }
+        if (message.lockedDifficulty === "beginner" || message.lockedDifficulty === "easy" || message.lockedDifficulty === "medium" || message.lockedDifficulty === "hard") {
+          setLockedDifficulty(message.lockedDifficulty);
         }
         // Sync questions so both players answer the same set - accept either
         // legacy full arrays or server-minted indexed patches.
@@ -477,6 +529,9 @@ export default function Multiplayer() {
       // Power-ups events
       case "power_ups_toggled":
         setPowerUpsEnabled(message.enabled);
+        if (typeof message.guestReady === "boolean") {
+          setGuestReady(message.guestReady);
+        }
         break;
       case "energy_sync":
         if (isHostRef.current) {
@@ -671,7 +726,7 @@ export default function Multiplayer() {
   };
   
   const startRace = async () => {
-    if (!wsRef.current || !selectedCircuit) return;
+    if (!wsRef.current || !selectedCircuit || !guestReady) return;
 
     const driver = KARTING_DRIVER;
     setSelectedDriver(driver);
@@ -684,7 +739,9 @@ export default function Multiplayer() {
     }
     setIsWetRace(wetRace);
     setQuestions([]);
-    setDynamicDifficultyDisplay('beginner');
+    setDynamicDifficultyDisplay(
+      difficultyMode === 'locked' ? lockedDifficulty : 'beginner'
+    );
 
     // Send the resolved wet/dry weather (not the literal 'random' selection)
     // so the server mints the shared question bank with matching difficulty.
@@ -718,7 +775,9 @@ export default function Multiplayer() {
         operation: selectedOperation,
         powerUpsEnabled,
         raceLength,
-        aeroZones: zones
+        aeroZones: zones,
+        difficultyMode,
+        lockedDifficulty,
       }));
     } catch (err) {
       console.error("Failed to update room:", err);
@@ -735,10 +794,34 @@ export default function Multiplayer() {
     if (!wsRef.current || !isHost) return;
     const newValue = !powerUpsEnabled;
     setPowerUpsEnabled(newValue);
+    setGuestReady(false);
     wsRef.current.send(JSON.stringify({
       type: "toggle_power_ups",
       roomCode,
       enabled: newValue
+    }));
+  };
+
+  const syncDifficultySettings = (mode: DifficultyMode, locked: Difficulty) => {
+    if (!wsRef.current || !isHost) return;
+    setDifficultyMode(mode);
+    setLockedDifficulty(locked);
+    setGuestReady(false);
+    wsRef.current.send(JSON.stringify({
+      type: "set_difficulty_settings",
+      roomCode,
+      difficultyMode: mode,
+      lockedDifficulty: locked,
+    }));
+  };
+
+  const setGuestReadyState = (ready: boolean) => {
+    if (!wsRef.current || isHost) return;
+    setGuestReady(ready);
+    wsRef.current.send(JSON.stringify({
+      type: "set_guest_ready",
+      roomCode,
+      ready,
     }));
   };
 
@@ -1335,21 +1418,131 @@ export default function Multiplayer() {
             )}
           </div>
 
+          {/* Difficulty: Adaptive (default) or Locked — host configures, guest accepts via Ready */}
+          <div className="bg-secondary rounded-xl p-4 w-full max-w-sm">
+            <div className="text-sm font-medium mb-3 text-center">Difficulty</div>
+            {isHost ? (
+              <>
+                <div className="flex justify-center gap-2 mb-2">
+                  {([
+                    ['adaptive', 'Adaptive'],
+                    ['locked', 'Locked'],
+                  ] as const).map(([mode, label]) => {
+                    const active = difficultyMode === mode;
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => syncDifficultySettings(mode, lockedDifficulty)}
+                        className="px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all"
+                        style={{
+                          fontFamily: 'Oxanium, sans-serif',
+                          color: active ? DIFFICULTY_MODE_COLORS[mode] : SETUP_INACTIVE_TEXT,
+                          background: 'transparent',
+                          opacity: active ? 1 : 0.45,
+                        }}
+                        data-testid={`mp-difficulty-${mode}`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Always render so lobby layout doesn't jump when switching modes */}
+                <div
+                  className={cn(
+                    "flex justify-center flex-wrap gap-2",
+                    difficultyMode !== 'locked' && "invisible pointer-events-none"
+                  )}
+                  aria-hidden={difficultyMode !== 'locked'}
+                >
+                  {DRIVERS.map((d) => {
+                    const active = lockedDifficulty === d.difficulty;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        tabIndex={difficultyMode === 'locked' ? 0 : -1}
+                        onClick={() => syncDifficultySettings('locked', d.difficulty)}
+                        className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
+                        style={{
+                          fontFamily: 'Oxanium, sans-serif',
+                          color: active ? LOCKED_LEVEL_COLORS[d.difficulty] : SETUP_INACTIVE_TEXT,
+                          background: 'transparent',
+                          opacity: active ? 1 : 0.45,
+                        }}
+                        data-testid={`mp-locked-level-${d.id}`}
+                      >
+                        {d.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <div className="text-center space-y-1">
+                <p
+                  className="font-bold uppercase tracking-wider"
+                  style={{
+                    fontFamily: 'Oxanium, sans-serif',
+                    color: difficultyMode === 'adaptive'
+                      ? DIFFICULTY_MODE_COLORS.adaptive
+                      : DIFFICULTY_MODE_COLORS.locked,
+                  }}
+                >
+                  {difficultyMode === 'adaptive' ? 'Adaptive' : `Locked · ${lockedLevelLabel}`}
+                </p>
+                <p className="text-xs text-muted-foreground">Host sets difficulty — Ready to accept</p>
+              </div>
+            )}
+          </div>
+
           {roomReady && (
             <div className="text-center space-y-4">
               <p className="text-green-500 font-medium">Opponent connected!</p>
 
-              {isHost && (
+              {!isHost && (
                 <button
-                  onClick={() => setGameStatus("track_select")}
-                  className="h-14 px-8 bg-black text-white rounded-lg font-bold text-lg hover:bg-gray-800 transition-all"
+                  onClick={() => setGuestReadyState(!guestReady)}
+                  className={cn(
+                    "h-14 px-8 rounded-lg font-bold text-lg transition-all",
+                    guestReady
+                      ? "bg-green-600 text-white hover:bg-green-700"
+                      : "bg-black text-white hover:bg-gray-800"
+                  )}
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  data-testid="button-choose-track"
+                  data-testid="button-guest-ready"
                 >
-                  Choose Track
+                  {guestReady ? 'Ready ✓' : 'Ready'}
                 </button>
               )}
-              {!isHost && (
+
+              {isHost && (
+                <>
+                  <p className={cn(
+                    "text-sm font-medium",
+                    guestReady ? "text-green-500" : "text-muted-foreground"
+                  )}>
+                    {guestReady ? 'Guest is Ready' : 'Waiting for guest Ready…'}
+                  </p>
+                  <button
+                    onClick={() => setGameStatus("track_select")}
+                    disabled={!guestReady}
+                    className={cn(
+                      "h-14 px-8 rounded-lg font-bold text-lg transition-all",
+                      guestReady
+                        ? "bg-black text-white hover:bg-gray-800"
+                        : "bg-muted text-muted-foreground cursor-not-allowed"
+                    )}
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
+                    data-testid="button-choose-track"
+                  >
+                    Choose Track
+                  </button>
+                </>
+              )}
+
+              {!isHost && guestReady && (
                 <p className="text-muted-foreground">Waiting for host to choose track...</p>
               )}
             </div>
@@ -1554,15 +1747,27 @@ export default function Multiplayer() {
 
         {/* Start Race Button - Fixed Bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-2 transition-colors duration-300" style={{ backgroundColor: '#1a1a1a' }}>
+          {!guestReady && (
+            <p className="text-sm text-yellow-400 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+              Waiting for guest Ready…
+            </p>
+          )}
+          <p className="text-xs text-gray-400 text-center uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+            {difficultyMode === 'adaptive' ? 'Adaptive' : `Locked · ${lockedLevelLabel}`}
+          </p>
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={startRace}
-            className="w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-black"
+            whileHover={guestReady ? { scale: 1.02 } : undefined}
+            whileTap={guestReady ? { scale: 0.98 } : undefined}
+            onClick={() => { if (guestReady) startRace(); }}
+            disabled={!guestReady}
+            className={cn(
+              "w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider",
+              guestReady ? "text-black" : "text-gray-500 cursor-not-allowed"
+            )}
             style={{ 
               fontFamily: 'Oxanium, sans-serif',
-              backgroundColor: '#ffffff',
-              animation: 'pulse-white 2s infinite'
+              backgroundColor: guestReady ? '#ffffff' : '#555555',
+              animation: guestReady ? 'pulse-white 2s infinite' : undefined
             }}
             data-testid="button-start-race"
           >

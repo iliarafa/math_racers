@@ -101,6 +101,55 @@ export const DRIVERS: Driver[] = [
   { id: "f1", name: "F1", difficulty: "hard", label: "Formula 1" }
 ];
 
+/** Solo setup: Adaptive (live) vs Locked (fixed series for the race). GP is always adaptive. */
+export type DifficultyMode = 'adaptive' | 'locked';
+
+const DIFFICULTY_MODE_KEY = 'difficultyMode';
+const LOCKED_DIFFICULTY_KEY = 'lockedDifficulty';
+
+export function loadDifficultyMode(): DifficultyMode {
+  try {
+    return localStorage.getItem(DIFFICULTY_MODE_KEY) === 'locked' ? 'locked' : 'adaptive';
+  } catch {
+    return 'adaptive';
+  }
+}
+
+export function loadLockedDifficulty(): Difficulty {
+  try {
+    const v = localStorage.getItem(LOCKED_DIFFICULTY_KEY);
+    if (v === 'beginner' || v === 'easy' || v === 'medium' || v === 'hard') return v;
+  } catch { /* ignore */ }
+  return 'beginner';
+}
+
+export function saveDifficultyPrefs(mode: DifficultyMode, locked: Difficulty) {
+  try {
+    localStorage.setItem(DIFFICULTY_MODE_KEY, mode);
+    localStorage.setItem(LOCKED_DIFFICULTY_KEY, locked);
+  } catch { /* ignore */ }
+}
+
+export function driverForDifficulty(difficulty: Difficulty): Driver {
+  return DRIVERS.find(d => d.difficulty === difficulty) ?? DRIVERS[0];
+}
+
+/** Setup selection text colors (active = highlighted text, no pill backgrounds). */
+export const DIFFICULTY_MODE_COLORS = {
+  adaptive: '#22c55e',
+  locked: '#a855f7',
+} as const;
+
+export const LOCKED_LEVEL_COLORS: Record<Difficulty, string> = {
+  beginner: '#00e5ff', // Karting — electric blue
+  easy: '#000000',     // F3 — black
+  medium: '#38bdf8',   // F2 — light blue
+  hard: '#ef4444',     // F1 — red
+};
+
+export const SETUP_INACTIVE_TEXT = 'rgba(255,255,255,0.35)';
+export const CHASE_CAM_ACTIVE_COLOR = '#ff2800';
+
 export const POSITION_POINTS: Record<number, number> = {
   1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1
 };
