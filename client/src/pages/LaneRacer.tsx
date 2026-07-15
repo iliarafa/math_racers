@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import {
   useGameState,
@@ -30,7 +30,6 @@ import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
 import { FOG_COLOR } from "@/components/lane-racer/atmosphere";
-import { cn } from "@/lib/utils";
 import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import flagItaly from "@/assets/flag_italy.png";
@@ -69,6 +68,8 @@ const CIRCUIT_MAP_IMAGES: { [id: string]: string } = {
 
 type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
 type RendererMode = '2d' | '3d';
+/** Setup step 1 = car/track/cam; step 2 = difficulty/operation */
+type SetupStep = 'identity' | 'race';
 
 const RENDERER_STORAGE_KEY = 'laneRacerRenderer';
 
@@ -79,6 +80,31 @@ const OPERATION_OPTIONS: { label: string; type: string }[] = [
   { label: '÷', type: 'Division' },
   { label: 'f(x)', type: 'Variables' },
 ];
+
+/** Lane Racer difficulty drum: Adaptive + locked series (defaults to Adaptive). */
+const DIFFICULTY_DRUM_OPTIONS: {
+  id: string;
+  label: string;
+  mode: DifficultyMode;
+  locked: Difficulty | null;
+}[] = [
+  { id: 'adaptive', label: 'Adaptive', mode: 'adaptive', locked: null },
+  { id: 'karting', label: 'Karting', mode: 'locked', locked: 'beginner' },
+  { id: 'f3', label: 'F3', mode: 'locked', locked: 'easy' },
+  { id: 'f2', label: 'F2', mode: 'locked', locked: 'medium' },
+  { id: 'f1', label: 'F1', mode: 'locked', locked: 'hard' },
+];
+
+function difficultyDrumIndex(mode: DifficultyMode, locked: Difficulty): number {
+  if (mode !== 'locked') return 0;
+  const i = DIFFICULTY_DRUM_OPTIONS.findIndex((o) => o.mode === 'locked' && o.locked === locked);
+  return i >= 0 ? i : 1;
+}
+
+function difficultyDrumColor(opt: (typeof DIFFICULTY_DRUM_OPTIONS)[number]): string {
+  if (opt.mode === 'adaptive') return DIFFICULTY_MODE_COLORS.adaptive;
+  return LOCKED_LEVEL_COLORS[opt.locked!];
+}
 
 // Precompute blob URLs for team car previews (module-level, created once)
 const TEAM_PREVIEW_URLS: Record<string, string> = {};
@@ -105,7 +131,6 @@ function HorizontalDrum({
   testIdPrefix,
   ariaLabelPrev = 'Previous',
   ariaLabelNext = 'Next',
-  slotClassName = 'w-20',
 }: {
   length: number;
   currentIndex: number;
@@ -115,7 +140,6 @@ function HorizontalDrum({
   testIdPrefix: string;
   ariaLabelPrev?: string;
   ariaLabelNext?: string;
-  slotClassName?: string;
 }) {
   const swipeStartXRef = useRef<number | null>(null);
   const itemH = 80;
@@ -139,51 +163,54 @@ function HorizontalDrum({
 
   return (
     <div
-      className="w-full flex items-center justify-center"
+      className="w-full flex items-center justify-center gap-4 outline-none focus:outline-none"
       style={{ height: itemH, overflow: 'hidden', touchAction: 'none', position: 'relative' }}
       {...swipeHandlers}
+      tabIndex={0}
       data-testid={`${testIdPrefix}-drum`}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          onPrev();
+        } else if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          onNext();
+        }
+      }}
+      aria-label={`Selection ${currentIndex + 1} of ${length}`}
     >
-      <div className="flex items-center gap-3">
-        {([-1, 0, 1] as const).map((offset) => {
-          const idx = getWrappedIndex(currentIndex, offset, length);
-          const isActive = offset === 0;
-          const isNeighbor = offset !== 0;
-          return (
-            <motion.div
-              key={`${testIdPrefix}-${currentIndex}-${offset}`}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: isActive ? 1 : 0.3, x: 0 }}
-              transition={{ duration: 0.15 }}
-              className={cn(
-                slotClassName,
-                'flex items-center justify-center',
-                isNeighbor && 'cursor-pointer',
-              )}
-              style={{ height: itemH }}
-              role={isNeighbor ? 'button' : undefined}
-              tabIndex={isNeighbor ? 0 : -1}
-              aria-label={offset === -1 ? ariaLabelPrev : offset === 1 ? ariaLabelNext : undefined}
-              aria-current={isActive ? true : undefined}
-              onClick={() => {
-                if (offset === -1) onPrev();
-                else if (offset === 1) onNext();
-              }}
-              onKeyDown={(e) => {
-                if (!isNeighbor) return;
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  if (offset === -1) onPrev();
-                  else if (offset === 1) onNext();
-                }
-              }}
-              data-testid={`${testIdPrefix}-slot-${offset}`}
-            >
-              {renderItem(idx, isActive)}
-            </motion.div>
-          );
-        })}
-      </div>
+      <button
+        type="button"
+        className="shrink-0 p-1.5 text-white/45 outline-none focus:outline-none focus-visible:outline-none"
+        aria-label={ariaLabelPrev}
+        onClick={onPrev}
+        data-testid={`${testIdPrefix}-prev`}
+      >
+        <ChevronLeft size={20} />
+      </button>
+
+      <motion.div
+        key={`${testIdPrefix}-${currentIndex}`}
+        initial={{ opacity: 0, x: 8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.15 }}
+        className="w-auto min-w-[5rem] flex items-center justify-center"
+        style={{ height: itemH }}
+        aria-current={true}
+        data-testid={`${testIdPrefix}-slot-0`}
+      >
+        {renderItem(currentIndex, true)}
+      </motion.div>
+
+      <button
+        type="button"
+        className="shrink-0 p-1.5 text-white/45 outline-none focus:outline-none focus-visible:outline-none"
+        aria-label={ariaLabelNext}
+        onClick={onNext}
+        data-testid={`${testIdPrefix}-next`}
+      >
+        <ChevronRight size={20} />
+      </button>
     </div>
   );
 }
@@ -223,8 +250,24 @@ export default function LaneRacer() {
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadDifficultyMode());
   const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLockedDifficulty());
+  const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(() =>
+    difficultyDrumIndex(loadDifficultyMode(), loadLockedDifficulty()),
+  );
   const [currentOpIndex, setCurrentOpIndex] = useState(0);
   const selectedOperation = OPERATION_OPTIONS[currentOpIndex].type;
+
+  const selectDifficultyDrumIndex = (n: number) => {
+    const opt = DIFFICULTY_DRUM_OPTIONS[n];
+    setCurrentDifficultyIndex(n);
+    if (opt.mode === 'adaptive') {
+      setDifficultyMode('adaptive');
+      saveDifficultyPrefs('adaptive', lockedDifficulty);
+    } else {
+      setDifficultyMode('locked');
+      setLockedDifficulty(opt.locked!);
+      saveDifficultyPrefs('locked', opt.locked!);
+    }
+  };
   const [currentTeamIndex, setCurrentTeamIndex] = useState(() => {
     const saved = localStorage.getItem('lastSelectedTeam');
     const idx = TEAMS.findIndex(t => t.id === saved);
@@ -259,6 +302,7 @@ export default function LaneRacer() {
     const saved = localStorage.getItem(RENDERER_STORAGE_KEY);
     return saved === '3d' ? '3d' : '2d';
   });
+  const [setupStep, setSetupStep] = useState<SetupStep>('identity');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<LaneRacerEngineRef | null>(null);
@@ -612,18 +656,38 @@ export default function LaneRacer() {
   // Progress line color: green when ahead of the rival marker, yellow when behind
   const progressColor = position === 1 ? '#19c37d' : '#ffcc00';
 
-  // Setup — single page with team + track selection
+  // Setup — two screens: identity (team/track/cam) → race (difficulty/operation)
   if (gameStatus === 'setup') {
+    const glassCardStyle = {
+      backgroundColor: 'rgba(255,255,255,0.08)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      border: '1px solid rgba(255,255,255,0.12)',
+    } as const;
+
     return (
       <div className="h-screen flex flex-col relative overflow-hidden">
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '8px' }}>
-          <Link href="/game">
-            <button className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors" style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
+          {setupStep === 'race' ? (
+            <button
+              type="button"
+              onClick={() => setSetupStep('identity')}
+              className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors outline-none focus:outline-none"
+              style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
+              aria-label="Back to team and track"
+              data-testid="lr-setup-back"
+            >
               <ChevronLeft size={24} />
             </button>
-          </Link>
+          ) : (
+            <Link href="/game">
+              <button className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors" style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
+                <ChevronLeft size={24} />
+              </button>
+            </Link>
+          )}
           <img src={logoImage} alt="F1 Math Racer" className="h-8 md:h-12 object-contain" />
         </div>
 
@@ -631,240 +695,201 @@ export default function LaneRacer() {
         <div className="relative z-10 flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="text-center">
             <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Lane Racer</h2>
-            <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Swipe to configure</div>
+            <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">
+              {setupStep === 'identity' ? 'Team · Track · Cam' : 'Difficulty · Operation'}
+            </div>
           </div>
 
-          <div
-            className="w-full max-w-sm rounded-2xl px-3 py-4"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255,255,255,0.12)',
-            }}
-          >
-            {/* Team — horizontal drum */}
-            <div>
-              <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
-              <HorizontalDrum
-                length={TEAMS.length}
-                currentIndex={currentTeamIndex}
-                onPrev={() => {
-                  const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
-                  setCurrentTeamIndex(n);
-                  setSelectedTeam(TEAMS[n].id);
-                  localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-                }}
-                onNext={() => {
-                  const n = getWrappedIndex(currentTeamIndex, 1, TEAMS.length);
-                  setCurrentTeamIndex(n);
-                  setSelectedTeam(TEAMS[n].id);
-                  localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-                }}
-                testIdPrefix="lr-team"
-                renderItem={(idx, isActive) => {
-                  const team = TEAMS[idx];
-                  return (
-                    <img
-                      src={TEAM_PREVIEW_URLS[team.id]}
-                      alt={team.name}
-                      className="w-14 h-14 object-contain"
-                      style={{ transform: 'rotate(90deg)' }}
-                      data-testid={`lr-team-${team.id}`}
-                    />
-                  );
-                }}
-              />
-            </div>
-
-            {/* Track — horizontal drum */}
-            <div className="mt-4 pt-4">
-              <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
-              <HorizontalDrum
-                length={CIRCUIT_OPTIONS.length}
-                currentIndex={currentCircuitIndex}
-                onPrev={() => {
-                  const n = getWrappedIndex(currentCircuitIndex, -1, CIRCUIT_OPTIONS.length);
-                  setCurrentCircuitIndex(n);
-                  setSelectedCircuit(CIRCUIT_OPTIONS[n]);
-                }}
-                onNext={() => {
-                  const n = getWrappedIndex(currentCircuitIndex, 1, CIRCUIT_OPTIONS.length);
-                  setCurrentCircuitIndex(n);
-                  setSelectedCircuit(CIRCUIT_OPTIONS[n]);
-                }}
-                testIdPrefix="lr-track"
-                ariaLabelPrev="Previous track"
-                ariaLabelNext="Next track"
-                renderItem={(idx, isActive) => {
-                  const circuit = CIRCUIT_OPTIONS[idx];
-                  return (
-                    <div className="flex flex-col items-center gap-1" data-testid={`lr-track-${circuit.id}`}>
-                      {CIRCUIT_MAP_IMAGES[circuit.id] && (
+          <div className="w-full max-w-sm rounded-2xl px-3 py-4" style={glassCardStyle} data-testid={`lr-setup-${setupStep}`}>
+            {setupStep === 'identity' ? (
+              <>
+                <div>
+                  <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
+                  <HorizontalDrum
+                    length={TEAMS.length}
+                    currentIndex={currentTeamIndex}
+                    onPrev={() => {
+                      const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
+                      setCurrentTeamIndex(n);
+                      setSelectedTeam(TEAMS[n].id);
+                      localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
+                    }}
+                    onNext={() => {
+                      const n = getWrappedIndex(currentTeamIndex, 1, TEAMS.length);
+                      setCurrentTeamIndex(n);
+                      setSelectedTeam(TEAMS[n].id);
+                      localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
+                    }}
+                    testIdPrefix="lr-team"
+                    ariaLabelPrev="Previous team"
+                    ariaLabelNext="Next team"
+                    renderItem={(idx) => {
+                      const team = TEAMS[idx];
+                      return (
                         <img
-                          src={CIRCUIT_MAP_IMAGES[circuit.id]}
-                          alt={circuit.name}
-                          className="h-10 object-contain"
-                          style={{ filter: 'invert(1)', maxWidth: 64 }}
+                          src={TEAM_PREVIEW_URLS[team.id]}
+                          alt={team.name}
+                          className="w-14 h-14 object-contain"
+                          style={{ transform: 'rotate(90deg)' }}
+                          data-testid={`lr-team-${team.id}`}
                         />
-                      )}
-                      <span
-                        className="text-[10px] font-bold uppercase tracking-wider"
-                        style={{
-                          fontFamily: 'Oxanium, sans-serif',
-                          color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
-                        }}
-                      >
-                        {circuit.name}
-                      </span>
-                    </div>
-                  );
-                }}
-              />
-            </div>
-
-            {/* Difficulty: Adaptive (default) or Locked level */}
-            <div className="mt-4 pt-4">
-              <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Difficulty</div>
-              <div className="flex justify-center gap-2 mb-2">
-                {([
-                  ['adaptive', 'Adaptive'],
-                  ['locked', 'Locked'],
-                ] as const).map(([mode, label]) => {
-                  const active = difficultyMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => {
-                        setDifficultyMode(mode);
-                        saveDifficultyPrefs(mode, lockedDifficulty);
-                      }}
-                      className="px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all outline-none focus:outline-none focus-visible:outline-none"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: active ? DIFFICULTY_MODE_COLORS[mode] : SETUP_INACTIVE_TEXT,
-                        background: 'transparent',
-                        border: 'none',
-                        opacity: active ? 1 : 0.45,
-                      }}
-                      data-testid={`lr-difficulty-${mode}`}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-              {/* Always render so layout below doesn't jump when switching modes */}
-              <div
-                className={cn(
-                  "flex justify-center flex-wrap gap-1.5",
-                  difficultyMode !== 'locked' && "invisible pointer-events-none"
-                )}
-                aria-hidden={difficultyMode !== 'locked'}
-              >
-                {DRIVERS.map((d) => {
-                  const active = lockedDifficulty === d.difficulty;
-                  return (
-                    <button
-                      key={d.id}
-                      type="button"
-                      tabIndex={difficultyMode === 'locked' ? 0 : -1}
-                      onClick={() => {
-                        setLockedDifficulty(d.difficulty);
-                        saveDifficultyPrefs('locked', d.difficulty);
-                      }}
-                      className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all outline-none focus:outline-none focus-visible:outline-none"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: active ? LOCKED_LEVEL_COLORS[d.difficulty] : SETUP_INACTIVE_TEXT,
-                        background: 'transparent',
-                        border: 'none',
-                        opacity: active ? 1 : 0.45,
-                      }}
-                      data-testid={`lr-locked-level-${d.id}`}
-                    >
-                      {d.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Operation — horizontal drum */}
-            <div className="mt-4 pt-4">
-              <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Operation</div>
-              <HorizontalDrum
-                length={OPERATION_OPTIONS.length}
-                currentIndex={currentOpIndex}
-                onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
-                onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
-                testIdPrefix="lr-op"
-                ariaLabelPrev="Previous operation"
-                ariaLabelNext="Next operation"
-                slotClassName="w-14"
-                renderItem={(idx, isActive) => {
-                  const op = OPERATION_OPTIONS[idx];
-                  return (
-                    <span
-                      className="font-bold text-2xl"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
-                      }}
-                      data-testid={`lr-op-${op.type}`}
-                    >
-                      {op.label}
-                    </span>
-                  );
-                }}
-              />
-            </div>
-
-            {/* Chase Cam — optional view (no VIEW label) */}
-            <div className="mt-4 pt-4">
-              <button
-                type="button"
-                onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
-                className="w-full py-3 px-3 transition-all outline-none focus:outline-none focus-visible:outline-none"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  background: 'transparent',
-                  border: 'none',
-                }}
-                data-testid="lr-view-3d"
-                aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
-              >
-                <div
-                  className={cn(
-                    'text-center uppercase tracking-widest font-bold',
-                    renderMode === '3d' ? 'text-base' : 'text-sm',
-                  )}
-                  style={{
-                    color: renderMode === '3d' ? CHASE_CAM_ACTIVE_COLOR : SETUP_INACTIVE_TEXT,
-                    opacity: renderMode === '3d' ? 1 : 0.45,
-                  }}
-                >
-                  Chase Cam
+                      );
+                    }}
+                  />
                 </div>
-                <p
-                  className="mt-2 text-center text-[10px] uppercase tracking-widest"
-                  style={{ color: 'rgba(255,255,255,0.4)' }}
-                >
-                  {renderMode === '3d' ? 'On · Tap to disable' : 'Tap to enable'}
-                </p>
-              </button>
-            </div>
+
+                <div className="mt-4 pt-4">
+                  <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
+                  <HorizontalDrum
+                    length={CIRCUIT_OPTIONS.length}
+                    currentIndex={currentCircuitIndex}
+                    onPrev={() => {
+                      const n = getWrappedIndex(currentCircuitIndex, -1, CIRCUIT_OPTIONS.length);
+                      setCurrentCircuitIndex(n);
+                      setSelectedCircuit(CIRCUIT_OPTIONS[n]);
+                    }}
+                    onNext={() => {
+                      const n = getWrappedIndex(currentCircuitIndex, 1, CIRCUIT_OPTIONS.length);
+                      setCurrentCircuitIndex(n);
+                      setSelectedCircuit(CIRCUIT_OPTIONS[n]);
+                    }}
+                    testIdPrefix="lr-track"
+                    ariaLabelPrev="Previous track"
+                    ariaLabelNext="Next track"
+                    renderItem={(idx, isActive) => {
+                      const circuit = CIRCUIT_OPTIONS[idx];
+                      return (
+                        <div className="flex flex-col items-center gap-1" data-testid={`lr-track-${circuit.id}`}>
+                          {CIRCUIT_MAP_IMAGES[circuit.id] && (
+                            <img
+                              src={CIRCUIT_MAP_IMAGES[circuit.id]}
+                              alt={circuit.name}
+                              className="h-10 object-contain"
+                              style={{ filter: 'invert(1)', maxWidth: 64 }}
+                            />
+                          )}
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-wider"
+                            style={{
+                              fontFamily: 'Oxanium, sans-serif',
+                              color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
+                            }}
+                          >
+                            {circuit.name}
+                          </span>
+                        </div>
+                      );
+                    }}
+                  />
+                </div>
+
+                <div className="mt-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
+                    className="w-full py-3 px-3 transition-all outline-none focus:outline-none focus-visible:outline-none"
+                    style={{ fontFamily: 'Oxanium, sans-serif', background: 'transparent', border: 'none' }}
+                    data-testid="lr-view-3d"
+                    aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
+                  >
+                    <div
+                      className={`text-center uppercase tracking-widest font-bold ${renderMode === '3d' ? 'text-base' : 'text-sm'}`}
+                      style={{
+                        color: renderMode === '3d' ? CHASE_CAM_ACTIVE_COLOR : SETUP_INACTIVE_TEXT,
+                        opacity: renderMode === '3d' ? 1 : 0.45,
+                      }}
+                    >
+                      Chase Cam
+                    </div>
+                    <p className="mt-2 text-center text-[10px] uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      {renderMode === '3d' ? 'On · Tap to disable' : 'Tap to enable'}
+                    </p>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Difficulty</div>
+                  <HorizontalDrum
+                    length={DIFFICULTY_DRUM_OPTIONS.length}
+                    currentIndex={currentDifficultyIndex}
+                    onPrev={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, -1, DIFFICULTY_DRUM_OPTIONS.length))}
+                    onNext={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, 1, DIFFICULTY_DRUM_OPTIONS.length))}
+                    testIdPrefix="lr-difficulty"
+                    ariaLabelPrev="Previous difficulty"
+                    ariaLabelNext="Next difficulty"
+                    renderItem={(idx, isActive) => {
+                      const opt = DIFFICULTY_DRUM_OPTIONS[idx];
+                      return (
+                        <span
+                          className="font-bold text-sm uppercase tracking-wider text-center leading-tight"
+                          style={{
+                            fontFamily: 'Oxanium, sans-serif',
+                            color: isActive ? difficultyDrumColor(opt) : SETUP_INACTIVE_TEXT,
+                          }}
+                          data-testid={`lr-difficulty-${opt.id}`}
+                        >
+                          {opt.label}
+                        </span>
+                      );
+                    }}
+                  />
+                </div>
+
+                <div className="mt-4 pt-4">
+                  <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Operation</div>
+                  <HorizontalDrum
+                    length={OPERATION_OPTIONS.length}
+                    currentIndex={currentOpIndex}
+                    onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
+                    onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
+                    testIdPrefix="lr-op"
+                    ariaLabelPrev="Previous operation"
+                    ariaLabelNext="Next operation"
+                    renderItem={(idx, isActive) => {
+                      const op = OPERATION_OPTIONS[idx];
+                      return (
+                        <span
+                          className="font-bold text-2xl"
+                          style={{
+                            fontFamily: 'Oxanium, sans-serif',
+                            color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
+                          }}
+                          data-testid={`lr-op-${op.type}`}
+                        >
+                          {op.label}
+                        </span>
+                      );
+                    }}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Start Button */}
           <div className="w-full px-4">
-            <motion.button
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-              onClick={startGame}
-              className="w-full max-w-sm md:max-w-md mx-auto py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white block"
-              style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a', animation: 'pulse-green 2s infinite' }}
-            >Start</motion.button>
+            {setupStep === 'identity' ? (
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onClick={() => setSetupStep('race')}
+                className="w-full max-w-sm md:max-w-md mx-auto py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white block"
+                style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
+                data-testid="lr-setup-continue"
+              >
+                Continue
+              </motion.button>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                onClick={startGame}
+                className="w-full max-w-sm md:max-w-md mx-auto py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white block"
+                style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a', animation: 'pulse-green 2s infinite' }}
+                data-testid="lr-setup-start"
+              >
+                Start
+              </motion.button>
+            )}
           </div>
         </div>
 
@@ -1046,7 +1071,7 @@ export default function LaneRacer() {
 
             <div className="grid gap-3">
               <button
-                onClick={() => { setGameStatus('setup'); setSubmitted(false); }}
+                onClick={() => { setGameStatus('setup'); setSetupStep('identity'); setSubmitted(false); }}
                 className="w-full bg-green-600 hover:bg-green-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
               >
                 Race Again
