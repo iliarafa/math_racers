@@ -1,8 +1,8 @@
 # Next Session Handoff
 
-**Branch:** `feature/lane-racer-horizontal-drums` (ahead of origin by **1** — tip `2964b9c` not pushed)  
-**Last updated:** 2026-07-14  
-**Status:** Working tree **clean**. Difficulty Lock Choice shipped on this branch (FP / Lane Racer / MP). Lane Racer setup is a **two-screen** flow with selected+chevron drums. **Grand Prix Practice stays always adaptive.** Soft-follow remains Capacitor-native only.
+**Branch:** `feature/lane-racer-horizontal-drums` (ahead of origin by **4** — tip will be HEAD after this commit; layout at `fb5eb86` not pushed)  
+**Last updated:** 2026-07-15  
+**Status:** Working tree **clean**. Difficulty Lock Choice shipped on this branch (FP / Lane Racer / MP). Lane Racer setup hierarchy redesign **done** — **one screen** with Track hero outside glass. **Grand Prix Practice stays always adaptive.** Soft-follow remains Capacitor-native only.
 
 ---
 
@@ -10,7 +10,7 @@
 
 ```bash
 git checkout feature/lane-racer-horizontal-drums
-git status   # expect clean; branch may be ahead of origin by 1 (2964b9c)
+git status   # expect clean; branch may be ahead of origin by 4+
 git push     # if tip not on remote yet
 npm run dev -- --port 8081
 ```
@@ -26,7 +26,7 @@ Do **not** invent a new mode or reopen locked product decisions without asking.
 **Reference implementations (source of truth):**
 1. Free Practice — `Game.tsx` (`difficultyMode` / `lockedDifficulty`; Adaptive uses `initDynamicDifficulty` / `updateDynamicDifficulty`)
 2. Grand Prix — always adaptive Practice → lock for Quali/Race (`grandPrixLockedDifficulty`) — **no** Adaptive/Locked UI
-3. Lane Racer — `LaneRacer.tsx` two-screen setup + `DIFFICULTY_DRUM_OPTIONS` (Adaptive + Karting/F3/F2/F1); rival/engine pace beginner when Adaptive, locked level when Locked
+3. Lane Racer — `LaneRacer.tsx` one-screen setup hierarchy + `DIFFICULTY_DRUM_OPTIONS` (Adaptive + Karting/F3/F2/F1); rival/engine pace beginner when Adaptive, locked level when Locked
 4. Multiplayer — host `set_difficulty_settings` + guest Ready; server skips DD updates when Locked
 5. Engine — `shared/mathEngine.ts` re-exported through `client/src/lib/gameLogic.ts` (`DifficultyMode`, prefs helpers, selection colors)
 
@@ -42,20 +42,20 @@ Do **not** invent a new mode or reopen locked product decisions without asking.
 | Selection chrome | Text color / opacity only — no gray selection pills |
 | Difficulty colors | Adaptive green · Locked purple (FP/MP mode UI) · Karting electric blue · F3 black · F2 light blue · F1 red |
 | Chase Cam on | Bright red (`#ff2800`) |
-| Lane Racer setup | **Two screens** — not garage preview, not one stacked form of five drums |
+| Lane Racer setup | **One screen** — Track hero outside glass; Team (car) / Diff / Math / Cam inside; whisper labels. Fallback A (Track inside glass) only if user asks |
 
 ---
 
 ## Shipped on this branch (committed)
 
-Tip of branch: **`2964b9c`** — *Add Adaptive vs Locked difficulty choice across FP and Multiplayer.*  
-Notable recent commits: `452c446` two-screen setup · `47885cf` hierarchy polish · drums/spec earlier on branch.
+Tip of branch: **`fb5eb86`** — *Restructure Lane Racer setup into one-screen Track-hero hierarchy.*  
+Notable recent commits: `988ac08` variable HorizontalDrum height · `2964b9c` Adaptive vs Locked · `452c446` earlier two-screen setup (superseded) · drums/spec earlier on branch.
 
 | Surface | Behavior |
 |---------|----------|
 | **Free Practice** | Adaptive \| Locked setup; Locked skips `updateDynamicDifficulty` |
 | **Lane Racer race** | Adaptive \| Locked via 5-option drum (Adaptive, Karting, F3, F2, F1); rival pace = beginner (Adaptive) or locked level |
-| **Lane Racer setup** | **Screen 1** `identity`: Team + Track + Chase Cam → Continue. **Screen 2** `race`: Difficulty + Operation → Start. Back chevron on screen 2 returns to screen 1. `HorizontalDrum` = selected only + flanking chevrons + swipe |
+| **Lane Racer setup** | **One screen** — Track hero outside glass; inside glass: Team (car only) → Difficulty → Math → Chase Cam → Start. Whisper labels; no subtitle; no hairlines. `HorizontalDrum` = selected only + flanking chevrons + swipe. No `setupStep` / no Continue |
 | **Grand Prix** | Practice always adapts; Quali/Race use achieved lock — unchanged |
 | **Multiplayer** | Adaptive \| Locked + guest Ready gate; server-owned bank |
 | **Regulations** | `#Difficulty` documents Adaptive, Locked, and GP exception |
@@ -65,12 +65,14 @@ Notable recent commits: `452c446` two-screen setup · `47885cf` hierarchy polish
 - `docs/superpowers/specs/2026-07-14-difficulty-lock-choice-design.md`
 - `docs/superpowers/specs/2026-07-14-lane-racer-horizontal-drums-design.md`
 - `docs/superpowers/plans/2026-07-14-lane-racer-horizontal-drums.md`
+- `docs/superpowers/specs/2026-07-15-lane-racer-setup-hierarchy-design.md`
+- `docs/superpowers/plans/2026-07-15-lane-racer-setup-hierarchy.md`
 
 ---
 
 ## Next optional (confirm with user)
 
-1. **Push tip** `2964b9c` and/or **open PR / merge** to `main`  
+1. **Push tip** and/or **open PR / merge** to `main`  
 2. **Manual host/guest play-test** — Locked MP + Ready gate, OVERTAKE under rapid answers  
 3. **Opponent-paced `slowerThanBot`** — MP hardcodes `false` today  
 4. **Reconnect resilience** — rehydrate difficulty + question bank on mid-race rejoin  
@@ -79,6 +81,7 @@ Notable recent commits: `452c446` two-screen setup · `47885cf` hierarchy polish
 
 ### Out of scope unless asked
 - Garage-preview / hotspot setup (tried, rejected)  
+- Fallback A (Track inside glass) — only if user asks  
 - Deploy/Harvest re-enable  
 - Championship / circuit unlock redesign  
 - Making GP Quali/Race fully dynamic  
@@ -95,7 +98,7 @@ Notable recent commits: `452c446` two-screen setup · `47885cf` hierarchy polish
 | `shared/mathEngine.ts` | Pure engine: difficulty + `generateQuestion` |
 | `client/src/lib/gameLogic.ts` | `DifficultyMode`, prefs, selection colors |
 | `client/src/pages/Game.tsx` | Free Practice lock UI + skip updates when Locked |
-| `client/src/pages/LaneRacer.tsx` | Two-screen setup; `HorizontalDrum`; difficulty drum; race logic |
+| `client/src/pages/LaneRacer.tsx` | One-screen setup hierarchy; `HorizontalDrum`; difficulty drum; race logic |
 | `client/src/pages/Multiplayer.tsx` | Host settings, guest Ready, start gate |
 | `server/websocket.ts` | Room mode/level/Ready; skip DD when Locked |
 | `docs/next-session-handoff.md` | This file |
@@ -104,4 +107,4 @@ Notable recent commits: `452c446` two-screen setup · `47885cf` hierarchy polish
 
 ## Note for the next agent
 
-Branch is feature-complete for this session’s work; working tree should be clean. Tip **`2964b9c`** may still need `git push`. Lane Racer setup is **two screens** (`setupStep`: `identity` → `race`) with **selected + chevron** drums — do not resurrect garage preview or neighbor peeks without asking. GP Practice must remain always adaptive. Prefer `http://127.0.0.1:8081` for local browser.
+Branch is feature-complete for this session's work; working tree should be clean. Tip **`fb5eb86`** (layout) may still need `git push` — branch may be ahead of origin. Lane Racer setup hierarchy redesign is **done**: **one screen**, Track hero outside glass, Team/Diff/Math/Cam inside with whisper labels — do not resurrect two-screen flow, Continue button, garage preview, or neighbor peeks without asking. GP Practice must remain always adaptive. Prefer `http://127.0.0.1:8081` for local browser.
