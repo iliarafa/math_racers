@@ -1,16 +1,17 @@
 # Next Session Handoff
 
-**Branch:** `feature/lane-racer-horizontal-drums` (local changes **uncommitted** — see below)  
+**Branch:** `feature/lane-racer-horizontal-drums` (ahead of origin by **1** — tip `2964b9c` not pushed)  
 **Last updated:** 2026-07-14  
-**Status:** Difficulty Lock Choice implemented (FP / Lane Racer / MP). **Grand Prix Practice stays always adaptive.** Lane Racer horizontal drums **done** (spec + plan implemented on this branch). Soft-follow remains Capacitor-native only.
+**Status:** Working tree **clean**. Difficulty Lock Choice shipped on this branch (FP / Lane Racer / MP). Lane Racer setup is a **two-screen** flow with selected+chevron drums. **Grand Prix Practice stays always adaptive.** Soft-follow remains Capacitor-native only.
 
 ---
 
 ## Resume here (start here)
 
 ```bash
-git checkout feature/lane-racer-horizontal-drums   # or main after merge
-git status   # expect uncommitted Difficulty Lock edits; drums committed through 9077e64
+git checkout feature/lane-racer-horizontal-drums
+git status   # expect clean; branch may be ahead of origin by 1 (2964b9c)
+git push     # if tip not on remote yet
 npm run dev -- --port 8081
 ```
 
@@ -18,23 +19,14 @@ Open the app at **`http://127.0.0.1:8081`** (prefer over `localhost` — server 
 
 ### First order of business (do this first)
 
-**Pick from optional follow-ups below** — confirm direction with the user before starting. Lane Racer setup drums are complete; no further drum work unless the user asks.
-
-**Shipped on `feature/lane-racer-horizontal-drums` (commits through 9077e64):**
-- Stacked full-width horizontal 3-slot drums for Team, Track, and Math (`HorizontalDrum` + `getWrappedIndex`)
-- Swipe left/right + tap neighbors; chevrons on neighbors; opacity center 1 / neighbors 0.3
-- Setup order: Team → Track → Difficulty → Math → Chase Cam → Start
-- Subtitle: “Swipe to configure”; no hairline dividers; text-color selection only
-- Difficulty + Chase Cam blocks unchanged
-
-**Plan / spec:** `docs/superpowers/plans/2026-07-14-lane-racer-horizontal-drums.md` · `docs/superpowers/specs/2026-07-14-lane-racer-horizontal-drums-design.md`
+Confirm with the user: **merge/PR this branch**, **push tip**, or pick an optional follow-up below. Do not invent new setup UX without asking — garage preview was tried and rejected as too complicated.
 
 Do **not** invent a new mode or reopen locked product decisions without asking.
 
 **Reference implementations (source of truth):**
 1. Free Practice — `Game.tsx` (`difficultyMode` / `lockedDifficulty`; Adaptive uses `initDynamicDifficulty` / `updateDynamicDifficulty`)
 2. Grand Prix — always adaptive Practice → lock for Quali/Race (`grandPrixLockedDifficulty`) — **no** Adaptive/Locked UI
-3. Lane Racer — `LaneRacer.tsx` (horizontal drums setup; Adaptive | Locked behavior wired; rival/engine pace beginner when Adaptive, locked level when Locked)
+3. Lane Racer — `LaneRacer.tsx` two-screen setup + `DIFFICULTY_DRUM_OPTIONS` (Adaptive + Karting/F3/F2/F1); rival/engine pace beginner when Adaptive, locked level when Locked
 4. Multiplayer — host `set_difficulty_settings` + guest Ready; server skips DD updates when Locked
 5. Engine — `shared/mathEngine.ts` re-exported through `client/src/lib/gameLogic.ts` (`DifficultyMode`, prefs helpers, selection colors)
 
@@ -48,48 +40,45 @@ Do **not** invent a new mode or reopen locked product decisions without asking.
 | Multiplayer difficulty | One shared track per room; host sets mode/level; guest Ready required; host changes clear Ready |
 | MP weather on start | Host sends **resolved** `'wet' \| 'dry'` (never literal `'random'`) |
 | Selection chrome | Text color / opacity only — no gray selection pills |
-| Difficulty colors | Adaptive green · Locked purple · Karting electric blue · F3 black · F2 light blue · F1 red |
+| Difficulty colors | Adaptive green · Locked purple (FP/MP mode UI) · Karting electric blue · F3 black · F2 light blue · F1 red |
 | Chase Cam on | Bright red (`#ff2800`) |
+| Lane Racer setup | **Two screens** — not garage preview, not one stacked form of five drums |
 
 ---
 
-## Uncommitted local work (this session)
+## Shipped on this branch (committed)
 
-| Area | Files | State |
-|------|-------|--------|
-| Difficulty Lock Choice | `gameLogic.ts`, `Game.tsx`, `Multiplayer.tsx`, `websocket.ts`, `Regulations.tsx`, spec | **Implemented** — commit when user asks |
-| Spec | `docs/superpowers/specs/2026-07-14-difficulty-lock-choice-design.md` | Written (GP excluded from lock UI) |
-| Lane Racer horizontal drums | `LaneRacer.tsx` | **Done** — committed on `feature/lane-racer-horizontal-drums` (9077e64) |
-
----
-
-## Shipped conceptually (code present; commit pending)
+Tip of branch: **`2964b9c`** — *Add Adaptive vs Locked difficulty choice across FP and Multiplayer.*  
+Notable recent commits: `452c446` two-screen setup · `47885cf` hierarchy polish · drums/spec earlier on branch.
 
 | Surface | Behavior |
 |---------|----------|
 | **Free Practice** | Adaptive \| Locked setup; Locked skips `updateDynamicDifficulty` |
-| **Lane Racer** | Adaptive \| Locked wired; rival pace = beginner (Adaptive) or locked level |
+| **Lane Racer race** | Adaptive \| Locked via 5-option drum (Adaptive, Karting, F3, F2, F1); rival pace = beginner (Adaptive) or locked level |
+| **Lane Racer setup** | **Screen 1** `identity`: Team + Track + Chase Cam → Continue. **Screen 2** `race`: Difficulty + Operation → Start. Back chevron on screen 2 returns to screen 1. `HorizontalDrum` = selected only + flanking chevrons + swipe |
 | **Grand Prix** | Practice always adapts; Quali/Race use achieved lock — unchanged |
 | **Multiplayer** | Adaptive \| Locked + guest Ready gate; server-owned bank |
 | **Regulations** | `#Difficulty` documents Adaptive, Locked, and GP exception |
 | **3D soft-follow** | Native Capacitor only |
-| **Lane Racer setup** | Horizontal 3-slot drums for Team / Track / Math |
 
-### Specs
+### Specs / plans
 - `docs/superpowers/specs/2026-07-14-difficulty-lock-choice-design.md`
 - `docs/superpowers/specs/2026-07-14-lane-racer-horizontal-drums-design.md`
+- `docs/superpowers/plans/2026-07-14-lane-racer-horizontal-drums.md`
 
 ---
 
 ## Next optional (confirm with user)
 
-1. **Opponent-paced `slowerThanBot`** — MP hardcodes `false` today  
-2. **Reconnect resilience** — rehydrate difficulty + question bank on mid-race rejoin  
-3. **Dead-code / copy cleanup** — orphaned helpers; Regulations FP table header `"Series"`; Garage wording  
-4. **Manual host/guest play-test** — Locked MP + Ready gate, OVERTAKE under rapid answers  
-5. **FP / MP difficulty UI polish** — Lane Racer got divider/layout cleanup; FP/MP may still want the same pass  
+1. **Push tip** `2964b9c` and/or **open PR / merge** to `main`  
+2. **Manual host/guest play-test** — Locked MP + Ready gate, OVERTAKE under rapid answers  
+3. **Opponent-paced `slowerThanBot`** — MP hardcodes `false` today  
+4. **Reconnect resilience** — rehydrate difficulty + question bank on mid-race rejoin  
+5. **Dead-code / copy cleanup** — orphaned helpers; Regulations FP table header `"Series"`; Garage wording  
+6. **FP / MP difficulty UI polish** — text-color Adaptive\|Locked already present; layout may still want a pass  
 
 ### Out of scope unless asked
+- Garage-preview / hotspot setup (tried, rejected)  
 - Deploy/Harvest re-enable  
 - Championship / circuit unlock redesign  
 - Making GP Quali/Race fully dynamic  
@@ -106,7 +95,7 @@ Do **not** invent a new mode or reopen locked product decisions without asking.
 | `shared/mathEngine.ts` | Pure engine: difficulty + `generateQuestion` |
 | `client/src/lib/gameLogic.ts` | `DifficultyMode`, prefs, selection colors |
 | `client/src/pages/Game.tsx` | Free Practice lock UI + skip updates when Locked |
-| `client/src/pages/LaneRacer.tsx` | Horizontal drums setup; Adaptive/Locked race logic |
+| `client/src/pages/LaneRacer.tsx` | Two-screen setup; `HorizontalDrum`; difficulty drum; race logic |
 | `client/src/pages/Multiplayer.tsx` | Host settings, guest Ready, start gate |
 | `server/websocket.ts` | Room mode/level/Ready; skip DD when Locked |
 | `docs/next-session-handoff.md` | This file |
@@ -115,4 +104,4 @@ Do **not** invent a new mode or reopen locked product decisions without asking.
 
 ## Note for the next agent
 
-Difficulty Lock Choice is implemented but may still be uncommitted — commit when the user asks. Lane Racer horizontal drums are **done** on `feature/lane-racer-horizontal-drums`; merge or continue from there. GP Practice must remain always adaptive. Prefer `http://127.0.0.1:8081` for local browser.
+Branch is feature-complete for this session’s work; working tree should be clean. Tip **`2964b9c`** may still need `git push`. Lane Racer setup is **two screens** (`setupStep`: `identity` → `race`) with **selected + chevron** drums — do not resurrect garage preview or neighbor peeks without asking. GP Practice must remain always adaptive. Prefer `http://127.0.0.1:8081` for local browser.
