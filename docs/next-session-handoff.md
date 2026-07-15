@@ -1,6 +1,6 @@
 # Next Session Handoff
 
-**Branch:** `feature/lane-racer-horizontal-drums` (ahead of origin by **4** — tip will be HEAD after this commit; layout at `fb5eb86` not pushed)  
+**Branch:** `feature/lane-racer-horizontal-drums` (ahead of origin by **6** — tip at HEAD; layout commit `fb5eb86`)  
 **Last updated:** 2026-07-15  
 **Status:** Working tree **clean**. Difficulty Lock Choice shipped on this branch (FP / Lane Racer / MP). Lane Racer setup hierarchy redesign **done** — **one screen** with Track hero outside glass. **Grand Prix Practice stays always adaptive.** Soft-follow remains Capacitor-native only.
 
@@ -10,7 +10,7 @@
 
 ```bash
 git checkout feature/lane-racer-horizontal-drums
-git status   # expect clean; branch may be ahead of origin by 4+
+git status   # expect clean; branch ahead of origin by 6
 git push     # if tip not on remote yet
 npm run dev -- --port 8081
 ```
@@ -48,8 +48,9 @@ Do **not** invent a new mode or reopen locked product decisions without asking.
 
 ## Shipped on this branch (committed)
 
-Tip of branch: **`fb5eb86`** — *Restructure Lane Racer setup into one-screen Track-hero hierarchy.*  
-Notable recent commits: `988ac08` variable HorizontalDrum height · `2964b9c` Adaptive vs Locked · `452c446` earlier two-screen setup (superseded) · drums/spec earlier on branch.
+Tip of branch: **HEAD** — *Fix handoff tip metadata after hierarchy ship.*  
+Layout commit: **`fb5eb86`** — *Restructure Lane Racer setup into one-screen Track-hero hierarchy.*  
+Notable recent commits: `73f034d` handoff update · `988ac08` variable HorizontalDrum height · `2964b9c` Adaptive vs Locked · `452c446` earlier two-screen setup (superseded).
 
 | Surface | Behavior |
 |---------|----------|
@@ -107,4 +108,4 @@ Notable recent commits: `988ac08` variable HorizontalDrum height · `2964b9c` Ad
 
 ## Note for the next agent
 
-Branch is feature-complete for this session's work; working tree should be clean. Tip **`fb5eb86`** (layout) may still need `git push` — branch may be ahead of origin. Lane Racer setup hierarchy redesign is **done**: **one screen**, Track hero outside glass, Team/Diff/Math/Cam inside with whisper labels — do not resurrect two-screen flow, Continue button, garage preview, or neighbor peeks without asking. GP Practice must remain always adaptive. Prefer `http://127.0.0.1:8081` for local browser.
+Branch is feature-complete for this session's work; working tree should be clean. Tip at **HEAD** (layout at **`fb5eb86`**) — branch is ahead of origin by 6; run `git push` when ready. Lane Racer setup hierarchy redesign is **done**: **one screen**, Track hero outside glass, Team/Diff/Math/Cam inside with whisper labels — do not resurrect two-screen flow, Continue button, garage preview, or neighbor peeks without asking. GP Practice must remain always adaptive. Prefer `http://127.0.0.1:8081` for local browser.
