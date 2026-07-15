@@ -148,7 +148,7 @@ export const LOCKED_LEVEL_COLORS: Record<Difficulty, string> = {
 };
 
 export const SETUP_INACTIVE_TEXT = 'rgba(255,255,255,0.35)';
-export const CHASE_CAM_ACTIVE_COLOR = '#a855f7';
+export const CHASE_CAM_ACTIVE_COLOR = '#ff2800';
 
 export const POSITION_POINTS: Record<number, number> = {
   1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1
