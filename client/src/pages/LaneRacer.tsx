@@ -68,8 +68,6 @@ const CIRCUIT_MAP_IMAGES: { [id: string]: string } = {
 
 type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
 type RendererMode = '2d' | '3d';
-/** Setup step 1 = car/track/cam; step 2 = difficulty/operation */
-type SetupStep = 'identity' | 'race';
 
 const RENDERER_STORAGE_KEY = 'laneRacerRenderer';
 
@@ -304,7 +302,6 @@ export default function LaneRacer() {
     const saved = localStorage.getItem(RENDERER_STORAGE_KEY);
     return saved === '3d' ? '3d' : '2d';
   });
-  const [setupStep, setSetupStep] = useState<SetupStep>('identity');
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<LaneRacerEngineRef | null>(null);
@@ -658,7 +655,7 @@ export default function LaneRacer() {
   // Progress line color: green when ahead of the rival marker, yellow when behind
   const progressColor = position === 1 ? '#19c37d' : '#ffcc00';
 
-  // Setup — two screens: identity (team/track/cam) → race (difficulty/operation)
+  // Setup
   if (gameStatus === 'setup') {
     const glassCardStyle = {
       backgroundColor: 'rgba(255,255,255,0.08)',
@@ -666,232 +663,225 @@ export default function LaneRacer() {
       WebkitBackdropFilter: 'blur(16px)',
       border: '1px solid rgba(255,255,255,0.12)',
     } as const;
+    const whisperLabelStyle = {
+      fontFamily: 'Oxanium, sans-serif',
+      fontSize: 9,
+      letterSpacing: '0.18em',
+      color: 'rgba(255,255,255,0.28)',
+      textTransform: 'uppercase' as const,
+    };
 
     return (
       <div className="h-screen flex flex-col relative overflow-hidden">
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '8px' }}>
-          {setupStep === 'race' ? (
+          <Link href="/game">
             <button
-              type="button"
-              onClick={() => setSetupStep('identity')}
-              className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors outline-none focus:outline-none"
+              className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
               style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
-              aria-label="Back to team and track"
+              aria-label="Back to game hub"
               data-testid="lr-setup-back"
             >
               <ChevronLeft size={24} />
             </button>
-          ) : (
-            <Link href="/game">
-              <button className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors" style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
-                <ChevronLeft size={24} />
-              </button>
-            </Link>
-          )}
+          </Link>
           <img src={logoImage} alt="F1 Math Racer" className="h-8 md:h-12 object-contain" />
         </div>
 
         {/* Main content */}
         <div className="relative z-10 flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
           <div className="text-center">
-            <h2 className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Lane Racer</h2>
-            <div className="text-[10px] text-white/40 uppercase tracking-widest mt-1">
-              {setupStep === 'identity' ? 'Team · Track · Cam' : 'Difficulty · Operation'}
+            <h2
+              className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              Lane Racer
+            </h2>
+          </div>
+
+          <div className="w-full max-w-sm" data-testid="lr-track-hero">
+            <HorizontalDrum
+              length={CIRCUIT_OPTIONS.length}
+              currentIndex={currentCircuitIndex}
+              itemHeight={100}
+              onPrev={() => {
+                const n = getWrappedIndex(currentCircuitIndex, -1, CIRCUIT_OPTIONS.length);
+                setCurrentCircuitIndex(n);
+                setSelectedCircuit(CIRCUIT_OPTIONS[n]);
+              }}
+              onNext={() => {
+                const n = getWrappedIndex(currentCircuitIndex, 1, CIRCUIT_OPTIONS.length);
+                setCurrentCircuitIndex(n);
+                setSelectedCircuit(CIRCUIT_OPTIONS[n]);
+              }}
+              testIdPrefix="lr-track"
+              ariaLabelPrev="Previous track"
+              ariaLabelNext="Next track"
+              renderItem={(idx, isActive) => {
+                const circuit = CIRCUIT_OPTIONS[idx];
+                return (
+                  <div className="flex flex-col items-center gap-1" data-testid={`lr-track-${circuit.id}`}>
+                    {CIRCUIT_MAP_IMAGES[circuit.id] && (
+                      <img
+                        src={CIRCUIT_MAP_IMAGES[circuit.id]}
+                        alt={circuit.name}
+                        className="h-14 object-contain"
+                        style={{ filter: 'invert(1)', maxWidth: 88 }}
+                      />
+                    )}
+                    <span
+                      className="text-sm font-bold uppercase tracking-wider"
+                      style={{
+                        fontFamily: 'Oxanium, sans-serif',
+                        color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
+                      }}
+                    >
+                      {circuit.name}
+                    </span>
+                  </div>
+                );
+              }}
+            />
+          </div>
+
+          <div className="w-full max-w-sm rounded-2xl px-3 py-4" style={glassCardStyle} data-testid="lr-setup">
+            <div className="flex items-center gap-2">
+              <span style={whisperLabelStyle}>Team</span>
+              <div className="flex-1">
+                <HorizontalDrum
+                  length={TEAMS.length}
+                  currentIndex={currentTeamIndex}
+                  itemHeight={56}
+                  onPrev={() => {
+                    const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
+                    setCurrentTeamIndex(n);
+                    setSelectedTeam(TEAMS[n].id);
+                    localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
+                  }}
+                  onNext={() => {
+                    const n = getWrappedIndex(currentTeamIndex, 1, TEAMS.length);
+                    setCurrentTeamIndex(n);
+                    setSelectedTeam(TEAMS[n].id);
+                    localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
+                  }}
+                  testIdPrefix="lr-team"
+                  ariaLabelPrev="Previous team"
+                  ariaLabelNext="Next team"
+                  renderItem={(idx) => {
+                    const team = TEAMS[idx];
+                    return (
+                      <img
+                        src={TEAM_PREVIEW_URLS[team.id]}
+                        alt={team.name}
+                        className="w-10 h-10 object-contain"
+                        style={{ transform: 'rotate(90deg)' }}
+                        data-testid={`lr-team-${team.id}`}
+                      />
+                    );
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-3">
+              <span style={whisperLabelStyle}>Diff</span>
+              <div className="flex-1">
+                <HorizontalDrum
+                  length={DIFFICULTY_DRUM_OPTIONS.length}
+                  currentIndex={currentDifficultyIndex}
+                  itemHeight={56}
+                  onPrev={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, -1, DIFFICULTY_DRUM_OPTIONS.length))}
+                  onNext={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, 1, DIFFICULTY_DRUM_OPTIONS.length))}
+                  testIdPrefix="lr-difficulty"
+                  ariaLabelPrev="Previous difficulty"
+                  ariaLabelNext="Next difficulty"
+                  renderItem={(idx, isActive) => {
+                    const opt = DIFFICULTY_DRUM_OPTIONS[idx];
+                    return (
+                      <span
+                        className="font-bold text-sm uppercase tracking-wider text-center leading-tight"
+                        style={{
+                          fontFamily: 'Oxanium, sans-serif',
+                          color: isActive ? difficultyDrumColor(opt) : SETUP_INACTIVE_TEXT,
+                        }}
+                        data-testid={`lr-difficulty-${opt.id}`}
+                      >
+                        {opt.label}
+                      </span>
+                    );
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-3">
+              <span style={whisperLabelStyle}>Math</span>
+              <div className="flex-1">
+                <HorizontalDrum
+                  length={OPERATION_OPTIONS.length}
+                  currentIndex={currentOpIndex}
+                  itemHeight={56}
+                  onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
+                  onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
+                  testIdPrefix="lr-op"
+                  ariaLabelPrev="Previous operation"
+                  ariaLabelNext="Next operation"
+                  renderItem={(idx, isActive) => {
+                    const op = OPERATION_OPTIONS[idx];
+                    return (
+                      <span
+                        className="font-bold text-xl"
+                        style={{
+                          fontFamily: 'Oxanium, sans-serif',
+                          color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
+                        }}
+                        data-testid={`lr-op-${op.type}`}
+                      >
+                        {op.label}
+                      </span>
+                    );
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
+                className="w-full py-2 px-3 transition-all outline-none focus:outline-none focus-visible:outline-none"
+                style={{ fontFamily: 'Oxanium, sans-serif', background: 'transparent', border: 'none' }}
+                data-testid="lr-view-3d"
+                aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
+              >
+                <div
+                  className={`text-center uppercase tracking-widest font-bold ${renderMode === '3d' ? 'text-base' : 'text-sm'}`}
+                  style={{
+                    color: renderMode === '3d' ? CHASE_CAM_ACTIVE_COLOR : SETUP_INACTIVE_TEXT,
+                    opacity: renderMode === '3d' ? 1 : 0.45,
+                  }}
+                >
+                  Chase Cam
+                </div>
+                <p className="mt-1 text-center text-[10px] uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                  {renderMode === '3d' ? 'On · Tap to disable' : 'Tap to enable'}
+                </p>
+              </button>
             </div>
           </div>
 
-          <div className="w-full max-w-sm rounded-2xl px-3 py-4" style={glassCardStyle} data-testid={`lr-setup-${setupStep}`}>
-            {setupStep === 'identity' ? (
-              <>
-                <div>
-                  <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</div>
-                  <HorizontalDrum
-                    length={TEAMS.length}
-                    currentIndex={currentTeamIndex}
-                    onPrev={() => {
-                      const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
-                      setCurrentTeamIndex(n);
-                      setSelectedTeam(TEAMS[n].id);
-                      localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-                    }}
-                    onNext={() => {
-                      const n = getWrappedIndex(currentTeamIndex, 1, TEAMS.length);
-                      setCurrentTeamIndex(n);
-                      setSelectedTeam(TEAMS[n].id);
-                      localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-                    }}
-                    testIdPrefix="lr-team"
-                    ariaLabelPrev="Previous team"
-                    ariaLabelNext="Next team"
-                    renderItem={(idx) => {
-                      const team = TEAMS[idx];
-                      return (
-                        <img
-                          src={TEAM_PREVIEW_URLS[team.id]}
-                          alt={team.name}
-                          className="w-14 h-14 object-contain"
-                          style={{ transform: 'rotate(90deg)' }}
-                          data-testid={`lr-team-${team.id}`}
-                        />
-                      );
-                    }}
-                  />
-                </div>
-
-                <div className="mt-4 pt-4">
-                  <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Track</div>
-                  <HorizontalDrum
-                    length={CIRCUIT_OPTIONS.length}
-                    currentIndex={currentCircuitIndex}
-                    onPrev={() => {
-                      const n = getWrappedIndex(currentCircuitIndex, -1, CIRCUIT_OPTIONS.length);
-                      setCurrentCircuitIndex(n);
-                      setSelectedCircuit(CIRCUIT_OPTIONS[n]);
-                    }}
-                    onNext={() => {
-                      const n = getWrappedIndex(currentCircuitIndex, 1, CIRCUIT_OPTIONS.length);
-                      setCurrentCircuitIndex(n);
-                      setSelectedCircuit(CIRCUIT_OPTIONS[n]);
-                    }}
-                    testIdPrefix="lr-track"
-                    ariaLabelPrev="Previous track"
-                    ariaLabelNext="Next track"
-                    renderItem={(idx, isActive) => {
-                      const circuit = CIRCUIT_OPTIONS[idx];
-                      return (
-                        <div className="flex flex-col items-center gap-1" data-testid={`lr-track-${circuit.id}`}>
-                          {CIRCUIT_MAP_IMAGES[circuit.id] && (
-                            <img
-                              src={CIRCUIT_MAP_IMAGES[circuit.id]}
-                              alt={circuit.name}
-                              className="h-10 object-contain"
-                              style={{ filter: 'invert(1)', maxWidth: 64 }}
-                            />
-                          )}
-                          <span
-                            className="text-[10px] font-bold uppercase tracking-wider"
-                            style={{
-                              fontFamily: 'Oxanium, sans-serif',
-                              color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
-                            }}
-                          >
-                            {circuit.name}
-                          </span>
-                        </div>
-                      );
-                    }}
-                  />
-                </div>
-
-                <div className="mt-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
-                    className="w-full py-3 px-3 transition-all outline-none focus:outline-none focus-visible:outline-none"
-                    style={{ fontFamily: 'Oxanium, sans-serif', background: 'transparent', border: 'none' }}
-                    data-testid="lr-view-3d"
-                    aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
-                  >
-                    <div
-                      className={`text-center uppercase tracking-widest font-bold ${renderMode === '3d' ? 'text-base' : 'text-sm'}`}
-                      style={{
-                        color: renderMode === '3d' ? CHASE_CAM_ACTIVE_COLOR : SETUP_INACTIVE_TEXT,
-                        opacity: renderMode === '3d' ? 1 : 0.45,
-                      }}
-                    >
-                      Chase Cam
-                    </div>
-                    <p className="mt-2 text-center text-[10px] uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                      {renderMode === '3d' ? 'On · Tap to disable' : 'Tap to enable'}
-                    </p>
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Difficulty</div>
-                  <HorizontalDrum
-                    length={DIFFICULTY_DRUM_OPTIONS.length}
-                    currentIndex={currentDifficultyIndex}
-                    onPrev={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, -1, DIFFICULTY_DRUM_OPTIONS.length))}
-                    onNext={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, 1, DIFFICULTY_DRUM_OPTIONS.length))}
-                    testIdPrefix="lr-difficulty"
-                    ariaLabelPrev="Previous difficulty"
-                    ariaLabelNext="Next difficulty"
-                    renderItem={(idx, isActive) => {
-                      const opt = DIFFICULTY_DRUM_OPTIONS[idx];
-                      return (
-                        <span
-                          className="font-bold text-sm uppercase tracking-wider text-center leading-tight"
-                          style={{
-                            fontFamily: 'Oxanium, sans-serif',
-                            color: isActive ? difficultyDrumColor(opt) : SETUP_INACTIVE_TEXT,
-                          }}
-                          data-testid={`lr-difficulty-${opt.id}`}
-                        >
-                          {opt.label}
-                        </span>
-                      );
-                    }}
-                  />
-                </div>
-
-                <div className="mt-4 pt-4">
-                  <div className="text-sm uppercase tracking-widest text-white/80 mb-2 font-bold text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Operation</div>
-                  <HorizontalDrum
-                    length={OPERATION_OPTIONS.length}
-                    currentIndex={currentOpIndex}
-                    onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
-                    onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
-                    testIdPrefix="lr-op"
-                    ariaLabelPrev="Previous operation"
-                    ariaLabelNext="Next operation"
-                    renderItem={(idx, isActive) => {
-                      const op = OPERATION_OPTIONS[idx];
-                      return (
-                        <span
-                          className="font-bold text-2xl"
-                          style={{
-                            fontFamily: 'Oxanium, sans-serif',
-                            color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
-                          }}
-                          data-testid={`lr-op-${op.type}`}
-                        >
-                          {op.label}
-                        </span>
-                      );
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
           <div className="w-full px-4">
-            {setupStep === 'identity' ? (
-              <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={() => setSetupStep('race')}
-                className="w-full max-w-sm md:max-w-md mx-auto py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white block"
-                style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a' }}
-                data-testid="lr-setup-continue"
-              >
-                Continue
-              </motion.button>
-            ) : (
-              <motion.button
-                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                onClick={startGame}
-                className="w-full max-w-sm md:max-w-md mx-auto py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white block"
-                style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a', animation: 'pulse-green 2s infinite' }}
-                data-testid="lr-setup-start"
-              >
-                Start
-              </motion.button>
-            )}
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={startGame}
+              className="w-full max-w-sm md:max-w-md mx-auto py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white block"
+              style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a', animation: 'pulse-green 2s infinite' }}
+              data-testid="lr-setup-start"
+            >
+              Start
+            </motion.button>
           </div>
         </div>
 
@@ -1073,7 +1063,7 @@ export default function LaneRacer() {
 
             <div className="grid gap-3">
               <button
-                onClick={() => { setGameStatus('setup'); setSetupStep('identity'); setSubmitted(false); }}
+                onClick={() => { setGameStatus('setup'); setSubmitted(false); }}
                 className="w-full bg-green-600 hover:bg-green-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
               >
                 Race Again
