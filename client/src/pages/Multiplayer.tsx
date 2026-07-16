@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
+import { LiveCircuitMap } from "@/components/LiveCircuitMap";
+import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, parseDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1940,95 +1942,48 @@ export default function Multiplayer() {
             </div>
           </div>
 
-          {/* Progress Bars */}
-          <div className="flex flex-col justify-center px-4 gap-1">
-            {/* Opponent Progress Bar */}
-            <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">
-              <div className="absolute inset-0 flex">
-                {Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < opponentProgress;
-                  const oppColor = opponentSectorColors[i];
-                  let segmentColor = "bg-transparent";
-                  if (isCompleted) {
-                    segmentColor = oppColor === 'purple' ? "bg-purple-500/70" :
-                                   oppColor === 'green' ? "bg-green-500/70" :
-                                   oppColor === 'yellow' ? "bg-yellow-500/70" :
-                                   oppColor === 'red' ? "bg-red-500/70" :
-                                   "bg-orange-500/70";
-                  }
-                  return (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                        segmentColor
-                      )}
-                    />
-                  );
-                })}
-              </div>
-              {/* Opponent car indicator */}
-              <motion.div
-                className="absolute top-1/2 -translate-y-1/2 z-10"
-                animate={{ left: `${(opponentProgress / raceLength) * 100}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                style={{ marginLeft: "-10px" }}
-              >
-                <div className="w-5 h-3 bg-red-600 rounded-sm flex items-center justify-center">
-                  <div className="w-3 h-1.5 bg-red-400 rounded-sm" />
-                </div>
-              </motion.div>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 leading-none text-[9px] text-red-400 font-bold">
-                {opponentName ? opponentName.slice(0, 3).toUpperCase() : "OPP"}
-              </span>
+          {/* Progress — track layout or classic sector squares (Garage preference) */}
+          {state.raceMapView === 'track' ? (
+            <div className="px-4 my-1">
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                rivalProgress={opponentProgress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalSectorResults={opponentSectorColors.map((c) => ({
+                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                    ? c
+                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+                }))}
+                showRival
+                overtakeActive={overtakeActive}
+                aeroActive={aeroActive}
+                isWet={isWetRace}
+                playerLabel={playerName ? playerName.slice(0, 3).toUpperCase() : 'YOU'}
+                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+                labelRight={`Limits: ${mistakes}`}
+                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+              />
             </div>
-
-            {/* Player Progress Bar */}
-            <div className="relative h-7 bg-muted rounded-full overflow-hidden">
-              <div className="absolute inset-0 flex">
-                {Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < progress;
-                  const lapData = lapResults[i];
-
-                  let segmentColor = "bg-transparent";
-                  if (isCompleted && lapData) {
-                    segmentColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
-                                   lapData.sectorColor === 'green' ? "bg-green-500" :
-                                   lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
-                                   lapData.sectorColor === 'red' ? "bg-red-500" : "bg-transparent";
-                  }
-
-                  return (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                        segmentColor
-                      )}
-                    />
-                  );
-                })}
-              </div>
-              {/* Player car indicator */}
-              <motion.div
-                className="absolute top-1/2 -translate-y-1/2 z-10"
-                animate={{ left: `${(progress / raceLength) * 100}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                style={{ marginLeft: "-12px" }}
-              >
-                <div className="w-6 h-4 bg-foreground rounded-sm flex items-center justify-center">
-                  <div className="w-4 h-2 bg-primary rounded-sm" />
-                </div>
-              </motion.div>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">{playerName ? playerName.slice(0, 3).toUpperCase() : "YOU"}</span>
-            </div>
-
-            {/* Progress text */}
-            <div className="flex justify-between text-[11px] text-muted-foreground mt-0.5 px-1">
-              <span>Lap {progress + 1}/{raceLength}</span>
-              <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
-            </div>
-          </div>
+          ) : (
+            <SectorProgressGrid
+              progress={progress}
+              raceLength={raceLength}
+              sectorResults={lapResults}
+              rivalProgress={opponentProgress}
+              rivalSectorResults={opponentSectorColors.map((c) => ({
+                sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                  ? c
+                  : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+              }))}
+              showRival
+              layout="dual"
+              labelRight={`Limits: ${mistakes}`}
+              labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+              rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+            />
+          )}
 
           {/* Keypad with integrated Power-ups row */}
           <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
@@ -2253,6 +2208,29 @@ export default function Multiplayer() {
           >
             Difficulty: {difficultyLabel}
           </p>
+
+          {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
+            <div className="w-full max-w-sm md:max-w-lg">
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                rivalProgress={opponentProgress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalSectorResults={opponentSectorColors.map((c) => ({
+                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                    ? c
+                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+                }))}
+                showRival
+                isWet={isWetRace}
+                variant="results"
+                playerLabel={playerName ? playerName.slice(0, 3).toUpperCase() : 'YOU'}
+                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+                labelLeft={`${selectedCircuit.name} · painted lap`}
+              />
+            </div>
+          )}
 
           <div className="bg-secondary rounded-xl p-6 w-full max-w-sm md:max-w-lg">
             <div className="grid grid-cols-3 gap-4 text-center">

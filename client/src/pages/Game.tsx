@@ -4,7 +4,9 @@ import confetti from "canvas-confetti";
 import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { TrackProgress } from "@/components/TrackProgress";
+import { LiveCircuitMap } from "@/components/LiveCircuitMap";
+import { SectorProgressGrid } from "@/components/SectorProgressGrid";
+import { getCircuitPathsForId } from "@/lib/circuitPaths";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -129,7 +131,7 @@ const createGrandPrixCircuit = (op: string): Circuit => ({
   type: op,
   description: 'Grand Prix',
   mapUrl: '',
-  paths: { s1: '', s2: '', s3: '' }
+  paths: getCircuitPathsForId(CURRENT_GRAND_PRIX.circuitId),
 });
 
 const createFreePracticeCircuit = (op: string): Circuit => ({
@@ -138,7 +140,7 @@ const createFreePracticeCircuit = (op: string): Circuit => ({
   type: op,
   description: 'Free Practice',
   mapUrl: '',
-  paths: { s1: '', s2: '', s3: '' }
+  paths: getCircuitPathsForId(CURRENT_GRAND_PRIX.circuitId),
 });
 
 const OPERATION_OPTIONS = [
@@ -2821,6 +2823,17 @@ export default function Game() {
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Pre-Season Testing</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Testing Complete</div>
             </div>
+            {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                isWet={currentWeather === 'wet'}
+                variant="results"
+                labelLeft={`${selectedCircuit.name} · painted lap`}
+              />
+            )}
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Achieved Level</span>
@@ -3081,6 +3094,22 @@ export default function Game() {
                  </div>
                )}
             </div>
+
+            {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                rivalProgress={botProgress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalSectorResults={raceMode === 'bot' ? botLapResults : undefined}
+                showRival={raceMode === 'bot' && !isPracticeMode}
+                isWet={currentWeather === 'wet'}
+                variant="results"
+                rivalLabel="BOT"
+                labelLeft={`${selectedCircuit.name} · painted lap`}
+              />
+            )}
 
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -3582,112 +3611,42 @@ export default function Game() {
           </div>
         </div>
 
-        {/* Progress Bar - between result and keypad */}
-        {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? (
-          /* Sector Grid for all sim/realism mode races */
-          <div className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
-            <div>
-              <div className={`grid gap-[2px]`} style={{ gridTemplateColumns: `repeat(${raceLength >= 40 ? 20 : 10}, 1fr)` }}>
-                {Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < progress;
-                  const isCurrent = i === progress;
-                  const lapData = lapResults[i];
-
-                  let cellColor = "bg-muted";
-                  if (isCompleted && lapData) {
-                    cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
-                                lapData.sectorColor === 'green' ? "bg-green-500" :
-                                lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
-                                lapData.sectorColor === 'red' ? "bg-red-500" : "bg-muted";
-                  } else if (isCurrent) {
-                    cellColor = currentSectorRed ? "bg-red-500 animate-pulse" : "bg-gray-400/50 animate-pulse";
-                  }
-
-                  return (
-                    <div
-                      key={i}
-                      className={cn(
-                        "aspect-square rounded-[2px] transition-colors",
-                        cellColor
-                      )}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-            {/* Progress text */}
-            <div className="flex justify-between text-muted-foreground mt-0.5 px-1 text-xs">
-              <span>Lap {progress + 1}/{raceLength}</span>
-              <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
-            </div>
+        {/* Progress — track layout or classic sector squares (Garage preference) */}
+        {state.raceMapView === 'track' ? (
+          <div className="my-2 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
+            <LiveCircuitMap
+              circuit={selectedCircuit}
+              progress={progress}
+              rivalProgress={botProgress}
+              raceLength={raceLength}
+              sectorResults={lapResults}
+              rivalSectorResults={raceMode === 'bot' ? botLapResults : undefined}
+              showRival={raceMode === 'bot' && !isPracticeMode}
+              currentSectorRed={currentSectorRed}
+              overtakeActive={overtakeActive}
+              aeroActive={aeroActive}
+              isWet={currentWeather === 'wet'}
+              rivalLabel="BOT"
+              labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
+              labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+            />
           </div>
         ) : (
-          <div className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
-            <div className="flex flex-col gap-1.5">
-              {/* Bot row (only in bot mode) */}
-              {raceMode === 'bot' && (
-                <div>
-                  <span className="text-[9px] text-foreground font-medium uppercase leading-none">BOT</span>
-                  <div className="grid gap-[2px] mt-0.5" style={{ gridTemplateColumns: `repeat(20, 1fr)` }}>
-                    {Array.from({ length: raceLength }).map((_, i) => {
-                      const isCompleted = i < botProgress;
-                      const lapData = botLapResults[i];
-
-                      let cellColor = "bg-muted";
-                      if (isCompleted && lapData) {
-                        cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500/70" :
-                                    lapData.sectorColor === 'green' ? "bg-green-500/70" :
-                                    "bg-yellow-500/70";
-                      }
-
-                      return (
-                        <div
-                          key={`bot-${i}`}
-                          className={cn(
-                            "aspect-square rounded-[2px] transition-colors",
-                            cellColor
-                          )}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {/* Player row */}
-              <div className="grid gap-[2px]" style={{ gridTemplateColumns: `repeat(20, 1fr)` }}>
-                {Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < progress;
-                  const isCurrent = i === progress;
-                  const lapData = lapResults[i];
-
-                  let cellColor = "bg-muted";
-                  if (isCompleted && lapData) {
-                    cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
-                                lapData.sectorColor === 'green' ? "bg-green-500" :
-                                lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
-                                lapData.sectorColor === 'red' ? "bg-red-500" : "bg-muted";
-                  } else if (isCurrent) {
-                    cellColor = currentSectorRed ? "bg-red-500 animate-pulse" : "bg-gray-400/50 animate-pulse";
-                  }
-
-                  return (
-                    <div
-                      key={`player-${i}`}
-                      className={cn(
-                        "aspect-square rounded-[2px] transition-colors",
-                        cellColor
-                      )}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-            {/* Progress text */}
-            <div className="flex justify-between text-foreground mt-0.5 px-1 text-[11px]">
-              <span>Lap {progress + 1}/{raceLength}</span>
-              <span className={cn(mistakes > 0 && "text-red-500")}>Warnings: {mistakes}</span>
-            </div>
-          </div>
+          <SectorProgressGrid
+            progress={progress}
+            raceLength={raceLength}
+            sectorResults={lapResults}
+            rivalProgress={botProgress}
+            rivalSectorResults={botLapResults}
+            showRival={raceMode === 'bot' && !isPracticeMode}
+            currentSectorRed={currentSectorRed}
+            layout={
+              effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual'
+            }
+            labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
+            labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+            rivalLabel="BOT"
+          />
         )}
 
         </div>
