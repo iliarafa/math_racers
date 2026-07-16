@@ -42,6 +42,8 @@ interface LiveCircuitMapProps {
   labelRightClassName?: string;
   playerLabel?: string;
   rivalLabel?: string;
+  /** When true, skip under-stage Lap/Limits row (parent renders it elsewhere). */
+  hideFooter?: boolean;
 }
 
 const CAR_MOVE_MS = 340;
@@ -55,6 +57,15 @@ const CENTERLINE_INSET = 5.5;
  */
 export function getMapLapLength(raceLength: number): number {
   return Math.min(Math.max(1, raceLength), RACE_LENGTH);
+}
+
+/** Lap / progress label used under the map or beside the keypad level row. */
+export function formatMapLapLabel(progress: number, raceLength: number): string {
+  const { circuitLap, totalCircuitLaps } = getMapLapState(progress, raceLength);
+  if (totalCircuitLaps > 1) {
+    return `Lap ${circuitLap}/${totalCircuitLaps} · ${Math.min(progress + 1, raceLength)}/${raceLength}`;
+  }
+  return `Lap ${Math.min(progress + 1, raceLength)}/${raceLength}`;
 }
 
 type MapLapState = {
@@ -306,8 +317,7 @@ export function LiveCircuitMap({
   labelLeft,
   labelRight,
   labelRightClassName,
-  playerLabel = 'YOU',
-  rivalLabel = 'RIV',
+  hideFooter = false,
 }: LiveCircuitMapProps) {
   const meta = useMemo(() => getCircuitMapMeta(circuit), [circuit]);
   const measureRef = useRef<SVGPathElement>(null);
@@ -346,12 +356,10 @@ export function LiveCircuitMap({
 
   const isResults = variant === 'results';
   const sectorStroke = isResults ? 10 : 8;
-  const viewBox = `0 0 ${meta.w} ${meta.h}`;
-  const defaultLeft =
-    labelLeft ??
-    (playerLap.totalCircuitLaps > 1
-      ? `Lap ${playerLap.circuitLap}/${playerLap.totalCircuitLaps} · ${Math.min(progress + 1, raceLength)}/${raceLength}`
-      : `Lap ${Math.min(progress + 1, raceLength)}/${raceLength}`);
+  /** Pad viewBox so thick strokes / car near Spa edges are not clipped. */
+  const viewPad = 10;
+  const viewBox = `${-viewPad} ${-viewPad} ${meta.w + viewPad * 2} ${meta.h + viewPad * 2}`;
+  const defaultLeft = labelLeft ?? formatMapLapLabel(progress, raceLength);
   const circuitName = circuit && 'name' in circuit && circuit.name ? circuit.name : 'Circuit';
 
   return (
@@ -361,7 +369,7 @@ export function LiveCircuitMap({
     >
       <div
         className={cn(
-          'relative w-full rounded-lg overflow-hidden bg-transparent',
+          'relative w-full rounded-lg overflow-visible bg-transparent',
           isResults ? 'max-h-52' : 'max-h-40 sm:max-h-44',
           isResults && 'border border-black/10'
         )}
@@ -385,8 +393,12 @@ export function LiveCircuitMap({
         {meta.image && (
           <div
             aria-hidden
-            className="absolute inset-0 z-0 pointer-events-none"
+            className="absolute z-0 pointer-events-none"
             style={{
+              top: `${(viewPad / (meta.h + viewPad * 2)) * 100}%`,
+              left: `${(viewPad / (meta.w + viewPad * 2)) * 100}%`,
+              right: `${(viewPad / (meta.w + viewPad * 2)) * 100}%`,
+              bottom: `${(viewPad / (meta.h + viewPad * 2)) * 100}%`,
               backgroundColor: '#111111',
               WebkitMaskImage: `url(${meta.image})`,
               maskImage: `url(${meta.image})`,
@@ -403,7 +415,7 @@ export function LiveCircuitMap({
 
         <svg
           viewBox={viewBox}
-          className="absolute inset-0 z-[1] h-full w-full"
+          className="absolute inset-0 z-[1] h-full w-full overflow-visible"
           role="img"
           aria-label={`${circuitName} live map`}
         >
@@ -496,44 +508,14 @@ export function LiveCircuitMap({
             pulse={overtakeActive || aeroActive}
           />
         </svg>
+      </div>
 
-        <div className="absolute bottom-1.5 left-2 right-2 z-[3] flex items-center justify-between pointer-events-none">
-          <div className="flex items-center gap-1.5">
-            {(
-              [
-                ['purple', '#a855f7'],
-                ['green', '#22c55e'],
-                ['yellow', '#eab308'],
-                ['red', '#ef4444'],
-              ] as const
-            ).map(([name, hex]) => (
-              <span
-                key={name}
-                className="w-2 h-2 rounded-[2px] ring-1 ring-black/20"
-                style={{ backgroundColor: hex }}
-                title={name}
-              />
-            ))}
-          </div>
-          <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-            {showRival && (
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-1.5 rounded-sm bg-red-600" />
-                {rivalLabel.slice(0, 3)}
-              </span>
-            )}
-            <span className="flex items-center gap-1 text-foreground">
-              <span className="w-2.5 h-1.5 rounded-sm bg-foreground" />
-              {playerLabel.slice(0, 3)}
-            </span>
-          </div>
+      {!hideFooter && (
+        <div className="flex justify-between text-muted-foreground mt-1 px-1 text-xs">
+          <span>{defaultLeft}</span>
+          {labelRight != null && <span className={labelRightClassName}>{labelRight}</span>}
         </div>
-      </div>
-
-      <div className="flex justify-between text-muted-foreground mt-1 px-1 text-xs">
-        <span>{defaultLeft}</span>
-        {labelRight != null && <span className={labelRightClassName}>{labelRight}</span>}
-      </div>
+      )}
     </div>
   );
 }

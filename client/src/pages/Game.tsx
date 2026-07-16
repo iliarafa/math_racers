@@ -4,7 +4,7 @@ import confetti from "canvas-confetti";
 import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { LiveCircuitMap } from "@/components/LiveCircuitMap";
+import { LiveCircuitMap, formatMapLapLabel } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
@@ -3476,66 +3476,64 @@ export default function Game() {
         )}
 
         <div className="landscape-left">
-        {/* Mode badge and controls */}
-        <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
-          <div className="flex items-center gap-2">
-            {isPreSeasonTesting ? (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">FREE PRACTICE</span>
-            ) : isGrandPrix && grandPrixPhase === 'rw_practice' ? (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
-            ) : isGrandPrix && grandPrixPhase === 'rw_qualifying' ? (
-              <span className="text-xs text-white px-2 py-0.5 rounded" style={{ backgroundColor: '#f59e0b' }}>QUALIFYING</span>
-            ) : isGrandPrix && grandPrixPhase === 'rw_race' ? (
-              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE DAY</span>
-            ) : isPracticeMode ? (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
-            ) : (
-              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE</span>
-            )}
+        {/* Mode badge and controls — Free Practice skips the green pill to keep HUD lighter */}
+        {!isPreSeasonTesting && (
+          <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
+            <div className="flex items-center gap-2">
+              {isGrandPrix && grandPrixPhase === 'rw_practice' ? (
+                <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
+              ) : isGrandPrix && grandPrixPhase === 'rw_qualifying' ? (
+                <span className="text-xs text-white px-2 py-0.5 rounded" style={{ backgroundColor: '#f59e0b' }}>QUALIFYING</span>
+              ) : isGrandPrix && grandPrixPhase === 'rw_race' ? (
+                <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE DAY</span>
+              ) : isPracticeMode ? (
+                <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
+              ) : (
+                <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {!isPracticeMode && (
+                <button
+                  onClick={() => setIsPaused(true)}
+                  className="p-1 hover:bg-secondary rounded transition-colors"
+                  data-testid="button-pause"
+                >
+                  <Pause className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {!isPracticeMode && (
-              <button
-                onClick={() => setIsPaused(true)}
-                className="p-1 hover:bg-secondary rounded transition-colors"
-                data-testid="button-pause"
-              >
-                <Pause className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Main content - compact header zone */}
-        <div className={cn("flex flex-col items-center px-4 pt-0", isPreSeasonTesting && "-mt-4")}>
-          {/* Track Limits Warning */}
-          <div className="h-12 flex items-center justify-center">
-            <AnimatePresence>
-              {showPenalty && (
+        <div className="relative flex flex-col items-center px-4 pt-1">
+          {/* Track Limits Warning — overlay so idle state reserves no vertical space */}
+          <AnimatePresence>
+            {showPenalty && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-2 pointer-events-none"
+              >
+                {showBlackWhiteFlag && (
+                  <img
+                    src={trackLimitsFlag}
+                    alt="Black and White Flag"
+                    className="h-8 w-12 object-cover rounded"
+                  />
+                )}
                 <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center gap-2"
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ duration: 0.3, repeat: 3 }}
+                  className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
                 >
-                  {showBlackWhiteFlag && (
-                    <img 
-                      src={trackLimitsFlag} 
-                      alt="Black and White Flag" 
-                      className="h-8 w-12 object-cover rounded"
-                    />
-                  )}
-                  <motion.div
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 0.3, repeat: 3 }}
-                    className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
-                  >
-                    TRACK LIMITS
-                  </motion.div>
+                  TRACK LIMITS
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Timer on top with weather indicator for realism random */}
           <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
@@ -3627,8 +3625,7 @@ export default function Game() {
               aeroActive={aeroActive}
               isWet={currentWeather === 'wet'}
               rivalLabel="BOT"
-              labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
-              labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+              hideFooter
             />
           </div>
         ) : (
@@ -3693,11 +3690,34 @@ export default function Game() {
             </div>
           )}
 
-          {/* PST level indicator above keypad */}
-          {isPreSeasonTesting && (
-            <div className="text-xs uppercase tracking-wider text-center mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
-              {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
+          {/* Lap | Level | Limits — aligned above keypad (track HUD moves status off the map) */}
+          {state.raceMapView === 'track' ? (
+            <div className="mb-1 flex w-full max-w-md md:max-w-xl lg:max-w-2xl items-center justify-between gap-2 px-0.5 text-xs text-muted-foreground">
+              <span className="min-w-0 shrink truncate">{formatMapLapLabel(progress, raceLength)}</span>
+              <span
+                className="shrink-0 text-center text-xs uppercase tracking-wider font-bold"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  color:
+                    isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice')
+                      ? (LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e')
+                      : 'transparent',
+                }}
+              >
+                {isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice')
+                  ? (DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting')
+                  : '\u00a0'}
+              </span>
+              <span className={cn('shrink-0 text-right', mistakes > 0 && 'text-red-500')}>
+                {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: {mistakes}
+              </span>
             </div>
+          ) : (
+            isPreSeasonTesting && (
+              <div className="text-xs uppercase tracking-wider text-center mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
+                {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
+              </div>
+            )
           )}
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 w-full max-w-md md:max-w-xl lg:max-w-2xl">
