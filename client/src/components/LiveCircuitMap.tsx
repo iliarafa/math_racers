@@ -1,5 +1,13 @@
-import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import type { Circuit } from '@/lib/gameLogic';
 import { RACE_LENGTH } from '@/lib/gameLogic';
 import {
@@ -37,6 +45,10 @@ interface LiveCircuitMapProps {
   rivalLabel?: string;
 }
 
+const CAR_MOVE_MS = 340;
+/** Inset from outer contour toward track center (viewBox units). */
+const CENTERLINE_INSET = 5.5;
+
 /**
  * One tour of the circuit silhouette is divided into `race length in laps`
  * sectors (capped at standard RACE_LENGTH=20). Longer sessions wrap: the car
@@ -56,6 +68,8 @@ type MapLapState = {
   lapStart: number;
   /** 0..1 position along the path */
   t: number;
+  /** Continuous progress across tours — eases across integer boundaries for lap wrap */
+  absoluteT: number;
   mapLapLength: number;
 };
 
@@ -68,36 +82,163 @@ function getMapLapState(progress: number, raceLength: number): MapLapState {
     const rem = raceLength % mapLapLength;
     const sectorOnLap = rem === 0 ? mapLapLength : rem;
     const lapStart = raceLength - sectorOnLap;
+    const t = sectorOnLap / mapLapLength;
+    const circuitLap = totalCircuitLaps;
     return {
-      circuitLap: totalCircuitLaps,
+      circuitLap,
       totalCircuitLaps,
       sectorOnLap,
       lapStart,
-      t: sectorOnLap / mapLapLength,
+      t,
+      absoluteT: circuitLap - 1 + t,
       mapLapLength,
     };
   }
 
   const lapStart = Math.floor(clamped / mapLapLength) * mapLapLength;
   const sectorOnLap = clamped - lapStart;
+  const t = sectorOnLap / mapLapLength;
+  const circuitLap = Math.floor(clamped / mapLapLength) + 1;
   return {
-    circuitLap: Math.floor(clamped / mapLapLength) + 1,
+    circuitLap,
     totalCircuitLaps,
     sectorOnLap,
     lapStart,
-    t: sectorOnLap / mapLapLength,
+    t,
+    absoluteT: circuitLap - 1 + t,
     mapLapLength,
   };
 }
 
-function readPose(path: SVGPathElement, t: number): CarPose {
+function easeOutCubic(u: number): number {
+  return 1 - (1 - u) ** 3;
+}
+
+function unwrapAngle(prevDeg: number, nextDeg: number): number {
+  let delta = nextDeg - prevDeg;
+  while (delta > 180) delta -= 360;
+  while (delta < -180) delta += 360;
+  return prevDeg + delta;
+}
+
+/** Path parameter in [0, 1]; treat exact integers > 0 as 1 (finish line) before modulo. */
+function pathParam(absoluteT: number): number {
+  if (absoluteT <= 0) return 0;
+  const frac = absoluteT % 1;
+  if (frac < 1e-6 && absoluteT > 0) return 1;
+  return frac;
+}
+
+function readPoseOnTrack(
+  path: SVGPathElement,
+  absoluteT: number,
+  inset: number,
+  center: { x: number; y: number },
+  prevAngle: number
+): CarPose {
   const len = path.getTotalLength();
-  if (len <= 0) return { x: 0, y: 0, angle: 0 };
-  const dist = Math.max(0, Math.min(1, t)) * len;
+  if (len <= 0) return { x: center.x, y: center.y, angle: prevAngle };
+
+  const u = pathParam(absoluteT);
+  const dist = Math.min(len, Math.max(0, u * len));
   const p = path.getPointAtLength(dist);
-  const look = path.getPointAtLength(Math.min(len, dist + Math.max(2, len * 0.01)));
-  const angle = (Math.atan2(look.y - p.y, look.x - p.x) * 180) / Math.PI;
-  return { x: p.x, y: p.y, angle };
+
+  const delta = Math.max(2.5, len * 0.01);
+  const p0 = path.getPointAtLength(Math.max(0, dist - delta * 0.5));
+  const p1 = path.getPointAtLength(Math.min(len, dist + delta * 0.5));
+  const tx = p1.x - p0.x;
+  const ty = p1.y - p0.y;
+  const tl = Math.hypot(tx, ty) || 1;
+  const nx = -ty / tl;
+  const ny = tx / tl;
+
+  // Pick the normal that points toward the circuit center (centerline of the stroke)
+  const toCx = center.x - p.x;
+  const toCy = center.y - p.y;
+  const sign = nx * toCx + ny * toCy >= 0 ? 1 : -1;
+
+  const rawAngle = (Math.atan2(ty, tx) * 180) / Math.PI;
+  const angle = unwrapAngle(prevAngle, rawAngle);
+
+  return {
+    x: p.x + nx * inset * sign,
+    y: p.y + ny * inset * sign,
+    angle,
+  };
+}
+
+function usePathCar(
+  pathRef: RefObject<SVGPathElement | null>,
+  targetAbsoluteT: number,
+  inset: number,
+  center: { x: number; y: number },
+  pathKey: string,
+  enabled: boolean
+): CarPose {
+  const [pose, setPose] = useState<CarPose>({ x: center.x, y: center.y, angle: 0 });
+  const displayAbs = useRef(targetAbsoluteT);
+  const angleRef = useRef(0);
+  const animRef = useRef<{ from: number; to: number; start: number } | null>(null);
+  const rafRef = useRef(0);
+
+  // Reset when circuit path changes
+  useLayoutEffect(() => {
+    displayAbs.current = targetAbsoluteT;
+    animRef.current = null;
+    angleRef.current = 0;
+    const path = pathRef.current;
+    if (!path || !enabled) return;
+    const next = readPoseOnTrack(path, targetAbsoluteT, inset, center, 0);
+    angleRef.current = next.angle;
+    setPose(next);
+  }, [pathKey, enabled]); // path geometry change only — not every target tick
+
+  // Kick ease when target moves
+  useEffect(() => {
+    if (!enabled) return;
+    const from = displayAbs.current;
+    const to = targetAbsoluteT;
+    if (Math.abs(to - from) < 1e-5) return;
+    animRef.current = { from, to, start: performance.now() };
+
+    const tick = (now: number) => {
+      const path = pathRef.current;
+      const anim = animRef.current;
+      if (!path) {
+        rafRef.current = 0;
+        return;
+      }
+
+      if (anim) {
+        const u = Math.min(1, (now - anim.start) / CAR_MOVE_MS);
+        displayAbs.current = anim.from + (anim.to - anim.from) * easeOutCubic(u);
+        if (u >= 1) {
+          displayAbs.current = anim.to;
+          animRef.current = null;
+        }
+      }
+
+      const next = readPoseOnTrack(path, displayAbs.current, inset, center, angleRef.current);
+      angleRef.current = next.angle;
+      setPose(next);
+
+      if (animRef.current) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        rafRef.current = 0;
+      }
+    };
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    };
+  }, [targetAbsoluteT, enabled, pathRef, inset, center.x, center.y]);
+
+  return pose;
 }
 
 function CarMarker({
@@ -128,22 +269,20 @@ function CarMarker({
           className="animate-pulse"
         />
       )}
-      <rect
-        x={-w / 2}
-        y={-h / 2}
-        width={w}
-        height={h}
-        rx={1.2}
+      {/* Pointed nose in travel direction (+x) */}
+      <polygon
+        points={`${w * 0.55},0 ${-w * 0.45},${-h * 0.5} ${-w * 0.45},${h * 0.5}`}
         fill={color}
         stroke={accent}
-        strokeWidth={0.9}
+        strokeWidth={0.85}
+        strokeLinejoin="round"
       />
       <rect
-        x={-w * 0.12}
-        y={-h * 0.28}
-        width={w * 0.45}
-        height={h * 0.55}
-        rx={0.6}
+        x={-w * 0.2}
+        y={-h * 0.22}
+        width={w * 0.35}
+        height={h * 0.44}
+        rx={0.5}
         fill={accent}
         opacity={0.95}
       />
@@ -173,8 +312,7 @@ export function LiveCircuitMap({
 }: LiveCircuitMapProps) {
   const meta = useMemo(() => getCircuitMapMeta(circuit), [circuit]);
   const measureRef = useRef<SVGPathElement>(null);
-  const [playerPose, setPlayerPose] = useState<CarPose>({ x: meta.w / 2, y: meta.h / 2, angle: 0 });
-  const [rivalPose, setRivalPose] = useState<CarPose>({ x: meta.w / 2, y: meta.h / 2, angle: 0 });
+  const center = useMemo(() => ({ x: meta.w / 2, y: meta.h / 2 }), [meta.w, meta.h]);
 
   const playerLap = useMemo(() => getMapLapState(progress, raceLength), [progress, raceLength]);
   const rivalLap = useMemo(
@@ -183,19 +321,29 @@ export function LiveCircuitMap({
   );
   const { mapLapLength } = playerLap;
 
+  const playerPose = usePathCar(
+    measureRef,
+    playerLap.absoluteT,
+    CENTERLINE_INSET,
+    center,
+    meta.d,
+    true
+  );
+  const rivalPose = usePathCar(
+    measureRef,
+    rivalLap.absoluteT,
+    CENTERLINE_INSET,
+    center,
+    meta.d,
+    showRival
+  );
+
   const lastPurpleOnLap = useMemo(() => {
     for (let i = playerLap.sectorOnLap - 1; i >= 0; i--) {
       if (sectorResults[playerLap.lapStart + i]?.sectorColor === 'purple') return i;
     }
     return -1;
   }, [playerLap.sectorOnLap, playerLap.lapStart, sectorResults]);
-
-  useLayoutEffect(() => {
-    const path = measureRef.current;
-    if (!path) return;
-    setPlayerPose(readPose(path, playerLap.t));
-    if (showRival) setRivalPose(readPose(path, rivalLap.t));
-  }, [meta.d, playerLap.t, rivalLap.t, showRival]);
 
   const isResults = variant === 'results';
   const sectorStroke = isResults ? 10 : 8;
@@ -311,7 +459,7 @@ export function LiveCircuitMap({
               );
             })}
 
-          {/* Player sector glow — current circuit tour only (max RACE_LENGTH slices) */}
+          {/* Player sector glow — current circuit tour only */}
           {Array.from({ length: playerLap.sectorOnLap }).map((_, i) => {
             const color = sectorResults[playerLap.lapStart + i]?.sectorColor ?? 'green';
             const isPurplePulse = i === lastPurpleOnLap && lastPurpleOnLap >= 0;
@@ -349,32 +497,20 @@ export function LiveCircuitMap({
           )}
 
           {showRival && (
-            <motion.g
-              initial={false}
-              animate={{ x: rivalPose.x, y: rivalPose.y, rotate: rivalPose.angle }}
-              transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-            >
-              <CarMarker
-                pose={{ x: 0, y: 0, angle: 0 }}
-                color="#dc2626"
-                accent="#fca5a5"
-                size={isResults ? 1.2 : 1.05}
-              />
-            </motion.g>
-          )}
-          <motion.g
-            initial={false}
-            animate={{ x: playerPose.x, y: playerPose.y, rotate: playerPose.angle, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 340, damping: 26 }}
-          >
             <CarMarker
-              pose={{ x: 0, y: 0, angle: 0 }}
-              color="#111111"
-              accent="#ff2800"
-              size={isResults ? 1.3 : 1.15}
-              pulse={overtakeActive || aeroActive}
+              pose={rivalPose}
+              color="#dc2626"
+              accent="#fca5a5"
+              size={isResults ? 1.15 : 0.95}
             />
-          </motion.g>
+          )}
+          <CarMarker
+            pose={playerPose}
+            color="#111111"
+            accent="#ff2800"
+            size={isResults ? 1.3 : 1.15}
+            pulse={overtakeActive || aeroActive}
+          />
         </svg>
 
         <div className="absolute bottom-1.5 left-2 right-2 z-[3] flex items-center justify-between pointer-events-none">
