@@ -7,7 +7,6 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import type { Circuit } from '@/lib/gameLogic';
 import { RACE_LENGTH } from '@/lib/gameLogic';
 import {
@@ -368,32 +367,17 @@ export function LiveCircuitMap({
         )}
         style={{ aspectRatio: `${meta.w} / ${meta.h}` }}
       >
-        <AnimatePresence>
-          {overtakeActive && (
-            <motion.div
-              key="overtake-flare"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.35, 0.7, 0.35] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.9, repeat: Infinity }}
-              className="pointer-events-none absolute inset-0 z-[2] rounded-lg ring-2 ring-yellow-400/80 shadow-[inset_0_0_28px_rgba(250,204,21,0.45)]"
-            />
-          )}
-          {aeroActive && (
-            <motion.div
-              key="aero-flare"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.3, 0.65, 0.3] }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.75, repeat: Infinity }}
-              className="pointer-events-none absolute inset-0 z-[2] rounded-lg ring-2 ring-cyan-400/80 shadow-[inset_0_0_28px_rgba(34,211,238,0.4)]"
-            />
-          )}
-        </AnimatePresence>
+        {/* Power-up feedback stays on the car marker (pulse) — no full-bleed yellow/cyan box flares */}
         {isWet && (
           <div
-            className="pointer-events-none absolute inset-0 z-[2] rounded-lg bg-blue-500/20"
+            className="pointer-events-none absolute inset-0 z-[2] rounded-lg bg-blue-500/10"
             data-testid="circuit-map-wet-tint"
+          />
+        )}
+        {currentSectorRed && (
+          <div
+            className="pointer-events-none absolute inset-0 z-[2] rounded-lg ring-2 ring-red-500/50"
+            data-testid="circuit-map-sector-warning"
           />
         )}
 
