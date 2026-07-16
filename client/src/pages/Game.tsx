@@ -3690,12 +3690,12 @@ export default function Game() {
             </div>
           )}
 
-          {/* Lap | Level | Limits — aligned above keypad (track HUD moves status off the map) */}
+          {/* Lap | Level | Limits — same 3-col grid as AERO / energy / OT so each label centers on its button */}
           {state.raceMapView === 'track' ? (
-            <div className="mb-1 flex w-full max-w-md md:max-w-xl lg:max-w-2xl items-center justify-between gap-2 px-0.5 text-xs text-muted-foreground">
-              <span className="min-w-0 shrink truncate">{formatMapLapLabel(progress, raceLength)}</span>
+            <div className="mb-1 grid w-full max-w-md md:max-w-xl lg:max-w-2xl grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 text-xs text-muted-foreground">
+              <span className="min-w-0 truncate text-center">{formatMapLapLabel(progress, raceLength)}</span>
               <span
-                className="shrink-0 text-center text-xs uppercase tracking-wider font-bold"
+                className="text-center text-xs uppercase tracking-wider font-bold"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
                   color:
@@ -3708,7 +3708,7 @@ export default function Game() {
                   ? (DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting')
                   : '\u00a0'}
               </span>
-              <span className={cn('shrink-0 text-right', mistakes > 0 && 'text-red-500')}>
+              <span className={cn('text-center', mistakes > 0 && 'text-red-500')}>
                 {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: {mistakes}
               </span>
             </div>

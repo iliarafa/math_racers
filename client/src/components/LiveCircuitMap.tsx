@@ -356,8 +356,8 @@ export function LiveCircuitMap({
 
   const isResults = variant === 'results';
   const sectorStroke = isResults ? 10 : 8;
-  /** Pad viewBox so thick strokes / car near Spa edges are not clipped. */
-  const viewPad = 10;
+  /** Pad viewBox so thick strokes / car near path edges are not clipped. */
+  const viewPad = 14;
   const viewBox = `${-viewPad} ${-viewPad} ${meta.w + viewPad * 2} ${meta.h + viewPad * 2}`;
   const defaultLeft = labelLeft ?? formatMapLapLabel(progress, raceLength);
   const circuitName = circuit && 'name' in circuit && circuit.name ? circuit.name : 'Circuit';
@@ -367,11 +367,15 @@ export function LiveCircuitMap({
       className={cn('w-full mx-auto', isResults ? 'max-w-md' : 'max-w-md md:max-w-xl', className)}
       data-testid="live-circuit-map"
     >
+      {/*
+        HUD: no max-height — at phone width, max-h-40 was shorter than natural
+        aspect height for Spa/Suzuka/etc and cropped the top-right. Width +
+        aspect-ratio alone keeps the full silhouette. Results keep a soft cap.
+      */}
       <div
         className={cn(
           'relative w-full rounded-lg overflow-visible bg-transparent',
-          isResults ? 'max-h-52' : 'max-h-40 sm:max-h-44',
-          isResults && 'border border-black/10'
+          isResults && 'max-h-52 border border-black/10'
         )}
         style={{ aspectRatio: `${meta.w} / ${meta.h}` }}
       >
