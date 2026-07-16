@@ -188,6 +188,9 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
       };
     }, [controller]);
 
+    // Sync pace from parent for Locked start / rival HUD updates.
+    // Mid-Adaptive steps are also applied in spawnQuestion via setPaceDifficulty;
+    // calling twice is harmless (snaps to series base) and must not remount.
     useEffect(() => {
       controller.setPaceDifficulty(difficulty);
     }, [difficulty, controller]);

@@ -522,7 +522,10 @@ export default function LaneRacer() {
   // Applied series pace (Adaptive follows live level on next-question boundary; Pro→F1 speeds).
   const paceDifficulty = appliedPaceDifficulty;
 
-  // Initialize 2D canvas engine when racing in classic mode
+  // Initialize 2D canvas engine when racing in classic mode.
+  // Do NOT depend on paceDifficulty — Adaptive level changes apply via
+  // setPaceDifficulty in spawnQuestion. Including pace here remounted the
+  // engine mid-race and double-spawned the next question (flash of Q1→Q2).
   useEffect(() => {
     if (gameStatus !== 'racing' || renderMode !== '2d' || !canvasRef.current) return;
 
@@ -552,7 +555,7 @@ export default function LaneRacer() {
       onWrong: handleWrong,
       onMiss: handleMiss,
       onFinished: handleFinished,
-    }, raceLength, selectedTeam, paceDifficulty);
+    }, raceLength, selectedTeam, appliedPaceDifficultyRef.current);
 
     engineRef.current = engine;
     startTimeRef.current = Date.now();
@@ -579,7 +582,7 @@ export default function LaneRacer() {
       window.removeEventListener('resize', measureSafeBottom);
       resizeObserver.disconnect();
     };
-  }, [gameStatus, renderMode, raceLength, selectedTeam, paceDifficulty, handleCorrect, handleWrong, handleMiss, handleFinished]);
+  }, [gameStatus, renderMode, raceLength, selectedTeam, handleCorrect, handleWrong, handleMiss, handleFinished]);
 
   // Track race start time for 3D mode (2D sets this in its init effect above)
   useEffect(() => {
