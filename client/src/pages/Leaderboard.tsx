@@ -33,6 +33,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   easy: 'F3',
   medium: 'F2',
   hard: 'F1',
+  pro: 'Pro',
 };
 
 function formatTime(ms: number) {

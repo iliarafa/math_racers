@@ -1,7 +1,8 @@
 import type { Difficulty } from './gameLogic';
 import {
   BASE_SPEED,
-  MAX_SPEED,
+  seriesBaseSpeed,
+  seriesMaxSpeed,
   speedAfterCorrect,
   speedAfterWrong,
   speedToKmh,
@@ -96,7 +97,7 @@ export class LaneRacerController3D {
   private activeTransitionMs = LANE_EARLY_MS;
   private activeLeanYaw = LANE_EARLY_YAW;
   private activeLeanRoll = LANE_EARLY_ROLL;
-  private speed = BASE_SPEED;
+  private speed = seriesBaseSpeed('beginner');
   private worldScrollZ = 0;
   private scrollDelta = 0;
   private tokens: AnswerToken3D[] = [];
@@ -126,7 +127,7 @@ export class LaneRacerController3D {
     tokens: [],
     flashColor: null,
     flashAlpha: 0,
-    speedKmh: speedToKmh(BASE_SPEED),
+    speedKmh: speedToKmh(seriesBaseSpeed('beginner'), 'beginner'),
     popupLabel: '',
     popupAlpha: 0,
     shakeMagnitude: 0,
@@ -142,10 +143,19 @@ export class LaneRacerController3D {
     this.callbacks = callbacks;
     this.totalQuestions = totalQuestions;
     this.difficulty = difficulty;
+    this.speed = seriesBaseSpeed(difficulty);
+    this.renderState.speedKmh = speedToKmh(this.speed, difficulty);
   }
 
   setStructureChangeListener(listener: (() => void) | null) {
     this.onStructureChange = listener;
+  }
+
+  /** Apply series pace on next-question boundary (Adaptive promote/demote). Snaps to new base. */
+  setPaceDifficulty(difficulty: Difficulty) {
+    this.difficulty = difficulty;
+    this.speed = seriesBaseSpeed(difficulty);
+    this.syncRenderState();
   }
 
   start() {
@@ -314,7 +324,7 @@ export class LaneRacerController3D {
     rs.tokens = this.tokens;
     rs.flashColor = this.flashFrames > 0 ? this.flashColor : null;
     rs.flashAlpha = this.flashFrames > 0 ? this.flashFrames / FLASH_FRAMES : 0;
-    rs.speedKmh = speedToKmh(this.speed);
+    rs.speedKmh = speedToKmh(this.speed, this.difficulty);
     rs.popupLabel = this.popupLabel;
     rs.popupAlpha = this.popupFrames > 0 ? this.popupFrames / POPUP_FRAMES : 0;
     rs.shakeMagnitude = this.shakeFrames > 0 ? (this.flashColor === 'red' ? 0.08 : 0.04) : 0;
@@ -350,14 +360,15 @@ export class LaneRacerController3D {
       const prevSpeed = this.speed;
       this.speed = speedAfterCorrect(this.speed, this.combo, this.difficulty);
       this.triggerCorrectFeedback();
-      if (this.speed >= MAX_SPEED && prevSpeed < MAX_SPEED) {
+      const maxSpeed = seriesMaxSpeed(this.difficulty);
+      if (this.speed >= maxSpeed && prevSpeed < maxSpeed) {
         this.showMessage('MAX SPEED');
       }
       this.callbacks.onCorrect();
     } else {
       this.combo = 0;
       this.wrongStreak++;
-      this.speed = speedAfterWrong(this.speed, this.wrongStreak);
+      this.speed = speedAfterWrong(this.speed, this.wrongStreak, this.difficulty);
       this.triggerWrongFeedback();
       this.callbacks.onWrong();
     }
@@ -377,7 +388,7 @@ export class LaneRacerController3D {
     this.questionsAnswered++;
     this.combo = 0;
     this.wrongStreak++;
-    this.speed = speedAfterWrong(this.speed, this.wrongStreak);
+    this.speed = speedAfterWrong(this.speed, this.wrongStreak, this.difficulty);
     this.triggerWrongFeedback();
     this.callbacks.onMiss();
 
@@ -419,4 +430,5 @@ export type LaneRacerEngineRef = {
   resume(): void;
   destroy(): void;
   setSafeBottomInset(px: number): void;
+  setPaceDifficulty(difficulty: Difficulty): void;
 };

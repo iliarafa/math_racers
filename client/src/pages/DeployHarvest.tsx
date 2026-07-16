@@ -26,6 +26,7 @@ const BOT_BASE_TIMES: Record<Difficulty, number> = {
   easy: 3500,
   medium: 4500,
   hard: 6000,
+  pro: 6500,
 };
 const BOT_RATIOS_MODIFIER = 1.20;
 

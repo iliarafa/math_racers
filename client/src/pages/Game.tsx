@@ -1227,7 +1227,7 @@ export default function Game() {
         (isPreSeasonTesting && difficultyMode === 'adaptive');
       if (shouldAdaptDifficulty && dynamicDifficultyRef.current) {
         const slowerThanBot = responseTime > question.botTime;
-        const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, true, responseTime, question.operation || 'Addition', slowerThanBot);
+        const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, true, responseTime, question.operation || 'Addition', slowerThanBot, 'hard');
         dynamicDifficultyRef.current = updated;
         currentDifficultyRef.current = updated.currentDifficulty;
         setDynamicDifficultyDisplay(updated.currentDifficulty);
@@ -1406,7 +1406,7 @@ export default function Game() {
         (isGrandPrix && grandPrixPhase === 'rw_practice') ||
         (isPreSeasonTesting && difficultyMode === 'adaptive');
       if (shouldAdaptDifficultyWrong && dynamicDifficultyRef.current) {
-        const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, false, responseTime, question.operation || 'Addition');
+        const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, false, responseTime, question.operation || 'Addition', false, 'hard');
         dynamicDifficultyRef.current = updated;
         currentDifficultyRef.current = updated.currentDifficulty;
         setDynamicDifficultyDisplay(updated.currentDifficulty);
@@ -3524,7 +3524,7 @@ export default function Game() {
           
           {/* Dynamic difficulty indicator for Grand Prix practice (PST shows it above keypad instead) */}
           {(isGrandPrix && grandPrixPhase === 'rw_practice') && (
-            <div className="text-xs uppercase tracking-wider font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: dynamicDifficultyDisplay === 'hard' ? '#ef4444' : dynamicDifficultyDisplay === 'medium' ? '#38bdf8' : dynamicDifficultyDisplay === 'easy' ? '#000000' : '#22c55e' }}>
+            <div className="text-xs uppercase tracking-wider font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
               {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
             </div>
           )}
@@ -3736,7 +3736,7 @@ export default function Game() {
 
           {/* PST level indicator above keypad */}
           {isPreSeasonTesting && (
-            <div className="text-xs uppercase tracking-wider text-center mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: dynamicDifficultyDisplay === 'hard' ? '#ef4444' : dynamicDifficultyDisplay === 'medium' ? '#38bdf8' : dynamicDifficultyDisplay === 'easy' ? '#000000' : '#22c55e' }}>
+            <div className="text-xs uppercase tracking-wider text-center mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
               {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
             </div>
           )}

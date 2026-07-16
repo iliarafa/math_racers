@@ -26,6 +26,7 @@ import type { Difficulty, DynamicDifficultyState, DifficultyMode } from "@/lib/g
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
+import { paceDifficultyForSpeed } from "@/lib/laneRacerHud";
 import { FOG_COLOR } from "@/components/lane-racer/atmosphere";
 import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
@@ -81,7 +82,7 @@ function loadLaneRacerDifficultyMode(): DifficultyMode {
 function loadLaneRacerLockedDifficulty(): Difficulty {
   try {
     const v = localStorage.getItem(LANE_RACER_LOCKED_DIFFICULTY_KEY);
-    if (v === 'beginner' || v === 'easy' || v === 'medium' || v === 'hard') return v;
+    if (v === 'beginner' || v === 'easy' || v === 'medium' || v === 'hard' || v === 'pro') return v;
   } catch { /* ignore */ }
   return 'beginner';
 }
@@ -113,6 +114,7 @@ const DIFFICULTY_DRUM_OPTIONS: {
   { id: 'f3', label: 'F3', mode: 'locked', locked: 'easy' },
   { id: 'f2', label: 'F2', mode: 'locked', locked: 'medium' },
   { id: 'f1', label: 'F1', mode: 'locked', locked: 'hard' },
+  { id: 'pro', label: 'Pro', mode: 'locked', locked: 'pro' },
 ];
 
 function difficultyDrumIndex(mode: DifficultyMode, locked: Difficulty): number {
@@ -271,7 +273,11 @@ export default function LaneRacer() {
   const dynamicDifficultyRef = useRef<DynamicDifficultyState | null>(null);
   const currentDifficultyRef = useRef<Difficulty>('beginner');
   const questionStartTimeRef = useRef<number>(Date.now());
+  /** Pace applied to engine/rival; Adaptive updates on next question spawn. */
+  const appliedPaceDifficultyRef = useRef<Difficulty>('beginner');
+  const pendingPaceDifficultyRef = useRef<Difficulty>('beginner');
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
+  const [appliedPaceDifficulty, setAppliedPaceDifficulty] = useState<Difficulty>('beginner');
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadLaneRacerDifficultyMode());
   const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLaneRacerLockedDifficulty());
   const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(() =>
@@ -381,6 +387,13 @@ export default function LaneRacer() {
   }, [correctCount, difficultyMode, dynamicDifficultyDisplay, gameStatus, lockedDifficulty, pendingSubmission, questionNum, raceLength, selectedCircuit.id, selectedCircuit.name, selectedOperation, showNamePrompt, state.playerId, state.playerName, submitted, totalTime]);
 
   const spawnQuestion = useCallback(() => {
+    // Adaptive: apply pending series pace on this spawn boundary (not mid-token).
+    const pendingPace = pendingPaceDifficultyRef.current;
+    if (pendingPace !== appliedPaceDifficultyRef.current) {
+      appliedPaceDifficultyRef.current = pendingPace;
+      setAppliedPaceDifficulty(pendingPace);
+      engineRef.current?.setPaceDifficulty(pendingPace);
+    }
     const difficulty = currentDifficultyRef.current;
     const q = generateQuestion(selectedCircuit.id, difficulty, false, 0, prevDisplayRef.current, selectedOperation);
     prevDisplayRef.current = q.display;
@@ -399,10 +412,14 @@ export default function LaneRacer() {
       correct,
       responseTime,
       selectedOperation,
+      false,
+      'hard',
     );
     dynamicDifficultyRef.current = updated;
     currentDifficultyRef.current = updated.currentDifficulty;
     setDynamicDifficultyDisplay(updated.currentDifficulty);
+    // Queue pace for next question — do not retarget in-flight tokens.
+    pendingPaceDifficultyRef.current = paceDifficultyForSpeed(updated.currentDifficulty);
   }, [difficultyMode, selectedOperation]);
 
   const handleCorrect = useCallback(() => {
@@ -432,10 +449,17 @@ export default function LaneRacer() {
       dynamicDifficultyRef.current = null;
       currentDifficultyRef.current = lockedDifficulty;
       setDynamicDifficultyDisplay(lockedDifficulty);
+      const pace = paceDifficultyForSpeed(lockedDifficulty);
+      appliedPaceDifficultyRef.current = pace;
+      pendingPaceDifficultyRef.current = pace;
+      setAppliedPaceDifficulty(pace);
     } else {
       dynamicDifficultyRef.current = initDynamicDifficulty('beginner');
       currentDifficultyRef.current = 'beginner';
       setDynamicDifficultyDisplay('beginner');
+      appliedPaceDifficultyRef.current = 'beginner';
+      pendingPaceDifficultyRef.current = 'beginner';
+      setAppliedPaceDifficulty('beginner');
     }
     const length = SIM_LAP_COUNTS[selectedCircuit.id] || RACE_LENGTH;
     setRaceLength(length);
@@ -495,8 +519,8 @@ export default function LaneRacer() {
     onFinished: handleFinished,
   }), [handleCorrect, handleWrong, handleMiss, handleFinished]);
 
-  // Adaptive: rival/engine pace stay beginner-baseline. Locked: pace at locked level.
-  const paceDifficulty = difficultyMode === 'locked' ? lockedDifficulty : 'beginner';
+  // Applied series pace (Adaptive follows live level on next-question boundary; Pro→F1 speeds).
+  const paceDifficulty = appliedPaceDifficulty;
 
   // Initialize 2D canvas engine when racing in classic mode
   useEffect(() => {

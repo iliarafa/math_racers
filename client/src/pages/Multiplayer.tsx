@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, parseDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight, Zap } from "lucide-react";
@@ -202,11 +202,7 @@ export default function Multiplayer() {
   const [guestReady, setGuestReady] = useState(false);
   const difficultyLabel =
     DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
-  const difficultyColor =
-    dynamicDifficultyDisplay === 'hard' ? '#ef4444'
-      : dynamicDifficultyDisplay === 'medium' ? '#38bdf8'
-        : dynamicDifficultyDisplay === 'easy' ? '#e5e5e5'
-          : '#22c55e';
+  const difficultyColor = LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e';
   const lockedLevelLabel =
     DRIVERS.find(d => d.difficulty === lockedDifficulty)?.name || 'Karting';
 
@@ -323,8 +319,9 @@ export default function Multiplayer() {
         if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
           setDifficultyMode(message.difficultyMode);
         }
-        if (message.lockedDifficulty === "beginner" || message.lockedDifficulty === "easy" || message.lockedDifficulty === "medium" || message.lockedDifficulty === "hard") {
-          setLockedDifficulty(message.lockedDifficulty);
+        {
+          const parsed = parseDifficulty(message.lockedDifficulty);
+          if (parsed) setLockedDifficulty(parsed);
         }
         if (typeof message.guestReady === "boolean") {
           setGuestReady(message.guestReady);
@@ -351,8 +348,9 @@ export default function Multiplayer() {
         if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
           setDifficultyMode(message.difficultyMode);
         }
-        if (message.lockedDifficulty === "beginner" || message.lockedDifficulty === "easy" || message.lockedDifficulty === "medium" || message.lockedDifficulty === "hard") {
-          setLockedDifficulty(message.lockedDifficulty);
+        {
+          const parsed = parseDifficulty(message.lockedDifficulty);
+          if (parsed) setLockedDifficulty(parsed);
         }
         if (typeof message.guestReady === "boolean") {
           setGuestReady(message.guestReady);
@@ -368,8 +366,9 @@ export default function Multiplayer() {
         if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
           setDifficultyMode(message.difficultyMode);
         }
-        if (message.lockedDifficulty === "beginner" || message.lockedDifficulty === "easy" || message.lockedDifficulty === "medium" || message.lockedDifficulty === "hard") {
-          setLockedDifficulty(message.lockedDifficulty);
+        {
+          const parsed = parseDifficulty(message.lockedDifficulty);
+          if (parsed) setLockedDifficulty(parsed);
         }
         if (typeof message.guestReady === "boolean") {
           setGuestReady(message.guestReady);
@@ -408,8 +407,9 @@ export default function Multiplayer() {
         if (message.difficultyMode === "adaptive" || message.difficultyMode === "locked") {
           setDifficultyMode(message.difficultyMode);
         }
-        if (message.lockedDifficulty === "beginner" || message.lockedDifficulty === "easy" || message.lockedDifficulty === "medium" || message.lockedDifficulty === "hard") {
-          setLockedDifficulty(message.lockedDifficulty);
+        {
+          const parsed = parseDifficulty(message.lockedDifficulty);
+          if (parsed) setLockedDifficulty(parsed);
         }
         // Sync questions so both players answer the same set - accept either
         // legacy full arrays or server-minted indexed patches.

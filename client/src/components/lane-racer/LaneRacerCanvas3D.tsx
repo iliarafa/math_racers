@@ -170,9 +170,10 @@ function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
 export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3DProps>(
   function LaneRacerCanvas3D({ callbacks, totalQuestions, teamId, difficulty, paused = false }, ref) {
     const softFollow = NATIVE_SOFT_FOLLOW;
+    // Do not remount when Adaptive pace steps mid-race — apply via setPaceDifficulty.
     const controller = useMemo(
       () => new LaneRacerController3D(callbacks, totalQuestions, difficulty),
-      [callbacks, totalQuestions, difficulty],
+      [callbacks, totalQuestions],
     );
     const controllerRef = useRef(controller);
     controllerRef.current = controller;
@@ -186,6 +187,10 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
         controller.setStructureChangeListener(null);
       };
     }, [controller]);
+
+    useEffect(() => {
+      controller.setPaceDifficulty(difficulty);
+    }, [difficulty, controller]);
 
     useEffect(() => {
       if (paused) controller.pause();
@@ -202,6 +207,7 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
       resume: () => controllerRef.current.resume(),
       destroy: () => controllerRef.current.destroy(),
       setSafeBottomInset: (px) => controllerRef.current.setSafeBottomInset(px),
+      setPaceDifficulty: (d) => controllerRef.current.setPaceDifficulty(d),
     }), []);
 
     return (

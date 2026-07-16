@@ -1,8 +1,8 @@
 import { TEAM_SVGS, type TeamId } from './carSvgs';
 import type { Difficulty } from './gameLogic';
 import {
-  BASE_SPEED,
-  MAX_SPEED,
+  seriesBaseSpeed,
+  seriesMaxSpeed,
   speedAfterCorrect,
   speedAfterWrong,
   speedToKmh,
@@ -112,7 +112,7 @@ export class LaneRacerEngine {
     this.state = {
       carLane: 1,
       carLaneVisual: 1,
-      speed: BASE_SPEED,
+      speed: seriesBaseSpeed(difficulty),
       roadOffset: 0,
       totalScroll: 0,
       tokens: [],
@@ -176,6 +176,12 @@ export class LaneRacerEngine {
 
   setSafeBottomInset(px: number) {
     this.safeBottomInset = px;
+  }
+
+  /** Apply series pace on next-question boundary (Adaptive promote/demote). Snaps to new base. */
+  setPaceDifficulty(difficulty: Difficulty) {
+    this.difficulty = difficulty;
+    this.state.speed = seriesBaseSpeed(difficulty);
   }
 
   destroy() {
@@ -351,14 +357,15 @@ export class LaneRacerEngine {
       s.speed = speedAfterCorrect(s.speed, s.combo, this.difficulty);
       this.triggerCorrectFeedback();
       // Single in-race message: announce the moment max speed is reached
-      if (s.speed >= MAX_SPEED && prevSpeed < MAX_SPEED) {
+      const maxSpeed = seriesMaxSpeed(this.difficulty);
+      if (s.speed >= maxSpeed && prevSpeed < maxSpeed) {
         this.showMessage('MAX SPEED');
       }
       this.callbacks.onCorrect();
     } else {
       s.combo = 0;
       s.wrongStreak++;
-      s.speed = speedAfterWrong(s.speed, s.wrongStreak);
+      s.speed = speedAfterWrong(s.speed, s.wrongStreak, this.difficulty);
       this.triggerWrongFeedback();
       this.callbacks.onWrong();
     }
@@ -377,7 +384,7 @@ export class LaneRacerEngine {
     s.questionsAnswered++;
     s.combo = 0;
     s.wrongStreak++;
-    s.speed = speedAfterWrong(s.speed, s.wrongStreak);
+    s.speed = speedAfterWrong(s.speed, s.wrongStreak, this.difficulty);
     this.triggerWrongFeedback();
     this.callbacks.onMiss();
 
@@ -598,7 +605,7 @@ export class LaneRacerEngine {
 
   private drawSpeedometer(w: number, h: number) {
     const ctx = this.ctx;
-    const kmh = speedToKmh(this.state.speed);
+    const kmh = speedToKmh(this.state.speed, this.difficulty);
     const pad = Math.round(w * 0.045);
     const yBase = h - pad - this.safeBottomInset;
 

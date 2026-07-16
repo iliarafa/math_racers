@@ -98,8 +98,15 @@ export const DRIVERS: Driver[] = [
   { id: "karting", name: "Karting", difficulty: "beginner", label: "Karting" },
   { id: "f3", name: "F3", difficulty: "easy", label: "Formula 3" },
   { id: "f2", name: "F2", difficulty: "medium", label: "Formula 2" },
-  { id: "f1", name: "F1", difficulty: "hard", label: "Formula 1" }
+  { id: "f1", name: "F1", difficulty: "hard", label: "Formula 1" },
+  { id: "pro", name: "Pro", difficulty: "pro", label: "Pro" },
 ];
+
+/** Parse a stored difficulty string; unknown values fall back to beginner. */
+export function parseDifficulty(v: string | null | undefined): Difficulty | null {
+  if (v === 'beginner' || v === 'easy' || v === 'medium' || v === 'hard' || v === 'pro') return v;
+  return null;
+}
 
 /** Solo setup: Adaptive (live) vs Locked (fixed series for the race). GP is always adaptive. */
 export type DifficultyMode = 'adaptive' | 'locked';
@@ -117,8 +124,7 @@ export function loadDifficultyMode(): DifficultyMode {
 
 export function loadLockedDifficulty(): Difficulty {
   try {
-    const v = localStorage.getItem(LOCKED_DIFFICULTY_KEY);
-    if (v === 'beginner' || v === 'easy' || v === 'medium' || v === 'hard') return v;
+    return parseDifficulty(localStorage.getItem(LOCKED_DIFFICULTY_KEY)) ?? 'beginner';
   } catch { /* ignore */ }
   return 'beginner';
 }
@@ -145,6 +151,7 @@ export const LOCKED_LEVEL_COLORS: Record<Difficulty, string> = {
   easy: '#000000',     // F3 — black
   medium: '#38bdf8',   // F2 — light blue
   hard: '#ef4444',     // F1 — red
+  pro: '#f59e0b',      // Pro — amber (distinct from F1 red)
 };
 
 export const SETUP_INACTIVE_TEXT = 'rgba(255,255,255,0.35)';
@@ -539,6 +546,7 @@ export function calculatePSTScore(
     easy: 1.5,
     medium: 2.0,
     hard: 3.0,
+    pro: 3.5,
   };
   const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
   const score = (lapCount / timeInSeconds) * (correctAnswers / lapCount) * multiplier * 1000;
@@ -561,6 +569,7 @@ export function calculateGPScore(
     easy: 1.5,
     medium: 2.0,
     hard: 3.0,
+    pro: 3.5,
   };
   const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
   let score = (raceLength / timeInSeconds) * (correctAnswers / raceLength) * multiplier * 1000;
@@ -582,6 +591,7 @@ export function calculateLaneRacerScore(
     easy: 1.5,
     medium: 2.0,
     hard: 3.0,
+    pro: 3.5,
   };
   const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
   const score = (raceLength / timeInSeconds) * (correctCount / raceLength) * multiplier * 1000;
@@ -598,6 +608,7 @@ export function estimateBotQuestionMs(difficulty: Difficulty, operation: string)
     easy: 3500,
     medium: 4500,
     hard: 6000,
+    pro: 6500,
   };
   const opMod: Record<string, number> = {
     Addition: 0.85,

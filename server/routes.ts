@@ -159,7 +159,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid operation" });
       }
 
-      const validDifficulties = ['beginner', 'easy', 'medium', 'hard'];
+      const validDifficulties = ['beginner', 'easy', 'medium', 'hard', 'pro'];
       if (!validDifficulties.includes(difficultyAchieved)) {
         return res.status(400).json({ error: "Invalid difficulty" });
       }
@@ -230,7 +230,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid operation" });
       }
 
-      const validDifficulties = ['beginner', 'easy', 'medium', 'hard'];
+      const validDifficulties = ['beginner', 'easy', 'medium', 'hard', 'pro'];
       if (!validDifficulties.includes(difficultyAchieved)) {
         return res.status(400).json({ error: "Invalid difficulty" });
       }

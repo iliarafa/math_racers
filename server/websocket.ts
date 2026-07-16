@@ -178,7 +178,7 @@ function handleMessage(ws: WebSocket, message: any) {
 }
 
 function isDifficulty(v: unknown): v is Difficulty {
-  return v === "beginner" || v === "easy" || v === "medium" || v === "hard";
+  return v === "beginner" || v === "easy" || v === "medium" || v === "hard" || v === "pro";
 }
 
 function difficultySettingsPayload(room: GameRoom) {
@@ -497,7 +497,8 @@ function handleProgressUpdate(ws: WebSocket, message: { roomCode: string; progre
       wasCorrect,
       message.responseTime,
       operationType,
-      false // slowerThanBot — MP v1
+      false, // slowerThanBot — MP v1
+      'hard', // Adaptive soft-caps at F1; Pro is Locked-only
     );
     broadcastDifficulty(message.roomCode, room);
   }
@@ -551,7 +552,8 @@ function handleMistakeUpdate(ws: WebSocket, message: { roomCode: string; mistake
       false,
       message.responseTime,
       room.operation || 'Addition',
-      false
+      false,
+      'hard',
     );
     broadcastDifficulty(message.roomCode, room);
   }

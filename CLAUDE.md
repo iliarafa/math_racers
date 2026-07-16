@@ -121,10 +121,12 @@ script/build.ts          # Custom build script
 | Silverstone | Variables/Algebra | Home of F1 |
 
 ### Difficulty Levels
-- **Karting** (ages 6-8): Numbers 1-10
-- **F3** (ages 8-10): Numbers 10-50
-- **F2** (ages 10-12): Numbers 20-100
-- **F1** (ages 12+): Numbers 50-200
+Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit size as F1, harder pace/facts).
+- **Karting**: Addition ~1–10; times tables up to 5
+- **F3**: Addition ~1–20; times tables up to 8
+- **F2**: Addition ~5–30; times tables up to 10
+- **F1**: Addition ~10–50; times tables up to 12 (kid-reachable summit)
+- **Pro** (Locked only): F1 digit budget + tighter timing / harder fact mix
 
 ### Power-Up Systems
 

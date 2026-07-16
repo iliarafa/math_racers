@@ -2,7 +2,18 @@
 // and the server (multiplayer WebSocket dynamic difficulty). Do not import React
 // or browser-only APIs (localStorage/sessionStorage) here.
 
-export type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard';
+export type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'pro';
+
+/** Ordered ladder; Adaptive soft-caps at hard (F1). Pro is Locked-only. */
+export const DIFFICULTY_LEVELS: Difficulty[] = ['beginner', 'easy', 'medium', 'hard', 'pro'];
+
+function difficultyIndex(d: Difficulty): number {
+  return DIFFICULTY_LEVELS.indexOf(d);
+}
+
+function clampDifficulty(d: Difficulty, max: Difficulty): Difficulty {
+  return difficultyIndex(d) <= difficultyIndex(max) ? d : max;
+}
 
 export interface Question {
   display: string;
@@ -125,13 +136,15 @@ function calculateBotTime(
   // Gap between levels increases as difficulty rises to match exponential difficulty increase
   let baseTime: number;
   if (difficulty === 'beginner') {
-    baseTime = 2500; // 2.5 seconds base for beginner (Karting) - unchanged, balanced
+    baseTime = 2500; // Karting
   } else if (difficulty === 'easy') {
-    baseTime = 3500; // 3.5 seconds base for easy (F3) - +1000ms from Karting
+    baseTime = 3500; // F3
   } else if (difficulty === 'medium') {
-    baseTime = 4500; // 4.5 seconds base for medium (F2) - +1000ms from F3
+    baseTime = 4500; // F2
+  } else if (difficulty === 'hard') {
+    baseTime = 6000; // F1
   } else {
-    baseTime = 6000; // 6 seconds base for hard (F1) - +1500ms from F2
+    baseTime = 6500; // Pro — slightly above F1 (pace/facts, not bigger digits)
   }
 
   // Wet mode adds half the gap to next difficulty level (250ms)
@@ -185,10 +198,10 @@ interface OperationRanges {
   variables: { min: number; max: number };
 }
 
-// Base operation ranges for each difficulty level
+// Kid-facing bands: Karting→F1 stay grade-school sized. Pro reuses F1 digit budget.
 const BASE_RANGES: Record<Difficulty, OperationRanges> = {
   beginner: {
-    // Karting: Ages 6-8
+    // Karting
     addition: { min: 1, max: 10 },
     subtraction: { min: 1, max: 10 },
     multiplication: { min: 1, max: 5 },
@@ -196,47 +209,48 @@ const BASE_RANGES: Record<Difficulty, OperationRanges> = {
     variables: { min: 1, max: 5 },
   },
   easy: {
-    // F3: Ages 8-10
-    addition: { min: 10, max: 50 },
-    subtraction: { min: 10, max: 50 },
-    multiplication: { min: 2, max: 10 },
-    division: { min: 2, max: 10 },
-    variables: { min: 2, max: 12 },
+    // F3
+    addition: { min: 1, max: 20 },
+    subtraction: { min: 1, max: 20 },
+    multiplication: { min: 2, max: 8 },
+    division: { min: 2, max: 8 },
+    variables: { min: 2, max: 10 },
   },
   medium: {
-    // F2: Ages 10-12
-    addition: { min: 20, max: 100 },
-    subtraction: { min: 20, max: 100 },
+    // F2
+    addition: { min: 5, max: 30 },
+    subtraction: { min: 5, max: 30 },
+    multiplication: { min: 2, max: 10 },
+    division: { min: 2, max: 10 },
+    variables: { min: 3, max: 12 },
+  },
+  hard: {
+    // F1 — kid-reachable summit
+    addition: { min: 10, max: 50 },
+    subtraction: { min: 10, max: 50 },
     multiplication: { min: 3, max: 12 },
     division: { min: 3, max: 12 },
     variables: { min: 3, max: 15 },
   },
-  hard: {
-    // F1: Ages 12+
-    addition: { min: 50, max: 200 },
-    subtraction: { min: 50, max: 200 },
-    multiplication: { min: 5, max: 15 },
-    division: { min: 5, max: 15 },
-    variables: { min: 5, max: 20 },
+  pro: {
+    // Same digit budget as F1; hardness comes from pace/facts elsewhere
+    addition: { min: 10, max: 50 },
+    subtraction: { min: 10, max: 50 },
+    multiplication: { min: 3, max: 12 },
+    division: { min: 3, max: 12 },
+    variables: { min: 3, max: 15 },
   },
 };
 
-// Extended ranges beyond hard, used when wet/OVERTAKE boost is applied at F1 difficulty
-const BOOSTED_HARD_RANGES: OperationRanges = {
-  addition: { min: 75, max: 300 },
-  subtraction: { min: 75, max: 300 },
-  multiplication: { min: 7, max: 20 },
-  division: { min: 7, max: 20 },
-  variables: { min: 8, max: 30 },
-};
-
-// Get the next difficulty level for wet interpolation
+// Get the next difficulty level for wet/OVERTAKE interpolation (numbers only).
+// F1→Pro and Pro→Pro keep the same ranges (no adult digit inflation).
 function getNextDifficulty(difficulty: Difficulty): Difficulty {
   switch (difficulty) {
     case 'beginner': return 'easy';
     case 'easy': return 'medium';
     case 'medium': return 'hard';
-    case 'hard': return 'hard'; // Cap at hard (boosted ranges used separately)
+    case 'hard': return 'pro';
+    case 'pro': return 'pro';
   }
 }
 
@@ -254,12 +268,13 @@ function interpolateRange(
 
 function getOperationRanges(difficulty: Difficulty, isWet: boolean, boostFactor: number = 0): OperationRanges {
   const baseRanges = BASE_RANGES[difficulty];
-  const nextRanges = difficulty === 'hard' ? BOOSTED_HARD_RANGES : BASE_RANGES[getNextDifficulty(difficulty)];
+  const nextRanges = BASE_RANGES[getNextDifficulty(difficulty)];
 
   // Calculate combined factor: wet adds 0.5, boost adds its value (e.g., 0.5 for OVERTAKE)
   const wetFactor = isWet ? 0.5 : 0;
   const totalFactor = Math.min(wetFactor + boostFactor, 1.0); // Cap at 1.0 (next difficulty level)
 
+  // Same-range steps (F1↔Pro) are a no-op for numbers — Pro hardness is pace/facts.
   if (totalFactor === 0) {
     return baseRanges;
   }
@@ -304,6 +319,14 @@ const EXPECTED_TIMES: Record<Difficulty, Record<string, number>> = {
     Division: 8500,
     Variables: 9000,
   },
+  // Pro ≈ 77% of F1 — snappier “fast” bar, same digit size
+  pro: {
+    Addition: 5400,
+    Subtraction: 5800,
+    Multiplication: 6150,
+    Division: 6550,
+    Variables: 6900,
+  },
 };
 
 // Get expected time for a question based on difficulty and operation type
@@ -328,15 +351,13 @@ export function calculateEnergyHarvest(
 
 // Get a harder difficulty level for AERO mode questions (bumps to next level)
 export function getHarderDifficulty(current: Difficulty): Difficulty {
-  const levels: Difficulty[] = ['beginner', 'easy', 'medium', 'hard'];
-  const idx = levels.indexOf(current);
-  return levels[Math.min(idx + 1, levels.length - 1)];
+  const idx = difficultyIndex(current);
+  return DIFFICULTY_LEVELS[Math.min(idx + 1, DIFFICULTY_LEVELS.length - 1)];
 }
 
 // Get an easier difficulty level (drops to previous level)
 export function getEasierDifficulty(current: Difficulty): Difficulty {
-  const levels: Difficulty[] = ['beginner', 'easy', 'medium', 'hard'];
-  return levels[Math.max(levels.indexOf(current) - 1, 0)];
+  return DIFFICULTY_LEVELS[Math.max(difficultyIndex(current) - 1, 0)];
 }
 
 // Dynamic difficulty state for Grand Prix practice
@@ -355,7 +376,9 @@ export function updateDynamicDifficulty(
   correct: boolean,
   responseTime: number,
   operationType: string,
-  slowerThanBot: boolean = false
+  slowerThanBot: boolean = false,
+  /** Adaptive callers pass 'hard' so Pro stays Locked-only. Default 'pro' for flexibility. */
+  maxDifficulty: Difficulty = 'pro'
 ): DynamicDifficultyState {
   const expectedTime = getExpectedTime(state.currentDifficulty, operationType);
   const fast = responseTime < expectedTime;
@@ -381,7 +404,7 @@ export function updateDynamicDifficulty(
   }
 
   if (newScore >= 3) {
-    const harder = getHarderDifficulty(state.currentDifficulty);
+    const harder = clampDifficulty(getHarderDifficulty(state.currentDifficulty), maxDifficulty);
     return harder !== state.currentDifficulty
       ? { currentDifficulty: harder, rollingScore: 0, consecutiveSlowSectors: slowSectors }
       : { ...state, rollingScore: 3, consecutiveSlowSectors: slowSectors };
@@ -395,17 +418,39 @@ export function updateDynamicDifficulty(
   return { ...state, rollingScore: newScore, consecutiveSlowSectors: slowSectors };
 }
 
+function randInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/** Uniform sample in [min, max], or upper-half bias when Pro. */
+function sampleInRange(min: number, max: number, proBias: boolean): number {
+  if (!proBias || max <= min) return randInt(min, max);
+  const mid = Math.ceil((min + max) / 2);
+  return randInt(Math.max(min, mid), max);
+}
+
+/** Mult/div factors: Pro prefers 6–12 within the allowed range. */
+function sampleFactor(min: number, max: number, proBias: boolean): number {
+  if (!proBias) return randInt(min, max);
+  const hardMin = Math.max(min, 6);
+  const hardMax = Math.min(max, 12);
+  if (hardMin <= hardMax) return randInt(hardMin, hardMax);
+  return sampleInRange(min, max, true);
+}
+
 // Generate a math question based on circuit, difficulty, and optional modifiers
 // - isWet: adds 0.5 boost factor (1.5x harder)
 // - boostFactor: additional difficulty boost (0-1), e.g., 0.5 for OVERTAKE (1.5x harder)
 // - Factors stack: wet (0.5) + OVERTAKE (0.5) = 1.0 (next difficulty level), capped at 1.0
 // - previousDisplay: if provided, ensures the new question is different (avoids back-to-back duplicates)
+// - Pro: same digit ranges as F1, with upper-half / harder-fact bias
 export function generateQuestion(circuitId: string, difficulty: Difficulty = 'easy', isWet: boolean = false, boostFactor: number = 0, previousDisplay?: string, operationOverride?: string): Question {
   const effectiveType =
     operationOverride ||
     CIRCUIT_OPERATION_TYPES[circuitId] ||
     CIRCUIT_OPERATION_TYPES.spa;
   const ranges = getOperationRanges(difficulty, isWet, boostFactor);
+  const proBias = difficulty === 'pro';
 
   let num1: number = 0, num2: number = 0, display: string, answer: number;
   let attempts = 0;
@@ -417,8 +462,8 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
   switch (effectiveType) {
     case "Multiplication": {
       const range = ranges.multiplication;
-      num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
-      num2 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      num1 = sampleFactor(range.min, range.max, proBias);
+      num2 = sampleFactor(range.min, range.max, proBias);
       display = `${num1} × ${num2}`;
       answer = num1 * num2;
       break;
@@ -426,8 +471,8 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
 
     case "Addition": {
       const range = ranges.addition;
-      num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
-      num2 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      num1 = sampleInRange(range.min, range.max, proBias);
+      num2 = sampleInRange(range.min, range.max, proBias);
       display = `${num1} + ${num2}`;
       answer = num1 + num2;
       break;
@@ -436,7 +481,7 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
     case "Subtraction": {
       const range = ranges.subtraction;
       // Ensure num1 > num2 for positive results
-      num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      num1 = sampleInRange(range.min, range.max, proBias);
       num2 = Math.floor(Math.random() * (num1 - 1)) + 1;
       display = `${num1} − ${num2}`;
       answer = num1 - num2;
@@ -446,8 +491,8 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
     case "Division": {
       const range = ranges.division;
       // Generate clean division (no remainders)
-      answer = Math.floor(Math.random() * (range.max - 1)) + 2;
-      num2 = Math.floor(Math.random() * (range.max - 1)) + 2;
+      answer = sampleFactor(2, range.max, proBias);
+      num2 = sampleFactor(2, range.max, proBias);
       num1 = answer * num2;
       display = `${num1} ÷ ${num2}`;
       break;
@@ -460,20 +505,20 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
 
       if (varType === 0) {
         // x + a = b
-        answer = Math.floor(Math.random() * (range.max - 1)) + 1;
-        num2 = Math.floor(Math.random() * (range.max - 1)) + 1;
+        answer = sampleInRange(1, range.max, proBias);
+        num2 = sampleInRange(1, range.max, proBias);
         num1 = answer + num2;
         display = `x + ${num2} = ${num1}`;
       } else if (varType === 1) {
         // a − x = b
-        answer = Math.floor(Math.random() * (range.max - 1)) + 1;
-        num2 = Math.floor(Math.random() * (range.max - 1)) + 1;
+        answer = sampleInRange(1, range.max, proBias);
+        num2 = sampleInRange(1, range.max, proBias);
         num1 = num2 + answer;
         display = `${num1} − x = ${num2}`;
       } else {
         // ax = b
-        answer = Math.floor(Math.random() * (range.max - 1)) + 2;
-        num2 = Math.floor(Math.random() * 5) + 2;
+        answer = sampleInRange(2, range.max, proBias);
+        num2 = proBias ? sampleFactor(2, Math.min(12, range.max), true) : randInt(2, 6);
         num1 = num2 * answer;
         display = `${num2}x = ${num1}`;
       }
@@ -482,8 +527,8 @@ export function generateQuestion(circuitId: string, difficulty: Difficulty = 'ea
 
     default: {
       const range = ranges.addition;
-      num1 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
-      num2 = Math.floor(Math.random() * (range.max - range.min + 1)) + range.min;
+      num1 = sampleInRange(range.min, range.max, proBias);
+      num2 = sampleInRange(range.min, range.max, proBias);
       display = `${num1} + ${num2}`;
       answer = num1 + num2;
     }
