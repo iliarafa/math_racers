@@ -3508,32 +3508,34 @@ export default function Game() {
 
         {/* Main content - compact header zone */}
         <div className="relative flex flex-col items-center px-4 pt-1">
-          {/* Track Limits Warning — overlay so idle state reserves no vertical space */}
-          <AnimatePresence>
-            {showPenalty && (
-              <motion.div
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-2 pointer-events-none"
-              >
-                {showBlackWhiteFlag && (
-                  <img
-                    src={trackLimitsFlag}
-                    alt="Black and White Flag"
-                    className="h-8 w-12 object-cover rounded"
-                  />
-                )}
+          {/* Track Limits Warning — track view: overlay on timer (idle reserves no space) */}
+          {state.raceMapView === 'track' && (
+            <AnimatePresence>
+              {showPenalty && (
                 <motion.div
-                  animate={{ opacity: [1, 0.3, 1] }}
-                  transition={{ duration: 0.3, repeat: 3 }}
-                  className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-2 pointer-events-none"
                 >
-                  TRACK LIMITS
+                  {showBlackWhiteFlag && (
+                    <img
+                      src={trackLimitsFlag}
+                      alt="Black and White Flag"
+                      className="h-8 w-12 object-cover rounded"
+                    />
+                  )}
+                  <motion.div
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 0.3, repeat: 3 }}
+                    className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                  >
+                    TRACK LIMITS
+                  </motion.div>
                 </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              )}
+            </AnimatePresence>
+          )}
 
           {/* Timer on top with weather indicator for realism random */}
           <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
@@ -3607,10 +3609,39 @@ export default function Game() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Sectors view: TRACK LIMITS sits between answer and grid (not over timer) */}
+          {state.raceMapView === 'sectors' && (
+            <AnimatePresence>
+              {showPenalty && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center justify-center gap-2 pointer-events-none mt-1"
+                >
+                  {showBlackWhiteFlag && (
+                    <img
+                      src={trackLimitsFlag}
+                      alt="Black and White Flag"
+                      className="h-8 w-12 object-cover rounded"
+                    />
+                  )}
+                  <motion.div
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 0.3, repeat: 3 }}
+                    className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                  >
+                    TRACK LIMITS
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
 
-        {/* Progress — track layout or classic sector squares (Garage preference) */}
-        {state.raceMapView === 'track' ? (
+        {/* Progress — track layout only here; sector squares sit above keypad */}
+        {state.raceMapView === 'track' && (
           <div className="my-2 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
             <LiveCircuitMap
               circuit={selectedCircuit}
@@ -3628,27 +3659,31 @@ export default function Game() {
               hideFooter
             />
           </div>
-        ) : (
-          <SectorProgressGrid
-            progress={progress}
-            raceLength={raceLength}
-            sectorResults={lapResults}
-            rivalProgress={botProgress}
-            rivalSectorResults={botLapResults}
-            showRival={raceMode === 'bot' && !isPracticeMode}
-            currentSectorRed={currentSectorRed}
-            layout={
-              effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual'
-            }
-            labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
-            labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
-            rivalLabel="BOT"
-          />
         )}
 
         </div>
         {/* Large Keypad with integrated Power-ups row */}
         <div className="landscape-right flex-1 flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11">
+          {/* Sectors view: grid sits just above power-ups / numpad */}
+          {state.raceMapView === 'sectors' && (
+            <SectorProgressGrid
+              className="my-0 mb-1"
+              progress={progress}
+              raceLength={raceLength}
+              sectorResults={lapResults}
+              rivalProgress={botProgress}
+              rivalSectorResults={botLapResults}
+              showRival={raceMode === 'bot' && !isPracticeMode}
+              currentSectorRed={currentSectorRed}
+              layout={
+                effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual'
+              }
+              labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
+              labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+              rivalLabel="BOT"
+            />
+          )}
+
           {/* Status Messages - floating above keypad */}
           {((raceMode === 'bot' && state.powerUpsEnabled) || (isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
             <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">

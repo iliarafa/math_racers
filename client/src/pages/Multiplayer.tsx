@@ -1849,34 +1849,36 @@ export default function Multiplayer() {
 
           {/* Main content - compact header zone */}
           <div className="flex flex-col items-center px-4 pt-0">
-            {/* Track Limits Warning */}
-            <div className="h-12 flex items-center justify-center">
-              <AnimatePresence>
-                {showPenalty && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center gap-2"
-                  >
-                    {showBlackWhiteFlag && (
-                      <img
-                        src={trackLimitsFlag}
-                        alt="Black and White Flag"
-                        className="h-8 w-12 object-cover rounded"
-                      />
-                    )}
+            {/* Track Limits Warning — track view keeps reserved slot above timer */}
+            {state.raceMapView === 'track' && (
+              <div className="h-12 flex items-center justify-center">
+                <AnimatePresence>
+                  {showPenalty && (
                     <motion.div
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ duration: 0.3, repeat: 3 }}
-                      className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center gap-2"
                     >
-                      TRACK LIMITS
+                      {showBlackWhiteFlag && (
+                        <img
+                          src={trackLimitsFlag}
+                          alt="Black and White Flag"
+                          className="h-8 w-12 object-cover rounded"
+                        />
+                      )}
+                      <motion.div
+                        animate={{ opacity: [1, 0.3, 1] }}
+                        transition={{ duration: 0.3, repeat: 3 }}
+                        className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                      >
+                        TRACK LIMITS
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* Timer */}
             <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
@@ -1940,10 +1942,39 @@ export default function Multiplayer() {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Sectors view: TRACK LIMITS between answer and grid */}
+            {state.raceMapView === 'sectors' && (
+              <AnimatePresence>
+                {showPenalty && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center justify-center gap-2 pointer-events-none mt-1"
+                  >
+                    {showBlackWhiteFlag && (
+                      <img
+                        src={trackLimitsFlag}
+                        alt="Black and White Flag"
+                        className="h-8 w-12 object-cover rounded"
+                      />
+                    )}
+                    <motion.div
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 0.3, repeat: 3 }}
+                      className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                    >
+                      TRACK LIMITS
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
           </div>
 
-          {/* Progress — track layout or classic sector squares (Garage preference) */}
-          {state.raceMapView === 'track' ? (
+          {/* Progress — track layout only here; sector squares sit above keypad */}
+          {state.raceMapView === 'track' && (
             <div className="px-4 my-1">
               <LiveCircuitMap
                 circuit={selectedCircuit}
@@ -1966,27 +1997,31 @@ export default function Multiplayer() {
                 labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
               />
             </div>
-          ) : (
-            <SectorProgressGrid
-              progress={progress}
-              raceLength={raceLength}
-              sectorResults={lapResults}
-              rivalProgress={opponentProgress}
-              rivalSectorResults={opponentSectorColors.map((c) => ({
-                sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
-                  ? c
-                  : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
-              }))}
-              showRival
-              layout="dual"
-              labelRight={`Limits: ${mistakes}`}
-              labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
-              rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
-            />
           )}
 
           {/* Keypad with integrated Power-ups row */}
           <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
+            {/* Sectors view: grid sits just above power-ups / numpad */}
+            {state.raceMapView === 'sectors' && (
+              <SectorProgressGrid
+                className="my-0 mb-1"
+                progress={progress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalProgress={opponentProgress}
+                rivalSectorResults={opponentSectorColors.map((c) => ({
+                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                    ? c
+                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+                }))}
+                showRival
+                layout="dual"
+                labelRight={`Limits: ${mistakes}`}
+                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+              />
+            )}
+
             {/* Status Messages - floating above keypad */}
             {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
               <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">

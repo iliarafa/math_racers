@@ -19,6 +19,7 @@ interface SectorProgressGridProps {
   labelRight: string;
   labelRightClassName?: string;
   rivalLabel?: string;
+  className?: string;
 }
 
 function cellClass(
@@ -55,13 +56,18 @@ export function SectorProgressGrid({
   labelRight,
   labelRightClassName,
   rivalLabel = 'BOT',
+  className,
 }: SectorProgressGridProps) {
   const cols = raceLength >= 40 ? 20 : layout === 'dual' ? 20 : 10;
+  const rootClass = cn(
+    'flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4',
+    className
+  );
 
   if (layout === 'single' || !showRival) {
     return (
       <div
-        className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4"
+        className={rootClass}
         data-testid="sector-progress-grid"
       >
         <div
@@ -90,7 +96,7 @@ export function SectorProgressGrid({
 
   return (
     <div
-      className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4"
+      className={rootClass}
       data-testid="sector-progress-grid"
     >
       <div className="flex flex-col gap-1.5">
