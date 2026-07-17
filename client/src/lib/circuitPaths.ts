@@ -41,19 +41,34 @@ type PathJsonEntry = {
   w: number;
   h: number;
   d: string;
+  points?: number;
 };
 
 const PATH_JSON = circuitPathData as Record<string, PathJsonEntry>;
 
-/** Smoothed cubic path `d` per circuit id (polylines only). */
-const SMOOTHED_D_CACHE = new Map<string, string>();
+/** Dense medial polylines are already accurate — do not Catmull-Rom reshape them. */
+const DENSE_PATH_MIN_POINTS = 80;
 
-function getSmoothedPathD(id: string, rawD: string): string {
-  const cached = SMOOTHED_D_CACHE.get(id);
+/** Resolved path `d` per circuit id. */
+const PATH_D_CACHE = new Map<string, string>();
+
+function countPolylinePoints(d: string): number {
+  const pairs = d.match(/-?\d*\.?\d+(?:e[-+]?\d+)?\s+-?\d*\.?\d+(?:e[-+]?\d+)?/gi);
+  return pairs?.length ?? 0;
+}
+
+function getResolvedPathD(id: string, entry: PathJsonEntry): string {
+  const cached = PATH_D_CACHE.get(id);
   if (cached) return cached;
-  const smoothed = smoothClosedPolylineToCubic(rawD);
-  SMOOTHED_D_CACHE.set(id, smoothed);
-  return smoothed;
+
+  const pointCount = entry.points ?? countPolylinePoints(entry.d);
+  const resolved =
+    pointCount >= DENSE_PATH_MIN_POINTS
+      ? entry.d
+      : smoothClosedPolylineToCubic(entry.d);
+
+  PATH_D_CACHE.set(id, resolved);
+  return resolved;
 }
 
 export function getCircuitMapMeta(
@@ -61,15 +76,15 @@ export function getCircuitMapMeta(
 ): CircuitMapMeta {
   const id = circuit?.id ?? '';
   const entry = PATH_JSON[id];
-  const image = CIRCUIT_IMAGES[id];
+  const image = CIRCUIT_IMAGES[id] ?? '';
 
   if (entry && image) {
-    return { w: entry.w, h: entry.h, d: getSmoothedPathD(id, entry.d), image };
+    return { w: entry.w, h: entry.h, d: getResolvedPathD(id, entry), image };
   }
 
   // Fallback: try path JSON without art, or oval
   if (entry) {
-    return { w: entry.w, h: entry.h, d: getSmoothedPathD(id, entry.d), image: '' };
+    return { w: entry.w, h: entry.h, d: getResolvedPathD(id, entry), image: '' };
   }
 
   return { w: 320, h: 160, d: FALLBACK_CIRCUIT_PATH, image: '' };
@@ -85,7 +100,7 @@ export function getCircuitPathD(
 export function getCircuitPathsForId(circuitId: string): CircuitPaths {
   const entry = PATH_JSON[circuitId];
   if (entry?.d) {
-    return { s1: getSmoothedPathD(circuitId, entry.d), s2: '', s3: '' };
+    return { s1: getResolvedPathD(circuitId, entry), s2: '', s3: '' };
   }
   return { s1: FALLBACK_CIRCUIT_PATH, s2: '', s3: '' };
 }

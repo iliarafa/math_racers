@@ -47,8 +47,8 @@ interface LiveCircuitMapProps {
 }
 
 const CAR_MOVE_MS = 340;
-/** Inset from outer contour toward track center (viewBox units). */
-const CENTERLINE_INSET = 5.5;
+/** Path is a medial centerline — no extra inward offset. */
+const CENTERLINE_INSET = 0;
 
 /**
  * Sectors per tour of the circuit silhouette. Uses the largest S ≤ RACE_LENGTH
@@ -425,15 +425,27 @@ export function LiveCircuitMap({
           role="img"
           aria-label={`${circuitName} live map`}
         >
-          {/* Black track from same path as sectors — guarantees alignment */}
-          <path
-            d={meta.d}
-            fill="none"
-            stroke="#111111"
-            strokeWidth={isResults ? 12 : 10}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          {/* Option A: black track = provided silhouette PNG (pixel-perfect). */}
+          {meta.image ? (
+            <image
+              href={meta.image}
+              x={0}
+              y={0}
+              width={meta.w}
+              height={meta.h}
+              preserveAspectRatio="none"
+              data-testid="circuit-map-track-art"
+            />
+          ) : (
+            <path
+              d={meta.d}
+              fill="none"
+              stroke="#111111"
+              strokeWidth={isResults ? 12 : 10}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          )}
 
           {/* Measure path for car / sector math */}
           <path ref={measureRef} d={meta.d} fill="none" stroke="transparent" strokeWidth={1} />
