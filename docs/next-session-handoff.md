@@ -1,11 +1,10 @@
 # Next Session Handoff
 
 **Branch:** `feature/live-circuit-map` (not merged to `main`)  
-**Tip:** see latest commit on this branch after pull  
 **App version:** `1.3.9` in `package.json` (local `ios/.../project.pbxproj` may show `1.3.10` marketing version — uncommitted / unrelated unless you intend a release bump)  
 **Current GP:** Round 10 / Spa (Belgium) — `client/src/lib/currentGrandPrix.ts`  
-**Last updated:** 2026-07-16  
-**Status:** Live Circuit Map HUD is implemented and play-tested on phone. Branch is ahead of `main` by the live-map commits; ready for polish / PR when user asks.
+**Last updated:** 2026-07-16 (late evening)  
+**Status:** Spa centerline apex polish **done** (top crest, bottom dip, right tip). Ready for PR/merge when you want.
 
 ---
 
@@ -13,7 +12,6 @@
 
 ```bash
 git checkout feature/live-circuit-map
-git status
 npm run dev -- --port 8081
 ```
 
@@ -21,14 +19,27 @@ Open **`http://127.0.0.1:8081`** (prefer over `localhost` — server listens IPv
 
 **iOS:** after web changes, `npm run build && npx cap sync ios`, then rebuild/run in Xcode/simulator.
 
-### First order of business (do this first)
+### First order of business
 
-Ask the user what they want next. Sensible defaults from this branch:
+1. **PR / merge** `feature/live-circuit-map` → `main` (if HUD + Spa path feel done)
+2. **Multiplayer track HUD parity** — MP still uses under-map footer; Game race HUD uses Lap|Level|Limits above keypad
+3. Otherwise pick from **Next optional** below
 
-1. **PR / merge** `feature/live-circuit-map` → `main` (if HUD feels done)
-2. **Trace map paths** for Canada / Miami / Barcelona / Austria (today they use the fallback oval in `LiveCircuitMap`)
-3. **Multiplayer track HUD parity** — MP still uses under-map footer; Game race HUD uses Lap|Level|Limits above keypad
-4. Otherwise pick from **Next optional** below (Lane Racer / weekend / etc.)
+QA Spa path: **http://127.0.0.1:8081/dev/circuit-maps** — zoom Spa “PNG + centerline”.
+
+### Spa centerline polish (just finished)
+
+Root cause for tip spikes: DT ridge lies when the silhouette kisses the PNG edge. Fix in `script/extractCircuitCenterline.ts`:
+
+- `roundSharpApex` — top/bottom via **geometric band midpoints** + smooth / short circular tip
+- `roundSharpSideApex` — right tip via **per-row** geom mids + smooth
+- Always regenerate from committed seed: `git checkout HEAD -- client/src/lib/circuitPathData.json && npx tsx script/extractCircuitCenterline.ts spa`
+
+Also kept: Catmull-Rom on dense paths (`circuitPaths.ts`), `geometricPrecision` on QA overlay.
+
+`ios/.../project.pbxproj` `1.3.10` bump remains **unstaged** on purpose.
+
+Do NOT retry tracing Canada / Miami / Barcelona / Austria — attempted earlier, wrong shapes, user reverted. Keep fallback oval.
 
 Do not invent new map UX or reopen locked difficulty decisions without asking.
 
@@ -43,6 +54,7 @@ Do not invent new map UX or reopen locked difficulty decisions without asking.
 | Lap wrapping | Map tours cap at `RACE_LENGTH` (20); FP 100 Q = multiple tours |
 | Phone HUD polish | No map legend; no FREE PRACTICE pill; TRACK LIMITS overlays (no reserved `h-12`); Lap\|Level\|Limits row above keypad aligned to AERO / energy / OT columns |
 | Crop fix | HUD stage has **no `max-h`** (phone `max-h-40` was cropping Spa/Suzuka); SVG `viewPad = 14`; `overflow-visible` |
+| Spa apex polish | Centered/smoothed top crest, bottom dip, and right tip on the centerline |
 
 ### Key files
 
@@ -57,6 +69,7 @@ Do not invent new map UX or reopen locked difficulty decisions without asking.
 | `client/src/pages/Garage.tsx` | Track ↔ Sectors toggle |
 | `client/src/pages/DevCircuitMaps.tsx` | QA page at `/dev/circuit-maps` (phone-width all circuits) |
 | `client/src/App.tsx` | Route `/dev/circuit-maps` |
+| `script/extractCircuitCenterline.ts` | Medial extract + Spa apex rounding |
 
 ### Circuit map coverage (verified 2026-07-16)
 
@@ -88,9 +101,10 @@ Carry forward from prior handoff — do not reopen without asking:
 
 **This branch**
 1. Open PR / merge live circuit map  
-2. Trace real paths + black art for Canada / Miami / Barcelona / Austria  
-3. Align Multiplayer status chrome with Game (Lap\|Limits above keypad)  
-4. Remove or gate `/dev/circuit-maps` before App Store if you do not want it in production  
+2. Align Multiplayer status chrome with Game (Lap\|Limits above keypad)  
+3. Remove or gate `/dev/circuit-maps` before App Store if you do not want it in production  
+
+(~~Trace Canada / Miami / Barcelona / Austria~~ — attempted 2026-07-16, traced shapes were wrong, user reverted and descoped. They keep the fallback oval. Don't retry without being asked.)
 
 **Broader backlog**
 1. Play-test kid ladder + Lane Racer 1:2:3:4 speeds  
@@ -107,4 +121,4 @@ Carry forward from prior handoff — do not reopen without asking:
 
 ## Note for the next agent
 
-You are on **`feature/live-circuit-map`**, not `main`. Live map is the active feature; phone HUD crop was fixed by removing HUD `max-h`. Prefer `http://127.0.0.1:8081`. For iOS verification: `npm run build && npx cap sync ios`. Ask before merging or tracing the four fallback GP circuits.
+You are on **`feature/live-circuit-map`**, not `main`. Spa apex polish is done; next is PR/merge or MP HUD parity. Prefer `http://127.0.0.1:8081`. QA: `/dev/circuit-maps`. For iOS: `npm run build && npx cap sync ios`. Ask before merging. Do not retrace the four fallback GP circuits.

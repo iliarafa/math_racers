@@ -69,6 +69,7 @@ export default function DevCircuitMaps() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       opacity={0.85}
+                      style={{ shapeRendering: 'geometricPrecision' }}
                     />
                   </svg>
                   <div className="absolute bottom-1 left-1 text-[10px] bg-white/80 px-1 text-black/70">

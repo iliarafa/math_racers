@@ -46,26 +46,16 @@ type PathJsonEntry = {
 
 const PATH_JSON = circuitPathData as Record<string, PathJsonEntry>;
 
-/** Dense medial polylines are already accurate — do not Catmull-Rom reshape them. */
-const DENSE_PATH_MIN_POINTS = 80;
-
 /** Resolved path `d` per circuit id. */
 const PATH_D_CACHE = new Map<string, string>();
-
-function countPolylinePoints(d: string): number {
-  const pairs = d.match(/-?\d*\.?\d+(?:e[-+]?\d+)?\s+-?\d*\.?\d+(?:e[-+]?\d+)?/gi);
-  return pairs?.length ?? 0;
-}
 
 function getResolvedPathD(id: string, entry: PathJsonEntry): string {
   const cached = PATH_D_CACHE.get(id);
   if (cached) return cached;
 
-  const pointCount = entry.points ?? countPolylinePoints(entry.d);
-  const resolved =
-    pointCount >= DENSE_PATH_MIN_POINTS
-      ? entry.d
-      : smoothClosedPolylineToCubic(entry.d);
+  // Catmull-Rom on dense medial samples stays faithful (unlike sparse ~50pt paths)
+  // and removes L-segment staircasing in the overlay / sector strokes.
+  const resolved = smoothClosedPolylineToCubic(entry.d);
 
   PATH_D_CACHE.set(id, resolved);
   return resolved;
