@@ -1658,7 +1658,7 @@ export default function Multiplayer() {
             </div>
 
             {/* Map: Track | Map | Sectors */}
-            <div className="pt-2 border-t border-gray-300 mb-2">
+            <div className="pt-2 mb-2">
               <SetupChoiceRow
                 variant="light"
                 label="Map"
@@ -1672,7 +1672,7 @@ export default function Multiplayer() {
             </div>
 
             {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-            <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+            <div className="flex justify-center gap-4 pt-2">
               <button
                 onClick={() => setSelectedWeather('dry')}
                 className={cn(
@@ -1715,7 +1715,7 @@ export default function Multiplayer() {
             </div>
 
             {/* Operation Toggle — soft fill + type weight (no outline rings) */}
-            <div className="flex justify-center gap-2 pt-2 mt-2 border-t border-gray-300 flex-wrap">
+            <div className="flex justify-center gap-2 pt-2 mt-2 flex-wrap">
               {OPERATION_OPTIONS.map(op => (
                 <button
                   key={op.type}

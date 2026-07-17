@@ -2368,7 +2368,7 @@ export default function Game() {
                 </div>
 
                 {/* Difficulty: Adaptive | Difficulty | Locked */}
-                <div className="pt-2 border-t border-white/20 mb-2">
+                <div className="pt-2 mb-2">
                   <SetupChoiceRow
                     label="Difficulty"
                     left={{ id: 'adaptive', text: 'Adaptive' }}
@@ -2422,7 +2422,7 @@ export default function Game() {
                 </div>
 
                 {/* Map: Track | Map | Sectors */}
-                <div className="pt-2 border-t border-white/20 mb-2">
+                <div className="pt-2 mb-2">
                   <SetupChoiceRow
                     label="Map"
                     left={{ id: 'track', text: 'Track' }}
@@ -2438,7 +2438,7 @@ export default function Game() {
                 </div>
 
                 {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-                <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
+                <div className="flex justify-center gap-4 pt-2">
                   <button
                     onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
@@ -2520,7 +2520,7 @@ export default function Game() {
                 </div>
 
                 {/* Map: Track | Map | Sectors */}
-                <div className="pt-2 border-t border-white/20 mb-2">
+                <div className="pt-2 mb-2">
                   <SetupChoiceRow
                     label="Map"
                     left={{ id: 'track', text: 'Track' }}
@@ -2536,7 +2536,7 @@ export default function Game() {
                 </div>
 
                 {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-                <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
+                <div className="flex justify-center gap-4 pt-2">
                   <button
                     onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
