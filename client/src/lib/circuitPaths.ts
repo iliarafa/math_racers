@@ -1,5 +1,6 @@
 import type { Circuit, CircuitPaths } from '@/lib/gameLogic';
 import circuitPathData from '@/lib/circuitPathData.json';
+import { smoothClosedPolylineToCubic } from '@/lib/smoothCircuitPath';
 
 import circuitSpaBlack from '@/assets/circuit_spa_black.png';
 import circuitMonzaBlack from '@/assets/circuit_monza_black.png';
@@ -44,6 +45,17 @@ type PathJsonEntry = {
 
 const PATH_JSON = circuitPathData as Record<string, PathJsonEntry>;
 
+/** Smoothed cubic path `d` per circuit id (polylines only). */
+const SMOOTHED_D_CACHE = new Map<string, string>();
+
+function getSmoothedPathD(id: string, rawD: string): string {
+  const cached = SMOOTHED_D_CACHE.get(id);
+  if (cached) return cached;
+  const smoothed = smoothClosedPolylineToCubic(rawD);
+  SMOOTHED_D_CACHE.set(id, smoothed);
+  return smoothed;
+}
+
 export function getCircuitMapMeta(
   circuit: Circuit | { id: string; paths?: CircuitPaths } | null | undefined
 ): CircuitMapMeta {
@@ -52,12 +64,12 @@ export function getCircuitMapMeta(
   const image = CIRCUIT_IMAGES[id];
 
   if (entry && image) {
-    return { w: entry.w, h: entry.h, d: entry.d, image };
+    return { w: entry.w, h: entry.h, d: getSmoothedPathD(id, entry.d), image };
   }
 
   // Fallback: try path JSON without art, or oval
   if (entry) {
-    return { w: entry.w, h: entry.h, d: entry.d, image: '' };
+    return { w: entry.w, h: entry.h, d: getSmoothedPathD(id, entry.d), image: '' };
   }
 
   return { w: 320, h: 160, d: FALLBACK_CIRCUIT_PATH, image: '' };
@@ -73,7 +85,7 @@ export function getCircuitPathD(
 export function getCircuitPathsForId(circuitId: string): CircuitPaths {
   const entry = PATH_JSON[circuitId];
   if (entry?.d) {
-    return { s1: entry.d, s2: '', s3: '' };
+    return { s1: getSmoothedPathD(circuitId, entry.d), s2: '', s3: '' };
   }
   return { s1: FALLBACK_CIRCUIT_PATH, s2: '', s3: '' };
 }

@@ -59,13 +59,13 @@ export function getMapLapLength(raceLength: number): number {
   return Math.min(Math.max(1, raceLength), RACE_LENGTH);
 }
 
-/** Lap / progress label used under the map or beside the keypad level row. */
+/** Lap label used under the map or beside the keypad level row. */
 export function formatMapLapLabel(progress: number, raceLength: number): string {
   const { circuitLap, totalCircuitLaps } = getMapLapState(progress, raceLength);
   if (totalCircuitLaps > 1) {
-    return `Lap ${circuitLap}/${totalCircuitLaps} · ${Math.min(progress + 1, raceLength)}/${raceLength}`;
+    return `Lap ${circuitLap}`;
   }
-  return `Lap ${Math.min(progress + 1, raceLength)}/${raceLength}`;
+  return `Lap ${Math.min(progress + 1, raceLength)}`;
 }
 
 type MapLapState = {
@@ -368,16 +368,25 @@ export function LiveCircuitMap({
       data-testid="live-circuit-map"
     >
       {/*
-        HUD: no max-height — at phone width, max-h-40 was shorter than natural
-        aspect height for Spa/Suzuka/etc and cropped the top-right. Width +
-        aspect-ratio alone keeps the full silhouette. Results keep a soft cap.
+        HUD: max-h-40 budget (previous phone size). Width is contain-fit so
+        tall circuits (Spa/Suzuka) shrink horizontally instead of cropping.
+        Results keep a soft max-h-52 cap.
       */}
       <div
         className={cn(
-          'relative w-full rounded-lg overflow-visible bg-transparent',
-          isResults && 'max-h-52 border border-black/10'
+          'relative mx-auto rounded-lg overflow-visible bg-transparent',
+          isResults
+            ? 'w-full max-h-52 border border-black/10'
+            : 'max-h-40 sm:max-h-44 max-w-full [--map-max-h:10rem] sm:[--map-max-h:11rem]'
         )}
-        style={{ aspectRatio: `${meta.w} / ${meta.h}` }}
+        style={{
+          aspectRatio: `${meta.w} / ${meta.h}`,
+          ...(isResults
+            ? {}
+            : {
+                width: `min(100%, calc(var(--map-max-h) * ${meta.w} / ${meta.h}))`,
+              }),
+        }}
       >
         {/* Power-up feedback stays on the car marker (pulse) — no full-bleed yellow/cyan box flares */}
         {isWet && (
