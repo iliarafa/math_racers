@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { LiveCircuitMap } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
+import { SetupChoiceRow } from "@/components/SetupChoiceRow";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, parseDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -146,7 +147,7 @@ const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
 const KARTING_DRIVER = DRIVERS.find(d => d.id === 'karting') ?? DRIVERS[0];
 
 export default function Multiplayer() {
-  const { state, addCoins, addCareerPoints } = useGameState();
+  const { state, addCoins, addCareerPoints, setRaceMapView } = useGameState();
   const { isPremium, isLoading } = usePurchase();
   const [, setLocation] = useLocation();
   
@@ -1653,6 +1654,20 @@ export default function Multiplayer() {
               >
                 {displayCircuit.type}
               </div>
+            </div>
+
+            {/* Map: Track | Map | Sectors */}
+            <div className="pt-2 border-t border-gray-300 mb-2">
+              <SetupChoiceRow
+                variant="light"
+                label="Map"
+                left={{ id: 'track', text: 'Track' }}
+                right={{ id: 'sectors', text: 'Sectors' }}
+                value={state.raceMapView}
+                onChange={(id) => setRaceMapView(id as 'track' | 'sectors')}
+                leftTestId="button-race-map-view-track"
+                rightTestId="button-race-map-view-sectors"
+              />
             </div>
 
             {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}

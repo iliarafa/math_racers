@@ -2,14 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useGameState } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
-import { TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy, ClipboardList, RotateCcw, ChevronLeft, Map, LayoutGrid } from "lucide-react";
+import { TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy, ClipboardList, RotateCcw, ChevronLeft } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { isNativePlatform } from "@/lib/purchases";
 import garageSound from "@/assets/garsound.m4a";
 import garageBackground from "@assets/garage_background.mp4";
 
 export default function Garage() {
-  const { state, toggleSound, toggleSimMode, togglePowerUps, toggleRaceMapView, resetAllData } = useGameState();
+  const { state, toggleSound, toggleSimMode, togglePowerUps, resetAllData } = useGameState();
   const { isPremium, restore } = usePurchase();
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -100,20 +100,6 @@ export default function Garage() {
               >
                 <Zap className={cn("w-10 h-10", state.powerUpsEnabled ? "text-green-500" : "text-white")} />
                 <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Power-Ups</span>
-              </div>
-              <div
-                onClick={toggleRaceMapView}
-                className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
-                data-testid="button-race-map-view"
-              >
-                {state.raceMapView === 'track' ? (
-                  <Map className="w-10 h-10 text-green-500" />
-                ) : (
-                  <LayoutGrid className="w-10 h-10 text-green-500" />
-                )}
-                <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">
-                  {state.raceMapView === 'track' ? 'Track' : 'Sectors'}
-                </span>
               </div>
               <Link href="/reaction">
                 <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-reflex-training">

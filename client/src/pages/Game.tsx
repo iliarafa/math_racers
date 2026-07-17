@@ -6,6 +6,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { LiveCircuitMap, formatMapLapLabel } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
+import { SetupChoiceRow } from "@/components/SetupChoiceRow";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
@@ -601,7 +602,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime, setPlayerName } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView } = useGameState();
   const { isPremium } = usePurchase();
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
@@ -2366,53 +2367,27 @@ export default function Game() {
                   />
                 </div>
 
-                {/* Operation — static display */}
-                <div className="text-center mb-2 md:mb-4">
-                  <div className="text-sm uppercase tracking-wider mb-1 text-white/50">Math Type</div>
-                  <div
-                    className="text-lg font-bold uppercase text-white"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    {selectedOperation}
-                  </div>
-                </div>
-
-                {/* Difficulty: Adaptive (default) or Locked level */}
+                {/* Difficulty: Adaptive | Difficulty | Locked */}
                 <div className="pt-2 border-t border-white/20 mb-2">
-                  <div className="text-sm uppercase tracking-wider mb-2 text-white/50 text-center">Difficulty</div>
-                  <div className="flex justify-center gap-2 mb-2">
-                    {([
-                      ['adaptive', 'Adaptive'],
-                      ['locked', 'Locked'],
-                    ] as const).map(([mode, label]) => {
-                      const active = difficultyMode === mode;
-                      return (
-                        <button
-                          key={mode}
-                          type="button"
-                          onClick={() => {
-                            setDifficultyMode(mode);
-                            saveDifficultyPrefs(mode, lockedDifficulty);
-                            if (state.soundEnabled) playCarouselClick();
-                          }}
-                          className="px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all"
-                          style={{
-                            fontFamily: 'Oxanium, sans-serif',
-                            color: active ? DIFFICULTY_MODE_COLORS[mode] : SETUP_INACTIVE_TEXT,
-                            background: 'transparent',
-                            opacity: active ? 1 : 0.45,
-                          }}
-                          data-testid={`button-difficulty-${mode}`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <SetupChoiceRow
+                    label="Difficulty"
+                    left={{ id: 'adaptive', text: 'Adaptive' }}
+                    right={{ id: 'locked', text: 'Locked' }}
+                    value={difficultyMode}
+                    activeColors={{ ...DIFFICULTY_MODE_COLORS }}
+                    onChange={(id) => {
+                      const mode = id as DifficultyMode;
+                      setDifficultyMode(mode);
+                      saveDifficultyPrefs(mode, lockedDifficulty);
+                      if (state.soundEnabled) playCarouselClick();
+                    }}
+                    leftTestId="button-difficulty-adaptive"
+                    rightTestId="button-difficulty-locked"
+                  />
                   {/* Always render so weather/CTA below don't jump when switching modes */}
                   <div
                     className={cn(
-                      "flex justify-center flex-wrap gap-2",
+                      "flex justify-center flex-wrap gap-2 mt-2",
                       difficultyMode !== 'locked' && "invisible pointer-events-none"
                     )}
                     aria-hidden={difficultyMode !== 'locked'}
@@ -2443,6 +2418,22 @@ export default function Game() {
                       );
                     })}
                   </div>
+                </div>
+
+                {/* Map: Track | Map | Sectors */}
+                <div className="pt-2 border-t border-white/20 mb-2">
+                  <SetupChoiceRow
+                    label="Map"
+                    left={{ id: 'track', text: 'Track' }}
+                    right={{ id: 'sectors', text: 'Sectors' }}
+                    value={state.raceMapView}
+                    onChange={(id) => {
+                      setRaceMapView(id as 'track' | 'sectors');
+                      if (state.soundEnabled) playCarouselClick();
+                    }}
+                    leftTestId="button-race-map-view-track"
+                    rightTestId="button-race-map-view-sectors"
+                  />
                 </div>
 
                 {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
@@ -2527,15 +2518,20 @@ export default function Game() {
                   />
                 </div>
 
-                {/* Operation — static display (chosen on operation_select screen) */}
-                <div className="text-center mb-2 md:mb-4">
-                  <div className="text-sm uppercase tracking-wider mb-1 text-white/50">Math Type</div>
-                  <div
-                    className="text-lg font-bold uppercase text-white"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    {selectedOperation}
-                  </div>
+                {/* Map: Track | Map | Sectors */}
+                <div className="pt-2 border-t border-white/20 mb-2">
+                  <SetupChoiceRow
+                    label="Map"
+                    left={{ id: 'track', text: 'Track' }}
+                    right={{ id: 'sectors', text: 'Sectors' }}
+                    value={state.raceMapView}
+                    onChange={(id) => {
+                      setRaceMapView(id as 'track' | 'sectors');
+                      if (state.soundEnabled) playCarouselClick();
+                    }}
+                    leftTestId="button-race-map-view-track"
+                    rightTestId="button-race-map-view-sectors"
+                  />
                 </div>
 
                 {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
