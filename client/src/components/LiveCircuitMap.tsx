@@ -14,6 +14,7 @@ import {
   getCircuitMapMeta,
   type SectorColor,
 } from '@/lib/circuitPaths';
+import { isNativeIPad } from '@/lib/purchases';
 import { cn } from '@/lib/utils';
 
 export type LiveCircuitSector = {
@@ -372,6 +373,7 @@ export function LiveCircuitMap({
   }, [playerLap.sectorOnLap, playerLap.lapStart, sectorResults]);
 
   const isResults = variant === 'results';
+  const nativeIPad = !isResults && isNativeIPad();
   const sectorStroke = isResults ? 10 : 8;
   /** Pad viewBox so thick strokes / car near path edges are not clipped. */
   const viewPad = 14;
@@ -381,20 +383,26 @@ export function LiveCircuitMap({
 
   return (
     <div
-      className={cn('w-full mx-auto', isResults ? 'max-w-md' : 'max-w-md md:max-w-xl', className)}
+      className={cn(
+        'w-full mx-auto',
+        isResults ? 'max-w-md' : nativeIPad ? 'max-w-2xl' : 'max-w-md md:max-w-xl',
+        className
+      )}
       data-testid="live-circuit-map"
     >
       {/*
-        HUD: max-h-40 budget (previous phone size). Width is contain-fit so
-        tall circuits (Spa/Suzuka) shrink horizontally instead of cropping.
-        Results keep a soft max-h-52 cap.
+        HUD: max-h-40 budget (previous phone size). Native iPad gets a taller
+        budget. Width is contain-fit so tall circuits (Spa/Suzuka) shrink
+        horizontally instead of cropping. Results keep a soft max-h-52 cap.
       */}
       <div
         className={cn(
           'relative mx-auto rounded-lg overflow-visible bg-transparent',
           isResults
             ? 'w-full max-h-52 border border-black/10'
-            : 'max-h-40 sm:max-h-44 max-w-full [--map-max-h:10rem] sm:[--map-max-h:11rem]'
+            : nativeIPad
+              ? 'max-h-64 max-w-full [--map-max-h:16rem]'
+              : 'max-h-40 sm:max-h-44 max-w-full [--map-max-h:10rem] sm:[--map-max-h:11rem]'
         )}
         style={{
           aspectRatio: `${meta.w} / ${meta.h}`,

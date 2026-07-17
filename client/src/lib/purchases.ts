@@ -9,6 +9,14 @@ export function isNativePlatform(): boolean {
   return Capacitor.isNativePlatform();
 }
 
+/** Native iPad (not phone, not browser) — short side stays large even in landscape. */
+export function isNativeIPad(): boolean {
+  if (!Capacitor.isNativePlatform()) return false;
+  if (Capacitor.getPlatform() !== 'ios') return false;
+  // iPad mini ~744; phones stay ~430 even when landscape
+  return Math.min(window.screen.width, window.screen.height) >= 700;
+}
+
 export async function initializePurchases(appUserId?: string): Promise<void> {
   console.log('[RC] Platform:', Capacitor.getPlatform(), 'isNative:', isNativePlatform());
   if (!isNativePlatform()) return;
