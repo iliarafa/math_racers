@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
+import { LiveCircuitMap } from "@/components/LiveCircuitMap";
+import { SectorProgressGrid } from "@/components/SectorProgressGrid";
+import { SetupChoiceRow } from "@/components/SetupChoiceRow";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, parseDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -144,7 +147,7 @@ const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
 const KARTING_DRIVER = DRIVERS.find(d => d.id === 'karting') ?? DRIVERS[0];
 
 export default function Multiplayer() {
-  const { state, addCoins, addCareerPoints } = useGameState();
+  const { state, addCoins, addCareerPoints, setRaceMapView } = useGameState();
   const { isPremium, isLoading } = usePurchase();
   const [, setLocation] = useLocation();
   
@@ -1448,21 +1451,22 @@ export default function Multiplayer() {
                     );
                   })}
                 </div>
-                {/* Always render so lobby layout doesn't jump when switching modes */}
+                {/* Always visible (greyed under Adaptive) so lobby rhythm matches Locked */}
                 <div
                   className={cn(
                     "flex justify-center flex-wrap gap-2",
-                    difficultyMode !== 'locked' && "invisible pointer-events-none"
+                    difficultyMode !== 'locked' && "pointer-events-none"
                   )}
                   aria-hidden={difficultyMode !== 'locked'}
                 >
                   {DRIVERS.map((d) => {
-                    const active = lockedDifficulty === d.difficulty;
+                    const interactive = difficultyMode === 'locked';
+                    const active = interactive && lockedDifficulty === d.difficulty;
                     return (
                       <button
                         key={d.id}
                         type="button"
-                        tabIndex={difficultyMode === 'locked' ? 0 : -1}
+                        tabIndex={interactive ? 0 : -1}
                         onClick={() => syncDifficultySettings('locked', d.difficulty)}
                         className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
                         style={{
@@ -1653,8 +1657,22 @@ export default function Multiplayer() {
               </div>
             </div>
 
+            {/* Map: Track | Map | Sectors */}
+            <div className="pt-2 mb-2">
+              <SetupChoiceRow
+                variant="light"
+                label="Map"
+                left={{ id: 'track', text: 'Track' }}
+                right={{ id: 'sectors', text: 'Sectors' }}
+                value={state.raceMapView}
+                onChange={(id) => setRaceMapView(id as 'track' | 'sectors')}
+                leftTestId="button-race-map-view-track"
+                rightTestId="button-race-map-view-sectors"
+              />
+            </div>
+
             {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-            <div className="flex justify-center gap-4 pt-2 border-t border-gray-300">
+            <div className="flex justify-center gap-4 pt-2">
               <button
                 onClick={() => setSelectedWeather('dry')}
                 className={cn(
@@ -1697,7 +1715,7 @@ export default function Multiplayer() {
             </div>
 
             {/* Operation Toggle — soft fill + type weight (no outline rings) */}
-            <div className="flex justify-center gap-2 pt-2 mt-2 border-t border-gray-300 flex-wrap">
+            <div className="flex justify-center gap-2 pt-2 mt-2 flex-wrap">
               {OPERATION_OPTIONS.map(op => (
                 <button
                   key={op.type}
@@ -1847,34 +1865,36 @@ export default function Multiplayer() {
 
           {/* Main content - compact header zone */}
           <div className="flex flex-col items-center px-4 pt-0">
-            {/* Track Limits Warning */}
-            <div className="h-12 flex items-center justify-center">
-              <AnimatePresence>
-                {showPenalty && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center gap-2"
-                  >
-                    {showBlackWhiteFlag && (
-                      <img
-                        src={trackLimitsFlag}
-                        alt="Black and White Flag"
-                        className="h-8 w-12 object-cover rounded"
-                      />
-                    )}
+            {/* Track Limits Warning — track view keeps reserved slot above timer */}
+            {state.raceMapView === 'track' && (
+              <div className="h-12 flex items-center justify-center">
+                <AnimatePresence>
+                  {showPenalty && (
                     <motion.div
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ duration: 0.3, repeat: 3 }}
-                      className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center gap-2"
                     >
-                      TRACK LIMITS
+                      {showBlackWhiteFlag && (
+                        <img
+                          src={trackLimitsFlag}
+                          alt="Black and White Flag"
+                          className="h-8 w-12 object-cover rounded"
+                        />
+                      )}
+                      <motion.div
+                        animate={{ opacity: [1, 0.3, 1] }}
+                        transition={{ duration: 0.3, repeat: 3 }}
+                        className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                      >
+                        TRACK LIMITS
+                      </motion.div>
                     </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* Timer */}
             <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
@@ -1938,100 +1958,86 @@ export default function Multiplayer() {
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Sectors view: TRACK LIMITS between answer and grid */}
+            {state.raceMapView === 'sectors' && (
+              <AnimatePresence>
+                {showPenalty && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center justify-center gap-2 pointer-events-none mt-1"
+                  >
+                    {showBlackWhiteFlag && (
+                      <img
+                        src={trackLimitsFlag}
+                        alt="Black and White Flag"
+                        className="h-8 w-12 object-cover rounded"
+                      />
+                    )}
+                    <motion.div
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 0.3, repeat: 3 }}
+                      className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                    >
+                      TRACK LIMITS
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
           </div>
 
-          {/* Progress Bars */}
-          <div className="flex flex-col justify-center px-4 gap-1">
-            {/* Opponent Progress Bar */}
-            <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden">
-              <div className="absolute inset-0 flex">
-                {Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < opponentProgress;
-                  const oppColor = opponentSectorColors[i];
-                  let segmentColor = "bg-transparent";
-                  if (isCompleted) {
-                    segmentColor = oppColor === 'purple' ? "bg-purple-500/70" :
-                                   oppColor === 'green' ? "bg-green-500/70" :
-                                   oppColor === 'yellow' ? "bg-yellow-500/70" :
-                                   oppColor === 'red' ? "bg-red-500/70" :
-                                   "bg-orange-500/70";
-                  }
-                  return (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                        segmentColor
-                      )}
-                    />
-                  );
-                })}
-              </div>
-              {/* Opponent car indicator */}
-              <motion.div
-                className="absolute top-1/2 -translate-y-1/2 z-10"
-                animate={{ left: `${(opponentProgress / raceLength) * 100}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                style={{ marginLeft: "-10px" }}
-              >
-                <div className="w-5 h-3 bg-red-600 rounded-sm flex items-center justify-center">
-                  <div className="w-3 h-1.5 bg-red-400 rounded-sm" />
-                </div>
-              </motion.div>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 leading-none text-[9px] text-red-400 font-bold">
-                {opponentName ? opponentName.slice(0, 3).toUpperCase() : "OPP"}
-              </span>
+          {/* Progress — track layout only here; sector squares sit above keypad */}
+          {state.raceMapView === 'track' && (
+            <div className="px-4 my-1">
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                rivalProgress={opponentProgress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalSectorResults={opponentSectorColors.map((c) => ({
+                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                    ? c
+                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+                }))}
+                showRival
+                overtakeActive={overtakeActive}
+                aeroActive={aeroActive}
+                isWet={isWetRace}
+                playerLabel={playerName ? playerName.slice(0, 3).toUpperCase() : 'YOU'}
+                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+                labelRight={`Limits: ${mistakes}`}
+                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+              />
             </div>
-
-            {/* Player Progress Bar */}
-            <div className="relative h-7 bg-muted rounded-full overflow-hidden">
-              <div className="absolute inset-0 flex">
-                {Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < progress;
-                  const lapData = lapResults[i];
-
-                  let segmentColor = "bg-transparent";
-                  if (isCompleted && lapData) {
-                    segmentColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
-                                   lapData.sectorColor === 'green' ? "bg-green-500" :
-                                   lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
-                                   lapData.sectorColor === 'red' ? "bg-red-500" : "bg-transparent";
-                  }
-
-                  return (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex-1 border-r border-background/20 last:border-r-0 transition-colors",
-                        segmentColor
-                      )}
-                    />
-                  );
-                })}
-              </div>
-              {/* Player car indicator */}
-              <motion.div
-                className="absolute top-1/2 -translate-y-1/2 z-10"
-                animate={{ left: `${(progress / raceLength) * 100}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                style={{ marginLeft: "-12px" }}
-              >
-                <div className="w-6 h-4 bg-foreground rounded-sm flex items-center justify-center">
-                  <div className="w-4 h-2 bg-primary rounded-sm" />
-                </div>
-              </motion.div>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground font-bold">{playerName ? playerName.slice(0, 3).toUpperCase() : "YOU"}</span>
-            </div>
-
-            {/* Progress text */}
-            <div className="flex justify-between text-[11px] text-muted-foreground mt-0.5 px-1">
-              <span>Lap {progress + 1}/{raceLength}</span>
-              <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
-            </div>
-          </div>
+          )}
 
           {/* Keypad with integrated Power-ups row */}
           <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
+            {/* Sectors view: grid sits just above power-ups / numpad */}
+            {state.raceMapView === 'sectors' && (
+              <SectorProgressGrid
+                className="my-0 mb-1"
+                progress={progress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalProgress={opponentProgress}
+                rivalSectorResults={opponentSectorColors.map((c) => ({
+                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                    ? c
+                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+                }))}
+                showRival
+                layout="dual"
+                labelRight={`Limits: ${mistakes}`}
+                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+              />
+            )}
+
             {/* Status Messages - floating above keypad */}
             {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
               <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
@@ -2253,6 +2259,29 @@ export default function Multiplayer() {
           >
             Difficulty: {difficultyLabel}
           </p>
+
+          {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
+            <div className="w-full max-w-sm md:max-w-lg">
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                rivalProgress={opponentProgress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalSectorResults={opponentSectorColors.map((c) => ({
+                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                    ? c
+                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+                }))}
+                showRival
+                isWet={isWetRace}
+                variant="results"
+                playerLabel={playerName ? playerName.slice(0, 3).toUpperCase() : 'YOU'}
+                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+                labelLeft={`${selectedCircuit.name} · painted lap`}
+              />
+            </div>
+          )}
 
           <div className="bg-secondary rounded-xl p-6 w-full max-w-sm md:max-w-lg">
             <div className="grid grid-cols-3 gap-4 text-center">

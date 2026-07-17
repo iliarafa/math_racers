@@ -24,12 +24,14 @@ import LaneRacer from "@/pages/LaneRacer";
 import GrandPrixInfo from "@/pages/GrandPrixInfo";
 // import DeployHarvest from "@/pages/DeployHarvest"; // archived — re-enable later
 import Hub from "@/pages/Hub";
+import DevCircuitMaps from "@/pages/DevCircuitMaps";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Welcome} />
       <Route path="/hub" component={Hub} />
+      <Route path="/dev/circuit-maps" component={DevCircuitMaps} />
       <Route path="/game" component={Game} />
       <Route path="/garage" component={Garage} />
       <Route path="/strategy" component={StrategyGuide} />

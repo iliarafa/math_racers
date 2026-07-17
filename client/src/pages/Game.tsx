@@ -4,7 +4,10 @@ import confetti from "canvas-confetti";
 import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { TrackProgress } from "@/components/TrackProgress";
+import { LiveCircuitMap, formatMapLapLabel } from "@/components/LiveCircuitMap";
+import { SectorProgressGrid } from "@/components/SectorProgressGrid";
+import { SetupChoiceRow } from "@/components/SetupChoiceRow";
+import { getCircuitPathsForId } from "@/lib/circuitPaths";
 import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -129,7 +132,7 @@ const createGrandPrixCircuit = (op: string): Circuit => ({
   type: op,
   description: 'Grand Prix',
   mapUrl: '',
-  paths: { s1: '', s2: '', s3: '' }
+  paths: getCircuitPathsForId(CURRENT_GRAND_PRIX.circuitId),
 });
 
 const createFreePracticeCircuit = (op: string): Circuit => ({
@@ -138,7 +141,7 @@ const createFreePracticeCircuit = (op: string): Circuit => ({
   type: op,
   description: 'Free Practice',
   mapUrl: '',
-  paths: { s1: '', s2: '', s3: '' }
+  paths: getCircuitPathsForId(CURRENT_GRAND_PRIX.circuitId),
 });
 
 const OPERATION_OPTIONS = [
@@ -599,7 +602,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime, setPlayerName } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView } = useGameState();
   const { isPremium } = usePurchase();
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
@@ -2364,64 +2367,39 @@ export default function Game() {
                   />
                 </div>
 
-                {/* Operation — static display */}
-                <div className="text-center mb-2 md:mb-4">
-                  <div className="text-sm uppercase tracking-wider mb-1 text-white/50">Math Type</div>
-                  <div
-                    className="text-lg font-bold uppercase text-white"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    {selectedOperation}
-                  </div>
-                </div>
-
-                {/* Difficulty: Adaptive (default) or Locked level */}
-                <div className="pt-2 border-t border-white/20 mb-2">
-                  <div className="text-sm uppercase tracking-wider mb-2 text-white/50 text-center">Difficulty</div>
-                  <div className="flex justify-center gap-2 mb-2">
-                    {([
-                      ['adaptive', 'Adaptive'],
-                      ['locked', 'Locked'],
-                    ] as const).map(([mode, label]) => {
-                      const active = difficultyMode === mode;
-                      return (
-                        <button
-                          key={mode}
-                          type="button"
-                          onClick={() => {
-                            setDifficultyMode(mode);
-                            saveDifficultyPrefs(mode, lockedDifficulty);
-                            if (state.soundEnabled) playCarouselClick();
-                          }}
-                          className="px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all"
-                          style={{
-                            fontFamily: 'Oxanium, sans-serif',
-                            color: active ? DIFFICULTY_MODE_COLORS[mode] : SETUP_INACTIVE_TEXT,
-                            background: 'transparent',
-                            opacity: active ? 1 : 0.45,
-                          }}
-                          data-testid={`button-difficulty-${mode}`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Always render so weather/CTA below don't jump when switching modes */}
+                {/* Difficulty: Adaptive | Difficulty | Locked */}
+                <div className="pt-2 mb-2">
+                  <SetupChoiceRow
+                    label="Difficulty"
+                    left={{ id: 'adaptive', text: 'Adaptive' }}
+                    right={{ id: 'locked', text: 'Locked' }}
+                    value={difficultyMode}
+                    activeColors={{ ...DIFFICULTY_MODE_COLORS }}
+                    onChange={(id) => {
+                      const mode = id as DifficultyMode;
+                      setDifficultyMode(mode);
+                      saveDifficultyPrefs(mode, lockedDifficulty);
+                      if (state.soundEnabled) playCarouselClick();
+                    }}
+                    leftTestId="button-difficulty-adaptive"
+                    rightTestId="button-difficulty-locked"
+                  />
+                  {/* Always visible (greyed under Adaptive) so card rhythm matches Locked */}
                   <div
                     className={cn(
-                      "flex justify-center flex-wrap gap-2",
-                      difficultyMode !== 'locked' && "invisible pointer-events-none"
+                      "flex justify-center flex-wrap gap-2 mt-2",
+                      difficultyMode !== 'locked' && "pointer-events-none"
                     )}
                     aria-hidden={difficultyMode !== 'locked'}
                   >
                     {DRIVERS.map((d) => {
-                      const active = lockedDifficulty === d.difficulty;
+                      const interactive = difficultyMode === 'locked';
+                      const active = interactive && lockedDifficulty === d.difficulty;
                       return (
                         <button
                           key={d.id}
                           type="button"
-                          tabIndex={difficultyMode === 'locked' ? 0 : -1}
+                          tabIndex={interactive ? 0 : -1}
                           onClick={() => {
                             setLockedDifficulty(d.difficulty);
                             saveDifficultyPrefs('locked', d.difficulty);
@@ -2443,8 +2421,24 @@ export default function Game() {
                   </div>
                 </div>
 
+                {/* Map: Track | Map | Sectors */}
+                <div className="pt-2 mb-2">
+                  <SetupChoiceRow
+                    label="Map"
+                    left={{ id: 'track', text: 'Track' }}
+                    right={{ id: 'sectors', text: 'Sectors' }}
+                    value={state.raceMapView}
+                    onChange={(id) => {
+                      setRaceMapView(id as 'track' | 'sectors');
+                      if (state.soundEnabled) playCarouselClick();
+                    }}
+                    leftTestId="button-race-map-view-track"
+                    rightTestId="button-race-map-view-sectors"
+                  />
+                </div>
+
                 {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-                <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
+                <div className="flex justify-center gap-4 pt-2">
                   <button
                     onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
@@ -2525,19 +2519,24 @@ export default function Game() {
                   />
                 </div>
 
-                {/* Operation — static display (chosen on operation_select screen) */}
-                <div className="text-center mb-2 md:mb-4">
-                  <div className="text-sm uppercase tracking-wider mb-1 text-white/50">Math Type</div>
-                  <div
-                    className="text-lg font-bold uppercase text-white"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    {selectedOperation}
-                  </div>
+                {/* Map: Track | Map | Sectors */}
+                <div className="pt-2 mb-2">
+                  <SetupChoiceRow
+                    label="Map"
+                    left={{ id: 'track', text: 'Track' }}
+                    right={{ id: 'sectors', text: 'Sectors' }}
+                    value={state.raceMapView}
+                    onChange={(id) => {
+                      setRaceMapView(id as 'track' | 'sectors');
+                      if (state.soundEnabled) playCarouselClick();
+                    }}
+                    leftTestId="button-race-map-view-track"
+                    rightTestId="button-race-map-view-sectors"
+                  />
                 </div>
 
                 {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-                <div className="flex justify-center gap-4 pt-2 border-t border-white/20">
+                <div className="flex justify-center gap-4 pt-2">
                   <button
                     onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
                     className={cn(
@@ -2821,6 +2820,17 @@ export default function Game() {
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Pre-Season Testing</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Testing Complete</div>
             </div>
+            {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                isWet={currentWeather === 'wet'}
+                variant="results"
+                labelLeft={`${selectedCircuit.name} · painted lap`}
+              />
+            )}
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Achieved Level</span>
@@ -3081,6 +3091,22 @@ export default function Game() {
                  </div>
                )}
             </div>
+
+            {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                rivalProgress={botProgress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalSectorResults={raceMode === 'bot' ? botLapResults : undefined}
+                showRival={raceMode === 'bot' && !isPracticeMode}
+                isWet={currentWeather === 'wet'}
+                variant="results"
+                rivalLabel="BOT"
+                labelLeft={`${selectedCircuit.name} · painted lap`}
+              />
+            )}
 
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -3447,52 +3473,52 @@ export default function Game() {
         )}
 
         <div className="landscape-left">
-        {/* Mode badge and controls */}
-        <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
-          <div className="flex items-center gap-2">
-            {isPreSeasonTesting ? (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">FREE PRACTICE</span>
-            ) : isGrandPrix && grandPrixPhase === 'rw_practice' ? (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
-            ) : isGrandPrix && grandPrixPhase === 'rw_qualifying' ? (
-              <span className="text-xs text-white px-2 py-0.5 rounded" style={{ backgroundColor: '#f59e0b' }}>QUALIFYING</span>
-            ) : isGrandPrix && grandPrixPhase === 'rw_race' ? (
-              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE DAY</span>
-            ) : isPracticeMode ? (
-              <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
-            ) : (
-              <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE</span>
-            )}
+        {/* Mode badge and controls — Free Practice skips the green pill to keep HUD lighter */}
+        {!isPreSeasonTesting && (
+          <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
+            <div className="flex items-center gap-2">
+              {isGrandPrix && grandPrixPhase === 'rw_practice' ? (
+                <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
+              ) : isGrandPrix && grandPrixPhase === 'rw_qualifying' ? (
+                <span className="text-xs text-white px-2 py-0.5 rounded" style={{ backgroundColor: '#f59e0b' }}>QUALIFYING</span>
+              ) : isGrandPrix && grandPrixPhase === 'rw_race' ? (
+                <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE DAY</span>
+              ) : isPracticeMode ? (
+                <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
+              ) : (
+                <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE</span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {!isPracticeMode && (
+                <button
+                  onClick={() => setIsPaused(true)}
+                  className="p-1 hover:bg-secondary rounded transition-colors"
+                  data-testid="button-pause"
+                >
+                  <Pause className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {!isPracticeMode && (
-              <button
-                onClick={() => setIsPaused(true)}
-                className="p-1 hover:bg-secondary rounded transition-colors"
-                data-testid="button-pause"
-              >
-                <Pause className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Main content - compact header zone */}
-        <div className={cn("flex flex-col items-center px-4 pt-0", isPreSeasonTesting && "-mt-4")}>
-          {/* Track Limits Warning */}
-          <div className="h-12 flex items-center justify-center">
+        <div className="relative flex flex-col items-center px-4 pt-1">
+          {/* Track Limits Warning — track view: overlay on timer (idle reserves no space) */}
+          {state.raceMapView === 'track' && (
             <AnimatePresence>
               {showPenalty && (
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center gap-2"
+                  className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-2 pointer-events-none"
                 >
                   {showBlackWhiteFlag && (
-                    <img 
-                      src={trackLimitsFlag} 
-                      alt="Black and White Flag" 
+                    <img
+                      src={trackLimitsFlag}
+                      alt="Black and White Flag"
                       className="h-8 w-12 object-cover rounded"
                     />
                   )}
@@ -3506,7 +3532,7 @@ export default function Game() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          )}
 
           {/* Timer on top with weather indicator for realism random */}
           <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
@@ -3580,119 +3606,81 @@ export default function Game() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* Sectors view: TRACK LIMITS sits between answer and grid (not over timer) */}
+          {state.raceMapView === 'sectors' && (
+            <AnimatePresence>
+              {showPenalty && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center justify-center gap-2 pointer-events-none mt-1"
+                >
+                  {showBlackWhiteFlag && (
+                    <img
+                      src={trackLimitsFlag}
+                      alt="Black and White Flag"
+                      className="h-8 w-12 object-cover rounded"
+                    />
+                  )}
+                  <motion.div
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 0.3, repeat: 3 }}
+                    className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                  >
+                    TRACK LIMITS
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
 
-        {/* Progress Bar - between result and keypad */}
-        {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? (
-          /* Sector Grid for all sim/realism mode races */
-          <div className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
-            <div>
-              <div className={`grid gap-[2px]`} style={{ gridTemplateColumns: `repeat(${raceLength >= 40 ? 20 : 10}, 1fr)` }}>
-                {Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < progress;
-                  const isCurrent = i === progress;
-                  const lapData = lapResults[i];
-
-                  let cellColor = "bg-muted";
-                  if (isCompleted && lapData) {
-                    cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
-                                lapData.sectorColor === 'green' ? "bg-green-500" :
-                                lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
-                                lapData.sectorColor === 'red' ? "bg-red-500" : "bg-muted";
-                  } else if (isCurrent) {
-                    cellColor = currentSectorRed ? "bg-red-500 animate-pulse" : "bg-gray-400/50 animate-pulse";
-                  }
-
-                  return (
-                    <div
-                      key={i}
-                      className={cn(
-                        "aspect-square rounded-[2px] transition-colors",
-                        cellColor
-                      )}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-            {/* Progress text */}
-            <div className="flex justify-between text-muted-foreground mt-0.5 px-1 text-xs">
-              <span>Lap {progress + 1}/{raceLength}</span>
-              <span className={cn(mistakes > 0 && "text-red-500")}>Limits: {mistakes}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
-            <div className="flex flex-col gap-1.5">
-              {/* Bot row (only in bot mode) */}
-              {raceMode === 'bot' && (
-                <div>
-                  <span className="text-[9px] text-foreground font-medium uppercase leading-none">BOT</span>
-                  <div className="grid gap-[2px] mt-0.5" style={{ gridTemplateColumns: `repeat(20, 1fr)` }}>
-                    {Array.from({ length: raceLength }).map((_, i) => {
-                      const isCompleted = i < botProgress;
-                      const lapData = botLapResults[i];
-
-                      let cellColor = "bg-muted";
-                      if (isCompleted && lapData) {
-                        cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500/70" :
-                                    lapData.sectorColor === 'green' ? "bg-green-500/70" :
-                                    "bg-yellow-500/70";
-                      }
-
-                      return (
-                        <div
-                          key={`bot-${i}`}
-                          className={cn(
-                            "aspect-square rounded-[2px] transition-colors",
-                            cellColor
-                          )}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {/* Player row */}
-              <div className="grid gap-[2px]" style={{ gridTemplateColumns: `repeat(20, 1fr)` }}>
-                {Array.from({ length: raceLength }).map((_, i) => {
-                  const isCompleted = i < progress;
-                  const isCurrent = i === progress;
-                  const lapData = lapResults[i];
-
-                  let cellColor = "bg-muted";
-                  if (isCompleted && lapData) {
-                    cellColor = lapData.sectorColor === 'purple' ? "bg-purple-500" :
-                                lapData.sectorColor === 'green' ? "bg-green-500" :
-                                lapData.sectorColor === 'yellow' ? "bg-yellow-500" :
-                                lapData.sectorColor === 'red' ? "bg-red-500" : "bg-muted";
-                  } else if (isCurrent) {
-                    cellColor = currentSectorRed ? "bg-red-500 animate-pulse" : "bg-gray-400/50 animate-pulse";
-                  }
-
-                  return (
-                    <div
-                      key={`player-${i}`}
-                      className={cn(
-                        "aspect-square rounded-[2px] transition-colors",
-                        cellColor
-                      )}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-            {/* Progress text */}
-            <div className="flex justify-between text-foreground mt-0.5 px-1 text-[11px]">
-              <span>Lap {progress + 1}/{raceLength}</span>
-              <span className={cn(mistakes > 0 && "text-red-500")}>Warnings: {mistakes}</span>
-            </div>
+        {/* Progress — track layout only here; sector squares sit above keypad */}
+        {state.raceMapView === 'track' && (
+          <div className="my-2 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
+            <LiveCircuitMap
+              circuit={selectedCircuit}
+              progress={progress}
+              rivalProgress={botProgress}
+              raceLength={raceLength}
+              sectorResults={lapResults}
+              rivalSectorResults={raceMode === 'bot' ? botLapResults : undefined}
+              showRival={raceMode === 'bot' && !isPracticeMode}
+              currentSectorRed={currentSectorRed}
+              overtakeActive={overtakeActive}
+              aeroActive={aeroActive}
+              isWet={currentWeather === 'wet'}
+              rivalLabel="BOT"
+              hideFooter
+            />
           </div>
         )}
 
         </div>
         {/* Large Keypad with integrated Power-ups row */}
         <div className="landscape-right flex-1 flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11">
+          {/* Sectors view: grid sits just above power-ups / numpad */}
+          {state.raceMapView === 'sectors' && (
+            <SectorProgressGrid
+              className="my-0 mb-1"
+              progress={progress}
+              raceLength={raceLength}
+              sectorResults={lapResults}
+              rivalProgress={botProgress}
+              rivalSectorResults={botLapResults}
+              showRival={raceMode === 'bot' && !isPracticeMode}
+              currentSectorRed={currentSectorRed}
+              layout={
+                effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual'
+              }
+              labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
+              labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+              rivalLabel="BOT"
+            />
+          )}
+
           {/* Status Messages - floating above keypad */}
           {((raceMode === 'bot' && state.powerUpsEnabled) || (isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
             <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
@@ -3734,11 +3722,34 @@ export default function Game() {
             </div>
           )}
 
-          {/* PST level indicator above keypad */}
-          {isPreSeasonTesting && (
-            <div className="text-xs uppercase tracking-wider text-center mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
-              {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
+          {/* Lap | Level | Limits — same 3-col grid as AERO / energy / OT so each label centers on its button */}
+          {state.raceMapView === 'track' ? (
+            <div className="mb-1 grid w-full max-w-md md:max-w-xl lg:max-w-2xl grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 text-xs text-muted-foreground">
+              <span className="min-w-0 truncate text-center">{formatMapLapLabel(progress, raceLength)}</span>
+              <span
+                className="text-center text-xs uppercase tracking-wider font-bold"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  color:
+                    isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice')
+                      ? (LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e')
+                      : 'transparent',
+                }}
+              >
+                {isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice')
+                  ? (DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting')
+                  : '\u00a0'}
+              </span>
+              <span className={cn('text-center', mistakes > 0 && 'text-red-500')}>
+                {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: {mistakes}
+              </span>
             </div>
+          ) : (
+            isPreSeasonTesting && (
+              <div className="text-xs uppercase tracking-wider text-center mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
+                {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
+              </div>
+            )
           )}
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 w-full max-w-md md:max-w-xl lg:max-w-2xl">

@@ -43,6 +43,9 @@ export interface LapEntry {
   series?: string;  // 'karting' | 'f3' | 'f2' | 'f1' - optional for backwards compatibility
 }
 
+/** Race HUD progress: circuit silhouette vs classic sector squares */
+export type RaceMapView = 'track' | 'sectors';
+
 export interface GameState {
   coins: number;
   unlockedItems: string[];
@@ -56,6 +59,7 @@ export interface GameState {
   soundEnabled: boolean;
   simMode: boolean;
   powerUpsEnabled: boolean;
+  raceMapView: RaceMapView;
   personalBests: { [circuitId: string]: number };
   lapHistory: LapEntry[];
   playerName: string;
@@ -270,11 +274,16 @@ const INITIAL_STATE: GameState = {
   soundEnabled: true,
   simMode: false,
   powerUpsEnabled: true,
+  raceMapView: 'track',
   personalBests: {},
   lapHistory: [],
   playerName: '',
   playerId: '',
 };
+
+function parseRaceMapView(value: unknown): RaceMapView {
+  return value === 'sectors' ? 'sectors' : 'track';
+}
 
 export const SHOP_ITEMS = [
   { id: 'red-livery', name: 'Scuderia Red', type: 'livery', cost: 0, color: 'bg-red-600' },
@@ -324,6 +333,7 @@ export function useGameState() {
           soundEnabled: parsed.soundEnabled ?? true,
           simMode: parsed.simMode ?? false,
           powerUpsEnabled: parsed.powerUpsEnabled ?? true,
+          raceMapView: parseRaceMapView(parsed.raceMapView),
           personalBests: parsed.personalBests ?? {},
           lapHistory: parsed.lapHistory ?? [],
           playerName: parsed.playerName ?? '',
@@ -393,6 +403,17 @@ export function useGameState() {
 
   const togglePowerUps = () => {
     setState(prev => ({ ...prev, powerUpsEnabled: !prev.powerUpsEnabled }));
+  };
+
+  const toggleRaceMapView = () => {
+    setState(prev => ({
+      ...prev,
+      raceMapView: prev.raceMapView === 'track' ? 'sectors' : 'track',
+    }));
+  };
+
+  const setRaceMapView = (raceMapView: RaceMapView) => {
+    setState(prev => ({ ...prev, raceMapView }));
   };
 
   const incrementLaps = () => {
@@ -477,6 +498,8 @@ export function useGameState() {
     toggleSound,
     toggleSimMode,
     togglePowerUps,
+    toggleRaceMapView,
+    setRaceMapView,
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,

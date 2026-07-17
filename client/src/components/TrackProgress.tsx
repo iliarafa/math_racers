@@ -1,43 +1,65 @@
-import { Circuit } from "@/lib/gameLogic";
-import monzaTrackImage from "@assets/IMG_0347_1767829723287.png";
+import type { ReactNode } from 'react';
+import type { Circuit } from '@/lib/gameLogic';
+import { LiveCircuitMap, type LiveCircuitSector } from '@/components/LiveCircuitMap';
 
 interface TrackProgressProps {
   circuit: Circuit;
   progress: number;
   total: number;
   showPenalty?: boolean;
+  rivalProgress?: number;
+  showRival?: boolean;
+  sectorResults?: LiveCircuitSector[];
+  rivalSectorResults?: Array<{ sectorColor: LiveCircuitSector['sectorColor'] }>;
+  currentSectorRed?: boolean;
+  overtakeActive?: boolean;
+  aeroActive?: boolean;
+  isWet?: boolean;
+  labelRight?: ReactNode;
+  labelRightClassName?: string;
+  variant?: 'hud' | 'results';
+  playerLabel?: string;
+  rivalLabel?: string;
 }
 
-export function TrackProgress({ circuit, progress, total, showPenalty = false }: TrackProgressProps) {
+/** Compatibility wrapper — race HUD uses LiveCircuitMap under the hood. */
+export function TrackProgress({
+  circuit,
+  progress,
+  total,
+  showPenalty = false,
+  rivalProgress = 0,
+  showRival = false,
+  sectorResults = [],
+  rivalSectorResults,
+  currentSectorRed = false,
+  overtakeActive = false,
+  aeroActive = false,
+  isWet = false,
+  labelRight,
+  labelRightClassName,
+  variant = 'hud',
+  playerLabel,
+  rivalLabel,
+}: TrackProgressProps) {
   return (
-    <div className="w-full max-w-lg md:max-w-xl mx-auto" data-testid="track-progress">
-      <div
-        id="circuit-visualizer"
-        className="relative mx-auto flex justify-center items-center"
-      >
-        <img
-          src={monzaTrackImage}
-          alt="Monza Circuit"
-          className="w-full max-w-[400px] md:max-w-[500px] h-auto"
-          data-testid="track-image"
-        />
-      </div>
-
-      <div className="flex justify-between items-center text-sm md:text-base text-muted-foreground mt-4 px-1">
-        <span>Lap {progress} / {total}</span>
-        <div id="dashboard-container" style={{ display: 'flex', gap: '15px', justifyContent: 'center', alignItems: 'center' }}>
-          {showPenalty && (
-            <div
-              id="penalty-light"
-              data-testid="penalty-light"
-              className="penalty-box"
-            >
-              !
-            </div>
-          )}
-        </div>
-        <span>{Math.round((progress / total) * 100)}%</span>
-      </div>
-    </div>
+    <LiveCircuitMap
+      circuit={circuit}
+      progress={progress}
+      rivalProgress={rivalProgress}
+      raceLength={total}
+      sectorResults={sectorResults}
+      rivalSectorResults={rivalSectorResults}
+      showRival={showRival}
+      currentSectorRed={currentSectorRed || showPenalty}
+      overtakeActive={overtakeActive}
+      aeroActive={aeroActive}
+      isWet={isWet}
+      variant={variant}
+      labelRight={labelRight}
+      labelRightClassName={labelRightClassName}
+      playerLabel={playerLabel}
+      rivalLabel={rivalLabel}
+    />
   );
 }
