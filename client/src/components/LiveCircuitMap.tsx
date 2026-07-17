@@ -51,21 +51,23 @@ const CAR_MOVE_MS = 340;
 const CENTERLINE_INSET = 5.5;
 
 /**
- * One tour of the circuit silhouette is divided into `race length in laps`
- * sectors (capped at standard RACE_LENGTH=20). Longer sessions wrap: the car
- * starts a second/third lap instead of slicing the map into 44/78/100 pieces.
+ * Sectors per tour of the circuit silhouette. Uses the largest S ≤ RACE_LENGTH
+ * that divides `raceLength`, so the final question lands on a lap boundary
+ * (e.g. Spa 44 → 11 sectors × 4 laps) without tiny dashes.
  */
 export function getMapLapLength(raceLength: number): number {
-  return Math.min(Math.max(1, raceLength), RACE_LENGTH);
+  const n = Math.max(1, Math.floor(raceLength));
+  if (n <= RACE_LENGTH) return n;
+  for (let s = RACE_LENGTH; s >= 1; s--) {
+    if (n % s === 0) return s;
+  }
+  return RACE_LENGTH;
 }
 
-/** Lap label used under the map or beside the keypad level row. */
+/** Lap label — circuit tour count (Lap 1, Lap 2, …). */
 export function formatMapLapLabel(progress: number, raceLength: number): string {
-  const { circuitLap, totalCircuitLaps } = getMapLapState(progress, raceLength);
-  if (totalCircuitLaps > 1) {
-    return `Lap ${circuitLap}`;
-  }
-  return `Lap ${Math.min(progress + 1, raceLength)}`;
+  const { circuitLap } = getMapLapState(progress, raceLength);
+  return `Lap ${circuitLap}`;
 }
 
 type MapLapState = {
@@ -105,10 +107,25 @@ function getMapLapState(progress: number, raceLength: number): MapLapState {
     };
   }
 
-  const lapStart = Math.floor(clamped / mapLapLength) * mapLapLength;
-  const sectorOnLap = clamped - lapStart;
+  // Index off the last completed sector so progress === S keeps the full lap
+  // colored (sectorOnLap = S) instead of rolling over to an empty next lap.
+  if (clamped === 0) {
+    return {
+      circuitLap: 1,
+      totalCircuitLaps,
+      sectorOnLap: 0,
+      lapStart: 0,
+      t: 0,
+      absoluteT: 0,
+      mapLapLength,
+    };
+  }
+
+  const lastIdx = clamped - 1;
+  const circuitLap = Math.floor(lastIdx / mapLapLength) + 1;
+  const lapStart = Math.floor(lastIdx / mapLapLength) * mapLapLength;
+  const sectorOnLap = (lastIdx % mapLapLength) + 1;
   const t = sectorOnLap / mapLapLength;
-  const circuitLap = Math.floor(clamped / mapLapLength) + 1;
   return {
     circuitLap,
     totalCircuitLaps,
@@ -465,7 +482,7 @@ export function LiveCircuitMap({
             );
           })}
 
-          {progress < raceLength && (
+          {progress < raceLength && playerLap.sectorOnLap < mapLapLength && (
             <path
               d={meta.d}
               fill="none"
