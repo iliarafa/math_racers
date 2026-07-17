@@ -402,46 +402,21 @@ export function LiveCircuitMap({
           />
         )}
 
-        {/* Black circuit from branded art: luminance-mask drops the PNG’s black plate */}
-        {meta.image && (
-          <div
-            aria-hidden
-            className="absolute z-0 pointer-events-none"
-            style={{
-              top: `${(viewPad / (meta.h + viewPad * 2)) * 100}%`,
-              left: `${(viewPad / (meta.w + viewPad * 2)) * 100}%`,
-              right: `${(viewPad / (meta.w + viewPad * 2)) * 100}%`,
-              bottom: `${(viewPad / (meta.h + viewPad * 2)) * 100}%`,
-              backgroundColor: '#111111',
-              WebkitMaskImage: `url(${meta.image})`,
-              maskImage: `url(${meta.image})`,
-              WebkitMaskSize: 'contain',
-              maskSize: 'contain',
-              WebkitMaskRepeat: 'no-repeat',
-              maskRepeat: 'no-repeat',
-              WebkitMaskPosition: 'center',
-              maskPosition: 'center',
-              maskMode: 'luminance',
-            }}
-          />
-        )}
-
         <svg
           viewBox={viewBox}
           className="absolute inset-0 z-[1] h-full w-full overflow-visible"
           role="img"
           aria-label={`${circuitName} live map`}
         >
-          {!meta.image && (
-            <path
-              d={meta.d}
-              fill="none"
-              stroke="#111111"
-              strokeWidth={isResults ? 12 : 10}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )}
+          {/* Black track from same path as sectors — guarantees alignment */}
+          <path
+            d={meta.d}
+            fill="none"
+            stroke="#111111"
+            strokeWidth={isResults ? 12 : 10}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
 
           {/* Measure path for car / sector math */}
           <path ref={measureRef} d={meta.d} fill="none" stroke="transparent" strokeWidth={1} />
