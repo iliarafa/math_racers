@@ -35,7 +35,7 @@ export function SetupChoiceRow({
   className,
 }: SetupChoiceRowProps) {
   const labelClass =
-    variant === 'light' ? 'text-gray-500' : 'text-white/50';
+    variant === 'light' ? 'text-gray-700' : 'text-white/85';
   const inactiveColor =
     variant === 'light' ? 'rgba(0,0,0,0.35)' : SETUP_INACTIVE_TEXT;
 

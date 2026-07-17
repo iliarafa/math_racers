@@ -2384,21 +2384,22 @@ export default function Game() {
                     leftTestId="button-difficulty-adaptive"
                     rightTestId="button-difficulty-locked"
                   />
-                  {/* Always render so weather/CTA below don't jump when switching modes */}
+                  {/* Always visible (greyed under Adaptive) so card rhythm matches Locked */}
                   <div
                     className={cn(
                       "flex justify-center flex-wrap gap-2 mt-2",
-                      difficultyMode !== 'locked' && "invisible pointer-events-none"
+                      difficultyMode !== 'locked' && "pointer-events-none"
                     )}
                     aria-hidden={difficultyMode !== 'locked'}
                   >
                     {DRIVERS.map((d) => {
-                      const active = lockedDifficulty === d.difficulty;
+                      const interactive = difficultyMode === 'locked';
+                      const active = interactive && lockedDifficulty === d.difficulty;
                       return (
                         <button
                           key={d.id}
                           type="button"
-                          tabIndex={difficultyMode === 'locked' ? 0 : -1}
+                          tabIndex={interactive ? 0 : -1}
                           onClick={() => {
                             setLockedDifficulty(d.difficulty);
                             saveDifficultyPrefs('locked', d.difficulty);

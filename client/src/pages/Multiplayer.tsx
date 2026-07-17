@@ -1451,21 +1451,22 @@ export default function Multiplayer() {
                     );
                   })}
                 </div>
-                {/* Always render so lobby layout doesn't jump when switching modes */}
+                {/* Always visible (greyed under Adaptive) so lobby rhythm matches Locked */}
                 <div
                   className={cn(
                     "flex justify-center flex-wrap gap-2",
-                    difficultyMode !== 'locked' && "invisible pointer-events-none"
+                    difficultyMode !== 'locked' && "pointer-events-none"
                   )}
                   aria-hidden={difficultyMode !== 'locked'}
                 >
                   {DRIVERS.map((d) => {
-                    const active = lockedDifficulty === d.difficulty;
+                    const interactive = difficultyMode === 'locked';
+                    const active = interactive && lockedDifficulty === d.difficulty;
                     return (
                       <button
                         key={d.id}
                         type="button"
-                        tabIndex={difficultyMode === 'locked' ? 0 : -1}
+                        tabIndex={interactive ? 0 : -1}
                         onClick={() => syncDifficultySettings('locked', d.difficulty)}
                         className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
                         style={{
