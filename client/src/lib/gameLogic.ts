@@ -88,7 +88,8 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   canada: 70,
   miami: 57,
   barcelona: 66,
-  austria: 70
+  austria: 70,
+  hungary: 70,
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -256,6 +257,14 @@ export const CIRCUITS: Circuit[] = [
     name: "AUSTRIA",
     type: "Variables",
     description: "Red Bull Ring, Spielberg",
+    mapUrl: "",
+    paths: { s1: "", s2: "", s3: "" }
+  },
+  {
+    id: "hungary",
+    name: "HUNGARY",
+    type: "Variables",
+    description: "Hungaroring, Mogyoród",
     mapUrl: "",
     paths: { s1: "", s2: "", s3: "" }
   }

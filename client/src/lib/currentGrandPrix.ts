@@ -1,21 +1,21 @@
-import circuitSpaBlack from "@/assets/circuit_spa_black.png";
-import flagBelgium from "@/assets/flag_belgium.png";
+import circuitHungary from "@/assets/circuit_hungary.png";
+import flagHungary from "@/assets/flag_hungary.png";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
 // Also add the new track/flag asset imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 export const CURRENT_GRAND_PRIX = {
-  round: 10,
-  circuitId: 'spa',
-  name: 'SPA',
-  country: 'BELGIUM',
-  trackImage: circuitSpaBlack,
-  flagImage: flagBelgium,
-  rainProbability: 0.55,
-  simLapCount: 44,
-  gradient: 'linear-gradient(90deg, #000000 0%, #FDDA24 50%, #EF3340 100%)',
-  welcomeBlurb: 'This week we head to Spa-Francorchamps, the longest and most dramatic lap on the calendar, for the Belgian Grand Prix.',
+  round: 11,
+  circuitId: 'hungary',
+  name: 'HUNGARY',
+  country: 'HUNGARY',
+  trackImage: circuitHungary,
+  flagImage: flagHungary,
+  rainProbability: 0.25,
+  simLapCount: 70,
+  gradient: 'linear-gradient(90deg, #CE2939 0%, #FFFFFF 50%, #477050 100%)',
+  welcomeBlurb: 'This week we head to the Hungaroring near Budapest — a tight, twisty lap that rewards precision and patience — for the Hungarian Grand Prix.',
 };
 
 export type CurrentGrandPrix = typeof CURRENT_GRAND_PRIX;

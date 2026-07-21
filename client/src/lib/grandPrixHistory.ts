@@ -2,6 +2,7 @@ import catalunyaDetail from "@/assets/catalunya_detail_track.png";
 import austriaDetail from "@/assets/austria_detail_track.png";
 import silverstoneDetail from "@/assets/silverstone_detail_track.png";
 import spaDetail from "@/assets/spa_detail_track.png";
+import hungaryDetail from "@/assets/hungary_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -253,6 +254,64 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Carlos Sainz', team: 'Williams', time: '1:13.203' },
         { name: 'Franco Colapinto', team: 'Alpine', time: '1:13.334' },
         { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:13.385' },
+      ],
+    },
+  },
+  hungary: {
+    officialName: 'FORMULA 1 AWS HUNGARIAN GRAND PRIX 2026',
+    firstHeld: 1986,
+    trackLength: '4.381 km',
+    laps: 70,
+    lapRecord: { driver: 'Lewis Hamilton', time: '1:16.627', year: 2020 },
+    mostWins: { driver: 'Lewis Hamilton', count: 8 },
+    summary:
+      'The Hungaroring near Budapest is one of the tightest, twistiest laps on the calendar — often called Monaco without the walls. Built in 1986 for the first Formula 1 race behind the Iron Curtain, it packs 14 corners into 4.381 km and rewards precision, traction and a tidy qualifying lap more than raw straight-line speed. Overtaking is hard, so strategy and patience matter; a win at the Hungarian Grand Prix is a proper driver\'s trophy.',
+    detailMapImage: hungaryDetail,
+    lastYear: {
+      season: 2025,
+      race: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:35:21.231' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '+0.698' },
+        { name: 'George Russell', team: 'Mercedes', time: '+21.916' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+42.560' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+59.040' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+66.169' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+68.174' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+69.451' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '+72.645' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+1 lap' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+1 lap' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+1 lap' },
+        { name: 'Nico Hulkenberg', team: 'Kick Sauber', time: '+1 lap' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+1 lap' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+1 lap' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1 lap' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+1 lap' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1 lap' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1 lap' },
+        { name: 'Oliver Bearman', team: 'Haas', time: 'DNF' },
+      ],
+      quali: [
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:15.372' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:15.398' },
+        { name: 'Lando Norris', team: 'McLaren', time: '1:15.413' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:15.425' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:15.481' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:15.498' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:15.725' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:15.728' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:15.821' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:15.915' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:15.694' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:15.702' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:15.781' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:16.159' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:16.386' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:15.899' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:15.966' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:16.023' },
+        { name: 'Nico Hulkenberg', team: 'Kick Sauber', time: '1:16.081' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:16.223' },
       ],
     },
   },

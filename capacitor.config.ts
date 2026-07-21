@@ -3,7 +3,7 @@ import type { CapacitorConfig } from '@capacitor/core';
 const config: CapacitorConfig = {
   appId: 'live.mathracer.app',
   appName: 'Math Racer',
-  version: '1.3.10',
+  version: '1.3.11',
   webDir: 'dist/public',
   ios: {
     contentInset: 'never'
