@@ -24,6 +24,7 @@ const ASSET_BY_ID: Record<string, string> = {
   monaco: 'circuit_monaco_black.png',
   suzuka: 'circuit_suzuka_black.png',
   silverstone: 'circuit_silverstone_black.png',
+  hungary: 'circuit_hungary.png',
 };
 
 function loadTrack(file: string): { w: number; h: number; track: Uint8Array } {
@@ -196,6 +197,101 @@ function toPathD(pts: Pt[]): string {
   }
   parts.push('Z');
   return parts.join(' ');
+}
+
+/**
+ * Bootstrap a closed seed polyline when circuitPathData.json has no entry.
+ * Walks the outer mask contour (Moore neighborhood), samples evenly, then
+ * the normal densify→ridge-snap pass pulls it onto the medial centerline.
+ */
+function bootstrapSeedFromMask(
+  track: Uint8Array,
+  w: number,
+  h: number,
+  sampleEvery = 10
+): Pt[] {
+  const at = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < w && y < h && track[y * w + x] === 1;
+
+  // Prefer a start on the left outer edge near mid-height (Hungaroring S/F straight).
+  const midY = Math.floor(h / 2);
+  let start: Pt | null = null;
+  for (let dy = 0; dy < h && !start; dy++) {
+    for (const y of [midY + dy, midY - dy]) {
+      if (y < 0 || y >= h) continue;
+      for (let x = 0; x < w; x++) {
+        if (at(x, y) && !at(x - 1, y)) {
+          start = { x, y };
+          break;
+        }
+      }
+      if (start) break;
+    }
+  }
+  if (!start) {
+    throw new Error('bootstrapSeedFromMask: no track boundary pixel found');
+  }
+
+  // 8-connected clockwise Moore dirs, indexed so +1 = turn right-ish from incoming.
+  const dirs: Pt[] = [
+    { x: 1, y: 0 },
+    { x: 1, y: 1 },
+    { x: 0, y: 1 },
+    { x: -1, y: 1 },
+    { x: -1, y: 0 },
+    { x: -1, y: -1 },
+    { x: 0, y: -1 },
+    { x: 1, y: -1 },
+  ];
+
+  const contour: Pt[] = [];
+  let cur = { ...start };
+  // Enter from the left (background → track); first search starts facing up (N).
+  let dirIdx = 6; // N
+  const maxSteps = w * h;
+  for (let step = 0; step < maxSteps; step++) {
+    contour.push({ ...cur });
+    // From the direction we arrived, turn left-most (CCW search) to hug the outer wall.
+    // Start looking from dirIdx+6 (back-left) so we keep the background on our left → outer walk.
+    let found: Pt | null = null;
+    let foundDir = dirIdx;
+    for (let k = 0; k < 8; k++) {
+      const di = (dirIdx + 6 + k) % 8;
+      const nx = cur.x + dirs[di].x;
+      const ny = cur.y + dirs[di].y;
+      if (at(nx, ny)) {
+        found = { x: nx, y: ny };
+        foundDir = di;
+        break;
+      }
+    }
+    if (!found) break;
+    cur = found;
+    dirIdx = foundDir;
+    if (step > 20 && cur.x === start.x && cur.y === start.y) break;
+  }
+
+  if (contour.length < 40) {
+    throw new Error(
+      `bootstrapSeedFromMask: contour too short (${contour.length}) — mask may be fragmented`
+    );
+  }
+
+  // Evenly sample ~every sampleEvery pixels along the contour.
+  const seed: Pt[] = [];
+  for (let i = 0; i < contour.length; i += sampleEvery) {
+    seed.push(contour[i]);
+  }
+  // Ensure closed-ish and not duplicating start
+  if (seed.length >= 2) {
+    const a = seed[0];
+    const b = seed[seed.length - 1];
+    if (Math.hypot(a.x - b.x, a.y - b.y) < sampleEvery) seed.pop();
+  }
+  console.log(
+    `Bootstrapped seed: contour=${contour.length} → seed=${seed.length} (every ${sampleEvery})`
+  );
+  return seed;
 }
 
 type BandPick = 'lower' | 'upper';
@@ -700,22 +796,27 @@ function main() {
     string,
     { w: number; h: number; trackPixels?: number; contourLen?: number; points: number; d: string }
   >;
-  const entry = json[id];
-  if (!entry?.d) {
-    console.error(`No seed path for ${id} in circuitPathData.json`);
-    process.exit(1);
-  }
 
   const file = path.join(ASSETS, asset);
   const { w, h, track } = loadTrack(file);
   const trackCount = track.reduce((a, b) => a + b, 0);
   console.log(`Loaded ${asset} ${w}×${h}, track=${trackCount}`);
 
+  const dt = distanceTransform(track, w, h);
+
+  let entry = json[id];
+  if (!entry?.d) {
+    // New circuit: bootstrap a seed from the PNG mask at native pixel size.
+    const seedPts = bootstrapSeedFromMask(track, w, h, 10);
+    entry = { w, h, points: seedPts.length, d: toPathD(seedPts) };
+    json[id] = entry;
+    console.log(`Created seed entry for ${id} at ${w}×${h}`);
+  }
+
   if (entry.w !== w || entry.h !== h) {
     console.warn(`Note: JSON viewBox ${entry.w}×${entry.h} vs PNG ${w}×${h} — snapping in PNG space then keeping JSON w/h`);
   }
 
-  const dt = distanceTransform(track, w, h);
   let seed = parsePolyline(entry.d);
   // Map seed from JSON space → PNG space if needed
   const sx = w / entry.w;
