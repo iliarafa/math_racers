@@ -55,6 +55,8 @@ export interface GameState {
   totalLaps: number;
   careerPoints: number;
   racesWon: number;
+  /** Persistent achievement ids (e.g. Free Practice purple lap). */
+  earnedBadges: string[];
 
   soundEnabled: boolean;
   simMode: boolean;
@@ -65,6 +67,9 @@ export interface GameState {
   playerName: string;
   playerId: string;
 }
+
+/** Free Practice: complete a full circuit tour with every sector purple. */
+export const BADGE_EVERYTHING_IS_PURPLE = 'everything-is-purple';
 
 export const TEAM_COLORS = [
   { id: 'ferrari', name: 'Scuderia Racing', hex: '#ff2800' },
@@ -279,6 +284,7 @@ const INITIAL_STATE: GameState = {
   totalLaps: 0,
   careerPoints: 0,
   racesWon: 0,
+  earnedBadges: [],
 
   soundEnabled: true,
   simMode: false,
@@ -338,6 +344,7 @@ export function useGameState() {
           totalLaps: parsed.totalLaps ?? 0,
           careerPoints: parsed.careerPoints ?? 0,
           racesWon: parsed.racesWon ?? 0,
+          earnedBadges: Array.isArray(parsed.earnedBadges) ? parsed.earnedBadges.filter((b: unknown) => typeof b === 'string') : [],
 
           soundEnabled: parsed.soundEnabled ?? true,
           simMode: parsed.simMode ?? false,
@@ -437,6 +444,17 @@ export function useGameState() {
     setState(prev => ({ ...prev, racesWon: prev.racesWon + 1 }));
   };
 
+  /** Returns true only when the badge was newly earned. */
+  const earnBadge = (id: string): boolean => {
+    let newlyEarned = false;
+    setState(prev => {
+      if (prev.earnedBadges.includes(id)) return prev;
+      newlyEarned = true;
+      return { ...prev, earnedBadges: [...prev.earnedBadges, id] };
+    });
+    return newlyEarned;
+  };
+
   const updatePersonalBest = (circuitId: string, time: number, difficulty?: Difficulty) => {
     setState(prev => {
       const key = difficulty ? `${circuitId}:${difficulty}` : circuitId;
@@ -512,6 +530,7 @@ export function useGameState() {
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,
+    earnBadge,
     updatePersonalBest,
     resetAllData,
     recordLapTime,

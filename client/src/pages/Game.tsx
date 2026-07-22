@@ -4,16 +4,20 @@ import confetti from "canvas-confetti";
 import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { LiveCircuitMap } from "@/components/LiveCircuitMap";
+import { LiveCircuitMap, getMapLapLength } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { SetupChoiceRow } from "@/components/SetupChoiceRow";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2, Trophy } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
+
+/** Temporary QA: force purple-lap lit (level → ALL PURPLE) as soon as Free Practice starts. */
+const FORCE_PURPLE_LAP_PREVIEW = false;
 
 // Import assets
 import tireHard from "@assets/IMG_0385_1768772937370.png";
@@ -608,7 +612,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView } = useGameState();
   const { isPremium } = usePurchase();
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
@@ -723,6 +727,8 @@ export default function Game() {
   }>>([]);
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
+  /** Free Practice: lit after an all-purple circuit tour until next non-purple sector. */
+  const [purpleLapLit, setPurpleLapLit] = useState(false);
   const questionStartTimeRef = useRef<number>(Date.now());
   // Track the best time for each sector and who holds it (F1-style competitive timing)
   const [revealedAttempts, setRevealedAttempts] = useState<Set<string>>(new Set());
@@ -1111,6 +1117,19 @@ export default function Game() {
     setBotProgress(0);
     setBotLapResults([]);
     sectorBestTimesRef.current = []; // Reset sector best times for new race
+    // Preview: FORCE_PURPLE_LAP_PREVIEW, or localStorage.setItem('f1-preview-purple-lap','1')
+    const previewPurpleLap =
+      FORCE_PURPLE_LAP_PREVIEW ||
+      (typeof localStorage !== 'undefined' &&
+        localStorage.getItem('f1-preview-purple-lap') === '1');
+    const freePracticePreview = Boolean(previewPurpleLap && isPracticeMode && !isGrandPrix);
+    setPurpleLapLit(freePracticePreview);
+    if (freePracticePreview && earnBadge(BADGE_EVERYTHING_IS_PURPLE)) {
+      toast({
+        title: 'Badge unlocked',
+        description: 'Everything Is Purple!',
+      });
+    }
     // Ensure race mode has bot opponent (practice mode uses solo)
     if (!isPracticeMode) {
       setRaceMode('bot');
@@ -1274,13 +1293,19 @@ export default function Game() {
 
       // When aero/overtake was active and we gained 2 sectors, add a bonus entry
       const actualGain = newProgress - progress; // Handles capping at raceLength
+      let bonusSectorColor: 'purple' | 'green' | 'yellow' | 'red' | undefined;
       if (actualGain === 2) {
         // Bonus sector wasn't individually timed, so compute its color properly
         const bonusSectorIndex = progress + 1;
         const bonusBest = sectorBestTimesRef.current[bonusSectorIndex];
-        let bonusSectorColor: 'purple' | 'green' | 'yellow' = 'green';
+        bonusSectorColor = 'green';
 
-        if (!bonusBest || responseTime < bonusBest.bestTime) {
+        if (isPracticeMode) {
+          const botTime = question.botTime;
+          if (responseTime < botTime * 0.5) bonusSectorColor = 'purple';
+          else if (responseTime < botTime) bonusSectorColor = 'green';
+          else bonusSectorColor = 'yellow';
+        } else if (!bonusBest || responseTime < bonusBest.bestTime) {
           bonusSectorColor = 'purple';
           // Demote bot's purple on this bonus sector if needed
           if (bonusBest?.holder === 'bot') {
@@ -1301,15 +1326,48 @@ export default function Game() {
 
         // Force red if player had retries
         if (hadRetries && !isPracticeMode) {
-          bonusSectorColor = 'red' as any;
+          bonusSectorColor = 'red';
         }
 
         setLapResults(prev => [...prev, mainEntry, {
           ...mainEntry,
-          sectorColor: bonusSectorColor,
+          sectorColor: bonusSectorColor!,
         }]);
       } else {
         setLapResults(prev => [...prev, mainEntry]);
+      }
+
+      // Free Practice: all-purple circuit tour → banner + one-time badge
+      const isFreePractice = isPracticeMode && !isGrandPrix;
+      if (isFreePractice) {
+        const nextResults =
+          actualGain === 2 && bonusSectorColor
+            ? [...lapResults, mainEntry, { ...mainEntry, sectorColor: bonusSectorColor }]
+            : [...lapResults, mainEntry];
+        const completedColors = nextResults.slice(progress, newProgress).map((r) => r.sectorColor);
+        if (completedColors.some((c) => c !== 'purple')) {
+          setPurpleLapLit(false);
+        } else {
+          const mapLapLength = getMapLapLength(raceLength);
+          if (
+            newProgress > 0 &&
+            newProgress % mapLapLength === 0
+          ) {
+            const lapSlice = nextResults.slice(newProgress - mapLapLength, newProgress);
+            if (
+              lapSlice.length === mapLapLength &&
+              lapSlice.every((r) => r.sectorColor === 'purple')
+            ) {
+              setPurpleLapLit(true);
+              if (earnBadge(BADGE_EVERYTHING_IS_PURPLE)) {
+                toast({
+                  title: 'Badge unlocked',
+                  description: 'Everything Is Purple!',
+                });
+              }
+            }
+          }
+        }
       }
 
       if (newProgress >= raceLength) {
@@ -1618,6 +1676,7 @@ export default function Game() {
     raceStartTimeRef.current = null;
     setPenaltyMessage({ text: '', color: 'red' });
     setInPurpleMode(false);
+    setPurpleLapLit(false);
     // Reset OVERTAKE state
     setOvertakeEnergy(0);
     setOvertakeActive(false);
@@ -1663,6 +1722,7 @@ export default function Game() {
     setBotLapResults([]);
     setRevealedAttempts(new Set());
     sectorBestTimesRef.current = [];
+    setPurpleLapLit(false);
     setMistakes(0);
     setFinalMistakes(0);
     setShowPenalty(false);
@@ -3633,11 +3693,12 @@ export default function Game() {
             </AnimatePresence>
           </div>
 
-          {/* Sectors view: TRACK LIMITS sits between answer and grid (not over timer) */}
+          {/* Sectors view: TRACK LIMITS between answer and grid (unchanged in-flow flash) */}
           {state.raceMapView === 'sectors' && (
             <AnimatePresence>
               {showPenalty && (
                 <motion.div
+                  key="track-limits"
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
@@ -3754,7 +3815,8 @@ export default function Game() {
             </div>
           )}
 
-          {/* Question | Level | Limits — same 3-col grid as AERO / energy / OT so each label centers on its button */}
+          {/* Question | Level | Limits — same 3-col grid as AERO / energy / OT so each label centers on its button.
+              Free Practice purple lap: center difficulty temporarily becomes ALL PURPLE. */}
           {state.raceMapView === 'track' ? (
             <div className="mb-1 grid w-full max-w-md md:max-w-xl lg:max-w-2xl grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 text-xs text-muted-foreground">
               <span className="min-w-0 truncate text-center">
@@ -3764,15 +3826,22 @@ export default function Game() {
                 className="text-center text-xs uppercase tracking-wider font-bold"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
-                  color:
-                    isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice')
-                      ? (LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e')
-                      : 'transparent',
+                  color: (() => {
+                    const showLevel =
+                      isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice');
+                    if (!showLevel) return 'transparent';
+                    if (purpleLapLit && isPreSeasonTesting && !showPenalty) return '#9333ea';
+                    return LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e';
+                  })(),
                 }}
               >
-                {isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice')
-                  ? (DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting')
-                  : '\u00a0'}
+                {(() => {
+                  const showLevel =
+                    isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice');
+                  if (!showLevel) return '\u00a0';
+                  if (purpleLapLit && isPreSeasonTesting && !showPenalty) return 'ALL PURPLE';
+                  return DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
+                })()}
               </span>
               <span className={cn('text-center', mistakes > 0 && 'text-red-500')}>
                 {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: {mistakes}
@@ -3780,8 +3849,19 @@ export default function Game() {
             </div>
           ) : (
             isPreSeasonTesting && (
-              <div className="text-xs uppercase tracking-wider text-center mb-1 font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
-                {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
+              <div
+                className="text-xs uppercase tracking-wider text-center mb-1 font-bold"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  color:
+                    purpleLapLit && !showPenalty
+                      ? '#9333ea'
+                      : (LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e'),
+                }}
+              >
+                {purpleLapLit && !showPenalty
+                  ? 'ALL PURPLE'
+                  : (DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting')}
               </div>
             )
           )}

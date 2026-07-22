@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState, LapEntry } from "@/lib/gameLogic";
+import { useGameState, LapEntry, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
+import { cn } from "@/lib/utils";
 
 const SERIES_ORDER = ['f1', 'f2', 'f3', 'karting'] as const;
 
@@ -43,6 +44,7 @@ export default function RacerLog() {
   ];
 
   const hasEntries = lapHistory.length > 0;
+  const hasPurpleBadge = state.earnedBadges.includes(BADGE_EVERYTHING_IS_PURPLE);
 
   return (
     <GameLayout hideGarageButton lockViewport backHref="/garage" darkBackground>
@@ -50,6 +52,31 @@ export default function RacerLog() {
         <h1 className="text-2xl md:text-3xl font-bold tracking-wider text-white text-center mb-6"
             style={{ fontFamily: 'Oxanium, sans-serif' }}>RACER LOG</h1>
         <div className="max-w-2xl md:max-w-4xl mx-auto">
+
+          <div className="mb-8">
+            <h2 className="text-xs font-bold tracking-widest uppercase text-white/40 mb-3 pb-2">
+              Badges
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              <div
+                className={cn(
+                  'flex flex-col items-center justify-center gap-1 rounded-md border px-3 py-2 min-w-[7.5rem]',
+                  hasPurpleBadge
+                    ? 'bg-purple-600 border-purple-300/50 text-white'
+                    : 'bg-transparent border-white/20 text-white/30'
+                )}
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+                data-testid="badge-everything-is-purple"
+              >
+                <span className={cn('text-lg font-bold leading-none', hasPurpleBadge ? 'text-white' : 'text-white/25')}>
+                  P
+                </span>
+                <span className="text-[9px] uppercase tracking-widest text-center leading-tight">
+                  {hasPurpleBadge ? 'Everything Is Purple' : 'Locked'}
+                </span>
+              </div>
+            </div>
+          </div>
 
           {!hasEntries ? (
             <p className="text-sm text-white/40 text-center py-12 font-mono">No data recorded.</p>
