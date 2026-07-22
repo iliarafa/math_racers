@@ -4,7 +4,7 @@ import confetti from "canvas-confetti";
 import { Link, useLocation } from "wouter";
 import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { LiveCircuitMap, formatMapLapLabel } from "@/components/LiveCircuitMap";
+import { LiveCircuitMap } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { SetupChoiceRow } from "@/components/SetupChoiceRow";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
@@ -48,6 +48,7 @@ import circuitSilverstoneRed from "@/assets/circuit_silverstone_red.png";
 import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
 import circuitSpaRed from "@/assets/circuit_spa_red.png";
 import circuitSpaBlack from "@/assets/circuit_spa_black.png";
+import circuitHungaryBlack from "@/assets/circuit_hungary_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
@@ -81,7 +82,12 @@ const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } 
   "monaco": { red: circuitMonacoRed, black: circuitMonacoBlack },
   "silverstone": { red: circuitSilverstoneRed, black: circuitSilverstoneBlack },
   "spa": { red: circuitSpaRed, black: circuitSpaBlack },
-  [CURRENT_GRAND_PRIX.circuitId]: { red: CURRENT_GRAND_PRIX.trackImage, black: CURRENT_GRAND_PRIX.trackImage },
+  // Thin Spa-style line art for setup TRACK — not the thick Live Map ribbon.
+  "hungary": { red: circuitHungaryBlack, black: circuitHungaryBlack },
+  [CURRENT_GRAND_PRIX.circuitId]:
+    CURRENT_GRAND_PRIX.circuitId === 'hungary'
+      ? { red: circuitHungaryBlack, black: circuitHungaryBlack }
+      : { red: CURRENT_GRAND_PRIX.trackImage, black: CURRENT_GRAND_PRIX.trackImage },
 };
 
 // Custom checkered flag icon component
@@ -2357,9 +2363,17 @@ export default function Game() {
                   />
                 </div>
 
-                {/* Track Map — padded contain stage (no max-w clamp that crops square maps) */}
+                {/* Track Map — padded contain stage (no max-w clamp that crops square maps).
+                    Hungary thin `_black` needs a taller stage to read at Spa visual size. */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible px-2">
-                  <div className="h-32 md:h-52 w-full overflow-visible p-2">
+                  <div
+                    className={cn(
+                      'w-full overflow-visible p-2',
+                      CURRENT_GRAND_PRIX.circuitId === 'hungary'
+                        ? 'h-40 md:h-60'
+                        : 'h-32 md:h-52'
+                    )}
+                  >
                     <img
                       src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
                       alt={`${CURRENT_GRAND_PRIX.name} circuit`}
@@ -2511,9 +2525,17 @@ export default function Game() {
                   />
                 </div>
 
-                {/* Track Map — padded contain stage (no max-w clamp that crops square maps) */}
+                {/* Track Map — padded contain stage (no max-w clamp that crops square maps).
+                    Hungary thin `_black` needs a taller stage to read at Spa visual size. */}
                 <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible px-2">
-                  <div className="h-32 md:h-52 w-full overflow-visible p-2">
+                  <div
+                    className={cn(
+                      'w-full overflow-visible p-2',
+                      CURRENT_GRAND_PRIX.circuitId === 'hungary'
+                        ? 'h-40 md:h-60'
+                        : 'h-32 md:h-52'
+                    )}
+                  >
                     <img
                       src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
                       alt={`${CURRENT_GRAND_PRIX.name} circuit`}
@@ -3732,10 +3754,12 @@ export default function Game() {
             </div>
           )}
 
-          {/* Lap | Level | Limits — same 3-col grid as AERO / energy / OT so each label centers on its button */}
+          {/* Question | Level | Limits — same 3-col grid as AERO / energy / OT so each label centers on its button */}
           {state.raceMapView === 'track' ? (
             <div className="mb-1 grid w-full max-w-md md:max-w-xl lg:max-w-2xl grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 text-xs text-muted-foreground">
-              <span className="min-w-0 truncate text-center">{formatMapLapLabel(progress, raceLength)}</span>
+              <span className="min-w-0 truncate text-center">
+                {`${Math.min(progress + 1, raceLength)}/${raceLength}`}
+              </span>
               <span
                 className="text-center text-xs uppercase tracking-wider font-bold"
                 style={{
