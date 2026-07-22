@@ -130,6 +130,59 @@ function snapToRidgeAlongNormal(
   return { x: best.x, y: best.y };
 }
 
+/**
+ * Snap to the geometric midpoint of the track band along the local normal.
+ * Prefer this after DT ridge snap when the silhouette is thick (Hungary) —
+ * DT can sit slightly off-center even when still on-track.
+ */
+function snapToGeomMidAlongNormal(
+  p: Pt,
+  tangent: Pt,
+  track: Uint8Array,
+  w: number,
+  h: number,
+  maxOffset: number
+): Pt {
+  const len = Math.hypot(tangent.x, tangent.y) || 1;
+  const nx = -tangent.y / len;
+  const ny = tangent.x / len;
+
+  const hits: number[] = [];
+  for (let o = -maxOffset; o <= maxOffset; o += 0.5) {
+    const x = Math.round(p.x + nx * o);
+    const y = Math.round(p.y + ny * o);
+    if (x < 0 || x >= w || y < 0 || y >= h) continue;
+    if (track[y * w + x]) hits.push(o);
+  }
+  if (!hits.length) return p;
+
+  const clusters: number[][] = [];
+  let cur: number[] = [hits[0]];
+  for (let i = 1; i < hits.length; i++) {
+    if (hits[i] - hits[i - 1] <= 0.5 + 1e-6) cur.push(hits[i]);
+    else {
+      clusters.push(cur);
+      cur = [hits[i]];
+    }
+  }
+  clusters.push(cur);
+
+  let best = clusters[0];
+  let bestDist = Infinity;
+  for (const c of clusters) {
+    const contains = c[0] <= 0 && c[c.length - 1] >= 0;
+    const dist = contains
+      ? 0
+      : Math.min(Math.abs(c[0]), Math.abs(c[c.length - 1]));
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = c;
+    }
+  }
+  const oMid = (best[0] + best[best.length - 1]) / 2;
+  return { x: p.x + nx * oMid, y: p.y + ny * oMid };
+}
+
 function distToSeg(p: Pt, a: Pt, b: Pt): number {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
@@ -876,6 +929,24 @@ function main() {
   }
   // Keep dense samples — light cleanup only (RDP cuts chicanes / straights)
   let cycle = cleanup(snapped);
+
+  // Hungary: DT ridge can sit off geometric mid on a thick ribbon — second
+  // pass locks sectors to the visual centerline (Spa quality bar). Keep the
+  // search inside ~one half-width so chicanes cannot jump to a parallel arm.
+  if (id === 'hungary') {
+    const geomLimit = Math.max(6, Math.ceil(ridgeMed) + 2);
+    const geom: Pt[] = [];
+    for (let i = 0; i < cycle.length; i++) {
+      const prev = cycle[(i - 1 + cycle.length) % cycle.length];
+      const next = cycle[(i + 1) % cycle.length];
+      const tangent = { x: next.x - prev.x, y: next.y - prev.y };
+      geom.push(
+        snapToGeomMidAlongNormal(cycle[i], tangent, track, w, h, geomLimit)
+      );
+    }
+    cycle = cleanup(geom);
+    console.log(`Hungary geom-mid snap (limit=${geomLimit}): ${geom.length} samples`);
+  }
 
   if (id === 'spa') {
     // Drop tip spikes that dart to x<=2 after the hairpin has already climbed
