@@ -27,6 +27,8 @@ export type CircuitMapMeta = {
   h: number;
   d: string;
   image: string;
+  /** Black ribbon width in path units (matches PNG stroke); sector paint uses this. */
+  ribbon?: number;
 };
 
 /** Black silhouettes — same shapes as setup cards. */
@@ -44,6 +46,7 @@ type PathJsonEntry = {
   h: number;
   d: string;
   points?: number;
+  ribbon?: number;
 };
 
 const PATH_JSON = circuitPathData as Record<string, PathJsonEntry>;
@@ -71,12 +74,24 @@ export function getCircuitMapMeta(
   const image = CIRCUIT_IMAGES[id] ?? '';
 
   if (entry && image) {
-    return { w: entry.w, h: entry.h, d: getResolvedPathD(id, entry), image };
+    return {
+      w: entry.w,
+      h: entry.h,
+      d: getResolvedPathD(id, entry),
+      image,
+      ribbon: entry.ribbon,
+    };
   }
 
   // Fallback: try path JSON without art, or oval
   if (entry) {
-    return { w: entry.w, h: entry.h, d: getResolvedPathD(id, entry), image: '' };
+    return {
+      w: entry.w,
+      h: entry.h,
+      d: getResolvedPathD(id, entry),
+      image: '',
+      ribbon: entry.ribbon,
+    };
   }
 
   return { w: 320, h: 160, d: FALLBACK_CIRCUIT_PATH, image: '' };

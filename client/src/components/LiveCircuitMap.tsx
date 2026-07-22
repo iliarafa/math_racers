@@ -374,7 +374,14 @@ export function LiveCircuitMap({
 
   const isResults = variant === 'results';
   const nativeIPad = !isResults && isNativeIPad();
-  const sectorStroke = isResults ? 10 : 8;
+  /** Sector paint matches the black ribbon width when known (per-circuit from extract). */
+  const sectorStroke = meta.ribbon
+    ? isResults
+      ? meta.ribbon
+      : Math.max(8, meta.ribbon - 2)
+    : isResults
+      ? 10
+      : 8;
   /** Pad viewBox from stroke + car marker so edge-tight art (Spa-style) never clips. */
   const carPad = isResults ? 14 : 12;
   const viewPad = Math.ceil(sectorStroke / 2) + carPad;

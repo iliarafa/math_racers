@@ -826,6 +826,33 @@ function main() {
     seedPng = fixSpaBusStopAndLaSource(seedPng, dt, track, w, h);
   }
 
+  // Search far enough to reach the medial ridge from an outer-contour seed.
+  // Spa half-width ≈ 5 so maxOffset=6 worked; Hungary ≈ 20 needs ~30+.
+  let ridgeMed = 0;
+  {
+    const ridge: number[] = [];
+    for (let y = 1; y < h - 1; y++) {
+      for (let x = 1; x < w - 1; x++) {
+        const i = y * w + x;
+        if (!track[i]) continue;
+        if (
+          dt[i] >= dt[i - 1] &&
+          dt[i] >= dt[i + 1] &&
+          dt[i] >= dt[i - w] &&
+          dt[i] >= dt[i + w] &&
+          dt[i] > 1
+        ) {
+          ridge.push(dt[i]);
+        }
+      }
+    }
+    ridge.sort((a, b) => a - b);
+    ridgeMed = ridge.length ? ridge[Math.floor(ridge.length / 2)] : 6;
+  }
+  const maxOffset = Math.max(6, Math.ceil(ridgeMed * 1.5) + 4);
+  const jumpLimit = Math.max(10, maxOffset);
+  console.log(`Ridge med=${ridgeMed.toFixed(1)} → maxOffset=${maxOffset} jumpLimit=${jumpLimit}`);
+
   const dense = densify(seedPng, 1.8);
   console.log(`Seed ${seedPng.length} → densified ${dense.length}`);
 
@@ -835,12 +862,13 @@ function main() {
     const prevSeed = dense[(i - 1 + dense.length) % dense.length];
     const nextSeed = dense[(i + 1) % dense.length];
     const tangent = { x: nextSeed.x - prevSeed.x, y: nextSeed.y - prevSeed.y };
-    const raw = snapToRidgeAlongNormal(seedPt, tangent, dt, track, w, h, 6);
+    const raw = snapToRidgeAlongNormal(seedPt, tangent, dt, track, w, h, maxOffset);
     const prev = snapped[i - 1];
-    if (prev && Math.hypot(raw.x - prev.x, raw.y - prev.y) > 10) {
+    // Only damp true spikes — do not undo a valid contour→ridge snap.
+    if (prev && Math.hypot(raw.x - prev.x, raw.y - prev.y) > jumpLimit) {
       snapped.push({
-        x: (prev.x + seedPt.x) / 2,
-        y: (prev.y + seedPt.y) / 2,
+        x: (prev.x + raw.x) / 2,
+        y: (prev.y + raw.y) / 2,
       });
     } else {
       snapped.push(raw);
@@ -876,16 +904,20 @@ function main() {
   const out = cycle.map((p) => ({ x: p.x / sx, y: p.y / sy }));
   console.log(`Centerline points=${out.length} maxX=${Math.max(...out.map((p) => p.x)).toFixed(1)}`);
 
+  // Ribbon width in path units ≈ 2 × medial half-width (for LiveCircuitMap sector strokes).
+  const ribbon = Math.max(8, Math.round(ridgeMed * 2));
+
   json[id] = {
     ...entry,
     w: entry.w,
     h: entry.h,
     trackPixels: trackCount,
     points: out.length,
+    ribbon,
     d: toPathD(out),
   };
   fs.writeFileSync(jsonPath, JSON.stringify(json, null, 2) + '\n');
-  console.log(`Wrote ${id} (viewBox ${entry.w}×${entry.h})`);
+  console.log(`Wrote ${id} (viewBox ${entry.w}×${entry.h}, ribbon=${ribbon})`);
 }
 
 main();
