@@ -122,7 +122,7 @@ const chapters: Chapter[] = [
       {
         id: "grand-prix",
         title: "Grand Prix",
-        description: "A full race weekend at the Circuit Gilles-Villeneuve with three sequential phases.",
+        description: "A full race weekend at the Hungaroring (Hungarian Grand Prix) with three sequential phases.",
         details: [
           "Select your math operation, then progress through Practice, Qualifying, and Race Day",
           "Practice (30 questions) — always Adaptive; difficulty adjusts as you go (no Adaptive/Locked toggle)",
@@ -148,6 +148,8 @@ const chapters: Chapter[] = [
           "Adaptive (default) — difficulty adjusts from your speed and accuracy (starts at Karting, soft-caps at F1).",
           "Locked — pick Karting / F3 / F2 / F1 / Pro; level stays fixed for the session (no promotion or demotion).",
           "No penalties — wrong answers don't count against you.",
+          "ALL PURPLE — complete a full circuit tour with every sector purple and the level label temporarily shows ALL PURPLE.",
+          "Everything Is Purple — the first time you do this, unlock a persistent badge in Racer Log (Free Practice only — not Grand Prix Practice).",
           "Your mission — complete all 100 questions to submit your score to the Leaderboard.",
           "BOX — click to exit to the pits and log your current stint. Go back to the track to start a new one.",
           "~(questions / time) × accuracy × difficulty multiplier × 1000 (max 100,000)",
@@ -228,7 +230,7 @@ const chapters: Chapter[] = [
           "Realism — toggle simulation distances and extra AERO zones",
           "Power-Ups — toggle OVERTAKE and AERO systems",
           "Reflex — F1-style reaction time test",
-          "Racer Log — your race history grouped by series",
+          "Racer Log — badges and race history grouped by series",
           "Leaderboard — Free Practice standings",
           "Regulations — rules and guide (this page)",
           "Strategy — math reference guide with tips for each operation",

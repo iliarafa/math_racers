@@ -29,6 +29,8 @@ import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
 import { paceDifficultyForSpeed } from "@/lib/laneRacerHud";
 import { FOG_COLOR } from "@/components/lane-racer/atmosphere";
 import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
+import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
+import { useIsMobile } from "@/hooks/use-mobile";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import flagItaly from "@/assets/flag_italy.png";
 import flagBelgium from "@/assets/flag_belgium.png";
@@ -141,6 +143,12 @@ const CIRCUIT_OPTIONS = CIRCUITS.map(c => ({
   name: c.name,
   type: c.type,
 }));
+
+/** Default track drum to the current GP weekend circuit. */
+const DEFAULT_CIRCUIT_INDEX = (() => {
+  const i = CIRCUIT_OPTIONS.findIndex((c) => c.id === CURRENT_GRAND_PRIX.circuitId);
+  return i >= 0 ? i : 0;
+})();
 
 function getWrappedIndex(current: number, offset: number, length: number): number {
   return ((current + offset) % length + length) % length;
@@ -269,9 +277,11 @@ function playBeep(freq: number, duration: number, volume = 0.15) {
 export default function LaneRacer() {
   const { state, setPlayerName } = useGameState();
   const [, navigate] = useLocation();
+  const isMobile = useIsMobile();
+  const setupDrumHeight = isMobile ? 56 : 72;
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
-  const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[0]);
-  const [currentCircuitIndex, setCurrentCircuitIndex] = useState(0);
+  const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[DEFAULT_CIRCUIT_INDEX]);
+  const [currentCircuitIndex, setCurrentCircuitIndex] = useState(DEFAULT_CIRCUIT_INDEX);
   const dynamicDifficultyRef = useRef<DynamicDifficultyState | null>(null);
   const currentDifficultyRef = useRef<Difficulty>('beginner');
   const questionStartTimeRef = useRef<number>(Date.now());
@@ -717,7 +727,7 @@ export default function LaneRacer() {
       border: '1px solid rgba(255,255,255,0.16)',
     } as const;
     const sectionTitleClass =
-      'mb-1.5 text-center text-sm font-bold uppercase tracking-widest text-white/90';
+      'mb-1 md:mb-1.5 text-center text-sm font-bold uppercase tracking-widest text-white/90';
 
     return (
       <div className="h-screen flex flex-col relative overflow-hidden">
@@ -794,13 +804,13 @@ export default function LaneRacer() {
             />
           </div>
 
-          <div className="w-full max-w-[15rem] rounded-2xl px-4 py-5 space-y-4" style={glassCardStyle} data-testid="lr-setup">
+          <div className="w-full max-w-[15rem] rounded-2xl px-4 py-3 space-y-2.5 md:py-5 md:space-y-4" style={glassCardStyle} data-testid="lr-setup">
             <div className="flex flex-col items-center">
               <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</span>
               <HorizontalDrum
                 length={TEAMS.length}
                 currentIndex={currentTeamIndex}
-                itemHeight={72}
+                itemHeight={setupDrumHeight}
                 onPrev={() => {
                   const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
                   setCurrentTeamIndex(n);
@@ -822,7 +832,7 @@ export default function LaneRacer() {
                     <img
                       src={TEAM_PREVIEW_URLS[team.id]}
                       alt={team.name}
-                      className="w-14 h-14 object-contain"
+                      className="w-12 h-12 md:w-14 md:h-14 object-contain"
                       style={{ transform: 'rotate(90deg)' }}
                       data-testid={`lr-team-${team.id}`}
                     />
@@ -836,7 +846,7 @@ export default function LaneRacer() {
               <HorizontalDrum
                 length={OPERATION_OPTIONS.length}
                 currentIndex={currentOpIndex}
-                itemHeight={72}
+                itemHeight={setupDrumHeight}
                 onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
                 onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
                 testIdPrefix="lr-op"
@@ -865,7 +875,7 @@ export default function LaneRacer() {
               <HorizontalDrum
                 length={DIFFICULTY_DRUM_OPTIONS.length}
                 currentIndex={currentDifficultyIndex}
-                itemHeight={72}
+                itemHeight={setupDrumHeight}
                 onPrev={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, -1, DIFFICULTY_DRUM_OPTIONS.length))}
                 onNext={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, 1, DIFFICULTY_DRUM_OPTIONS.length))}
                 testIdPrefix="lr-difficulty"
@@ -893,7 +903,7 @@ export default function LaneRacer() {
               <button
                 type="button"
                 onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
-                className="w-full py-2 px-3 transition-all outline-none focus:outline-none focus-visible:outline-none"
+                className="w-full py-1 md:py-2 px-3 transition-all outline-none focus:outline-none focus-visible:outline-none"
                 style={{ fontFamily: 'Oxanium, sans-serif', background: 'transparent', border: 'none' }}
                 data-testid="lr-view-3d"
                 aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
@@ -908,7 +918,7 @@ export default function LaneRacer() {
                   Chase Cam
                 </div>
                 <p
-                  className="mt-1 text-center text-[10px] uppercase tracking-widest h-4 leading-4"
+                  className="mt-0.5 md:mt-1 text-center text-[10px] uppercase tracking-widest h-4 leading-4"
                   style={{ color: 'rgba(255,255,255,0.28)' }}
                 >
                   {renderMode === '3d' ? 'Tap to disable' : 'Tap to enable'}
