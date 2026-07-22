@@ -3641,9 +3641,15 @@ export default function Game() {
           )}
         </div>
 
-        {/* Progress — track layout only here; sector squares sit above keypad */}
+        {/* Progress — track layout only here; sector squares sit above keypad.
+            Hungary: nudge up into the top-of-art dip so the ribbon clears Lap/Limits. */}
         {state.raceMapView === 'track' && (
-          <div className="my-2 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4 overflow-visible">
+          <div
+            className={cn(
+              'w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4 overflow-visible',
+              selectedCircuit?.id === 'hungary' ? '-translate-y-3 mt-0 mb-4' : 'my-2'
+            )}
+          >
             <LiveCircuitMap
               circuit={selectedCircuit}
               progress={progress}

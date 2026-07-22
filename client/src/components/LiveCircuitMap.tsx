@@ -374,6 +374,8 @@ export function LiveCircuitMap({
 
   const isResults = variant === 'results';
   const nativeIPad = !isResults && isNativeIPad();
+  /** Near-square Hungary reads small at the Spa phone budget — taller phone slot only. */
+  const phoneHungaryBoost = !isResults && !nativeIPad && circuit?.id === 'hungary';
   /** Sector paint matches the black ribbon width when known (per-circuit from extract). */
   const sectorStroke = meta.ribbon
     ? isResults
@@ -401,9 +403,9 @@ export function LiveCircuitMap({
       data-testid="live-circuit-map"
     >
       {/*
-        HUD: max-h-40 budget (previous phone size). Native iPad gets a taller
-        budget. Stage aspect matches the padded viewBox so contain-fit never
-        crops strokes/cars. Results keep a soft max-h-52 cap.
+        HUD: max-h-40 budget (previous phone size). Hungary phone gets a modest
+        taller slot (near-square art). Native iPad gets 16rem. Stage aspect
+        matches the padded viewBox so contain-fit never crops strokes/cars.
       */}
       <div
         className={cn(
@@ -412,7 +414,9 @@ export function LiveCircuitMap({
             ? 'w-full max-h-52 border border-black/10'
             : nativeIPad
               ? 'max-h-64 max-w-full [--map-max-h:16rem]'
-              : 'max-h-40 sm:max-h-44 max-w-full [--map-max-h:10rem] sm:[--map-max-h:11rem]'
+              : phoneHungaryBoost
+                ? 'max-h-48 sm:max-h-52 max-w-full [--map-max-h:12rem] sm:[--map-max-h:13rem]'
+                : 'max-h-40 sm:max-h-44 max-w-full [--map-max-h:10rem] sm:[--map-max-h:11rem]'
         )}
         style={{
           aspectRatio: `${vbW} / ${vbH}`,
