@@ -375,16 +375,19 @@ export function LiveCircuitMap({
   const isResults = variant === 'results';
   const nativeIPad = !isResults && isNativeIPad();
   const sectorStroke = isResults ? 10 : 8;
-  /** Pad viewBox so thick strokes / car near path edges are not clipped. */
-  const viewPad = 22;
-  const viewBox = `${-viewPad} ${-viewPad} ${meta.w + viewPad * 2} ${meta.h + viewPad * 2}`;
+  /** Pad viewBox from stroke + car marker so edge-tight art (Spa-style) never clips. */
+  const carPad = isResults ? 14 : 12;
+  const viewPad = Math.ceil(sectorStroke / 2) + carPad;
+  const vbW = meta.w + viewPad * 2;
+  const vbH = meta.h + viewPad * 2;
+  const viewBox = `${-viewPad} ${-viewPad} ${vbW} ${vbH}`;
   const defaultLeft = labelLeft ?? formatMapLapLabel(progress, raceLength);
   const circuitName = circuit && 'name' in circuit && circuit.name ? circuit.name : 'Circuit';
 
   return (
     <div
       className={cn(
-        'w-full mx-auto',
+        'w-full mx-auto overflow-visible',
         isResults ? 'max-w-md' : nativeIPad ? 'max-w-2xl' : 'max-w-md md:max-w-xl',
         className
       )}
@@ -392,8 +395,8 @@ export function LiveCircuitMap({
     >
       {/*
         HUD: max-h-40 budget (previous phone size). Native iPad gets a taller
-        budget. Width is contain-fit so tall circuits (Spa/Suzuka) shrink
-        horizontally instead of cropping. Results keep a soft max-h-52 cap.
+        budget. Stage aspect matches the padded viewBox so contain-fit never
+        crops strokes/cars. Results keep a soft max-h-52 cap.
       */}
       <div
         className={cn(
@@ -405,11 +408,12 @@ export function LiveCircuitMap({
               : 'max-h-40 sm:max-h-44 max-w-full [--map-max-h:10rem] sm:[--map-max-h:11rem]'
         )}
         style={{
-          aspectRatio: `${meta.w} / ${meta.h}`,
+          aspectRatio: `${vbW} / ${vbH}`,
           ...(isResults
             ? {}
             : {
-                width: `min(100%, calc(var(--map-max-h) * ${meta.w} / ${meta.h}))`,
+                width: `min(100%, calc(var(--map-max-h) * ${vbW} / ${vbH}))`,
+                maxHeight: 'var(--map-max-h)',
               }),
         }}
       >

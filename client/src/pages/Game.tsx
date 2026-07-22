@@ -2357,14 +2357,16 @@ export default function Game() {
                   />
                 </div>
 
-                {/* Track Map */}
-                <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible">
-                  <img
-                    src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
-                    alt={`${CURRENT_GRAND_PRIX.name} circuit`}
-                    className="h-32 md:h-52 w-auto max-w-[280px] object-contain"
-                    style={{ filter: 'invert(1)' }}
-                  />
+                {/* Track Map — padded contain stage (no max-w clamp that crops square maps) */}
+                <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible px-2">
+                  <div className="h-32 md:h-52 w-full overflow-visible p-2">
+                    <img
+                      src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+                      alt={`${CURRENT_GRAND_PRIX.name} circuit`}
+                      className="h-full w-full object-contain"
+                      style={{ filter: 'invert(1)' }}
+                    />
+                  </div>
                 </div>
 
                 {/* Difficulty: Adaptive | Difficulty | Locked */}
@@ -2509,14 +2511,16 @@ export default function Game() {
                   />
                 </div>
 
-                {/* Track Map */}
-                <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible">
-                  <img
-                    src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
-                    alt={`${CURRENT_GRAND_PRIX.name} circuit`}
-                    className="h-32 md:h-52 w-auto max-w-[280px] object-contain"
-                    style={{ filter: 'invert(1)' }}
-                  />
+                {/* Track Map — padded contain stage (no max-w clamp that crops square maps) */}
+                <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible px-2">
+                  <div className="h-32 md:h-52 w-full overflow-visible p-2">
+                    <img
+                      src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+                      alt={`${CURRENT_GRAND_PRIX.name} circuit`}
+                      className="h-full w-full object-contain"
+                      style={{ filter: 'invert(1)' }}
+                    />
+                  </div>
                 </div>
 
                 {/* Map: Track | Map | Sectors */}
@@ -3639,7 +3643,7 @@ export default function Game() {
 
         {/* Progress — track layout only here; sector squares sit above keypad */}
         {state.raceMapView === 'track' && (
-          <div className="my-2 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4">
+          <div className="my-2 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4 overflow-visible">
             <LiveCircuitMap
               circuit={selectedCircuit}
               progress={progress}
