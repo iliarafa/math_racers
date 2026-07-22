@@ -2358,12 +2358,12 @@ export default function Game() {
                 </div>
 
                 {/* Track Map */}
-                <div className="flex-1 flex items-center justify-center py-3 md:py-6">
+                <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible">
                   <img
                     src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
                     alt={`${CURRENT_GRAND_PRIX.name} circuit`}
-                    className="h-32 md:h-52 object-contain"
-                    style={{ maxWidth: '280px', filter: 'invert(1)' }}
+                    className="h-32 md:h-52 w-auto max-w-[280px] object-contain"
+                    style={{ filter: 'invert(1)' }}
                   />
                 </div>
 
@@ -2510,12 +2510,12 @@ export default function Game() {
                 </div>
 
                 {/* Track Map */}
-                <div className="flex-1 flex items-center justify-center py-3 md:py-6">
+                <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible">
                   <img
                     src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
                     alt={`${CURRENT_GRAND_PRIX.name} circuit`}
-                    className="h-32 md:h-52 object-contain"
-                    style={{ maxWidth: '280px', filter: 'invert(1)' }}
+                    className="h-32 md:h-52 w-auto max-w-[280px] object-contain"
+                    style={{ filter: 'invert(1)' }}
                   />
                 </div>
 

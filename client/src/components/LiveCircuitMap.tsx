@@ -376,7 +376,7 @@ export function LiveCircuitMap({
   const nativeIPad = !isResults && isNativeIPad();
   const sectorStroke = isResults ? 10 : 8;
   /** Pad viewBox so thick strokes / car near path edges are not clipped. */
-  const viewPad = 14;
+  const viewPad = 22;
   const viewBox = `${-viewPad} ${-viewPad} ${meta.w + viewPad * 2} ${meta.h + viewPad * 2}`;
   const defaultLeft = labelLeft ?? formatMapLapLabel(progress, raceLength);
   const circuitName = circuit && 'name' in circuit && circuit.name ? circuit.name : 'Circuit';
