@@ -1,21 +1,21 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { LiveCircuitMap, getMapLapLength } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
-import type { Weather, RaceMapView } from "@/lib/gameLogic";
-import { loadSetupWeather, saveSetupWeather, DIFFICULTY_DRUM_OPTIONS, difficultyDrumIndex } from "@/lib/gameLogic";
-import { RaceSetupCard } from "@/components/setup/RaceSetupCard";
-import { useIsMobile } from "@/hooks/use-mobile";
+import type { Weather, RaceMapView, DifficultyDrumOption } from "@/lib/gameLogic";
+import { loadSetupWeather, saveSetupWeather, loadSetupOperation, saveSetupOperation } from "@/lib/gameLogic";
+import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
+import { operationRow, levelRow, weatherRow, viewRow } from "@/components/setup/setupRows";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, ChevronRight, Download, Share2, Trophy } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 
@@ -52,8 +52,6 @@ import trackBahrain from "@/assets/track_bahrain.png";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
-import garageCar from "@/assets/garage_car.jpeg";
-import trackIllustration from "@/assets/track_illustration.jpeg";
 import chooseTrackVideo from "@assets/choose_TRACK.mp4";
 
 const FLAG_IMAGES: { [circuitId: string]: string } = {
@@ -362,18 +360,21 @@ const playAeroActivatedSound = () => {
 
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView } = useGameState();
-  const { isPremium } = usePurchase();
-  const isMobile = useIsMobile();
-  // Tighter than Lane Racer's 56 — this card carries more above it.
-  const setupDrumHeight = isMobile ? 48 : 72;
+  const { isPremium, isLoading: isPurchaseLoading } = usePurchase();
   const [, setLocation] = useLocation();
+  /** `/game/free-practice` | `/game/grand-prix` — replaces the old mode_select screen. */
+  const routeMode = useParams<{ mode?: string }>().mode;
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
   const [botProgress, setBotProgress] = useState(0);
   const [botLapResults, setBotLapResults] = useState<Array<{
     sectorColor: 'purple' | 'green' | 'yellow';
     botTime: number;
   }>>([]);
-  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  // Free Practice and Grand Prix always race the karting driver; the old operation_select
+  // screen used to set this on the way through, so it is seeded here instead.
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(
+    () => DRIVERS.find(d => d.id === 'karting') ?? null,
+  );
   const currentDifficultyRef = useRef<Difficulty>('easy');
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
   const [selectedWeather, setSelectedWeather] = useState<Weather>(() => loadSetupWeather());
@@ -383,11 +384,11 @@ export default function Game() {
   const [initialWeather, setInitialWeather] = useState<'dry' | 'wet'>('dry');
 
   const [isPracticeMode, setIsPracticeMode] = useState(false);
-  const [isGrandPrix, setIsGrandPrix] = useState(false);
-  const [isPreSeasonTesting, setIsPreSeasonTesting] = useState(false);
+  const [isGrandPrix, setIsGrandPrix] = useState(() => routeMode === 'grand-prix');
+  const [isPreSeasonTesting, setIsPreSeasonTesting] = useState(() => routeMode !== 'grand-prix');
   const [pstSessionLog, setPstSessionLog] = useState(false);
   const pstStintsRef = useRef<Array<{ startIndex: number; endIndex: number; time: number }>>([]); // tracks each stint's lap range and elapsed time
-  const [selectedOperation, setSelectedOperation] = useState<string>('Addition');
+  const [selectedOperation, setSelectedOperation] = useState<string>(() => loadSetupOperation());
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [pendingScoreSubmission, setPendingScoreSubmission] = useState<{
     playerId: string;
@@ -413,10 +414,6 @@ export default function Game() {
   // Free Practice only — GP Practice is always adaptive
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadDifficultyMode());
   const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLockedDifficulty());
-  // The setup card shows one LEVEL drum; mode + locked stay the underlying state.
-  const [levelDrumIndex, setLevelDrumIndex] = useState(() =>
-    difficultyDrumIndex(loadDifficultyMode(), loadLockedDifficulty()),
-  );
 
   // Force sim mode on for Grand Prix and Pre-Season Testing
   const effectiveSimMode = (isGrandPrix || isPreSeasonTesting) ? true : state.simMode;
@@ -488,7 +485,7 @@ export default function Game() {
   const questionStartTimeRef = useRef<number>(Date.now());
   // Track the best time for each sector and who holds it (F1-style competitive timing)
   const [revealedAttempts, setRevealedAttempts] = useState<Set<string>>(new Set());
-  const [gameStatus, setGameStatus] = useState<'mode_select' | 'operation_select' | 'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>('mode_select');
+  const [gameStatus, setGameStatus] = useState<'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>('selecting');
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -730,27 +727,50 @@ export default function Game() {
     return () => clearInterval(interval);
   }, [gameStatus, isPaused, showNamePrompt]);
 
-  // Guard: redirect to proper selection if missing driver/circuit
+  // Guard: a race can't run without a circuit, so fall back to setup.
+  // The driver no longer needs guarding — it is seeded at mount for both modes.
   useEffect(() => {
-    if (!selectedDriver && gameStatus !== 'mode_select' && gameStatus !== 'operation_select' && gameStatus !== 'paywall') {
-      setGameStatus('mode_select');
-    } else if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
+    if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
       setGameStatus('selecting');
     }
-  }, [selectedDriver, selectedCircuit, gameStatus]);
+  }, [selectedCircuit, gameStatus]);
 
-  // Auto-select first circuit when entering selecting state
+  /**
+   * Entering `/game/:mode` does the work the old operation_select screen did on tap.
+   *
+   * That screen forced the karting driver, built the circuit around the chosen operation
+   * and reset the Grand Prix phase flags before handing off to setup. With the screen gone
+   * the once-per-entry half of that runs here; the per-change half is `chooseOperation`.
+   */
   useEffect(() => {
-    if (gameStatus === 'selecting' && !selectedCircuit) {
-      if (isGrandPrix) {
-        setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
-      } else if (isPreSeasonTesting) {
-        setSelectedCircuit(createFreePracticeCircuit(selectedOperation));
-      } else {
-        setSelectedCircuit(CIRCUITS[0]);
-      }
+    const grandPrix = routeMode === 'grand-prix';
+    const kartingDriver = DRIVERS.find(d => d.id === 'karting');
+    if (kartingDriver) {
+      setSelectedDriver(kartingDriver);
+      localStorage.setItem('lastSelectedDriverId', kartingDriver.id);
     }
-  }, [gameStatus, selectedCircuit]);
+    setIsGrandPrix(grandPrix);
+    setIsPreSeasonTesting(!grandPrix);
+    setIsPracticeMode(true);
+    setRaceMode('solo');
+    dynamicDifficultyRef.current = null;
+    if (grandPrix) {
+      setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
+      setGrandPrixPhase('rw_practice');
+      setGrandPrixLockedDifficulty(null);
+      setGrandPrixPolePosition(false);
+      setGrandPrixPracticeCompleted(false);
+      setGrandPrixQualifyingCompleted(false);
+      setSelectedTab('rw_practice');
+    } else {
+      setSelectedCircuit(createFreePracticeCircuit(selectedOperation));
+      setSelectedTab('testing');
+    }
+    initAudio();
+    // Deliberately keyed on the route only — re-running on operation change would
+    // wipe Grand Prix progress mid-weekend. `chooseOperation` handles that case.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeMode]);
 
   // Keyboard input for desktop
   useEffect(() => {
@@ -865,17 +885,17 @@ export default function Game() {
     setSelectedCircuit(circuit);
   };
 
-  /** Pick a setup weather: apply, persist, and click. */
+  // Setup-card handlers. The card plays the click for every row, so these only apply
+  // and persist — do not add a `playCarouselClick` here or it will double up.
+
+  /** Pick a setup weather: apply and persist. */
   const chooseWeather = (weather: Weather) => {
     setSelectedWeather(weather);
     saveSetupWeather(weather);
-    if (state.soundEnabled) playCarouselClick();
   };
 
-  /** Step the LEVEL drum, exploding the chosen option back into mode + locked. */
-  const selectLevelDrumIndex = (n: number) => {
-    const opt = DIFFICULTY_DRUM_OPTIONS[n];
-    setLevelDrumIndex(n);
+  /** Pick a level, exploding the chosen rung back into mode + locked. */
+  const chooseLevel = (opt: DifficultyDrumOption) => {
     if (opt.mode === 'adaptive') {
       setDifficultyMode('adaptive');
       saveDifficultyPrefs('adaptive', lockedDifficulty);
@@ -884,13 +904,18 @@ export default function Game() {
       setLockedDifficulty(opt.locked!);
       saveDifficultyPrefs('locked', opt.locked!);
     }
-    if (state.soundEnabled) playCarouselClick();
   };
 
-  /** Pick the race progress view: apply and click. */
+  /** Pick the maths type: apply, persist, and rebuild the circuit around it. */
+  const chooseOperation = (op: string) => {
+    setSelectedOperation(op);
+    saveSetupOperation(op);
+    setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(op) : createFreePracticeCircuit(op));
+  };
+
+  /** Pick the race progress view. */
   const chooseRaceMapView = (view: RaceMapView) => {
     setRaceMapView(view);
-    if (state.soundEnabled) playCarouselClick();
   };
 
   const handleStartRace = () => {
@@ -1437,10 +1462,12 @@ export default function Game() {
     setShowPenalty(false);
     setElapsedTime(0);
     setCountdownLight(0);
-    setGameStatus('mode_select');
-    setSelectedDriver(null);
-    setSelectedCircuit(null);
-    setIsPracticeMode(false);
+    // Back to setup in the same mode. This used to dump the player at the mode menu,
+    // which meant re-picking mode and operation to race the same session again; the mode
+    // now lives in the route, so the driver and circuit stay valid.
+    setGameStatus('selecting');
+    setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(selectedOperation) : createFreePracticeCircuit(selectedOperation));
+    setIsPracticeMode(true);
     setIsPaused(false);
     setFeedback('idle');
     setAnswer("");
@@ -1449,7 +1476,6 @@ export default function Game() {
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
     setCurrentSectorRed(false);
-    setRaceMode('bot'); // Race mode always uses bot opponent
     // selectedWeather is a saved setup preference — only the resolved race weather resets
     setActualWeather('dry');
     // Reset alternating weather state
@@ -1488,14 +1514,21 @@ export default function Game() {
     setGrandPrixQualifyingCompleted(false);
     dynamicDifficultyRef.current = null;
     setDynamicDifficultyDisplay('beginner');
-    setIsGrandPrix(false);
-    setIsPreSeasonTesting(false);
+    // Mode comes from the route now, so it survives a restart rather than being cleared.
+    setSelectedTab(isGrandPrix ? 'rw_practice' : 'testing');
+    setRaceMode('solo');
     setPstSessionLog(false);
     pstStintsRef.current = [];
     setPstCycleCount(0);
     setShowNamePrompt(false);
     setPendingScoreSubmission(null);
     setNameInput('');
+  };
+
+  /** Leave the session entirely: reset, then back to the Paddock. */
+  const quitToPaddock = () => {
+    restartRace();
+    setLocation('/hub');
   };
 
   // Helper to reset race state and go back to selecting screen (for Grand Prix phase transitions)
@@ -1760,42 +1793,81 @@ export default function Game() {
     }
   }, [botFinished, overtakeActive]);
 
-  // Paywall Screen
-  if (gameStatus === 'paywall') {
-    return <Paywall onBack={() => setGameStatus('mode_select')} onPurchaseSuccess={() => setGameStatus('mode_select')} />;
+  // Grand Prix is premium. The entitlement is currently granted to everyone
+  // (see PurchaseContext), so this gate is inert — it stays wired for when it isn't.
+  if (isGrandPrix && !isPremium && !isPurchaseLoading) {
+    return <Paywall onBack={() => setLocation('/hub')} onPurchaseSuccess={() => setGameStatus('selecting')} />;
   }
 
-  // Mode Selection Screen — Career vs Grand Prix
-  if (gameStatus === 'mode_select') {
-    const modeCardStyle: React.CSSProperties = {
-      backgroundColor: 'rgba(255,255,255,0.12)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
-      border: '1px solid rgba(255,255,255,0.2)',
-      borderRadius: '12px',
-      padding: '16px 20px',
-      width: '100%',
-      textAlign: 'left' as const,
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-    };
-    const modeTitleStyle: React.CSSProperties = {
-      fontFamily: 'Oxanium, sans-serif',
-      fontSize: window.innerWidth >= 768 ? '1.4rem' : '1.15rem',
-      fontWeight: 'bold',
-      color: '#FFFFFF',
-    };
-    const modeSubStyle: React.CSSProperties = {
-      fontFamily: 'Oxanium, sans-serif',
-      fontSize: '0.75rem',
-      color: 'rgba(255,255,255,0.65)',
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.08em',
-      marginTop: '4px',
-    };
+  // Pre-race setup — the pit-wall card. One screen for both modes; Free Practice and
+  // Grand Prix differ only in which rows they contribute.
+  if (gameStatus === 'selecting') {
+    const GP_PHASES: { id: 'rw_practice' | 'rw_qualifying' | 'rw_race'; label: string; color: string; unlocked: boolean }[] = [
+      { id: 'rw_practice', label: 'Practice', color: '#22c55e', unlocked: true },
+      { id: 'rw_qualifying', label: 'Qualifying', color: '#f59e0b', unlocked: grandPrixPracticeCompleted },
+      { id: 'rw_race', label: 'Race', color: '#ef4444', unlocked: grandPrixQualifyingCompleted },
+    ];
+
+    const rows: SetupRowSpec[] = [
+      operationRow(selectedOperation, chooseOperation),
+      // Grand Prix contributes no LEVEL row — it is always adaptive through Practice and
+      // then locks for the rest of the weekend.
+      ...(isGrandPrix ? [] : [levelRow(difficultyMode, lockedDifficulty, chooseLevel)]),
+      weatherRow(selectedWeather, chooseWeather),
+      viewRow(state.raceMapView, chooseRaceMapView),
+    ];
+
+    const start = selectedTab === 'rw_qualifying'
+      ? { label: 'Start qualifying', tone: 'amber' as const }
+      : selectedTab === 'rw_race'
+        ? { label: 'Start race', tone: 'red' as const }
+        : selectedTab === 'rw_practice'
+          ? { label: 'Start practice', tone: 'green' as const }
+          : { label: 'Go to track', tone: 'green' as const };
+
+    const helpText = isGrandPrix
+      ? `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`
+      : '100 questions with Adaptive difficulty (or locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.';
+
+    const phaseTabs = isGrandPrix ? (
+      <div className="flex items-center justify-center gap-5 pt-1" data-testid="gp-phase-tabs">
+        {GP_PHASES.map((p) => {
+          const active = selectedTab === p.id;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              disabled={!p.unlocked}
+              onClick={() => {
+                if (!p.unlocked) return;
+                setSelectedTab(p.id);
+                setGrandPrixPhase(p.id);
+                setIsPracticeMode(p.id === 'rw_practice');
+                setRaceMode(p.id === 'rw_practice' ? 'solo' : 'bot');
+                if (state.soundEnabled) playCarouselClick();
+              }}
+              className="font-bold uppercase tracking-widest transition-colors outline-none focus:outline-none disabled:cursor-not-allowed"
+              style={{
+                fontFamily: 'Oxanium, sans-serif',
+                fontSize: '11px',
+                color: active ? p.color : 'rgba(255,255,255,0.4)',
+                opacity: p.unlocked ? 1 : 0.25,
+              }}
+              data-testid={`gp-phase-${p.id}`}
+            >
+              {p.label}
+            </button>
+          );
+        })}
+      </div>
+    ) : undefined;
 
     return (
-      <div className="h-screen flex flex-col relative overflow-hidden">
+      <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+        {/* Background Video */}
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-30">
+          <source src={chooseTrackVideo} type="video/mp4" />
+        </video>
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
@@ -1804,484 +1876,45 @@ export default function Game() {
               onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
               className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
               style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
+              aria-label="Back to paddock"
             >
               <ChevronLeft size={24} />
             </button>
           </Link>
-          <img
-            src={logoImage}
-            alt="F1 Math Racer"
-            className="h-8 md:h-12 object-contain"
+          <img src={logoImage} alt="F1 Math Racer" className="h-8 md:h-12 object-contain" />
+        </div>
+
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 overflow-y-auto">
+          <RaceSetupCard
+            motionKey={`${isGrandPrix ? 'gp' : 'fp'}-${CURRENT_GRAND_PRIX.circuitId}-card`}
+            testId={`hero-card-${isGrandPrix ? '' : 'pst-'}${CURRENT_GRAND_PRIX.circuitId}`}
+            header={{
+              eyebrow: `Round ${CURRENT_GRAND_PRIX.round} · ${isGrandPrix ? 'Grand Prix' : 'Free Practice'}`,
+              title: CURRENT_GRAND_PRIX.name,
+              flagSrc: CURRENT_GRAND_PRIX.flagImage,
+              phase: phaseTabs,
+            }}
+            mapImageSrc={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+            mapStageClass={CURRENT_GRAND_PRIX.mapStageClass}
+            rows={rows}
+            readouts={[{ label: 'Laps', value: String(raceLength) }]}
+            start={{ ...start, onStart: handleStartRace }}
+            onBack={() => setLocation('/hub')}
+            helpText={helpText}
+            soundEnabled={state.soundEnabled}
           />
-        </div>
 
-        {/* Title */}
-        <div className="relative z-10 mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
-          <h2
-            className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-          >
-            Select Mode
-          </h2>
-        </div>
-
-        {/* Mode Cards */}
-        <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
-          <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
-            {/* Weekend Briefing Banner — links to /grand-prix */}
-            <Link
-              href="/grand-prix"
-              onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-              data-testid="link-weekend-briefing"
-              style={{
-                background: CURRENT_GRAND_PRIX.gradient,
-                borderRadius: '14px',
-                padding: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                color: '#1a1a1a',
-                boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
-                textDecoration: 'none',
-              }}
-            >
-              <img
-                src={CURRENT_GRAND_PRIX.flagImage}
-                alt={`${CURRENT_GRAND_PRIX.country} flag`}
-                style={{
-                  width: 30,
-                  height: 22,
-                  borderRadius: 3,
-                  objectFit: 'cover',
-                  flexShrink: 0,
-                  boxShadow: '0 0 0 0.5px rgba(255,255,255,0.3)',
-                }}
-              />
-              <div style={{ flex: 1, lineHeight: 1.1, fontFamily: 'Oxanium, sans-serif' }}>
-                <div style={{ fontSize: '9px', letterSpacing: '0.3em', fontWeight: 800, opacity: 0.85 }}>
-                  WEEKEND BRIEFING
-                </div>
-                <div style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '0.06em', marginTop: '2px' }}>
-                  {CURRENT_GRAND_PRIX.name}
-                </div>
-              </div>
-            </Link>
-
-            {/* Free Practice Card */}
-            <motion.button
-              onClick={() => {
-                if (state.soundEnabled) playCarouselClick();
-                setIsPreSeasonTesting(true);
-                setGameStatus('operation_select');
-              }}
-              whileTap={{ scale: 0.98 }}
-              style={modeCardStyle}
-            >
-              <span className="block" style={modeTitleStyle}>FREE PRACTICE</span>
-              <span className="block" style={modeSubStyle}>{`ROUND ${CURRENT_GRAND_PRIX.round} / ${CURRENT_GRAND_PRIX.name}`}</span>
-            </motion.button>
-
-            {/* Sim Racing Card */}
-            <Link href="/lane-racer">
-              <motion.button
-                onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
-                whileTap={{ scale: 0.98 }}
-                style={modeCardStyle}
-              >
-                <span className="block" style={modeTitleStyle}>LANE RACER</span>
-                <span className="block" style={modeSubStyle}>ARCADE MODE</span>
-              </motion.button>
-            </Link>
-
-            {/* Deploy/Harvest Card — archived, re-enable later */}
-
-            {/* Grand Prix Card */}
-            <motion.button
-              onClick={() => {
-                if (state.soundEnabled) playCarouselClick();
-                if (!isPremium) { setGameStatus('paywall'); return; }
-                setIsGrandPrix(true);
-                setGameStatus('operation_select');
-              }}
-              whileTap={{ scale: 0.98 }}
-              style={modeCardStyle}
-            >
-              <span className="block" style={modeTitleStyle}>GRAND PRIX</span>
-              <span className="block" style={modeSubStyle}>{CURRENT_GRAND_PRIX.name}</span>
-              {!isPremium && (
-                <span className="block" style={{ ...modeSubStyle, fontSize: '0.65rem', color: '#999', marginTop: '6px' }}>
-                  Full version
-                </span>
-              )}
-            </motion.button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Operation Selection Screen for Grand Prix / Pre-Season Testing
-  if (gameStatus === 'operation_select') {
-    const operationItems = [
-      { label: 'Addition', symbol: '+', type: 'Addition' },
-      { label: 'Subtraction', symbol: '−', type: 'Subtraction' },
-      { label: 'Multiplication', symbol: '×', type: 'Multiplication' },
-      { label: 'Division', symbol: '÷', type: 'Division' },
-      { label: 'Variables', symbol: 'f(x)', type: 'Variables' },
-    ];
-
-    return (
-      <div className="h-screen flex flex-col">
-        {/* App Logo */}
-        <div className="relative z-10 pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
-          <Link href="/">
-            <img
-              src={logoImage}
-              alt="F1 Math Racer"
-              className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
-            />
-          </Link>
-        </div>
-        <div className="relative z-10 flex-1 flex flex-col md:justify-center md:pb-16">
-        {/* Welcome Section */}
-        <div className="mt-6 md:mt-0 mb-6 md:mb-6 flex flex-col items-center px-8">
-          {isPreSeasonTesting ? (
-            <h2 className="text-4xl md:text-5xl font-bold uppercase tracking-wider text-white text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>Free Practice</h2>
-          ) : (
-          <h2
-            className="text-2xl md:text-4xl font-bold uppercase tracking-wider text-white text-center"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-          >
-            {'Welcome to Grand Prix!'}
-          </h2>
-          )}
-          <p
-            className="mt-3 text-center text-white/60"
-            style={{ fontFamily: 'Oxanium, sans-serif', fontSize: '0.8rem', maxWidth: '28rem' }}
-          >
-            {isPreSeasonTesting
-              ? '100 questions with Adaptive difficulty (or Locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.'
-              : `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`}
-          </p>
-          <h3
-            className="mt-8 text-xl md:text-2xl font-bold uppercase tracking-wider text-white"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-          >
-            Select Operation
-          </h3>
-        </div>
-        {/* Operation Grid */}
-        <div className="flex flex-col items-center px-8">
-          <div className="grid grid-cols-2 gap-3 w-full max-w-xs md:max-w-md">
-            {operationItems.map((op, index) => (
-              <motion.button
-                key={op.type}
-                onClick={() => {
-                  setSelectedOperation(op.type);
-                  const kartingDriver = DRIVERS.find(d => d.id === 'karting')!;
-                  setSelectedDriver(kartingDriver);
-                  localStorage.setItem('lastSelectedDriverId', kartingDriver.id);
-                  if (isPreSeasonTesting) {
-                    setSelectedCircuit(createFreePracticeCircuit(op.type));
-                    setIsPracticeMode(true);
-                    setRaceMode('solo');
-                    setSelectedTab('testing');
-                    dynamicDifficultyRef.current = null;
-                  } else {
-                    setSelectedCircuit(createGrandPrixCircuit(op.type));
-                    setGrandPrixPhase('rw_practice');
-                    setGrandPrixLockedDifficulty(null);
-                    setGrandPrixPolePosition(false);
-                    setGrandPrixPracticeCompleted(false);
-                    setGrandPrixQualifyingCompleted(false);
-                    dynamicDifficultyRef.current = null;
-                    setIsPracticeMode(true);
-                    setRaceMode('solo');
-                    setSelectedTab('rw_practice');
-                  }
-                  if (state.soundEnabled) playCarouselClick();
-                  initAudio();
-                  setGameStatus('selecting');
-                }}
-                whileTap={{ scale: 0.95 }}
-                whileHover={{ scale: 1.02 }}
-                className={`h-20 md:h-24 rounded-xl flex flex-col items-center justify-center${index === operationItems.length - 1 ? ' col-span-2' : ''}`}
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.12)',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                }}
-              >
-                <span
-                  className="block"
-                  style={{
-                    fontFamily: 'Oxanium, sans-serif',
-                    fontSize: window.innerWidth >= 768 ? '2rem' : '1.4rem',
-                    fontWeight: 'bold',
-                    color: '#FFFFFF',
-                    opacity: 0.85,
-                  }}
-                >
-                  {op.symbol}
-                </span>
-                <span
-                  className="block mt-1 uppercase tracking-widest"
-                  style={{
-                    fontFamily: 'Oxanium, sans-serif',
-                    fontSize: '0.6rem',
-                    color: '#FFFFFF',
-                    opacity: 0.5,
-                  }}
-                >
-                  {op.label}
-                </span>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-        {!isPreSeasonTesting && (
-          <div className="flex justify-center mt-4">
+          {isGrandPrix && (
             <Link href="/leaderboard?mode=grand-prix">
               <button
-                className="flex items-center gap-2 transition-colors text-sm uppercase tracking-wider text-white/50 hover:text-white"
+                className="mt-4 flex items-center gap-2 transition-colors text-xs uppercase tracking-wider text-white/45 hover:text-white"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
                 <Trophy className="w-4 h-4" /> Leaderboard
               </button>
             </Link>
-          </div>
-        )}
+          )}
         </div>
-        {/* Back button */}
-        <div className="relative z-10 px-8 py-4 flex flex-col items-center gap-3">
-          <button
-            onClick={() => {
-              if (state.soundEnabled) playCarouselClick();
-              setIsGrandPrix(false);
-              setIsPreSeasonTesting(false);
-              setGameStatus('mode_select');
-            }}
-            className="transition-colors text-sm uppercase tracking-wider text-white/50 hover:text-white"
-            style={{ fontFamily: 'Oxanium, sans-serif', paddingBottom: 'env(safe-area-inset-bottom)' }}
-          >
-            Back
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // Driver Selection Screen - Racing Series Menu
-
-  // Circuit Selection Screen - Dark Race Setup
-  if (gameStatus === 'selecting') {
-    const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
-    const displayCircuit = selectedCircuit || CIRCUITS[0];
-    const isCircuitLocked = false;
-
-
-    return (
-      <div className="min-h-screen flex flex-col transition-colors duration-300 relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
-        {/* Background Video */}
-        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-30">
-          <source src={chooseTrackVideo} type="video/mp4" />
-        </video>
-        {/* App Logo — same position as driver select */}
-        <div className="pb-4 flex justify-center relative z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
-          <Link href="/">
-            <img
-              src={logoImage}
-              alt="F1 Math Racer"
-              className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
-            />
-          </Link>
-        </div>
-        {/* Tab Toggle — Grand Prix phases, Pre-Season Testing, or normal Race/Practice */}
-        <div className="mt-8 md:mt-24 landscape:md:mt-8 mb-6 md:mb-24 landscape:md:mb-6 flex justify-center relative z-10">
-          {isPreSeasonTesting ? (
-            <div className="rounded-full p-1 flex gap-1 bg-gray-200">
-              <button
-                className="px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all bg-green-600 text-white"
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-              >
-                Free Practice
-              </button>
-            </div>
-          ) : isGrandPrix ? (
-            <div className="rounded-full p-1 flex gap-1 bg-gray-200">
-              <button
-                onClick={() => {
-                  setSelectedTab('rw_practice');
-                  setGrandPrixPhase('rw_practice');
-                  setIsPracticeMode(true);
-                  setRaceMode('solo');
-                  if (state.soundEnabled) playCarouselClick();
-                }}
-                className={cn(
-                  "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
-                  selectedTab === 'rw_practice'
-                    ? "bg-green-600 text-white"
-                    : "bg-transparent text-gray-600 hover:text-gray-900"
-                )}
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-              >
-                Practice
-              </button>
-              <button
-                onClick={() => {
-                  if (!grandPrixPracticeCompleted) return;
-                  setSelectedTab('rw_qualifying');
-                  setGrandPrixPhase('rw_qualifying');
-                  setIsPracticeMode(false);
-                  setRaceMode('bot');
-                  if (state.soundEnabled) playCarouselClick();
-                }}
-                className={cn(
-                  "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
-                  selectedTab === 'rw_qualifying'
-                    ? "bg-amber-500 text-white"
-                    : !grandPrixPracticeCompleted
-                      ? "bg-transparent text-gray-300 cursor-not-allowed"
-                      : "bg-transparent text-gray-600 hover:text-gray-900"
-                )}
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-              >
-                Qualifying
-              </button>
-              <button
-                onClick={() => {
-                  if (!grandPrixQualifyingCompleted) return;
-                  setSelectedTab('rw_race');
-                  setGrandPrixPhase('rw_race');
-                  setIsPracticeMode(false);
-                  setRaceMode('bot');
-                  if (state.soundEnabled) playCarouselClick();
-                }}
-                className={cn(
-                  "px-4 py-2 rounded-full font-bold text-xs md:text-sm uppercase tracking-wider transition-all",
-                  selectedTab === 'rw_race'
-                    ? "bg-red-600 text-white"
-                    : !grandPrixQualifyingCompleted
-                      ? "bg-transparent text-gray-300 cursor-not-allowed"
-                      : "bg-transparent text-gray-600 hover:text-gray-900"
-                )}
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-              >
-                Race
-              </button>
-            </div>
-          ) : null}
-        </div>
-        {/* Main Content - Hero Card with Side Chevrons */}
-        {/* Card area — same position as series buttons list */}
-        <div className="flex items-center justify-center px-8 pb-24 md:pb-32 landscape:md:pb-24 relative z-10">
-          {isPreSeasonTesting ? (
-            <RaceSetupCard
-              motionKey={`pst-${CURRENT_GRAND_PRIX.circuitId}-card`}
-              testId={`hero-card-pst-${CURRENT_GRAND_PRIX.circuitId}`}
-              mapImageSrc={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
-              level={{ index: levelDrumIndex, onIndexChange: selectLevelDrumIndex }}
-              view={state.raceMapView}
-              onViewChange={chooseRaceMapView}
-              weather={selectedWeather}
-              onWeatherChange={chooseWeather}
-              drumHeight={setupDrumHeight}
-            />
-          ) : isGrandPrix ? (
-            /* Grand Prix has no LEVEL drum — it is always adaptive in Practice, then locks. */
-            <RaceSetupCard
-              motionKey={`${CURRENT_GRAND_PRIX.circuitId}-card`}
-              testId={`hero-card-${CURRENT_GRAND_PRIX.circuitId}`}
-              mapImageSrc={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
-              view={state.raceMapView}
-              onViewChange={chooseRaceMapView}
-              weather={selectedWeather}
-              onWeatherChange={chooseWeather}
-              drumHeight={setupDrumHeight}
-            />
-          ) : null}
-        </div>
-        {/* Start Engine Button - Fixed Bottom */}
-        <div className="fixed bottom-4 left-0 right-0 px-8 py-4 flex flex-col items-center gap-3 transition-colors duration-300 z-10" style={{ backgroundColor: 'transparent' }}>
-          <motion.button
-            whileHover={!isCircuitLocked ? { scale: 1.02 } : undefined}
-            whileTap={!isCircuitLocked ? { scale: 0.98 } : undefined}
-            onClick={() => { if (isCircuitLocked) return; if (state.soundEnabled) playCarouselClick(); handleStartRace(); }}
-            className={cn(
-              "w-full max-w-sm md:max-w-lg py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white",
-              isCircuitLocked && "opacity-40 cursor-not-allowed"
-            )}
-            style={{
-              fontFamily: 'Oxanium, sans-serif',
-              backgroundColor: isCircuitLocked ? '#999999'
-                : selectedTab === 'testing' ? '#16a34a'
-                : selectedTab === 'rw_practice' ? '#16a34a'
-                : selectedTab === 'rw_qualifying' ? '#f59e0b'
-                : selectedTab === 'rw_race' ? '#dc2626'
-                : '#16a34a',
-              animation: isCircuitLocked ? 'none'
-                : selectedTab === 'rw_qualifying' ? 'pulse-amber 2s infinite'
-                : selectedTab === 'rw_race' ? 'pulse-red 2s infinite'
-                : 'pulse-green 2s infinite'
-            }}
-            data-testid="button-start-race"
-          >
-            {selectedTab === 'testing' ? 'Go to Track'
-              : selectedTab === 'rw_practice' ? 'Start Practice'
-              : selectedTab === 'rw_qualifying' ? 'Start Qualifying'
-              : selectedTab === 'rw_race' ? 'Start Race'
-              : isPracticeMode ? 'Start Practice' : 'Go to Grid'}
-          </motion.button>
-          <button
-            onClick={() => {
-              if (state.soundEnabled) playCarouselClick();
-              if (isGrandPrix) {
-                setIsGrandPrix(false);
-                setGrandPrixPhase('rw_practice');
-                setGrandPrixLockedDifficulty(null);
-                setGrandPrixPolePosition(false);
-                setGrandPrixPracticeCompleted(false);
-                setGrandPrixQualifyingCompleted(false);
-                dynamicDifficultyRef.current = null;
-                setSelectedTab('race');
-                setGameStatus("mode_select");
-              } else if (isPreSeasonTesting) {
-                setIsPreSeasonTesting(false);
-                dynamicDifficultyRef.current = null;
-                setSelectedTab('race');
-                setGameStatus("mode_select");
-              }
-            }}
-            className="transition-colors text-sm uppercase tracking-wider text-white/50 hover:text-white"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-            data-testid="button-back-menu"
-          >
-            Back
-          </button>
-        </div>
-        <style>{`
-          @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0.3); }
-          }
-          @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(22, 163, 74, 0.3); }
-          }
-          @keyframes pulse-purple {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(147, 51, 234, 0.3); }
-          }
-          @keyframes pulse-blue {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(37, 99, 235, 0.3); }
-          }
-          @keyframes pulse-amber {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(245, 158, 11, 0.3); }
-          }
-        `}</style>
       </div>
     );
   }
@@ -2485,8 +2118,8 @@ export default function Game() {
                   View Leaderboard
                 </button>
               </Link>
-              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
-                <RotateCcw className="w-4 h-4" /> Back to Menu
+              <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
+                <Home className="w-4 h-4" /> Back to Paddock
               </button>
             </div>
           </div>
@@ -2998,7 +2631,7 @@ export default function Game() {
                 Resume
               </button>
               <button
-                onClick={restartRace}
+                onClick={quitToPaddock}
                 className="bg-secondary text-secondary-foreground px-6 py-2 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center gap-2 mx-auto"
                 data-testid="button-quit-race"
               >

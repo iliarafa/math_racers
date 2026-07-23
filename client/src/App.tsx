@@ -32,6 +32,7 @@ function Router() {
       <Route path="/" component={Welcome} />
       <Route path="/hub" component={Hub} />
       <Route path="/dev/circuit-maps" component={DevCircuitMaps} />
+      <Route path="/game/:mode" component={Game} />
       <Route path="/game" component={Game} />
       <Route path="/garage" component={Garage} />
       <Route path="/strategy" component={StrategyGuide} />

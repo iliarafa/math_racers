@@ -1,64 +1,88 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CURRENT_GRAND_PRIX, DEFAULT_MAP_STAGE_CLASS } from '@/lib/currentGrandPrix';
-import {
-  DIFFICULTY_DRUM_OPTIONS,
-  difficultyDrumColor,
-  type RaceMapView,
-} from '@/lib/gameLogic';
-import { SetupDrumRow } from './SetupDrumRow';
-import { WEATHER_DRUM_OPTIONS, weatherDrumIndex } from './weatherOptions';
-import type { Weather } from '@/lib/gameLogic';
+import { DEFAULT_MAP_STAGE_CLASS } from '@/lib/currentGrandPrix';
+import { playCarouselClick } from '@/lib/uiSound';
+import { SetupRow, type SetupRowSpec } from './SetupRow';
 
-const VIEW_OPTIONS: { id: RaceMapView; label: string }[] = [
-  { id: 'track', label: 'Track' },
-  { id: 'sectors', label: 'Sectors' },
-];
+export type { SetupOption, SetupRowSpec } from './SetupRow';
 
-const VIEW_ACTIVE_COLOR = '#22c55e';
+const TONE_COLORS = {
+  green: '#16a34a',
+  amber: '#f59e0b',
+  red: '#dc2626',
+} as const;
 
-interface RaceSetupCardProps {
-  /** Distinguishes the Free Practice and Grand Prix cards for animation identity. */
+export interface RaceSetupCardProps {
+  /** Distinguishes surfaces for animation identity. */
   motionKey: string;
   testId: string;
-  /** Resolved circuit silhouette (the thin `black` line art). */
+  header: {
+    /** Small tracked line above the title, e.g. `ROUND 11`. */
+    eyebrow?: string;
+    title: string;
+    flagSrc?: string;
+    /** Phase tabs or any other header control. Progression state, not a setting. */
+    phase?: React.ReactNode;
+  };
+  /** Circuit silhouette for the hero band. Omit to drop the band entirely. */
   mapImageSrc?: string;
-  /** Present only where a level choice is offered — Grand Prix locks after Practice. */
-  level?: { index: number; onIndexChange: (next: number) => void };
-  view: RaceMapView;
-  onViewChange: (view: RaceMapView) => void;
-  weather: Weather;
-  onWeatherChange: (weather: Weather) => void;
-  drumHeight: number;
+  /** Tailwind height classes for the hero band; per-circuit art needs different room. */
+  mapStageClass?: string;
+  /** Black line art needs inverting on a dark card. */
+  invertMap?: boolean;
+  rows: SetupRowSpec[];
+  /** Values that are shown but not chosen, e.g. LAPS 100. */
+  readouts?: { label: string; value: string }[];
+  start: { label: string; tone: keyof typeof TONE_COLORS; onStart: () => void; disabled?: boolean };
+  onBack?: () => void;
+  /** Mode rules, reachable from the "?" — not shown before every race. */
+  helpText?: string;
+  soundEnabled?: boolean;
+  /** Extra content below the rows, e.g. Multiplayer's room code. */
+  children?: React.ReactNode;
 }
 
 /**
- * The Free Practice / Grand Prix setup card.
+ * The shared pre-race setup card for Free Practice, Grand Prix, Lane Racer and Multiplayer.
  *
- * Both cards were byte-identical apart from the level control, so they share one
- * component: presence of `level` is what distinguishes them. The card owns all three
- * drums deliberately — no children slot — so the two surfaces cannot drift in ordering
- * or spacing the way the duplicated JSX did.
+ * Setup reads as a race engineer's readout: a hero band of circuit art, then one row per
+ * setting with its current value right-aligned. Rows are passed as data rather than
+ * hardcoded, which is what lets four modes with different setting counts share one layout
+ * with no variant prop and no branching — a mode simply contributes more or fewer rows.
+ *
+ * The card owns which row is open so only one can be at a time.
  */
 export function RaceSetupCard({
   motionKey,
   testId,
+  header,
   mapImageSrc,
-  level,
-  view,
-  onViewChange,
-  weather,
-  onWeatherChange,
-  drumHeight,
+  mapStageClass,
+  invertMap = true,
+  rows,
+  readouts,
+  start,
+  onBack,
+  helpText,
+  soundEnabled = true,
+  children,
 }: RaceSetupCardProps) {
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  const click = () => {
+    if (soundEnabled) playCarouselClick();
+  };
+
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full">
       <motion.div
         key={motionKey}
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
-        className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none backdrop-blur-xl"
+        className="w-[350px] md:w-[500px] rounded-[20px] px-5 py-4 md:px-6 md:py-5 flex flex-col select-none backdrop-blur-xl"
         style={{
           backgroundColor: 'rgba(255,255,255,0.12)',
           border: '1px solid rgba(255,255,255,0.2)',
@@ -66,112 +90,215 @@ export function RaceSetupCard({
         }}
         data-testid={testId}
       >
-        {/* Header - Circuit & Flag */}
-        <div className="flex items-center justify-center gap-3 mb-4">
-          <h2
-            className="text-2xl font-bold uppercase tracking-wider text-white"
-            style={{ fontFamily: 'Oxanium, sans-serif' }}
-          >
-            {CURRENT_GRAND_PRIX.name}
-          </h2>
-          <img
-            src={CURRENT_GRAND_PRIX.flagImage}
-            alt={`${CURRENT_GRAND_PRIX.country} flag`}
-            className="h-5 w-7 object-cover rounded-sm relative -top-0.5"
-          />
-        </div>
-
-        {/* Track Map — padded contain stage (no max-w clamp that crops square maps).
-            Stage height comes from the GP config so per-circuit art is one field. */}
-        <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible px-2">
-          <div
-            className={cn(
-              'w-full overflow-visible p-2',
-              CURRENT_GRAND_PRIX.mapStageClass ?? DEFAULT_MAP_STAGE_CLASS,
+        {/* Header — eyebrow, circuit, flag, and the "?" that owns the mode rules */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            {header.eyebrow && (
+              <div
+                className="uppercase"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  fontSize: '9px',
+                  letterSpacing: '0.3em',
+                  color: 'rgba(255,255,255,0.35)',
+                }}
+              >
+                {header.eyebrow}
+              </div>
             )}
-          >
-            <img
-              src={mapImageSrc}
-              alt={`${CURRENT_GRAND_PRIX.name} circuit`}
-              className="h-full w-full object-contain"
-              style={{ filter: 'invert(1)' }}
-            />
+            <div className="flex items-center gap-2.5">
+              <h2
+                className="text-xl md:text-2xl font-bold uppercase tracking-wider text-white leading-tight"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+              >
+                {header.title}
+              </h2>
+              {header.flagSrc && (
+                <img
+                  src={header.flagSrc}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-4 w-6 object-cover rounded-sm"
+                />
+              )}
+            </div>
           </div>
-        </div>
-
-        <div className="space-y-1.5 pt-1">
-          {level && (
-            <SetupDrumRow
-              title="Level"
-              length={DIFFICULTY_DRUM_OPTIONS.length}
-              currentIndex={level.index}
-              itemHeight={drumHeight}
-              onIndexChange={level.onIndexChange}
-              testIdPrefix="fp-level"
-              ariaLabelPrev="Previous level"
-              ariaLabelNext="Next level"
-              renderItem={(idx) => {
-                const opt = DIFFICULTY_DRUM_OPTIONS[idx];
-                return (
-                  <span
-                    className="font-bold text-base uppercase tracking-wider text-center leading-tight"
-                    style={{ fontFamily: 'Oxanium, sans-serif', color: difficultyDrumColor(opt) }}
-                    data-testid={`setup-level-${opt.id}`}
-                  >
-                    {opt.label}
-                  </span>
-                );
+          {helpText && (
+            <button
+              type="button"
+              onClick={() => {
+                click();
+                setHelpOpen(true);
               }}
-            />
+              className="shrink-0 w-7 h-7 flex items-center justify-center text-white/45 hover:text-white transition-colors outline-none focus:outline-none"
+              style={{
+                fontFamily: 'Oxanium, sans-serif',
+                fontSize: '12px',
+                fontWeight: 700,
+              }}
+              aria-label="How this mode works"
+              data-testid="setup-help"
+            >
+              ?
+            </button>
           )}
-
-          <SetupDrumRow
-            title="View"
-            length={VIEW_OPTIONS.length}
-            currentIndex={view === 'sectors' ? 1 : 0}
-            itemHeight={drumHeight}
-            onIndexChange={(n) => onViewChange(VIEW_OPTIONS[n].id)}
-            testIdPrefix="setup-view"
-            ariaLabelPrev="Previous view"
-            ariaLabelNext="Next view"
-            renderItem={(idx) => {
-              const opt = VIEW_OPTIONS[idx];
-              return (
-                <span
-                  className="font-bold text-base uppercase tracking-wider text-center leading-tight"
-                  style={{ fontFamily: 'Oxanium, sans-serif', color: VIEW_ACTIVE_COLOR }}
-                  data-testid={`setup-view-${opt.id}`}
-                >
-                  {opt.label}
-                </span>
-              );
-            }}
-          />
-
-          <SetupDrumRow
-            title="Weather"
-            length={WEATHER_DRUM_OPTIONS.length}
-            currentIndex={weatherDrumIndex(weather)}
-            itemHeight={drumHeight}
-            onIndexChange={(n) => onWeatherChange(WEATHER_DRUM_OPTIONS[n].id)}
-            testIdPrefix="setup-weather"
-            ariaLabelPrev="Previous weather"
-            ariaLabelNext="Next weather"
-            renderItem={(idx) => {
-              const opt = WEATHER_DRUM_OPTIONS[idx];
-              return (
-                <span
-                  className="font-bold text-base uppercase tracking-wider text-center leading-tight"
-                  style={{ fontFamily: 'Oxanium, sans-serif', color: opt.color }}
-                  data-testid={`setup-weather-${opt.id}`}
-                >
-                  {opt.label}
-                </span>
-              );
-            }}
-          />
         </div>
+
+        {header.phase && <div className="mt-3">{header.phase}</div>}
+
+        {mapImageSrc && (
+          <div className="flex items-center justify-center py-2 md:py-4 overflow-visible px-2">
+            <div className={cn('w-full overflow-visible p-1', mapStageClass ?? DEFAULT_MAP_STAGE_CLASS)}>
+              <img
+                src={mapImageSrc}
+                alt={`${header.title} circuit`}
+                className="h-full w-full object-contain"
+                style={invertMap ? { filter: 'invert(1)' } : undefined}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className={mapImageSrc ? 'mt-0' : 'mt-4'}>
+          {rows.map((spec) => (
+            <SetupRow
+              key={spec.id}
+              /* The card owns the click so every row sounds identical and callers can't forget. */
+              spec={{ ...spec, onSelect: (id) => { click(); spec.onSelect(id); } }}
+            />
+          ))}
+
+          {readouts?.map((r) => (
+            <div
+              key={r.label}
+              className="flex items-center justify-between gap-3 py-3 border-b"
+              style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+              data-testid={`setup-readout-${r.label.toLowerCase()}`}
+            >
+              <span
+                className="uppercase"
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  fontSize: '9px',
+                  letterSpacing: '0.24em',
+                  color: 'rgba(255,255,255,0.4)',
+                }}
+              >
+                {r.label}
+              </span>
+              <span
+                className="font-bold text-sm md:text-base uppercase tracking-wider"
+                style={{ fontFamily: 'Oxanium, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+              >
+                {r.value}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {children}
+
+        <motion.button
+          whileHover={!start.disabled ? { scale: 1.02 } : undefined}
+          whileTap={!start.disabled ? { scale: 0.98 } : undefined}
+          onClick={() => {
+            if (start.disabled) return;
+            click();
+            start.onStart();
+          }}
+          className={cn(
+            'mt-4 w-full py-3.5 rounded-xl font-bold text-base md:text-lg uppercase tracking-wider text-white',
+            start.disabled && 'opacity-40 cursor-not-allowed',
+          )}
+          style={{
+            fontFamily: 'Oxanium, sans-serif',
+            backgroundColor: start.disabled ? '#999999' : TONE_COLORS[start.tone],
+            animation: start.disabled ? 'none' : `pulse-${start.tone} 2s infinite`,
+          }}
+          data-testid="button-start-race"
+        >
+          {start.label}
+        </motion.button>
+
+        {onBack && (
+          <button
+            type="button"
+            onClick={() => {
+              click();
+              onBack();
+            }}
+            className="mt-3 transition-colors text-xs uppercase tracking-wider text-white/45 hover:text-white"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+            data-testid="button-back-menu"
+          >
+            Back
+          </button>
+        )}
       </motion.div>
+
+      <AnimatePresence>
+        {helpOpen && helpText && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6"
+            style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+            onClick={() => setHelpOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 10 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 10 }}
+              className="w-full max-w-sm rounded-[20px] p-6 backdrop-blur-xl"
+              style={{
+                backgroundColor: 'rgba(30,30,32,0.96)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+              data-testid="setup-help-sheet"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3
+                  className="text-base font-bold uppercase tracking-wider text-white"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                >
+                  {header.title}
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setHelpOpen(false)}
+                  className="text-white/50 hover:text-white transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <p
+                className="text-white/70"
+                style={{ fontFamily: 'Oxanium, sans-serif', fontSize: '0.8rem', lineHeight: 1.6 }}
+              >
+                {helpText}
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        @keyframes pulse-green {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+          50% { box-shadow: 0 0 20px 10px rgba(22, 163, 74, 0.3); }
+        }
+        @keyframes pulse-amber {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+          50% { box-shadow: 0 0 20px 10px rgba(245, 158, 11, 0.3); }
+        }
+        @keyframes pulse-red {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+          50% { box-shadow: 0 0 20px 10px rgba(220, 38, 38, 0.3); }
+        }
+      `}</style>
     </div>
   );
 }

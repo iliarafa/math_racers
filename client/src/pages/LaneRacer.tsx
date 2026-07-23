@@ -7,7 +7,6 @@ import {
   useGameState,
   generateQuestion,
   generateWrongAnswers,
-  CIRCUITS,
   RACE_LENGTH,
   SIM_LAP_COUNTS,
   calculateLaneRacerScore,
@@ -17,16 +16,12 @@ import {
   DRIVERS,
   initDynamicDifficulty,
   updateDynamicDifficulty,
-  SETUP_INACTIVE_TEXT,
   CHASE_CAM_ACTIVE_COLOR,
-  DIFFICULTY_DRUM_OPTIONS,
-  difficultyDrumIndex,
-  difficultyDrumColor,
   createDifficultyPrefs,
 } from "@/lib/gameLogic";
-import type { Difficulty, DynamicDifficultyState, DifficultyMode } from "@/lib/gameLogic";
-import { SetupDrum } from "@/components/setup/SetupDrum";
-import { SetupDrumRow } from "@/components/setup/SetupDrumRow";
+import type { Difficulty, DynamicDifficultyState, DifficultyMode, DifficultyDrumOption } from "@/lib/gameLogic";
+import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
+import { operationRow, levelRow } from "@/components/setup/setupRows";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
@@ -34,28 +29,8 @@ import { paceDifficultyForSpeed } from "@/lib/laneRacerHud";
 import { FOG_COLOR } from "@/components/lane-racer/atmosphere";
 import { TEAMS, TEAM_SVGS, type TeamId } from "@/lib/carSvgs";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
-import { useIsMobile } from "@/hooks/use-mobile";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
-import flagItaly from "@/assets/flag_italy.png";
-import flagBelgium from "@/assets/flag_belgium.png";
-import flagMonaco from "@/assets/flag_monaco.png";
-import flagJapan from "@/assets/flag_japan.png";
-import flagUK from "@/assets/flag_uk.png";
-import circuitMonzaBlack from "@/assets/circuit_monza_black.png";
-import circuitSuzukaBlack from "@/assets/circuit_suzuka_black.png";
-import circuitMonacoBlack from "@/assets/circuit_monaco_black.png";
-import circuitSilverstoneBlack from "@/assets/circuit_silverstone_black.png";
-import circuitSpaBlack from "@/assets/circuit_spa_black.png";
-import trackMiami from "@/assets/miami_track.png";
-import trackCanada from "@/assets/track_canada.png";
-import circuitCatalunya from "@/assets/circuit_catalunya.png";
-import circuitAustria from "@/assets/circuit_austria.png";
-import circuitHungaryBlack from "@/assets/circuit_hungary_black.png";
-import flagUs from "@/assets/flag_us.jpg";
-import flagCanada from "@/assets/flag_canada.png";
-import flagSpain from "@/assets/flag_spain.png";
-import flagAustria from "@/assets/flag_austria.png";
-import flagHungary from "@/assets/flag_hungary.png";
+import { CIRCUIT_MENU_ART, MENU_CIRCUITS } from "@/lib/circuitMenuArt";
 
 const LaneRacerCanvas3D = lazy(() =>
   import("@/components/lane-racer/LaneRacerCanvas3D").then(m => ({ default: m.LaneRacerCanvas3D })),
@@ -64,13 +39,6 @@ const LaneRacerCanvas3D = lazy(() =>
 function preloadLaneRacer3D() {
   void import("@/components/lane-racer/LaneRacerCanvas3D");
 }
-
-const FLAG_IMAGES: { [id: string]: string } = {
-  monza: flagItaly, spa: flagBelgium, monaco: flagMonaco, suzuka: flagJapan, silverstone: flagUK, miami: flagUs, canada: flagCanada, barcelona: flagSpain, austria: flagAustria, hungary: flagHungary,
-};
-const CIRCUIT_MAP_IMAGES: { [id: string]: string } = {
-  monza: circuitMonzaBlack, spa: circuitSpaBlack, monaco: circuitMonacoBlack, suzuka: circuitSuzukaBlack, silverstone: circuitSilverstoneBlack, miami: trackMiami, canada: trackCanada, barcelona: circuitCatalunya, austria: circuitAustria, hungary: circuitHungaryBlack,
-};
 
 type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
 type RendererMode = '2d' | '3d';
@@ -97,7 +65,8 @@ for (const team of TEAMS) {
   TEAM_PREVIEW_URLS[team.id] = URL.createObjectURL(new Blob([TEAM_SVGS[team.id]], { type: 'image/svg+xml' }));
 }
 
-const CIRCUIT_OPTIONS = CIRCUITS.map(c => ({
+// Only circuits with proper thin-line art are selectable — see circuitMenuArt.ts.
+const CIRCUIT_OPTIONS = MENU_CIRCUITS.map(c => ({
   id: c.id,
   name: c.name,
   type: c.type,
@@ -134,8 +103,6 @@ function playBeep(freq: number, duration: number, volume = 0.15) {
 export default function LaneRacer() {
   const { state, setPlayerName } = useGameState();
   const [, navigate] = useLocation();
-  const isMobile = useIsMobile();
-  const setupDrumHeight = isMobile ? 56 : 72;
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
   const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[DEFAULT_CIRCUIT_INDEX]);
   const [currentCircuitIndex, setCurrentCircuitIndex] = useState(DEFAULT_CIRCUIT_INDEX);
@@ -149,15 +116,11 @@ export default function LaneRacer() {
   const [appliedPaceDifficulty, setAppliedPaceDifficulty] = useState<Difficulty>('beginner');
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => laneRacerDifficultyPrefs.loadMode());
   const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => laneRacerDifficultyPrefs.loadLocked());
-  const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(() =>
-    difficultyDrumIndex(laneRacerDifficultyPrefs.loadMode(), laneRacerDifficultyPrefs.loadLocked()),
-  );
   const [currentOpIndex, setCurrentOpIndex] = useState(0);
   const selectedOperation = OPERATION_OPTIONS[currentOpIndex].type;
 
-  const selectDifficultyDrumIndex = (n: number) => {
-    const opt = DIFFICULTY_DRUM_OPTIONS[n];
-    setCurrentDifficultyIndex(n);
+  /** Pick a level. Lane Racer keeps its own namespace — see `laneRacerDifficultyPrefs`. */
+  const chooseLevel = (opt: DifficultyDrumOption) => {
     if (opt.mode === 'adaptive') {
       setDifficultyMode('adaptive');
       laneRacerDifficultyPrefs.save('adaptive', lockedDifficulty);
@@ -577,22 +540,68 @@ export default function LaneRacer() {
 
   // Setup
   if (gameStatus === 'setup') {
-    const glassCardStyle = {
-      backgroundColor: 'rgba(255,255,255,0.08)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      border: '1px solid rgba(255,255,255,0.16)',
-    } as const;
+    const rows: SetupRowSpec[] = [
+      {
+        id: 'track',
+        label: 'Track',
+        // Text-only: the hero band shows the circuit silhouette and updates as you cycle.
+        options: CIRCUIT_OPTIONS.map((c) => ({ id: c.id, label: c.name })),
+        selectedId: selectedCircuit.id,
+        onSelect: (id) => {
+          const i = CIRCUIT_OPTIONS.findIndex((c) => c.id === id);
+          if (i >= 0) {
+            setCurrentCircuitIndex(i);
+            setSelectedCircuit(CIRCUIT_OPTIONS[i]);
+          }
+        },
+      },
+      {
+        id: 'team',
+        label: 'Team',
+        options: TEAMS.map((t) => ({
+          id: t.id,
+          label: t.name,
+          thumb: TEAM_PREVIEW_URLS[t.id],
+          thumbStyle: { transform: 'rotate(90deg)' },
+        })),
+        selectedId: selectedTeam,
+        onSelect: (id) => {
+          const i = TEAMS.findIndex((t) => t.id === id);
+          if (i < 0) return;
+          setCurrentTeamIndex(i);
+          setSelectedTeam(TEAMS[i].id);
+          localStorage.setItem('lastSelectedTeam', TEAMS[i].id);
+        },
+      },
+      operationRow(selectedOperation, (op) => {
+        const i = OPERATION_OPTIONS.findIndex((o) => o.type === op);
+        if (i >= 0) setCurrentOpIndex(i);
+      }),
+      levelRow(difficultyMode, lockedDifficulty, chooseLevel),
+      {
+        id: 'chase-cam',
+        label: 'Chase cam',
+        // Shown everywhere: only the soft-follow behaviour is native-gated, inside
+        // LaneRacerCanvas3D (NATIVE_SOFT_FOLLOW).
+        options: [
+          { id: '2d', label: 'Off' },
+          { id: '3d', label: 'On', color: CHASE_CAM_ACTIVE_COLOR },
+        ],
+        selectedId: renderMode,
+        onSelect: (id) => selectRenderMode(id as RendererMode),
+      },
+    ];
+
     return (
       <div className="h-screen flex flex-col relative overflow-hidden">
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '8px' }}>
-          <Link href="/game">
+          <Link href="/hub">
             <button
               className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
               style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
-              aria-label="Back to game hub"
+              aria-label="Back to paddock"
               data-testid="lr-setup-back"
             >
               <ChevronLeft size={24} />
@@ -601,179 +610,21 @@ export default function LaneRacer() {
           <img src={logoImage} alt="F1 Math Racer" className="h-8 md:h-12 object-contain" />
         </div>
 
-        {/* Main content */}
-        <div className="relative z-10 flex-1 flex flex-col justify-evenly items-center px-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-          <div className="text-center">
-            <h2
-              className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-            >
-              Lane Racer
-            </h2>
-          </div>
-
-          <div className="w-full max-w-sm" data-testid="lr-track-hero">
-            <SetupDrum
-              length={CIRCUIT_OPTIONS.length}
-              currentIndex={currentCircuitIndex}
-              itemHeight={140}
-              chevronSize={16}
-              onIndexChange={(n) => {
-                setCurrentCircuitIndex(n);
-                setSelectedCircuit(CIRCUIT_OPTIONS[n]);
-              }}
-              testIdPrefix="lr-track"
-              ariaLabelPrev="Previous track"
-              ariaLabelNext="Next track"
-              renderItem={(idx) => {
-                const circuit = CIRCUIT_OPTIONS[idx];
-                return (
-                  <div className="flex flex-col items-center gap-1" data-testid={`lr-track-${circuit.id}`}>
-                    {CIRCUIT_MAP_IMAGES[circuit.id] && (
-                      <img
-                        src={CIRCUIT_MAP_IMAGES[circuit.id]}
-                        alt={circuit.name}
-                        className="h-24 object-contain"
-                        style={{ filter: 'invert(1)', maxWidth: 140 }}
-                      />
-                    )}
-                    <span
-                      className="text-base font-bold uppercase tracking-wider"
-                      style={{ fontFamily: 'Oxanium, sans-serif', color: '#fff' }}
-                    >
-                      {circuit.name}
-                    </span>
-                  </div>
-                );
-              }}
-            />
-          </div>
-
-          <div className="w-full max-w-[15rem] rounded-2xl px-4 py-3 space-y-2.5 md:py-5 md:space-y-4" style={glassCardStyle} data-testid="lr-setup">
-            <SetupDrumRow
-              title="Team"
-              length={TEAMS.length}
-              currentIndex={currentTeamIndex}
-              itemHeight={setupDrumHeight}
-              onIndexChange={(n) => {
-                setCurrentTeamIndex(n);
-                setSelectedTeam(TEAMS[n].id);
-                localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-              }}
-              testIdPrefix="lr-team"
-              ariaLabelPrev="Previous team"
-              ariaLabelNext="Next team"
-              renderItem={(idx) => {
-                const team = TEAMS[idx];
-                return (
-                  <img
-                    src={TEAM_PREVIEW_URLS[team.id]}
-                    alt={team.name}
-                    className="w-12 h-12 md:w-14 md:h-14 object-contain"
-                    style={{ transform: 'rotate(90deg)' }}
-                    data-testid={`lr-team-${team.id}`}
-                  />
-                );
-              }}
-            />
-
-            <SetupDrumRow
-              title="Operation"
-              length={OPERATION_OPTIONS.length}
-              currentIndex={currentOpIndex}
-              itemHeight={setupDrumHeight}
-              onIndexChange={setCurrentOpIndex}
-              testIdPrefix="lr-op"
-              ariaLabelPrev="Previous operation"
-              ariaLabelNext="Next operation"
-              renderItem={(idx) => {
-                const op = OPERATION_OPTIONS[idx];
-                return (
-                  <span
-                    className="font-bold text-4xl leading-none"
-                    style={{ fontFamily: 'Oxanium, sans-serif', color: '#fff' }}
-                    data-testid={`lr-op-${op.type}`}
-                  >
-                    {op.label}
-                  </span>
-                );
-              }}
-            />
-
-            <SetupDrumRow
-              title="Level"
-              length={DIFFICULTY_DRUM_OPTIONS.length}
-              currentIndex={currentDifficultyIndex}
-              itemHeight={setupDrumHeight}
-              onIndexChange={selectDifficultyDrumIndex}
-              testIdPrefix="lr-difficulty"
-              ariaLabelPrev="Previous difficulty"
-              ariaLabelNext="Next difficulty"
-              renderItem={(idx) => {
-                const opt = DIFFICULTY_DRUM_OPTIONS[idx];
-                return (
-                  <span
-                    className="font-bold text-base uppercase tracking-wider text-center leading-tight"
-                    style={{
-                      fontFamily: 'Oxanium, sans-serif',
-                      color: difficultyDrumColor(opt),
-                    }}
-                    data-testid={`lr-difficulty-${opt.id}`}
-                  >
-                    {opt.label}
-                  </span>
-                );
-              }}
-            />
-
-            <div>
-              <button
-                type="button"
-                onClick={() => selectRenderMode(renderMode === '3d' ? '2d' : '3d')}
-                className="w-full py-1 md:py-2 px-3 transition-all outline-none focus:outline-none focus-visible:outline-none"
-                style={{ fontFamily: 'Oxanium, sans-serif', background: 'transparent', border: 'none' }}
-                data-testid="lr-view-3d"
-                aria-label={renderMode === '3d' ? 'Disable chase cam' : 'Enable chase cam'}
-              >
-                <div
-                  className="text-center text-sm uppercase tracking-widest font-bold"
-                  style={{
-                    color: renderMode === '3d' ? CHASE_CAM_ACTIVE_COLOR : SETUP_INACTIVE_TEXT,
-                    opacity: renderMode === '3d' ? 1 : 0.45,
-                  }}
-                >
-                  Chase Cam
-                </div>
-                <p
-                  className="mt-0.5 md:mt-1 text-center text-[10px] uppercase tracking-widest h-4 leading-4"
-                  style={{ color: 'rgba(255,255,255,0.28)' }}
-                >
-                  {renderMode === '3d' ? 'Tap to disable' : 'Tap to enable'}
-                </p>
-              </button>
-            </div>
-          </div>
-
-          <div className="w-full px-4">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={startGame}
-              className="w-full max-w-sm md:max-w-md mx-auto py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white block"
-              style={{ fontFamily: 'Oxanium, sans-serif', backgroundColor: '#16a34a', animation: 'pulse-green 2s infinite' }}
-              data-testid="lr-setup-start"
-            >
-              Start
-            </motion.button>
-          </div>
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-2 overflow-y-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+          <RaceSetupCard
+            /* Stable per-surface key: cycling TRACK must update the hero in place, not
+               remount the card and replay its entry animation on every tap. */
+            motionKey="lr-setup-card"
+            testId="lr-setup"
+            header={{ eyebrow: 'Lane Racer', title: selectedCircuit.name, flagSrc: CIRCUIT_MENU_ART[selectedCircuit.id]?.flag }}
+            mapImageSrc={CIRCUIT_MENU_ART[selectedCircuit.id]?.image}
+            /* No per-circuit stage override — every silhouette uses the same stage (Spa's). */
+            rows={rows}
+            start={{ label: 'Start', tone: 'green', onStart: startGame }}
+            onBack={() => navigate('/hub')}
+            soundEnabled={state.soundEnabled}
+          />
         </div>
-
-        <style>{`
-          @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(22, 163, 74, 0.3); }
-          }
-        `}</style>
       </div>
     );
   }
@@ -956,9 +807,9 @@ export default function LaneRacer() {
                   View Leaderboard
                 </button>
               </Link>
-              <Link href="/game">
+              <Link href="/hub">
                 <button className="w-full bg-white/10 text-white h-12 rounded-lg font-medium hover:bg-white/20 transition-all flex items-center justify-center gap-2">
-                  Main Menu
+                  Paddock
                 </button>
               </Link>
             </div>

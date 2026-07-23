@@ -21,7 +21,8 @@
       "Bash(git fetch *)",
       "Skill(update-config)",
       "Skill(update-config:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(python3 -c ' *)"
     ]
   },
   "hooks": {

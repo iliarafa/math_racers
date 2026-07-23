@@ -156,6 +156,24 @@ Optional later: further Lane Racer Hungary stroke/framing polish — **do not** 
 
 ## Backlog (confirm with user)
 
+0. **1.3.12: unlock the track picker + ship consistent PNGs for all circuits.** In **1.3.11** the
+   TRACK picker in Lane Racer **and** Multiplayer is **locked to the current GP circuit** — the six
+   remaining silhouettes are still inconsistent in stroke/size (raster problem CSS can't fix), so
+   rather than ship that, only the weekend's circuit is shown, as a non-interactive TRACK row. The
+   lock is one flag: **`LOCK_MENU_TO_CURRENT_GP` in `client/src/lib/circuitMenuArt.ts`** — while
+   `true`, `MENU_CIRCUITS` collapses to `[current GP]`; a single-option row auto-renders static (see
+   `SetupRow`'s `interactive` branch). Multiplayer's `selectedCircuit` init was pointed at
+   `MENU_CIRCUITS[0]` so the created room's `circuitId` follows the lock.
+
+   For **1.3.12**: (a) set `LOCK_MENU_TO_CURRENT_GP = false`, and (b) add fresh, **consistent**
+   thin-line `_black` PNGs (~360px canvas, matching Spa's stroke/tone) for **all** circuits — the six
+   already in `CIRCUIT_MENU_ART` need re-exports to actually match, and Miami / Canada / Barcelona /
+   Austria need adding back (they were removed earlier for heavy raster art; still inert in `CIRCUITS`
+   / `SIM_LAP_COUNTS`). Adding a circuit = one entry in `CIRCUIT_MENU_ART` (`image` + `flag`); nothing
+   else changes. (An abandoned alternative — rendering silhouettes from vector centerlines for uniform
+   stroke — is written up under "Follow-up: uniform VECTOR silhouettes" in the session plan; the user
+   chose fresh PNGs instead.)
+
 1. **Multiplayer setup card** — still the only `SetupChoiceRow` consumer, still has the
    filled-tile weather row (labelled Standard / Harder / Surprise). Adopting the drums
    there needs a `variant` prop first: `SetupDrum` hardcodes `text-white/35` chevrons and

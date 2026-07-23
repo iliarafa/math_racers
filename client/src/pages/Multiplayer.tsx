@@ -3,54 +3,19 @@ import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { LiveCircuitMap } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
-import { SetupChoiceRow } from "@/components/SetupChoiceRow";
+import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
+import { operationRow, weatherRow, viewRow } from "@/components/setup/setupRows";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, parseDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, Timer, Delete, Home, Globe, ChevronLeft, ChevronRight, Zap } from "lucide-react";
+import { Copy, Check, Timer, Delete, Home, Globe, ChevronLeft, Zap } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 
 // Import assets for track selection
-import weatherSun from "@/assets/weather_sun.png";
-import weatherRain from "@/assets/weather_rain.png";
-import weatherRandom from "@/assets/weather_random.png";
-import circuit_monza_black from "@/assets/circuit_monza_black.png";
-import circuit_suzuka_black from "@/assets/circuit_suzuka_black.png";
-import circuit_monaco_black from "@/assets/circuit_monaco_black.png";
-import circuit_silverstone_black from "@/assets/circuit_silverstone_black.png";
-import circuit_spa_black from "@/assets/circuit_spa_black.png";
-import flag_italy from "@/assets/flag_italy.png";
-import flag_japan from "@/assets/flag_japan.png";
-import flag_monaco from "@/assets/flag_monaco.png";
-import flag_uk from "@/assets/flag_uk.png";
-import flag_belgium from "@/assets/flag_belgium.png";
-import flag_us from "@/assets/flag_us.jpg";
-import flag_canada from "@/assets/flag_canada.png";
-import track_miami from "@/assets/miami_track.png";
-import track_canada from "@/assets/track_canada.png";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import trackLimitsFlag from "@/assets/track-limits-flag.png";
-
-const CIRCUIT_MAP_IMAGES: Record<string, { black: string }> = {
-  monza: { black: circuit_monza_black },
-  suzuka: { black: circuit_suzuka_black },
-  monaco: { black: circuit_monaco_black },
-  silverstone: { black: circuit_silverstone_black },
-  spa: { black: circuit_spa_black },
-  miami: { black: track_miami },
-  canada: { black: track_canada },
-};
-
-const FLAG_IMAGES: Record<string, string> = {
-  monza: flag_italy,
-  suzuka: flag_japan,
-  monaco: flag_monaco,
-  silverstone: flag_uk,
-  spa: flag_belgium,
-  miami: flag_us,
-  canada: flag_canada,
-};
+import { CIRCUIT_MENU_ART, MENU_CIRCUITS } from "@/lib/circuitMenuArt";
 import confetti from "canvas-confetti";
 
 // Custom checkered flag icon component
@@ -128,14 +93,6 @@ const playBeep = (frequency: number = 800, duration: number = 150) => {
 type GameStatus = "lobby" | "waiting" | "track_select" | "countdown" | "racing" | "finished";
 type Weather = 'dry' | 'wet' | 'random';
 
-const OPERATION_OPTIONS: { label: string; type: string }[] = [
-  { label: '+', type: 'Addition' },
-  { label: '−', type: 'Subtraction' },
-  { label: '×', type: 'Multiplication' },
-  { label: '÷', type: 'Division' },
-  { label: 'x=?', type: 'Variables' },
-];
-
 const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
   "spa": 0.60,
   "silverstone": 0.50,
@@ -166,7 +123,9 @@ export default function Multiplayer() {
   
   // Game state
   const [gameStatus, setGameStatus] = useState<GameStatus>("lobby");
-  const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(CIRCUITS[0]);
+  // Default to the first menu circuit — while the picker is locked (LOCK_MENU_TO_CURRENT_GP)
+  // that is the current GP, so the header/silhouette and the created room match the locked pick.
+  const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(MENU_CIRCUITS[0] ?? CIRCUITS[0]);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(KARTING_DRIVER);
   const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
   const [selectedOperation, setSelectedOperation] = useState('Addition');
@@ -1189,7 +1148,7 @@ export default function Multiplayer() {
     return (
       <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* App Logo */}
-        <div className="pt-4 pb-2 flex justify-center shrink-0 bg-[#525252]">
+        <div className="pt-4 pb-2 flex justify-center shrink-0">
           <Link href="/" data-testid="link-home-logo">
             <img 
               src={logoImage} 
@@ -1206,19 +1165,19 @@ export default function Multiplayer() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[350px] md:max-w-[450px] bg-white rounded-[24px] p-6 sm:p-8"
-          style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
+          className="w-full max-w-[350px] md:max-w-[450px] rounded-[24px] p-6 sm:p-8 backdrop-blur-xl"
+          style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
         >
           {/* Header Section */}
-          <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-gray-200">
-            <Globe className="w-12 h-12 text-black mb-3" />
+          <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-white/10">
+            <Globe className="w-12 h-12 text-white/70 mb-3" />
             <h1 
-              className="text-2xl font-bold text-black uppercase tracking-wide"
+              className="text-2xl font-bold text-white uppercase tracking-wide"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
             >
               Multiplayer Lobby
             </h1>
-            <p className="text-sm text-red-500 mt-1">*LAN Only</p>
+            <p className="text-sm text-red-400 mt-1">*LAN Only</p>
           </div>
           
           {mode === "menu" && (
@@ -1229,8 +1188,8 @@ export default function Multiplayer() {
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 placeholder="Enter Driver ID..."
-                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-black placeholder:text-gray-400 transition-all border-2 border-transparent focus:border-[#ff2800] focus:bg-white outline-none"
-                style={{ backgroundColor: '#f5f5f5' }}
+                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-white placeholder:text-white/35 transition-all border-2 border-transparent focus:border-[#ff2800] outline-none"
+                style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
                 maxLength={20}
                 data-testid="input-driver-name"
               />
@@ -1248,7 +1207,7 @@ export default function Multiplayer() {
               {/* Join Existing Button */}
               <button
                 onClick={() => setMode("join")}
-                className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-black border-2 border-black bg-white transition-all hover:bg-gray-100"
+                className="h-[50px] rounded-xl font-bold text-lg uppercase tracking-wider text-white border-2 border-white/30 bg-transparent transition-all hover:bg-white/10"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-join-existing"
               >
@@ -1258,7 +1217,7 @@ export default function Multiplayer() {
               {/* Back to Home */}
               <Link href="/">
                 <button
-                  className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider w-full mt-2"
+                  className="text-white/45 hover:text-white transition-colors text-sm uppercase tracking-wider w-full mt-2"
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
                   data-testid="button-back-home"
                 >
@@ -1275,8 +1234,8 @@ export default function Multiplayer() {
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 placeholder="Enter Driver ID..."
-                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-black placeholder:text-gray-400 transition-all border-2 border-transparent focus:border-[#ff2800] focus:bg-white outline-none"
-                style={{ backgroundColor: '#f5f5f5' }}
+                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-white placeholder:text-white/35 transition-all border-2 border-transparent focus:border-[#ff2800] outline-none"
+                style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
                 maxLength={20}
                 data-testid="input-driver-name-create"
               />
@@ -1291,7 +1250,7 @@ export default function Multiplayer() {
               </button>
               <button
                 onClick={() => { setMode("menu"); setError(""); }}
-                className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider"
+                className="text-white/45 hover:text-white transition-colors text-sm uppercase tracking-wider"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-back-create"
               >
@@ -1307,8 +1266,8 @@ export default function Multiplayer() {
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 placeholder="Enter Driver ID..."
-                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-black placeholder:text-gray-400 transition-all border-2 border-transparent focus:border-[#ff2800] focus:bg-white outline-none"
-                style={{ backgroundColor: '#f5f5f5' }}
+                className="h-14 px-4 rounded-xl text-center text-lg font-medium text-white placeholder:text-white/35 transition-all border-2 border-transparent focus:border-[#ff2800] outline-none"
+                style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
                 maxLength={20}
                 data-testid="input-driver-name-join"
               />
@@ -1317,8 +1276,8 @@ export default function Multiplayer() {
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 placeholder="Room Code"
-                className="h-14 px-4 rounded-xl text-center text-2xl font-bold tracking-widest text-black placeholder:text-gray-400 transition-all border-2 border-transparent focus:border-[#ff2800] focus:bg-white outline-none"
-                style={{ backgroundColor: '#f5f5f5' }}
+                className="h-14 px-4 rounded-xl text-center text-2xl font-bold tracking-widest text-white placeholder:text-white/35 transition-all border-2 border-transparent focus:border-[#ff2800] outline-none"
+                style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
                 maxLength={4}
                 data-testid="input-room-code"
               />
@@ -1333,7 +1292,7 @@ export default function Multiplayer() {
               </button>
               <button
                 onClick={() => { setMode("menu"); setError(""); }}
-                className="text-gray-500 hover:text-black transition-colors text-sm uppercase tracking-wider"
+                className="text-white/45 hover:text-white transition-colors text-sm uppercase tracking-wider"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-back-join"
               >
@@ -1343,7 +1302,7 @@ export default function Multiplayer() {
           )}
           
           {/* Server Status Footer */}
-          <div className="mt-8 pt-4 border-t border-gray-200 flex items-center justify-center gap-2" data-testid="status-server">
+          <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-center gap-2" data-testid="status-server">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -1565,247 +1524,73 @@ export default function Multiplayer() {
   
   // Track Selection (Host only)
   if (gameStatus === "track_select") {
-    const currentCircuitIndex = selectedCircuit ? CIRCUITS.findIndex(c => c.id === selectedCircuit.id) : 0;
-    const displayCircuit = selectedCircuit || CIRCUITS[0];
-    
-    const goToPrevCircuit = () => {
-      const newIndex = currentCircuitIndex === 0 ? CIRCUITS.length - 1 : currentCircuitIndex - 1;
-      setSelectedCircuit(CIRCUITS[newIndex]);
-    };
-    
-    const goToNextCircuit = () => {
-      const newIndex = currentCircuitIndex === CIRCUITS.length - 1 ? 0 : currentCircuitIndex + 1;
-      setSelectedCircuit(CIRCUITS[newIndex]);
-    };
+    const displayCircuit = selectedCircuit || MENU_CIRCUITS[0];
+
+    const rows: SetupRowSpec[] = [
+      {
+        id: 'track',
+        label: 'Track',
+        // Only circuits with proper thin-line art are selectable — see circuitMenuArt.ts.
+        // The hero band shows the silhouette and updates as you cycle.
+        options: MENU_CIRCUITS.map((c) => ({ id: c.id, label: c.name })),
+        selectedId: displayCircuit.id,
+        onSelect: (id) => {
+          const circuit = MENU_CIRCUITS.find((c) => c.id === id);
+          if (circuit) setSelectedCircuit(circuit);
+        },
+      },
+      operationRow(selectedOperation, setSelectedOperation),
+      weatherRow(selectedWeather, setSelectedWeather),
+      viewRow(state.raceMapView, setRaceMapView),
+    ];
 
     return (
-      <div className="h-screen flex flex-col overflow-hidden transition-colors duration-300" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* Header */}
         <div className="pt-4 pb-2 flex justify-center shrink-0">
-          <div className="bg-black text-white px-4 py-2 rounded-full">
-            <span className="font-bold text-xs uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-              Multiplayer - Choose Track
-            </span>
-          </div>
+          <span
+            className="font-bold text-[10px] uppercase tracking-[0.3em] text-white/40"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            Multiplayer
+          </span>
         </div>
 
-        {/* Main Content - Hero Card with Side Chevrons */}
-        <div className="flex-1 flex items-center justify-center px-4 pb-28 overflow-hidden">
-          {/* Left Chevron */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={goToPrevCircuit}
-            className="p-3 transition-colors text-gray-400 hover:text-white"
-            data-testid="circuit-prev"
-          >
-            <ChevronLeft className="w-12 h-12" />
-          </motion.button>
-
-          {/* Hero Card */}
-          <motion.div
-            key={displayCircuit.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300"
-            style={{
-              backgroundColor: '#f0f0f0',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-2 overflow-y-auto">
+          <RaceSetupCard
+            /* Stable per-surface key: cycling TRACK must update the hero in place, not
+               remount the card and replay its entry animation on every tap. */
+            motionKey="mp-setup-card"
+            testId={`hero-card-${displayCircuit.id}`}
+            header={{
+              eyebrow: `Room ${roomCode}`,
+              title: displayCircuit.name,
+              flagSrc: CIRCUIT_MENU_ART[displayCircuit.id]?.flag,
             }}
-            data-testid={`hero-card-${displayCircuit.id}`}
+            mapImageSrc={CIRCUIT_MENU_ART[displayCircuit.id]?.image}
+            rows={rows}
+            /* Level is not a choice here — both cars race the host's stored preference. */
+            readouts={[{ label: 'Level', value: difficultyMode === 'adaptive' ? 'Adaptive' : lockedLevelLabel }]}
+            start={{
+              label: 'Start race',
+              tone: 'green',
+              onStart: startRace,
+              disabled: !guestReady,
+            }}
+            onBack={() => setGameStatus("waiting")}
+            soundEnabled={state.soundEnabled}
           >
-            {/* Header - Circuit Name & Flag */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <h2 
-                className="text-2xl font-bold uppercase tracking-wider text-gray-900"
+            {!guestReady && (
+              <p
+                className="pt-3 text-xs text-yellow-400 text-center uppercase tracking-wider"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
+                data-testid="text-waiting-guest"
               >
-                {displayCircuit.name}
-              </h2>
-              <img 
-                src={FLAG_IMAGES[displayCircuit.id]} 
-                alt={`${displayCircuit.name} flag`} 
-                className="h-5 w-7 object-cover rounded-sm"
-              />
-            </div>
-
-            {/* Track Map */}
-            <div className="flex-1 flex items-center justify-center py-6">
-              {CIRCUIT_MAP_IMAGES[displayCircuit.id] ? (
-                <img 
-                  src={CIRCUIT_MAP_IMAGES[displayCircuit.id].black} 
-                  alt={`${displayCircuit.name} circuit`}
-                  className="h-40 md:h-52 object-contain"
-                  style={{ maxWidth: '280px' }}
-                />
-              ) : (
-                <div className="h-40 w-full bg-gray-200 rounded flex items-center justify-center text-gray-500">
-                  Track Map
-                </div>
-              )}
-            </div>
-
-            {/* Info - Math Type */}
-            <div className="text-center mb-4">
-              <div className="text-sm uppercase tracking-wider mb-1 text-gray-500">Math Type</div>
-              <div 
-                className="text-lg font-bold uppercase text-gray-900"
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-              >
-                {displayCircuit.type}
-              </div>
-            </div>
-
-            {/* Map: Track | Map | Sectors */}
-            <div className="pt-2 mb-2">
-              <SetupChoiceRow
-                variant="light"
-                label="Map"
-                left={{ id: 'track', text: 'Track' }}
-                right={{ id: 'sectors', text: 'Sectors' }}
-                value={state.raceMapView}
-                onChange={(id) => setRaceMapView(id as 'track' | 'sectors')}
-                leftTestId="button-race-map-view-track"
-                rightTestId="button-race-map-view-sectors"
-              />
-            </div>
-
-            {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-            <div className="flex justify-center gap-4 pt-2">
-              <button
-                onClick={() => setSelectedWeather('dry')}
-                className={cn(
-                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'dry'
-                    ? "bg-yellow-500/20"
-                    : "bg-transparent opacity-40 hover:opacity-70 hover:bg-black/5"
-                )}
-                data-testid="weather-dry"
-              >
-                <img src={weatherSun} alt="Dry" className="w-8 h-8" />
-                <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'dry' ? "text-gray-900" : "text-gray-500")}>Standard</span>
-              </button>
-              <button
-                onClick={() => setSelectedWeather('wet')}
-                className={cn(
-                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'wet'
-                    ? "bg-blue-500/20"
-                    : "bg-transparent opacity-40 hover:opacity-70 hover:bg-black/5"
-                )}
-                data-testid="weather-wet"
-              >
-                <img src={weatherRain} alt="Wet" className="w-8 h-8" />
-                <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'wet' ? "text-gray-900" : "text-gray-500")}>Harder</span>
-              </button>
-              <button
-                onClick={() => setSelectedWeather('random')}
-                className={cn(
-                  "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                  selectedWeather === 'random'
-                    ? "bg-purple-500/20"
-                    : "bg-transparent opacity-40 hover:opacity-70 hover:bg-black/5"
-                )}
-                data-testid="weather-random"
-              >
-                <img src={weatherRandom} alt="Random" className="w-8 h-8" />
-                <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'random' ? "text-gray-900" : "text-gray-500")}>Surprise</span>
-              </button>
-            </div>
-
-            {/* Operation Toggle — soft fill + type weight (no outline rings) */}
-            <div className="flex justify-center gap-2 pt-2 mt-2 flex-wrap">
-              {OPERATION_OPTIONS.map(op => (
-                <button
-                  key={op.type}
-                  onClick={() => setSelectedOperation(op.type)}
-                  className={cn(
-                    "min-w-[44px] px-3 py-2 rounded-lg transition-all text-sm font-bold",
-                    selectedOperation === op.type
-                      ? "bg-black/10 text-gray-900"
-                      : "bg-transparent text-gray-400 opacity-45 hover:opacity-70 hover:bg-black/5"
-                  )}
-                  data-testid={`mp-op-${op.type}`}
-                >
-                  {op.label}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Right Chevron */}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={goToNextCircuit}
-            className="p-3 transition-colors text-gray-400 hover:text-white"
-            data-testid="circuit-next"
-          >
-            <ChevronRight className="w-12 h-12" />
-          </motion.button>
-        </div>
-
-        {/* Track Dots Indicator */}
-        <div className="absolute bottom-28 left-0 right-0 flex justify-center gap-2">
-          {CIRCUITS.map((circuit, index) => (
-            <button
-              key={circuit.id}
-              onClick={() => setSelectedCircuit(circuit)}
-              className={cn(
-                "w-2 h-2 rounded-full transition-all",
-                currentCircuitIndex === index 
-                  ? "bg-white" 
-                  : "bg-gray-500"
-              )}
-              data-testid={`circuit-dot-${circuit.id}`}
-            />
-          ))}
-        </div>
-
-        {/* Start Race Button - Fixed Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center gap-2 transition-colors duration-300" style={{ backgroundColor: '#1a1a1a' }}>
-          {!guestReady && (
-            <p className="text-sm text-yellow-400 text-center" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-              Waiting for guest Ready…
-            </p>
-          )}
-          <p className="text-xs text-gray-400 text-center uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-            {difficultyMode === 'adaptive' ? 'Adaptive' : `Locked · ${lockedLevelLabel}`}
-          </p>
-          <motion.button
-            whileHover={guestReady ? { scale: 1.02 } : undefined}
-            whileTap={guestReady ? { scale: 0.98 } : undefined}
-            onClick={() => { if (guestReady) startRace(); }}
-            disabled={!guestReady}
-            className={cn(
-              "w-full max-w-sm md:max-w-md py-4 rounded-xl font-bold text-lg uppercase tracking-wider",
-              guestReady ? "text-black" : "text-gray-500 cursor-not-allowed"
+                Waiting for guest Ready…
+              </p>
             )}
-            style={{ 
-              fontFamily: 'Oxanium, sans-serif',
-              backgroundColor: guestReady ? '#ffffff' : '#555555',
-              animation: guestReady ? 'pulse-white 2s infinite' : undefined
-            }}
-            data-testid="button-start-race"
-          >
-            Start Race
-          </motion.button>
-          <button
-            onClick={() => setGameStatus("waiting")}
-            className="transition-colors text-sm uppercase tracking-wider text-gray-400 hover:text-white"
-            data-testid="button-back-waiting"
-          >
-            &lt;&lt; Back
-          </button>
+          </RaceSetupCard>
         </div>
-
-        <style>{`
-          @keyframes pulse-white {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-            50% { box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.3); }
-          }
-        `}</style>
       </div>
     );
   }

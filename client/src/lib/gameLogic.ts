@@ -385,6 +385,25 @@ export function saveSetupWeather(weather: Weather) {
   } catch { /* ignore */ }
 }
 
+/** Maths type, persisted for the same reason weather is — see above. */
+const SETUP_OPERATION_KEY = 'setupOperation';
+
+const OPERATIONS = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'];
+
+export function loadSetupOperation(): string {
+  try {
+    const stored = localStorage.getItem(SETUP_OPERATION_KEY);
+    if (stored && OPERATIONS.includes(stored)) return stored;
+  } catch { /* ignore */ }
+  return 'Addition';
+}
+
+export function saveSetupOperation(operation: string) {
+  try {
+    localStorage.setItem(SETUP_OPERATION_KEY, operation);
+  } catch { /* ignore */ }
+}
+
 export const SHOP_ITEMS = [
   { id: 'red-livery', name: 'Scuderia Red', type: 'livery', cost: 0, color: 'bg-red-600' },
   { id: 'blue-livery', name: 'Racing Blue', type: 'livery', cost: 100, color: 'bg-blue-600' },

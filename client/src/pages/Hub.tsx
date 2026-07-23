@@ -1,35 +1,10 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useGameState } from "@/lib/gameLogic";
+import { usePurchase } from "@/hooks/use-purchase";
+import { playCarouselClick } from "@/lib/uiSound";
+import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
-
-let audioContext: AudioContext | null = null;
-
-const getAudioContext = (): AudioContext => {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  if (audioContext.state === 'suspended') {
-    audioContext.resume();
-  }
-  return audioContext;
-};
-
-const playClickSound = () => {
-  try {
-    const ctx = getAudioContext();
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    oscillator.frequency.value = 600;
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.08);
-  } catch (e) {}
-};
 
 const hubCardStyle: React.CSSProperties = {
   backgroundColor: 'rgba(255,255,255,0.12)',
@@ -60,8 +35,47 @@ const hubSubStyle: React.CSSProperties = {
   marginTop: '4px',
 };
 
+interface HubCardProps {
+  href: string;
+  title: string;
+  subtitle: string;
+  note?: string;
+  testId: string;
+  soundEnabled: boolean;
+}
+
+function HubCard({ href, title, subtitle, note, testId, soundEnabled }: HubCardProps) {
+  return (
+    <Link href={href}>
+      <motion.button
+        onClick={() => { if (soundEnabled) playCarouselClick(); }}
+        whileTap={{ scale: 0.98 }}
+        style={hubCardStyle}
+        data-testid={testId}
+      >
+        <span className="block" style={hubTitleStyle}>{title}</span>
+        <span className="block" style={hubSubStyle}>{subtitle}</span>
+        {note && (
+          <span className="block" style={{ ...hubSubStyle, fontSize: '0.65rem', color: '#999', marginTop: '6px' }}>
+            {note}
+          </span>
+        )}
+      </motion.button>
+    </Link>
+  );
+}
+
+/**
+ * The Paddock — the app's only mode menu.
+ *
+ * This used to be one of two near-identical list screens: Paddock offered Single Player /
+ * Multiplayer / Garage, and Game's `mode_select` then offered Free Practice / Lane Racer /
+ * Grand Prix in the same glass cards. They are one screen now, so every mode is two taps
+ * from its Start button.
+ */
 export default function Hub() {
   const { state } = useGameState();
+  const { isPremium } = usePurchase();
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
@@ -78,7 +92,7 @@ export default function Hub() {
       </div>
 
       {/* Title */}
-      <div className="relative z-10 mt-4 md:mt-10 mb-6 md:mb-10 flex justify-center">
+      <div className="relative z-10 mt-2 md:mt-8 mb-5 md:mb-8 flex justify-center">
         <h2
           className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
           style={{ fontFamily: 'Oxanium, sans-serif' }}
@@ -87,44 +101,89 @@ export default function Hub() {
         </h2>
       </div>
 
-      {/* Hub Cards */}
+      {/* Modes */}
       <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
-          {/* Solo */}
-          <Link href="/game">
-            <motion.button
-              onClick={() => { if (state.soundEnabled) playClickSound(); }}
-              whileTap={{ scale: 0.98 }}
-              style={hubCardStyle}
-            >
-              <span className="block" style={hubTitleStyle}>SINGLE PLAYER</span>
-              <span className="block" style={hubSubStyle}>RACE AGAINST THE AI</span>
-            </motion.button>
+
+          {/* Weekend Briefing */}
+          <Link
+            href="/grand-prix"
+            onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
+            data-testid="link-weekend-briefing"
+            style={{
+              background: CURRENT_GRAND_PRIX.gradient,
+              borderRadius: '14px',
+              padding: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              color: '#1a1a1a',
+              boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
+              textDecoration: 'none',
+            }}
+          >
+            <img
+              src={CURRENT_GRAND_PRIX.flagImage}
+              alt={`${CURRENT_GRAND_PRIX.country} flag`}
+              style={{
+                width: 30,
+                height: 22,
+                borderRadius: 3,
+                objectFit: 'cover',
+                flexShrink: 0,
+                boxShadow: '0 0 0 0.5px rgba(255,255,255,0.3)',
+              }}
+            />
+            <div style={{ flex: 1, lineHeight: 1.1, fontFamily: 'Oxanium, sans-serif' }}>
+              <div style={{ fontSize: '9px', letterSpacing: '0.3em', fontWeight: 800, opacity: 0.85 }}>
+                WEEKEND BRIEFING
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: 900, letterSpacing: '0.06em', marginTop: '2px' }}>
+                {CURRENT_GRAND_PRIX.name}
+              </div>
+            </div>
           </Link>
 
-          {/* Multiplayer */}
-          <Link href="/multiplayer">
-            <motion.button
-              onClick={() => { if (state.soundEnabled) playClickSound(); }}
-              whileTap={{ scale: 0.98 }}
-              style={hubCardStyle}
-            >
-              <span className="block" style={hubTitleStyle}>MULTIPLAYER</span>
-              <span className="block" style={hubSubStyle}>1v1 ONLINE RACING</span>
-            </motion.button>
-          </Link>
+          <HubCard
+            href="/game/free-practice"
+            title="FREE PRACTICE"
+            subtitle={CURRENT_GRAND_PRIX.circuitName}
+            testId="link-free-practice"
+            soundEnabled={state.soundEnabled}
+          />
 
-          {/* Garage */}
-          <Link href="/garage">
-            <motion.button
-              onClick={() => { if (state.soundEnabled) playClickSound(); }}
-              whileTap={{ scale: 0.98 }}
-              style={hubCardStyle}
-            >
-              <span className="block" style={hubTitleStyle}>GARAGE</span>
-              <span className="block" style={hubSubStyle}>SETTINGS & STATS</span>
-            </motion.button>
-          </Link>
+          <HubCard
+            href="/game/grand-prix"
+            title="GRAND PRIX"
+            subtitle={`ROUND ${CURRENT_GRAND_PRIX.round}`}
+            note={isPremium ? undefined : 'Full version'}
+            testId="link-grand-prix"
+            soundEnabled={state.soundEnabled}
+          />
+
+          <HubCard
+            href="/lane-racer"
+            title="LANE RACER"
+            subtitle="ARCADE MODE"
+            testId="link-lane-racer"
+            soundEnabled={state.soundEnabled}
+          />
+
+          <HubCard
+            href="/multiplayer"
+            title="MULTIPLAYER"
+            subtitle="1v1 ONLINE RACING"
+            testId="link-multiplayer"
+            soundEnabled={state.soundEnabled}
+          />
+
+          <HubCard
+            href="/garage"
+            title="GARAGE"
+            subtitle="SETTINGS & STATS"
+            testId="link-garage"
+            soundEnabled={state.soundEnabled}
+          />
         </div>
       </div>
     </div>
