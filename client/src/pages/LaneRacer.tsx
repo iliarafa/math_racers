@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import {
   useGameState,
@@ -17,12 +17,16 @@ import {
   DRIVERS,
   initDynamicDifficulty,
   updateDynamicDifficulty,
-  DIFFICULTY_MODE_COLORS,
-  LOCKED_LEVEL_COLORS,
   SETUP_INACTIVE_TEXT,
   CHASE_CAM_ACTIVE_COLOR,
+  DIFFICULTY_DRUM_OPTIONS,
+  difficultyDrumIndex,
+  difficultyDrumColor,
+  createDifficultyPrefs,
 } from "@/lib/gameLogic";
 import type { Difficulty, DynamicDifficultyState, DifficultyMode } from "@/lib/gameLogic";
+import { SetupDrum } from "@/components/setup/SetupDrum";
+import { SetupDrumRow } from "@/components/setup/SetupDrumRow";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
@@ -72,31 +76,12 @@ type GameStatus = 'setup' | 'countdown' | 'racing' | 'finished';
 type RendererMode = '2d' | '3d';
 
 const RENDERER_STORAGE_KEY = 'laneRacerRenderer';
-const LANE_RACER_DIFFICULTY_MODE_KEY = 'laneRacerDifficultyMode';
-const LANE_RACER_LOCKED_DIFFICULTY_KEY = 'laneRacerLockedDifficulty';
 
-function loadLaneRacerDifficultyMode(): DifficultyMode {
-  try {
-    return localStorage.getItem(LANE_RACER_DIFFICULTY_MODE_KEY) === 'locked' ? 'locked' : 'adaptive';
-  } catch {
-    return 'adaptive';
-  }
-}
-
-function loadLaneRacerLockedDifficulty(): Difficulty {
-  try {
-    const v = localStorage.getItem(LANE_RACER_LOCKED_DIFFICULTY_KEY);
-    if (v === 'beginner' || v === 'easy' || v === 'medium' || v === 'hard' || v === 'pro') return v;
-  } catch { /* ignore */ }
-  return 'beginner';
-}
-
-function saveLaneRacerDifficultyPrefs(mode: DifficultyMode, locked: Difficulty) {
-  try {
-    localStorage.setItem(LANE_RACER_DIFFICULTY_MODE_KEY, mode);
-    localStorage.setItem(LANE_RACER_LOCKED_DIFFICULTY_KEY, locked);
-  } catch { /* ignore */ }
-}
+/** Lane Racer keeps its own level namespace — picking here must not move Free Practice's. */
+const laneRacerDifficultyPrefs = createDifficultyPrefs(
+  'laneRacerDifficultyMode',
+  'laneRacerLockedDifficulty',
+);
 
 const OPERATION_OPTIONS: { label: string; type: string }[] = [
   { label: '+', type: 'Addition' },
@@ -105,32 +90,6 @@ const OPERATION_OPTIONS: { label: string; type: string }[] = [
   { label: '÷', type: 'Division' },
   { label: 'f(x)', type: 'Variables' },
 ];
-
-/** Lane Racer difficulty drum: Adaptive + locked series (defaults to Adaptive). */
-const DIFFICULTY_DRUM_OPTIONS: {
-  id: string;
-  label: string;
-  mode: DifficultyMode;
-  locked: Difficulty | null;
-}[] = [
-  { id: 'adaptive', label: 'Adaptive', mode: 'adaptive', locked: null },
-  { id: 'karting', label: 'Karting', mode: 'locked', locked: 'beginner' },
-  { id: 'f3', label: 'F3', mode: 'locked', locked: 'easy' },
-  { id: 'f2', label: 'F2', mode: 'locked', locked: 'medium' },
-  { id: 'f1', label: 'F1', mode: 'locked', locked: 'hard' },
-  { id: 'pro', label: 'Pro', mode: 'locked', locked: 'pro' },
-];
-
-function difficultyDrumIndex(mode: DifficultyMode, locked: Difficulty): number {
-  if (mode !== 'locked') return 0;
-  const i = DIFFICULTY_DRUM_OPTIONS.findIndex((o) => o.mode === 'locked' && o.locked === locked);
-  return i >= 0 ? i : 1;
-}
-
-function difficultyDrumColor(opt: (typeof DIFFICULTY_DRUM_OPTIONS)[number]): string {
-  if (opt.mode === 'adaptive') return DIFFICULTY_MODE_COLORS.adaptive;
-  return LOCKED_LEVEL_COLORS[opt.locked!];
-}
 
 // Precompute blob URLs for team car previews (module-level, created once)
 const TEAM_PREVIEW_URLS: Record<string, string> = {};
@@ -150,108 +109,6 @@ const DEFAULT_CIRCUIT_INDEX = (() => {
   return i >= 0 ? i : 0;
 })();
 
-function getWrappedIndex(current: number, offset: number, length: number): number {
-  return ((current + offset) % length + length) % length;
-}
-
-function HorizontalDrum({
-  length,
-  currentIndex,
-  onPrev,
-  onNext,
-  renderItem,
-  testIdPrefix,
-  ariaLabelPrev = 'Previous',
-  ariaLabelNext = 'Next',
-  itemHeight = 80,
-  chevronSize = 14,
-}: {
-  length: number;
-  currentIndex: number;
-  onPrev: () => void;
-  onNext: () => void;
-  renderItem: (index: number, isActive: boolean) => React.ReactNode;
-  testIdPrefix: string;
-  ariaLabelPrev?: string;
-  ariaLabelNext?: string;
-  itemHeight?: number;
-  chevronSize?: number;
-}) {
-  const swipeStartXRef = useRef<number | null>(null);
-  const itemH = itemHeight;
-
-  const swipeHandlers = {
-    onTouchStart: (e: React.TouchEvent) => {
-      swipeStartXRef.current = e.touches[0].clientX;
-    },
-    onTouchEnd: (e: React.TouchEvent) => {
-      if (swipeStartXRef.current === null) return;
-      const diff = swipeStartXRef.current - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > 30) {
-        diff > 0 ? onNext() : onPrev();
-      }
-      swipeStartXRef.current = null;
-    },
-    onTouchCancel: () => {
-      swipeStartXRef.current = null;
-    },
-  };
-
-  return (
-    <div
-      className="w-full flex items-center justify-center gap-2 outline-none focus:outline-none"
-      style={{ height: itemH, overflow: 'hidden', touchAction: 'none', position: 'relative' }}
-      {...swipeHandlers}
-      tabIndex={0}
-      data-testid={`${testIdPrefix}-drum`}
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          onPrev();
-        } else if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          onNext();
-        }
-      }}
-      aria-label={`Selection ${currentIndex + 1} of ${length}`}
-    >
-      <button
-        type="button"
-        className="shrink-0 p-1 text-white/35 outline-none focus:outline-none focus-visible:outline-none"
-        aria-label={ariaLabelPrev}
-        onClick={onPrev}
-        data-testid={`${testIdPrefix}-prev`}
-      >
-        <ChevronLeft size={chevronSize} />
-      </button>
-
-      <motion.div
-        key={`${testIdPrefix}-${currentIndex}`}
-        initial={{ opacity: 0, x: 8 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.15 }}
-        className="w-auto min-w-[5rem] flex items-center justify-center"
-        style={{ height: itemH }}
-        aria-current={true}
-        data-testid={`${testIdPrefix}-slot-0`}
-      >
-        {renderItem(currentIndex, true)}
-      </motion.div>
-
-      <button
-        type="button"
-        className="shrink-0 p-1 text-white/35 outline-none focus:outline-none focus-visible:outline-none"
-        aria-label={ariaLabelNext}
-        onClick={onNext}
-        data-testid={`${testIdPrefix}-next`}
-      >
-        <ChevronRight size={chevronSize} />
-      </button>
-    </div>
-  );
-}
-
-// Web Audio helpers
 let audioCtx: AudioContext | null = null;
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new AudioContext();
@@ -290,10 +147,10 @@ export default function LaneRacer() {
   const pendingPaceDifficultyRef = useRef<Difficulty>('beginner');
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
   const [appliedPaceDifficulty, setAppliedPaceDifficulty] = useState<Difficulty>('beginner');
-  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadLaneRacerDifficultyMode());
-  const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLaneRacerLockedDifficulty());
+  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => laneRacerDifficultyPrefs.loadMode());
+  const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => laneRacerDifficultyPrefs.loadLocked());
   const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(() =>
-    difficultyDrumIndex(loadLaneRacerDifficultyMode(), loadLaneRacerLockedDifficulty()),
+    difficultyDrumIndex(laneRacerDifficultyPrefs.loadMode(), laneRacerDifficultyPrefs.loadLocked()),
   );
   const [currentOpIndex, setCurrentOpIndex] = useState(0);
   const selectedOperation = OPERATION_OPTIONS[currentOpIndex].type;
@@ -303,11 +160,11 @@ export default function LaneRacer() {
     setCurrentDifficultyIndex(n);
     if (opt.mode === 'adaptive') {
       setDifficultyMode('adaptive');
-      saveLaneRacerDifficultyPrefs('adaptive', lockedDifficulty);
+      laneRacerDifficultyPrefs.save('adaptive', lockedDifficulty);
     } else {
       setDifficultyMode('locked');
       setLockedDifficulty(opt.locked!);
-      saveLaneRacerDifficultyPrefs('locked', opt.locked!);
+      laneRacerDifficultyPrefs.save('locked', opt.locked!);
     }
   };
   const [currentTeamIndex, setCurrentTeamIndex] = useState(() => {
@@ -726,9 +583,6 @@ export default function LaneRacer() {
       WebkitBackdropFilter: 'blur(16px)',
       border: '1px solid rgba(255,255,255,0.16)',
     } as const;
-    const sectionTitleClass =
-      'mb-1 md:mb-1.5 text-center text-sm font-bold uppercase tracking-widest text-white/90';
-
     return (
       <div className="h-screen flex flex-col relative overflow-hidden">
 
@@ -759,25 +613,19 @@ export default function LaneRacer() {
           </div>
 
           <div className="w-full max-w-sm" data-testid="lr-track-hero">
-            <HorizontalDrum
+            <SetupDrum
               length={CIRCUIT_OPTIONS.length}
               currentIndex={currentCircuitIndex}
               itemHeight={140}
               chevronSize={16}
-              onPrev={() => {
-                const n = getWrappedIndex(currentCircuitIndex, -1, CIRCUIT_OPTIONS.length);
-                setCurrentCircuitIndex(n);
-                setSelectedCircuit(CIRCUIT_OPTIONS[n]);
-              }}
-              onNext={() => {
-                const n = getWrappedIndex(currentCircuitIndex, 1, CIRCUIT_OPTIONS.length);
+              onIndexChange={(n) => {
                 setCurrentCircuitIndex(n);
                 setSelectedCircuit(CIRCUIT_OPTIONS[n]);
               }}
               testIdPrefix="lr-track"
               ariaLabelPrev="Previous track"
               ariaLabelNext="Next track"
-              renderItem={(idx, isActive) => {
+              renderItem={(idx) => {
                 const circuit = CIRCUIT_OPTIONS[idx];
                 return (
                   <div className="flex flex-col items-center gap-1" data-testid={`lr-track-${circuit.id}`}>
@@ -791,10 +639,7 @@ export default function LaneRacer() {
                     )}
                     <span
                       className="text-base font-bold uppercase tracking-wider"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
-                      }}
+                      style={{ fontFamily: 'Oxanium, sans-serif', color: '#fff' }}
                     >
                       {circuit.name}
                     </span>
@@ -805,99 +650,81 @@ export default function LaneRacer() {
           </div>
 
           <div className="w-full max-w-[15rem] rounded-2xl px-4 py-3 space-y-2.5 md:py-5 md:space-y-4" style={glassCardStyle} data-testid="lr-setup">
-            <div className="flex flex-col items-center">
-              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Team</span>
-              <HorizontalDrum
-                length={TEAMS.length}
-                currentIndex={currentTeamIndex}
-                itemHeight={setupDrumHeight}
-                onPrev={() => {
-                  const n = getWrappedIndex(currentTeamIndex, -1, TEAMS.length);
-                  setCurrentTeamIndex(n);
-                  setSelectedTeam(TEAMS[n].id);
-                  localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-                }}
-                onNext={() => {
-                  const n = getWrappedIndex(currentTeamIndex, 1, TEAMS.length);
-                  setCurrentTeamIndex(n);
-                  setSelectedTeam(TEAMS[n].id);
-                  localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
-                }}
-                testIdPrefix="lr-team"
-                ariaLabelPrev="Previous team"
-                ariaLabelNext="Next team"
-                renderItem={(idx) => {
-                  const team = TEAMS[idx];
-                  return (
-                    <img
-                      src={TEAM_PREVIEW_URLS[team.id]}
-                      alt={team.name}
-                      className="w-12 h-12 md:w-14 md:h-14 object-contain"
-                      style={{ transform: 'rotate(90deg)' }}
-                      data-testid={`lr-team-${team.id}`}
-                    />
-                  );
-                }}
-              />
-            </div>
+            <SetupDrumRow
+              title="Team"
+              length={TEAMS.length}
+              currentIndex={currentTeamIndex}
+              itemHeight={setupDrumHeight}
+              onIndexChange={(n) => {
+                setCurrentTeamIndex(n);
+                setSelectedTeam(TEAMS[n].id);
+                localStorage.setItem('lastSelectedTeam', TEAMS[n].id);
+              }}
+              testIdPrefix="lr-team"
+              ariaLabelPrev="Previous team"
+              ariaLabelNext="Next team"
+              renderItem={(idx) => {
+                const team = TEAMS[idx];
+                return (
+                  <img
+                    src={TEAM_PREVIEW_URLS[team.id]}
+                    alt={team.name}
+                    className="w-12 h-12 md:w-14 md:h-14 object-contain"
+                    style={{ transform: 'rotate(90deg)' }}
+                    data-testid={`lr-team-${team.id}`}
+                  />
+                );
+              }}
+            />
 
-            <div className="flex flex-col items-center">
-              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Operation</span>
-              <HorizontalDrum
-                length={OPERATION_OPTIONS.length}
-                currentIndex={currentOpIndex}
-                itemHeight={setupDrumHeight}
-                onPrev={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, -1, OPERATION_OPTIONS.length))}
-                onNext={() => setCurrentOpIndex(getWrappedIndex(currentOpIndex, 1, OPERATION_OPTIONS.length))}
-                testIdPrefix="lr-op"
-                ariaLabelPrev="Previous operation"
-                ariaLabelNext="Next operation"
-                renderItem={(idx, isActive) => {
-                  const op = OPERATION_OPTIONS[idx];
-                  return (
-                    <span
-                      className="font-bold text-4xl leading-none"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: isActive ? '#fff' : SETUP_INACTIVE_TEXT,
-                      }}
-                      data-testid={`lr-op-${op.type}`}
-                    >
-                      {op.label}
-                    </span>
-                  );
-                }}
-              />
-            </div>
+            <SetupDrumRow
+              title="Operation"
+              length={OPERATION_OPTIONS.length}
+              currentIndex={currentOpIndex}
+              itemHeight={setupDrumHeight}
+              onIndexChange={setCurrentOpIndex}
+              testIdPrefix="lr-op"
+              ariaLabelPrev="Previous operation"
+              ariaLabelNext="Next operation"
+              renderItem={(idx) => {
+                const op = OPERATION_OPTIONS[idx];
+                return (
+                  <span
+                    className="font-bold text-4xl leading-none"
+                    style={{ fontFamily: 'Oxanium, sans-serif', color: '#fff' }}
+                    data-testid={`lr-op-${op.type}`}
+                  >
+                    {op.label}
+                  </span>
+                );
+              }}
+            />
 
-            <div className="flex flex-col items-center">
-              <span className={sectionTitleClass} style={{ fontFamily: 'Oxanium, sans-serif' }}>Level</span>
-              <HorizontalDrum
-                length={DIFFICULTY_DRUM_OPTIONS.length}
-                currentIndex={currentDifficultyIndex}
-                itemHeight={setupDrumHeight}
-                onPrev={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, -1, DIFFICULTY_DRUM_OPTIONS.length))}
-                onNext={() => selectDifficultyDrumIndex(getWrappedIndex(currentDifficultyIndex, 1, DIFFICULTY_DRUM_OPTIONS.length))}
-                testIdPrefix="lr-difficulty"
-                ariaLabelPrev="Previous difficulty"
-                ariaLabelNext="Next difficulty"
-                renderItem={(idx, isActive) => {
-                  const opt = DIFFICULTY_DRUM_OPTIONS[idx];
-                  return (
-                    <span
-                      className="font-bold text-base uppercase tracking-wider text-center leading-tight"
-                      style={{
-                        fontFamily: 'Oxanium, sans-serif',
-                        color: isActive ? difficultyDrumColor(opt) : SETUP_INACTIVE_TEXT,
-                      }}
-                      data-testid={`lr-difficulty-${opt.id}`}
-                    >
-                      {opt.label}
-                    </span>
-                  );
-                }}
-              />
-            </div>
+            <SetupDrumRow
+              title="Level"
+              length={DIFFICULTY_DRUM_OPTIONS.length}
+              currentIndex={currentDifficultyIndex}
+              itemHeight={setupDrumHeight}
+              onIndexChange={selectDifficultyDrumIndex}
+              testIdPrefix="lr-difficulty"
+              ariaLabelPrev="Previous difficulty"
+              ariaLabelNext="Next difficulty"
+              renderItem={(idx) => {
+                const opt = DIFFICULTY_DRUM_OPTIONS[idx];
+                return (
+                  <span
+                    className="font-bold text-base uppercase tracking-wider text-center leading-tight"
+                    style={{
+                      fontFamily: 'Oxanium, sans-serif',
+                      color: difficultyDrumColor(opt),
+                    }}
+                    data-testid={`lr-difficulty-${opt.id}`}
+                  >
+                    {opt.label}
+                  </span>
+                );
+              }}
+            />
 
             <div>
               <button

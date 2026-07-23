@@ -2,13 +2,16 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Link, useLocation } from "wouter";
-import useEmblaCarousel from "embla-carousel-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { LiveCircuitMap, getMapLapLength } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
-import { SetupChoiceRow } from "@/components/SetupChoiceRow";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
-import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, CIRCUITS, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
+import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
+import type { Weather, RaceMapView } from "@/lib/gameLogic";
+import { loadSetupWeather, saveSetupWeather, DIFFICULTY_DRUM_OPTIONS, difficultyDrumIndex } from "@/lib/gameLogic";
+import { RaceSetupCard } from "@/components/setup/RaceSetupCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -23,9 +26,6 @@ const FORCE_PURPLE_LAP_PREVIEW = false;
 import tireHard from "@assets/IMG_0385_1768772937370.png";
 import tireMedium from "@assets/IMG_0384_1768772937370.png";
 import tireSoft from "@assets/IMG_0383_1768772937370.png";
-import weatherSun from "@/assets/weather_sun.png";
-import weatherRain from "@/assets/weather_rain.png";
-import weatherRandom from "@/assets/weather_random.png";
 import flagItaly from "@/assets/flag_italy.png";
 import flagBelgium from "@/assets/flag_belgium.png";
 import flagMonaco from "@/assets/flag_monaco.png";
@@ -35,11 +35,6 @@ import flagAustralia from "@/assets/flag_australia.png";
 import flagChina from "@/assets/flag_china.png";
 import flagBahrain from "@/assets/flag_bahrain.jpeg";
 import trackLimitsFlag from "@/assets/track-limits-flag.png";
-import trackMonza from "@/assets/track_monza.png";
-import trackSpa from "@/assets/track_spa.png";
-import trackMonaco from "@/assets/track_monaco.png";
-import trackSuzuka from "@/assets/track_suzuka.png";
-import trackSilverstone from "@/assets/track_silverstone.png";
 import trackMelbourne from "@/assets/track_melbourne.png";
 import trackChina from "@/assets/track_china.png";
 import circuitMonzaRed from "@/assets/circuit_monza_red.png";
@@ -69,15 +64,6 @@ const FLAG_IMAGES: { [circuitId: string]: string } = {
   "silverstone": flagUK,
   [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.flagImage,
   "bahrain": flagBahrain,
-};
-
-const TRACK_IMAGES: { [circuitId: string]: string } = {
-  "monza": trackMonza,
-  "spa": trackSpa,
-  "monaco": trackMonaco,
-  "suzuka": trackSuzuka,
-  "silverstone": trackSilverstone,
-  [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.trackImage,
 };
 
 const CIRCUIT_MAP_IMAGES: { [circuitId: string]: { red: string; black: string } } = {
@@ -162,14 +148,6 @@ const OPERATION_OPTIONS = [
   { label: 'x=?', type: 'Variables' },
 ];
 
-export type Weather = 'dry' | 'wet' | 'random';
-
-const WEATHER_OPTIONS: { id: Weather; name: string; icon: string; description: string }[] = [
-  { id: 'dry', name: 'DRY', icon: 'sun', description: 'Standard racing conditions' },
-  { id: 'wet', name: 'WET', icon: 'rain', description: 'Harder numbers, tighter times' },
-  { id: 'random', name: 'RANDOM', icon: 'random', description: 'Based on real circuit weather' },
-];
-
 // Historical rain probability for each circuit (based on real F1 data)
 const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
   "spa": 0.60,        // Spa-Francorchamps: 50-70% -> 60%
@@ -181,236 +159,7 @@ const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
   [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.rainProbability,
 };
 
-// Weather Carousel Component
-const WeatherCarousel = ({ 
-  onSelect, 
-  selectedWeather,
-  soundEnabled
-}: { 
-  onSelect: (weather: Weather) => void;
-  selectedWeather: Weather;
-  soundEnabled: boolean;
-}) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
-    loop: true,
-    align: 'center',
-    skipSnaps: false,
-    startIndex: WEATHER_OPTIONS.findIndex(w => w.id === selectedWeather)
-  });
-  const [selectedIndex, setSelectedIndex] = useState(WEATHER_OPTIONS.findIndex(w => w.id === selectedWeather));
-  const isFirstRender = useRef(true);
-
-  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
-
-  const onSelectChange = useCallback(() => {
-    if (!emblaApi) return;
-    const index = emblaApi.selectedScrollSnap();
-    setSelectedIndex(index);
-    onSelect(WEATHER_OPTIONS[index].id);
-    if (!isFirstRender.current && soundEnabled) {
-      playCarouselClick();
-    }
-    isFirstRender.current = false;
-  }, [emblaApi, onSelect, soundEnabled]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelectChange();
-    emblaApi.on('select', onSelectChange);
-    emblaApi.on('reInit', onSelectChange);
-  }, [emblaApi, onSelectChange]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') scrollPrev();
-      if (e.key === 'ArrowRight') scrollNext();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [scrollPrev, scrollNext]);
-
-  const getWeatherIcon = (iconType: string) => {
-    switch (iconType) {
-      case 'sun': return weatherSun;
-      case 'rain': return weatherRain;
-      case 'random': return weatherRandom;
-      default: return weatherSun;
-    }
-  };
-
-  return (
-    <div className="w-full max-w-sm mx-auto relative">
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex">
-          {WEATHER_OPTIONS.map((weather) => (
-            <div
-              key={weather.id}
-              className="flex-[0_0_100%] min-w-0 flex flex-col items-center gap-2 py-2"
-            >
-              <img src={getWeatherIcon(weather.icon)} alt={weather.name} className="w-12 h-12 object-contain select-none" draggable={false} />
-              <div className="text-lg font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>{weather.name}</div>
-              <div className="text-xs text-muted-foreground text-center px-2" data-testid={`text-weather-description-${weather.id}`}>{weather.description}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <button
-        onClick={scrollPrev}
-        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full p-2 rounded-full hover:bg-secondary transition-colors"
-        data-testid="weather-carousel-prev"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
-
-      <button
-        onClick={scrollNext}
-        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-full p-2 rounded-full hover:bg-secondary transition-colors"
-        data-testid="weather-carousel-next"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
-
-      <div className="flex justify-center gap-2 mt-3">
-        {WEATHER_OPTIONS.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => emblaApi?.scrollTo(index)}
-            className={cn(
-              "w-2 h-2 rounded-full transition-colors",
-              selectedIndex === index ? "bg-primary" : "bg-border"
-            )}
-            data-testid={`weather-dot-${index}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Circuit Carousel Component
-const CircuitCarousel = ({ onSelect, soundEnabled }: { onSelect: (circuit: Circuit) => void; soundEnabled: boolean }) => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
-    loop: true,
-    align: 'center',
-    skipSnaps: false
-  });
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const isFirstRender = useRef(true);
-
-  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
-
-  const onSelectChange = useCallback(() => {
-    if (!emblaApi) return;
-    const newIndex = emblaApi.selectedScrollSnap();
-    setSelectedIndex(newIndex);
-    onSelect(CIRCUITS[newIndex]);
-    if (!isFirstRender.current && soundEnabled) {
-      playCarouselClick();
-    }
-    isFirstRender.current = false;
-  }, [emblaApi, onSelect, soundEnabled]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelectChange();
-    emblaApi.on('select', onSelectChange);
-    emblaApi.on('reInit', onSelectChange);
-  }, [emblaApi, onSelectChange]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') scrollPrev();
-      if (e.key === 'ArrowRight') scrollNext();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [scrollPrev, scrollNext]);
-
-  return (
-    <div className="w-full max-w-lg mx-auto relative">
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex">
-          {CIRCUITS.map((circuit, index) => (
-            <div
-              key={circuit.id}
-              className="flex-[0_0_100%] min-w-0 flex justify-center"
-            >
-              <img 
-                src={TRACK_IMAGES[circuit.id]} 
-                alt={`${circuit.name} - ${circuit.type}`} 
-                className="h-44 object-contain select-none"
-                draggable={false}
-                data-testid={`track-image-${circuit.id}`}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <button
-        onClick={scrollPrev}
-        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full p-2 rounded-full hover:bg-secondary transition-colors"
-        data-testid="carousel-prev"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-
-      <button
-        onClick={scrollNext}
-        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-full p-2 rounded-full hover:bg-secondary transition-colors"
-        data-testid="carousel-next"
-      >
-        <ChevronRight className="w-6 h-6" />
-      </button>
-
-      <div className="flex justify-center gap-2 mt-4">
-        {CIRCUITS.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => emblaApi?.scrollTo(index)}
-            className={cn(
-              "w-2 h-2 rounded-full transition-colors",
-              selectedIndex === index ? "bg-primary" : "bg-border"
-            )}
-            data-testid={`carousel-dot-${index}`}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-let audioContext: AudioContext | null = null;
 let audioInitialized = false;
-
-const getAudioContext = (): AudioContext => {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  if (audioContext.state === 'suspended') {
-    audioContext.resume();
-  }
-  return audioContext;
-};
-
-const playCarouselClick = () => {
-  try {
-    const ctx = getAudioContext();
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
-    oscillator.frequency.value = 600;
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-    oscillator.start();
-    oscillator.stop(ctx.currentTime + 0.08);
-  } catch (e) {}
-};
 
 const initAudio = () => {
   if (audioInitialized) return;
@@ -614,6 +363,9 @@ const playAeroActivatedSound = () => {
 export default function Game() {
   const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView } = useGameState();
   const { isPremium } = usePurchase();
+  const isMobile = useIsMobile();
+  // Tighter than Lane Racer's 56 — this card carries more above it.
+  const setupDrumHeight = isMobile ? 48 : 72;
   const [, setLocation] = useLocation();
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
   const [botProgress, setBotProgress] = useState(0);
@@ -624,7 +376,7 @@ export default function Game() {
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
   const currentDifficultyRef = useRef<Difficulty>('easy');
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
-  const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
+  const [selectedWeather, setSelectedWeather] = useState<Weather>(() => loadSetupWeather());
   const [actualWeather, setActualWeather] = useState<'dry' | 'wet'>('dry');
   // Alternating weather state for Realism mode with random weather
   const [weatherChangePoints, setWeatherChangePoints] = useState<number[]>([]);
@@ -661,6 +413,10 @@ export default function Game() {
   // Free Practice only — GP Practice is always adaptive
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadDifficultyMode());
   const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLockedDifficulty());
+  // The setup card shows one LEVEL drum; mode + locked stay the underlying state.
+  const [levelDrumIndex, setLevelDrumIndex] = useState(() =>
+    difficultyDrumIndex(loadDifficultyMode(), loadLockedDifficulty()),
+  );
 
   // Force sim mode on for Grand Prix and Pre-Season Testing
   const effectiveSimMode = (isGrandPrix || isPreSeasonTesting) ? true : state.simMode;
@@ -1107,6 +863,34 @@ export default function Game() {
   const handleCircuitSelect = (circuit: Circuit) => {
     initAudio();
     setSelectedCircuit(circuit);
+  };
+
+  /** Pick a setup weather: apply, persist, and click. */
+  const chooseWeather = (weather: Weather) => {
+    setSelectedWeather(weather);
+    saveSetupWeather(weather);
+    if (state.soundEnabled) playCarouselClick();
+  };
+
+  /** Step the LEVEL drum, exploding the chosen option back into mode + locked. */
+  const selectLevelDrumIndex = (n: number) => {
+    const opt = DIFFICULTY_DRUM_OPTIONS[n];
+    setLevelDrumIndex(n);
+    if (opt.mode === 'adaptive') {
+      setDifficultyMode('adaptive');
+      saveDifficultyPrefs('adaptive', lockedDifficulty);
+    } else {
+      setDifficultyMode('locked');
+      setLockedDifficulty(opt.locked!);
+      saveDifficultyPrefs('locked', opt.locked!);
+    }
+    if (state.soundEnabled) playCarouselClick();
+  };
+
+  /** Pick the race progress view: apply and click. */
+  const chooseRaceMapView = (view: RaceMapView) => {
+    setRaceMapView(view);
+    if (state.soundEnabled) playCarouselClick();
   };
 
   const handleStartRace = () => {
@@ -1666,7 +1450,7 @@ export default function Game() {
     wrongAttemptsRef.current = [];
     setCurrentSectorRed(false);
     setRaceMode('bot'); // Race mode always uses bot opponent
-    setSelectedWeather('dry');
+    // selectedWeather is a saved setup preference — only the resolved race weather resets
     setActualWeather('dry');
     // Reset alternating weather state
     setWeatherChangePoints([]);
@@ -1736,7 +1520,7 @@ export default function Game() {
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
     setCurrentSectorRed(false);
-    setSelectedWeather('dry');
+    // selectedWeather is a saved setup preference — only the resolved race weather resets
     setActualWeather('dry');
     setWeatherChangePoints([]);
     setInitialWeather('dry');
@@ -2393,275 +2177,29 @@ export default function Game() {
         {/* Card area — same position as series buttons list */}
         <div className="flex items-center justify-center px-8 pb-24 md:pb-32 landscape:md:pb-24 relative z-10">
           {isPreSeasonTesting ? (
-            /* Pre-Season Testing Card */
-            (<div className="flex flex-col items-center">
-              <motion.div
-                key={`pst-${CURRENT_GRAND_PRIX.circuitId}-card`}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none backdrop-blur-xl"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-                }}
-                data-testid={`hero-card-pst-${CURRENT_GRAND_PRIX.circuitId}`}
-              >
-                {/* Header - Circuit & Flag */}
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <h2
-                    className="text-2xl font-bold uppercase tracking-wider text-white"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    {CURRENT_GRAND_PRIX.name}
-                  </h2>
-                  <img
-                    src={CURRENT_GRAND_PRIX.flagImage}
-                    alt={`${CURRENT_GRAND_PRIX.country} flag`}
-                    className="h-5 w-7 object-cover rounded-sm relative -top-0.5"
-                  />
-                </div>
-
-                {/* Track Map — padded contain stage (no max-w clamp that crops square maps).
-                    Hungary thin `_black` needs a taller stage to read at Spa visual size. */}
-                <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible px-2">
-                  <div
-                    className={cn(
-                      'w-full overflow-visible p-2',
-                      CURRENT_GRAND_PRIX.circuitId === 'hungary'
-                        ? 'h-40 md:h-60'
-                        : 'h-32 md:h-52'
-                    )}
-                  >
-                    <img
-                      src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
-                      alt={`${CURRENT_GRAND_PRIX.name} circuit`}
-                      className="h-full w-full object-contain"
-                      style={{ filter: 'invert(1)' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Difficulty: Adaptive | Difficulty | Locked */}
-                <div className="pt-2 mb-2">
-                  <SetupChoiceRow
-                    label="Difficulty"
-                    left={{ id: 'adaptive', text: 'Adaptive' }}
-                    right={{ id: 'locked', text: 'Locked' }}
-                    value={difficultyMode}
-                    activeColors={{ ...DIFFICULTY_MODE_COLORS }}
-                    onChange={(id) => {
-                      const mode = id as DifficultyMode;
-                      setDifficultyMode(mode);
-                      saveDifficultyPrefs(mode, lockedDifficulty);
-                      if (state.soundEnabled) playCarouselClick();
-                    }}
-                    leftTestId="button-difficulty-adaptive"
-                    rightTestId="button-difficulty-locked"
-                  />
-                  {/* Always visible (greyed under Adaptive) so card rhythm matches Locked */}
-                  <div
-                    className={cn(
-                      "flex justify-center flex-wrap gap-2 mt-2",
-                      difficultyMode !== 'locked' && "pointer-events-none"
-                    )}
-                    aria-hidden={difficultyMode !== 'locked'}
-                  >
-                    {DRIVERS.map((d) => {
-                      const interactive = difficultyMode === 'locked';
-                      const active = interactive && lockedDifficulty === d.difficulty;
-                      return (
-                        <button
-                          key={d.id}
-                          type="button"
-                          tabIndex={interactive ? 0 : -1}
-                          onClick={() => {
-                            setLockedDifficulty(d.difficulty);
-                            saveDifficultyPrefs('locked', d.difficulty);
-                            if (state.soundEnabled) playCarouselClick();
-                          }}
-                          className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
-                          style={{
-                            fontFamily: 'Oxanium, sans-serif',
-                            color: active ? LOCKED_LEVEL_COLORS[d.difficulty] : SETUP_INACTIVE_TEXT,
-                            background: 'transparent',
-                            opacity: active ? 1 : 0.45,
-                          }}
-                          data-testid={`button-locked-level-${d.id}`}
-                        >
-                          {d.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Map: Track | Map | Sectors */}
-                <div className="pt-2 mb-2">
-                  <SetupChoiceRow
-                    label="Map"
-                    left={{ id: 'track', text: 'Track' }}
-                    right={{ id: 'sectors', text: 'Sectors' }}
-                    value={state.raceMapView}
-                    onChange={(id) => {
-                      setRaceMapView(id as 'track' | 'sectors');
-                      if (state.soundEnabled) playCarouselClick();
-                    }}
-                    leftTestId="button-race-map-view-track"
-                    rightTestId="button-race-map-view-sectors"
-                  />
-                </div>
-
-                {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-                <div className="flex justify-center gap-4 pt-2">
-                  <button
-                    onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
-                    className={cn(
-                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                      selectedWeather === 'dry'
-                        ? "bg-yellow-500/20"
-                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
-                    )}
-                  >
-                    <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(10) hue-rotate(3deg) brightness(0.95)' : undefined }} />
-                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'dry' ? "text-white" : "text-white/50")}>Dry</span>
-                  </button>
-                  <button
-                    onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
-                    className={cn(
-                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                      selectedWeather === 'wet'
-                        ? "bg-blue-500/20"
-                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
-                    )}
-                  >
-                    <img src={weatherRain} alt="Wet" className="w-8 h-8" style={{ filter: selectedWeather === 'wet' ? 'invert(1) sepia(1) saturate(5) hue-rotate(190deg)' : undefined }} />
-                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'wet' ? "text-white" : "text-white/50")}>Wet</span>
-                  </button>
-                  <button
-                    onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
-                    className={cn(
-                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                      selectedWeather === 'random'
-                        ? "bg-purple-500/20"
-                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
-                    )}
-                  >
-                    <img src={weatherRandom} alt="Random" className="w-8 h-8" style={{ filter: selectedWeather === 'random' ? 'invert(1) sepia(1) saturate(5) hue-rotate(250deg)' : undefined }} />
-                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'random' ? "text-white" : "text-white/50")}>Random</span>
-                  </button>
-                </div>
-              </motion.div>
-            </div>)
+            <RaceSetupCard
+              motionKey={`pst-${CURRENT_GRAND_PRIX.circuitId}-card`}
+              testId={`hero-card-pst-${CURRENT_GRAND_PRIX.circuitId}`}
+              mapImageSrc={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+              level={{ index: levelDrumIndex, onIndexChange: selectLevelDrumIndex }}
+              view={state.raceMapView}
+              onViewChange={chooseRaceMapView}
+              weather={selectedWeather}
+              onWeatherChange={chooseWeather}
+              drumHeight={setupDrumHeight}
+            />
           ) : isGrandPrix ? (
-            /* Grand Prix Card */
-            (<div className="flex flex-col items-center">
-              <motion.div
-                key={`${CURRENT_GRAND_PRIX.circuitId}-card`}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.2 }}
-                className="w-[350px] md:w-[500px] rounded-[20px] p-6 flex flex-col transition-colors duration-300 select-none backdrop-blur-xl"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-                }}
-                data-testid={`hero-card-${CURRENT_GRAND_PRIX.circuitId}`}
-              >
-                {/* Header - Circuit & Flag */}
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <h2
-                    className="text-2xl font-bold uppercase tracking-wider text-white"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    {CURRENT_GRAND_PRIX.name}
-                  </h2>
-                  <img
-                    src={CURRENT_GRAND_PRIX.flagImage}
-                    alt={`${CURRENT_GRAND_PRIX.country} flag`}
-                    className="h-5 w-7 object-cover rounded-sm relative -top-0.5"
-                  />
-                </div>
-
-                {/* Track Map — padded contain stage (no max-w clamp that crops square maps).
-                    Hungary thin `_black` needs a taller stage to read at Spa visual size. */}
-                <div className="flex-1 flex items-center justify-center py-3 md:py-6 overflow-visible px-2">
-                  <div
-                    className={cn(
-                      'w-full overflow-visible p-2',
-                      CURRENT_GRAND_PRIX.circuitId === 'hungary'
-                        ? 'h-40 md:h-60'
-                        : 'h-32 md:h-52'
-                    )}
-                  >
-                    <img
-                      src={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
-                      alt={`${CURRENT_GRAND_PRIX.name} circuit`}
-                      className="h-full w-full object-contain"
-                      style={{ filter: 'invert(1)' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Map: Track | Map | Sectors */}
-                <div className="pt-2 mb-2">
-                  <SetupChoiceRow
-                    label="Map"
-                    left={{ id: 'track', text: 'Track' }}
-                    right={{ id: 'sectors', text: 'Sectors' }}
-                    value={state.raceMapView}
-                    onChange={(id) => {
-                      setRaceMapView(id as 'track' | 'sectors');
-                      if (state.soundEnabled) playCarouselClick();
-                    }}
-                    leftTestId="button-race-map-view-track"
-                    rightTestId="button-race-map-view-sectors"
-                  />
-                </div>
-
-                {/* Weather Toggle — selection via soft fill + opacity (no outline rings) */}
-                <div className="flex justify-center gap-4 pt-2">
-                  <button
-                    onClick={() => { setSelectedWeather('dry'); if (state.soundEnabled) playCarouselClick(); }}
-                    className={cn(
-                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                      selectedWeather === 'dry'
-                        ? "bg-yellow-500/20"
-                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
-                    )}
-                  >
-                    <img src={weatherSun} alt="Dry" className="w-8 h-8" style={{ filter: selectedWeather === 'dry' ? 'invert(1) sepia(1) saturate(10) hue-rotate(3deg) brightness(0.95)' : undefined }} />
-                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'dry' ? "text-white" : "text-white/50")}>Dry</span>
-                  </button>
-                  <button
-                    onClick={() => { setSelectedWeather('wet'); if (state.soundEnabled) playCarouselClick(); }}
-                    className={cn(
-                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                      selectedWeather === 'wet'
-                        ? "bg-blue-500/20"
-                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
-                    )}
-                  >
-                    <img src={weatherRain} alt="Wet" className="w-8 h-8" style={{ filter: selectedWeather === 'wet' ? 'invert(1) sepia(1) saturate(5) hue-rotate(190deg)' : undefined }} />
-                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'wet' ? "text-white" : "text-white/50")}>Wet</span>
-                  </button>
-                  <button
-                    onClick={() => { setSelectedWeather('random'); if (state.soundEnabled) playCarouselClick(); }}
-                    className={cn(
-                      "p-3 rounded-lg transition-all flex flex-col items-center gap-1",
-                      selectedWeather === 'random'
-                        ? "bg-purple-500/20"
-                        : "bg-transparent opacity-40 hover:opacity-70 hover:bg-white/5"
-                    )}
-                  >
-                    <img src={weatherRandom} alt="Random" className="w-8 h-8" style={{ filter: selectedWeather === 'random' ? 'invert(1) sepia(1) saturate(5) hue-rotate(250deg)' : undefined }} />
-                    <span className={cn("text-[9px] uppercase tracking-wide", selectedWeather === 'random' ? "text-white" : "text-white/50")}>Random</span>
-                  </button>
-                </div>
-              </motion.div>
-            </div>)
+            /* Grand Prix has no LEVEL drum — it is always adaptive in Practice, then locks. */
+            <RaceSetupCard
+              motionKey={`${CURRENT_GRAND_PRIX.circuitId}-card`}
+              testId={`hero-card-${CURRENT_GRAND_PRIX.circuitId}`}
+              mapImageSrc={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+              view={state.raceMapView}
+              onViewChange={chooseRaceMapView}
+              weather={selectedWeather}
+              onWeatherChange={chooseWeather}
+              drumHeight={setupDrumHeight}
+            />
           ) : null}
         </div>
         {/* Start Engine Button - Fixed Bottom */}

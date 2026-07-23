@@ -13,8 +13,6 @@ interface SetupChoiceRowProps {
   value: string;
   onChange: (id: string) => void;
   variant?: 'dark' | 'light';
-  /** Per-option active color; defaults to green */
-  activeColors?: Record<string, string>;
   leftTestId?: string;
   rightTestId?: string;
   className?: string;
@@ -29,7 +27,6 @@ export function SetupChoiceRow({
   value,
   onChange,
   variant = 'dark',
-  activeColors,
   leftTestId,
   rightTestId,
   className,
@@ -39,11 +36,9 @@ export function SetupChoiceRow({
   const inactiveColor =
     variant === 'light' ? 'rgba(0,0,0,0.35)' : SETUP_INACTIVE_TEXT;
 
-  const optionStyle = (id: string, active: boolean) => ({
+  const optionStyle = (active: boolean) => ({
     fontFamily: 'Oxanium, sans-serif',
-    color: active
-      ? (activeColors?.[id] ?? DEFAULT_ACTIVE)
-      : inactiveColor,
+    color: active ? DEFAULT_ACTIVE : inactiveColor,
     background: 'transparent' as const,
     opacity: active ? 1 : 0.45,
   });
@@ -54,7 +49,7 @@ export function SetupChoiceRow({
         type="button"
         onClick={() => onChange(left.id)}
         className="px-2 py-2 text-sm font-bold uppercase tracking-wider text-left sm:text-center transition-all"
-        style={optionStyle(left.id, value === left.id)}
+        style={optionStyle(value === left.id)}
         data-testid={leftTestId}
       >
         {left.text}
@@ -72,7 +67,7 @@ export function SetupChoiceRow({
         type="button"
         onClick={() => onChange(right.id)}
         className="px-2 py-2 text-sm font-bold uppercase tracking-wider text-right sm:text-center transition-all"
-        style={optionStyle(right.id, value === right.id)}
+        style={optionStyle(value === right.id)}
         data-testid={rightTestId}
       >
         {right.text}

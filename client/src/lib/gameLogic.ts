@@ -46,6 +46,9 @@ export interface LapEntry {
 /** Race HUD progress: circuit silhouette vs classic sector squares */
 export type RaceMapView = 'track' | 'sectors';
 
+/** Setup weather choice. 'random' resolves per-circuit at the countdown. */
+export type Weather = 'dry' | 'wet' | 'random';
+
 export interface GameState {
   coins: number;
   unlockedItems: string[];
@@ -121,29 +124,49 @@ export function parseDifficulty(v: string | null | undefined): Difficulty | null
 /** Solo setup: Adaptive (live) vs Locked (fixed series for the race). GP is always adaptive. */
 export type DifficultyMode = 'adaptive' | 'locked';
 
-const DIFFICULTY_MODE_KEY = 'difficultyMode';
-const LOCKED_DIFFICULTY_KEY = 'lockedDifficulty';
+/**
+ * Difficulty prefs bound to a pair of localStorage keys.
+ *
+ * Each game keeps its own namespace on purpose — picking a level in Lane Racer must not
+ * move Free Practice's. One implementation, several namespaces.
+ */
+export function createDifficultyPrefs(modeKey: string, lockedKey: string) {
+  return {
+    loadMode(): DifficultyMode {
+      try {
+        return localStorage.getItem(modeKey) === 'locked' ? 'locked' : 'adaptive';
+      } catch {
+        return 'adaptive';
+      }
+    },
+    loadLocked(): Difficulty {
+      try {
+        return parseDifficulty(localStorage.getItem(lockedKey)) ?? 'beginner';
+      } catch { /* ignore */ }
+      return 'beginner';
+    },
+    save(mode: DifficultyMode, locked: Difficulty) {
+      try {
+        localStorage.setItem(modeKey, mode);
+        localStorage.setItem(lockedKey, locked);
+      } catch { /* ignore */ }
+    },
+  };
+}
+
+/** Free Practice / Grand Prix / Multiplayer namespace. */
+const soloDifficultyPrefs = createDifficultyPrefs('difficultyMode', 'lockedDifficulty');
 
 export function loadDifficultyMode(): DifficultyMode {
-  try {
-    return localStorage.getItem(DIFFICULTY_MODE_KEY) === 'locked' ? 'locked' : 'adaptive';
-  } catch {
-    return 'adaptive';
-  }
+  return soloDifficultyPrefs.loadMode();
 }
 
 export function loadLockedDifficulty(): Difficulty {
-  try {
-    return parseDifficulty(localStorage.getItem(LOCKED_DIFFICULTY_KEY)) ?? 'beginner';
-  } catch { /* ignore */ }
-  return 'beginner';
+  return soloDifficultyPrefs.loadLocked();
 }
 
 export function saveDifficultyPrefs(mode: DifficultyMode, locked: Difficulty) {
-  try {
-    localStorage.setItem(DIFFICULTY_MODE_KEY, mode);
-    localStorage.setItem(LOCKED_DIFFICULTY_KEY, locked);
-  } catch { /* ignore */ }
+  soloDifficultyPrefs.save(mode, locked);
 }
 
 export function driverForDifficulty(difficulty: Difficulty): Driver {
@@ -158,7 +181,7 @@ export const DIFFICULTY_MODE_COLORS = {
 
 export const LOCKED_LEVEL_COLORS: Record<Difficulty, string> = {
   beginner: '#00e5ff', // Karting — electric blue
-  easy: '#000000',     // F3 — black
+  easy: '#ec4899',     // F3 — magenta; readable on both the light race HUD and the dark setup drums (was #000000)
   medium: '#38bdf8',   // F2 — light blue
   hard: '#ef4444',     // F1 — red
   pro: '#f59e0b',      // Pro — amber (distinct from F1 red)
@@ -166,6 +189,41 @@ export const LOCKED_LEVEL_COLORS: Record<Difficulty, string> = {
 
 export const SETUP_INACTIVE_TEXT = 'rgba(255,255,255,0.35)';
 export const CHASE_CAM_ACTIVE_COLOR = '#ff2800';
+
+export interface DifficultyDrumOption {
+  id: string;
+  label: string;
+  mode: DifficultyMode;
+  locked: Difficulty | null;
+}
+
+/**
+ * The setup drum: Adaptive first, then one entry per series.
+ *
+ * Derived from DRIVERS rather than hand-listed so the two can't drift apart. The
+ * underlying state is still the mode/locked pair — this is only how it's presented.
+ */
+export const DIFFICULTY_DRUM_OPTIONS: DifficultyDrumOption[] = [
+  { id: 'adaptive', label: 'Adaptive', mode: 'adaptive', locked: null },
+  ...DRIVERS.map((d) => ({
+    id: d.id,
+    label: d.name,
+    mode: 'locked' as const,
+    locked: d.difficulty,
+  })),
+];
+
+/** Maps the stored mode/locked pair onto a drum index. */
+export function difficultyDrumIndex(mode: DifficultyMode, locked: Difficulty): number {
+  if (mode !== 'locked') return 0;
+  const i = DIFFICULTY_DRUM_OPTIONS.findIndex((o) => o.mode === 'locked' && o.locked === locked);
+  return i >= 0 ? i : 1;
+}
+
+export function difficultyDrumColor(opt: DifficultyDrumOption): string {
+  if (opt.mode === 'adaptive') return DIFFICULTY_MODE_COLORS.adaptive;
+  return LOCKED_LEVEL_COLORS[opt.locked!];
+}
 
 export const POSITION_POINTS: Record<number, number> = {
   1: 25, 2: 18, 3: 15, 4: 12, 5: 10, 6: 8, 7: 6, 8: 4, 9: 2, 10: 1
@@ -298,6 +356,33 @@ const INITIAL_STATE: GameState = {
 
 function parseRaceMapView(value: unknown): RaceMapView {
   return value === 'sectors' ? 'sectors' : 'track';
+}
+
+export function parseWeather(value: unknown): Weather | null {
+  if (value === 'dry' || value === 'wet' || value === 'random') return value;
+  return null;
+}
+
+/**
+ * Setup weather lives under its own key rather than in the GameState blob.
+ *
+ * The blob is rewritten wholesale by whichever `useGameState` copy saves last, and
+ * `MenuMusic` holds a second copy mounted app-wide — so a value written here would be
+ * liable to get clobbered by a stale one. A standalone key sidesteps that.
+ */
+const SETUP_WEATHER_KEY = 'setupWeather';
+
+export function loadSetupWeather(): Weather {
+  try {
+    return parseWeather(localStorage.getItem(SETUP_WEATHER_KEY)) ?? 'dry';
+  } catch { /* ignore */ }
+  return 'dry';
+}
+
+export function saveSetupWeather(weather: Weather) {
+  try {
+    localStorage.setItem(SETUP_WEATHER_KEY, weather);
+  } catch { /* ignore */ }
 }
 
 export const SHOP_ITEMS = [

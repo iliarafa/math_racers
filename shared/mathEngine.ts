@@ -377,8 +377,13 @@ export function updateDynamicDifficulty(
   responseTime: number,
   operationType: string,
   slowerThanBot: boolean = false,
-  /** Adaptive callers pass 'hard' so Pro stays Locked-only. Default 'pro' for flexibility. */
-  maxDifficulty: Difficulty = 'pro'
+  /**
+   * Ceiling for adaptive promotion. Required on purpose — adaptive callers pass 'hard'
+   * so Pro stays reachable only by picking it explicitly. This used to default to 'pro'
+   * (i.e. uncapped), which meant forgetting the argument silently let Pro leak into the
+   * adaptive ladder. Keeping it required makes that a compile error instead.
+   */
+  maxDifficulty: Difficulty
 ): DynamicDifficultyState {
   const expectedTime = getExpectedTime(state.currentDifficulty, operationType);
   const fast = responseTime < expectedTime;

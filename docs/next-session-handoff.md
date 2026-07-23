@@ -1,126 +1,140 @@
 # Next Session Handoff
 
-**Branch:** `main` (ahead of `origin/main` by 9 commits — not pushed)  
-**App version:** `1.3.12` — aligned in `package.json`, `capacitor.config.ts`, Xcode `MARKETING_VERSION`  
+**Branch:** `main`  
+**App version:** `1.3.11` — **single source of truth.** Build `1` is correct (nothing archived for 1.3.11 yet).  
+**App Store live:** `1.3.10` (shipped as build 2 — build numbers reset per marketing version, so 1.3.11 build 1 is valid)  
 **Current GP:** Round 11 / Hungary — `client/src/lib/currentGrandPrix.ts`  
-**Last updated:** 2026-07-21 (end of session)  
-**Status:** Hungary weekend + Live Circuit Map are on `main`. **Hungaroring track assets are a mess** — Lane Racer thickness/size work was started then reverted after it resized Spa. Pick that up carefully tomorrow.
+**Last updated:** 2026-07-22  
+**Status:** Free Practice / Grand Prix setup cards rebuilt as **LEVEL / VIEW / WEATHER drums**. Shipped and verified on the iPhone 17 Pro sim.
 
 ---
 
 ## Resume here (start here)
 
-**Agent map for Spa-quality Hungary work:** [`docs/spa-quality-circuit-map-guide.md`](spa-quality-circuit-map-guide.md)
-
 ```bash
 git checkout main
-git pull   # only if you want remote; local is 9 commits ahead
+git pull
 npm run dev -- --port 8081
 ```
 
 Open **`http://127.0.0.1:8081`** (prefer over `localhost` — server listens IPv4 only).
 
-**iOS:** `npm run build && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios`  
-Then run on sim (this session used):  
+**iOS:**  
+`npm run build && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios`  
 `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap run ios --target=A1301ED4-C124-4695-9A60-D05ACF4B4604`  
-(iPhone 17 / iOS 26.5 — confirm with `xcrun simctl list devices booted`)
+(iPhone 17 sim — confirm with `xcrun simctl list devices booted`)
+
+**Agent map for Spa-quality circuit work (if needed):** [`docs/spa-quality-circuit-map-guide.md`](spa-quality-circuit-map-guide.md)
 
 ---
 
-## ⚠ Hungaroring track assets are a mess (read first)
+## Setup drums — how the cards work now
 
-Do **not** treat Hungary map art as finished. Two different products need two different line weights, and one shared PNG is wrong for both.
+Free Practice and Grand Prix share **one** component. Both used to be ~110 lines of
+byte-identical JSX; that duplication is gone.
 
-| Surface | Asset today | Problem |
-|---------|-------------|---------|
-| Free Practice / Live Circuit Map / GP setup | `client/src/assets/circuit_hungary.png` (thick ribbon, 667×698) | Iterated many times (Austria weight → Spa weight → crop fights → new reference). Centerline + `ribbon: 26` in `circuitPathData.json` are for this thick art. |
-| Lane Racer carousel | **Same** `circuit_hungary.png` via `LaneRacer.tsx` `CIRCUIT_MAP_IMAGES` | Looks much thicker than Spa’s thin `circuit_spa_black.png`. Spa uses dedicated `*_black` line art; Hungary does not. |
+| Piece | Location |
+|-------|----------|
+| Shared card | [`client/src/components/setup/RaceSetupCard.tsx`](../client/src/components/setup/RaceSetupCard.tsx) |
+| Drum mechanism | [`client/src/components/setup/SetupDrum.tsx`](../client/src/components/setup/SetupDrum.tsx) (extracted from Lane Racer) |
+| Titled drum | [`client/src/components/setup/SetupDrumRow.tsx`](../client/src/components/setup/SetupDrumRow.tsx) |
+| Weather options | [`client/src/components/setup/weatherOptions.ts`](../client/src/components/setup/weatherOptions.ts) |
+| Level options | `DIFFICULTY_DRUM_OPTIONS` in [`gameLogic.ts`](../client/src/lib/gameLogic.ts) — **derived from `DRIVERS`**, do not hand-edit |
+| Setup click sound | [`client/src/lib/uiSound.ts`](../client/src/lib/uiSound.ts) (owns the shared `AudioContext`) |
 
-### What we tried tonight (and walked back)
+**Three drums: LEVEL / VIEW / WEATHER.** All words, all the same type size — one language.
 
-1. Pointed Lane Racer at a thin `RaceCircuitHungaroring` line art → Hungary too thin vs Spa.  
-2. Dilated a new `circuit_hungary_black.png` to match Spa `strokeRelH` → then “a bit too thick.”  
-3. Enlarged the **shared** Lane Racer track stage (`itemHeight` 200, `200×144` stage) for all circuits → **destroyed Spa’s size**. User ordered full revert.  
-4. Reverted `LaneRacer.tsx` to original (`itemHeight={140}`, `h-24` + `maxWidth: 140`). Deleted untracked `circuit_hungary_black.png`. Redeployed to iOS sim.
+- **LEVEL** — `Adaptive, Karting, F3, F2, F1, Pro`. Free Practice only; Grand Prix has no
+  LEVEL drum (always adaptive in Practice, then locks). Presence of the optional `level`
+  prop is what distinguishes the two cards.
+- **VIEW** — Track | Sectors → `state.raceMapView`.
+- **WEATHER** — Dry | Wet | Random. **Words only, no icon** — a deliberate call: `Random`
+  has no honest icon, and the drum shows one item at a time with nothing to disambiguate it.
 
-**Working tree is clean** for code (only untracked docs images / quality guide left).
+**The Adaptive/Locked toggle is gone from the UI.** Underneath, `difficultyMode` +
+`lockedDifficulty` are unchanged — the drum maps to/from a drum index, exactly as Lane
+Racer already did. **No server, wire-protocol, or localStorage migration was involved**;
+do not "finish the job" by collapsing that state without deciding to deploy both ends.
 
-### Source art (outside repo, Cursor assets folder)
+**Per-circuit silhouette art is now config,** not JSX: `mapStageClass` in
+[`currentGrandPrix.ts`](../client/src/lib/currentGrandPrix.ts) (falls back to
+`DEFAULT_MAP_STAGE_CLASS`). Hungary uses `h-40 md:h-60` because its line art is thin.
+**Weekly rotation: set or clear this one field** instead of editing a ternary in two cards.
 
-Thin Hungaroring references (same bytes ~17KB each):
+**Weather now persists** under its own `setupWeather` key — deliberately *not* in the
+`f1-math-racer-state` blob, which `MenuMusic` can clobber (see Known issues). If you ever
+reintroduce a `setSelectedWeather('dry')` reset in `restartRace` /
+`restartToSelectingScreen`, you will silently break persistence after the first race.
 
-- `…/assets/RaceCircuitHungaroring-2084592d-f5dc-475a-922b-3feeaf24559c.png` (used for Lane Racer attempts)  
-- `…/assets/RaceCircuitHungaroring-a11ed8fa-0a1e-47fc-9f18-69fd8f1958b6.png` (used for Live Map rebuild in `51db1cf`)  
+### Trap worth knowing
 
-Live Map thick silhouette was rebuilt from the rounded-tip reference + Spa `strokeRelH` dilation + margin — commit `51db1cf`.
+`updateDynamicDifficulty` ([`shared/mathEngine.ts`](../shared/mathEngine.ts)) used to
+default `maxDifficulty` to `'pro'` — i.e. **uncapped** — while five call sites passed
+`'hard'` as the only thing keeping Pro out of the adaptive ladder. It is now a **required
+parameter**, so omitting it is a compile error. Keep it that way. Gate:
 
-### Hard constraint for tomorrow
+```bash
+grep -rn -A8 "updateDynamicDifficulty" client/src/pages/Game.tsx client/src/pages/LaneRacer.tsx server/websocket.ts | grep -c "'hard'"
+```
 
-- **Never change the shared Lane Racer stage size** to “fix” Hungary — that resizes Spa/Monza/etc.  
-- Give Hungary its **own** thin `circuit_hungary_black.png` (or equivalent) for Lane Racer only.  
-- Keep thick `circuit_hungary.png` for Live Circuit Map / FP.  
-- Match **on-screen stroke px** to Spa at the **existing** `h-24` / `maxWidth: 140` stage — do not enlarge the stage.  
-- If Hungary still looks small (square vs Spa landscape), fix with **asset framing** (crop/pad) or a Hungary-only CSS scale — not a global stage change.
+Must print `5`.
 
 ---
 
-## First order of business tomorrow
+## Shipped this stretch (on `origin/main`)
 
-Follow [`docs/spa-quality-circuit-map-guide.md`](spa-quality-circuit-map-guide.md) (§ Hungary reproduction map).
+| Commit | What |
+|--------|------|
+| _this stretch_ | Setup drums: LEVEL / VIEW / WEATHER on FP + GP, shared `RaceSetupCard`, weather persistence, `mapStageClass` config, F3 colour fix, ~250 lines of dead carousel removed |
+| `1f5034a` | Regulations: Everything Is Purple + Hungaroring; Lane Racer defaults to GP circuit; iPhone setup card tighten |
+| `16e1293` | Free Practice all-purple lap → ALL PURPLE label + persistent Racer Log badge |
+| `88bd6cf`…`c70ad84` | Hungary Live Circuit Map + Round 11 weekend rotation |
 
-1. **Lane Racer Hungary line weight** — add dedicated thin black asset; keep Spa stage untouched; match Spa thickness at current clamps.  
-2. Optional: sanity-check FP Live Map Hungary still OK at `/dev/circuit-maps`.  
-3. Otherwise pick from **Next optional** below.
+**Purple badge (verified)**
+
+- Id: `BADGE_EVERYTHING_IS_PURPLE` (`everything-is-purple`) in `gameLogic.ts`  
+- Earn: Free Practice only — full circuit tour all purple → toast + Racer Log badge  
+- HUD: level label temporarily **ALL PURPLE** while lit  
+- Regulations Free Practice + Garage Racer Log lines updated  
 
 ---
 
-## Shipped this stretch (on `main`, local)
+## Version — 1.3.11
 
-Recent Hungary map commits (newest first):
+**`1.3.11` is the single source of truth.** Verified consistent across the working tree:
 
-- `51db1cf` Rebuild Hungary silhouette from uncropped Hungaroring reference  
-- `5498053` Center Hungary progress on the ribbon and stop edge crop  
-- `6cff84b` Make Hungary live map crop-proof with Spa-weight Asset_2 art  
-- `2fb7dd6` Match Hungary live-map stroke width to Spa  
-- (+ rotate/pad/thicken commits before that)  
-- `6afe18c` Add Hungary live circuit map with dense centerline  
-- `c70ad84` Update Free Practice and Grand Prix to Round 11 / Hungary  
+| File | Value |
+|------|-------|
+| `package.json` / `package-lock.json` | `1.3.11` |
+| `capacitor.config.ts` | `1.3.11` |
+| `ios/App/App/capacitor.config.json` (generated by `cap sync`) | `1.3.11` |
+| `ios/App/App.xcodeproj/project.pbxproj` | `MARKETING_VERSION` 1.3.11 (both configs) |
+| `ios/App/App.xcodeproj/project.pbxproj` | `CURRENT_PROJECT_VERSION` 1 |
 
-### Live Circuit Map plumbing (still in code)
+No version string is rendered anywhere in the app UI — these files are the only places it lives.
 
-- `circuitPaths.ts`: `ribbon?: number` on meta  
-- `LiveCircuitMap.tsx`: `sectorStroke` from `meta.ribbon`; dynamic `viewPad` / viewBox aspect so strokes/cars don’t clip  
-- `extractCircuitCenterline.ts`: `maxOffset` / `jumpLimit` from ridge median; writes `ribbon` into JSON  
-- Hungary path entry (verified): **viewBox 667×698**, **1564 points**, **`ribbon: 26`**
+**Build number `1` is correct.** 1.3.10 shipped as build 2, but App Store Connect scopes
+the build counter to the marketing version, so 1.3.11 starts at 1. It only needs raising
+if a *second* upload of 1.3.11 goes to ASC.
 
-### Lane Racer (verified after revert)
+**History, so nobody "fixes" it backwards:** `6afe18c` ("Add Hungary live circuit map")
+bumped to `1.3.12` by mistake — `c70ad84` had already set 1.3.11 for the Hungary round.
+That stray bump has been **reverted down** to 1.3.11 and committed. 1.3.12 was never
+released; do not treat it as a version to return to.
 
-- Track drum: `itemHeight={140}`  
-- Img: `h-24` + `maxWidth: 140` + `filter: invert(1)`  
-- Hungary still imports thick `circuit_hungary.png`
+---
 
-### Key files
+## Hungary / Live Circuit Map (current facts)
 
-| File | Role |
-|------|------|
-| `client/src/assets/circuit_hungary.png` | Thick Live Map / FP / (wrongly) Lane Racer |
-| `client/src/pages/LaneRacer.tsx` | Carousel maps — needs Hungary `_black` |
-| `client/src/components/LiveCircuitMap.tsx` | Live map + ribbon stroke |
-| `client/src/lib/circuitPaths.ts` / `circuitPathData.json` | Images + path + ribbon |
-| `script/extractCircuitCenterline.ts` | Medial extract |
-| `client/src/lib/currentGrandPrix.ts` | Round 11 Hungary |
-| `docs/spa-quality-circuit-map-guide.md` | Spa→Hungary quality / reproduction guide |
-| `docs/spa-live-circuit-map-playbook.md` | Stub → points at quality guide |
+| Item | Verified |
+|------|----------|
+| Thick Live Map art | `client/src/assets/circuit_hungary.png` |
+| Thin line art | `client/src/assets/circuit_hungary_black.png` (Lane Racer + FP setup black map) |
+| Path JSON | `w: 698`, `h: 667`, `points: 2476`, `ribbon: 19` |
+| Lane Racer maps | `hungary: circuitHungaryBlack` |
+| Regenerated via | `npx tsx script/extractCircuitCenterline.ts hungary` |
 
-### Circuit map coverage
-
-| Circuit | Live map art | Notes |
-|---------|--------------|--------|
-| Spa, Monaco, Monza, Suzuka, Silverstone, Hungary | Yes | Hungary assets messy — see above |
-| Canada, Miami, Barcelona, Austria | Fallback oval | Do not retrace without ask |
-
-Hungary regenerate:  
-`npx tsx script/extractCircuitCenterline.ts hungary`
+Optional later: further Lane Racer Hungary stroke/framing polish — **do not** enlarge the shared Lane Racer stage (`itemHeight={140}`, `h-24` / `maxWidth: 140`).
 
 ---
 
@@ -129,42 +143,55 @@ Hungary regenerate:
 | Topic | Decision |
 |-------|----------|
 | Adaptive default | Factory default on FP / Lane Racer / MP |
-| Locked | Fixed Karting/F3/F2/F1 for the race; no promotion/demotion |
-| Grand Prix | Always adaptive Practice; Quali/Race lock after Practice — no Adaptive/Locked UI on GP setup card |
+| Locked | Fixed Karting…F1/Pro for the race; no promotion/demotion. **No longer a visible mode** — picking a level on the LEVEL drum *is* locking |
+| Grand Prix | Always adaptive Practice; Quali/Race lock after Practice — no LEVEL drum on GP setup |
+| Setup drums | One language: LEVEL / VIEW / WEATHER, words only, same type size. No icons mixed with words |
 | Soft-follow 3D cam | Capacitor native only (`isNativePlatform()`), including iPad — never in browser |
-| Selection chrome | Text color / opacity only — no gray selection pills |
+| Selection chrome | Text color / opacity only — no gray selection pills, no filled selection tiles |
 | Kid difficulty ladder | Karting→F1 compressed; Adaptive soft-caps at F1; Pro Locked-only |
 | Live Circuit Map iPad size | Native iPad only (`isNativeIPad()`), not browser / not iPhone |
-| Lane Racer track stage | Keep Spa-era clamps; no global enlarge to fix Hungary |
+| Lane Racer track stage | Keep Spa-era clamps; no global enlarge to fix one circuit |
 
 ---
 
-## Next optional (confirm with user)
+## Backlog (confirm with user)
 
-1. Finish Lane Racer Hungary thin asset (without touching Spa size)  
-2. Align Multiplayer race status chrome with Game (Lap\|Limits + `hideFooter`)  
+1. **Multiplayer setup card** — still the only `SetupChoiceRow` consumer, still has the
+   filled-tile weather row (labelled Standard / Harder / Surprise). Adopting the drums
+   there needs a `variant` prop first: `SetupDrum` hardcodes `text-white/35` chevrons and
+   MP's card is light-themed. ← **most natural next step**
+2. Align Multiplayer race status chrome with Game  
 3. Remove or gate `/dev/circuit-maps` in production  
-4. Play-test kid ladder + Lane Racer 1:2:3:4 speeds  
-5. Discuss Lane Racer setup on iPad  
+4. Play-test kid ladder + Lane Racer pace  
 
-### Local untracked (not committed — leave unless asked)
+### Known issues (found, not fixed)
 
+- **`useGameState` blob clobber.** `useGameState` is a plain hook, not a context, and
+  `MenuMusic` (`App.tsx`) holds a second independent copy while rendering the sound
+  toggle. The persistence effect rewrites the *entire* `f1-math-racer-state` blob on any
+  change, so toggling music can write `MenuMusic`'s mount-time-stale `raceMapView` over a
+  newer value. Real, pre-existing, and the reason setup weather uses its own key.
+- **Multiplayer setup card unverified** after the `SetupChoiceRow` prop cleanup — it needs
+  a hosted room to reach. The lobby renders and `tsc` is clean; only a dead prop was removed.
+
+### Local untracked (not committed)
+
+- `docs/hungary-90cw-centerline-check.png`  
 - `docs/mockup-map-toggle-real-sectors.png`  
 - `docs/mockup-map-toggle-real-track.png`  
 - `docs/setup-card-target.png`  
-- `docs/spa-quality-circuit-map-guide.md`
-- `docs/spa-live-circuit-map-playbook.md` (stub)  
 
 ### Out of scope unless asked
 
-- Soft-follow in browser / narrow-only iPad gate  
+- Soft-follow in browser  
 - Championship unlock redesign  
 - Deploy/Harvest re-enable  
 - Retracing Canada / Miami / Barcelona / Austria  
-- Pushing the 9 local commits to origin  
 
 ---
 
 ## Note for the next agent
 
-You are on **`main`**, **9 commits ahead of origin**. Current GP is **Hungary (Round 11)**. Live Circuit Map exists for Hungary but **Hungaroring track assets are a mess** — Lane Racer still uses the thick Live Map PNG; a shared stage enlarge was reverted because it broke Spa. Start from [`docs/spa-quality-circuit-map-guide.md`](spa-quality-circuit-map-guide.md). Prefer `http://127.0.0.1:8081`. QA: `/dev/circuit-maps`. iOS: build + `cap sync` + `cap run` to booted sim. Do not invent new map UX or reopen locked difficulty decisions without asking. Do not retrace the four fallback GP circuits. Do not change global Lane Racer map stage size.
+You are on **`main`**, synced with origin for code through `1f5034a`. GP is **Hungary (Round 11)**. App version is **1.3.11**, build **1** — uncommitted, and it is a *revert down* from the stray `1.3.12` on `HEAD`, not a bump.  
+
+**Start with Free Practice setup** in `Game.tsx` (`hero-card-pst-hungary` / `isPreSeasonTesting` card). Prefer `http://127.0.0.1:8081`. iOS: build + `cap sync` + `cap run` to the iPhone 17 sim. Do not reopen locked difficulty / map-stage decisions without asking.
