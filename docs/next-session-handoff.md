@@ -4,7 +4,7 @@
 **App version:** `1.3.11` — **single source of truth.** Build `1` is correct (nothing archived for 1.3.11 yet).  
 **App Store live:** `1.3.10` (shipped as build 2 — build numbers reset per marketing version, so 1.3.11 build 1 is valid)  
 **Current GP:** Round 11 / Hungary — `client/src/lib/currentGrandPrix.ts`  
-**Last updated:** 2026-07-22  
+**Last updated:** 2026-07-23  
 **Status:** Free Practice / Grand Prix setup cards rebuilt as **LEVEL / VIEW / WEATHER drums**. Shipped and verified on the iPhone 17 Pro sim.
 
 ---
@@ -174,10 +174,10 @@ Optional later: further Lane Racer Hungary stroke/framing polish — **do not** 
    stroke — is written up under "Follow-up: uniform VECTOR silhouettes" in the session plan; the user
    chose fresh PNGs instead.)
 
-1. **Multiplayer setup card** — still the only `SetupChoiceRow` consumer, still has the
-   filled-tile weather row (labelled Standard / Harder / Surprise). Adopting the drums
-   there needs a `variant` prop first: `SetupDrum` hardcodes `text-white/35` chevrons and
-   MP's card is light-themed. ← **most natural next step**
+1. **Multiplayer setup card — done.** The waiting-room LEVEL picker now uses the shared
+   `SetupRow` via `levelRow` (host taps to cycle; guest sees a locked read-only readout),
+   matching Free Practice / Grand Prix / Lane Racer. `SetupRow` gained a `variant="light"`
+   for MP's light waiting card; `track_select` already used SetupRow rows + a Level readout.
 2. Align Multiplayer race status chrome with Game  
 3. Remove or gate `/dev/circuit-maps` in production  
 4. Play-test kid ladder + Lane Racer pace  
@@ -189,8 +189,9 @@ Optional later: further Lane Racer Hungary stroke/framing polish — **do not** 
   toggle. The persistence effect rewrites the *entire* `f1-math-racer-state` blob on any
   change, so toggling music can write `MenuMusic`'s mount-time-stale `raceMapView` over a
   newer value. Real, pre-existing, and the reason setup weather uses its own key.
-- **Multiplayer setup card unverified** after the `SetupChoiceRow` prop cleanup — it needs
-  a hosted room to reach. The lobby renders and `tsc` is clean; only a dead prop was removed.
+- **Multiplayer LEVEL `SetupRow` — iOS unchecked.** The waiting-room LEVEL row (host cycle,
+  guest read-only, live-synced) and `track_select` were verified in the browser via a hosted
+  room; `tsc` clean. Not yet built to the iPhone sim.
 
 ### Local untracked (not committed)
 

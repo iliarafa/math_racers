@@ -21,6 +21,12 @@ export interface SetupRowSpec {
 
 interface SetupRowProps {
   spec: SetupRowSpec;
+  /**
+   * `dark` (default) suits the glass pit-wall card; `light` recolours the label, divider and
+   * value fallback for light surfaces (Multiplayer's waiting-room card). Option `color`s are
+   * left alone, so the level rungs keep their series colours on either surface.
+   */
+  variant?: 'dark' | 'light';
 }
 
 const LABEL_STYLE: React.CSSProperties = {
@@ -43,11 +49,14 @@ const LABEL_STYLE: React.CSSProperties = {
  * (no tap, no cursor, no click sound). This is how the TRACK row appears while the menu is
  * pinned to one circuit — see `LOCK_MENU_TO_CURRENT_GP` in `circuitMenuArt.ts`.
  */
-export function SetupRow({ spec }: SetupRowProps) {
+export function SetupRow({ spec, variant = 'dark' }: SetupRowProps) {
   const rawIndex = spec.options.findIndex((o) => o.id === spec.selectedId);
   const index = rawIndex >= 0 ? rawIndex : 0;
   const selected = spec.options[index] ?? spec.options[0];
   const interactive = spec.options.length > 1;
+  const labelColor = variant === 'light' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)';
+  const dividerColor = variant === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)';
+  const valueFallback = variant === 'light' ? '#111827' : '#ffffff';
 
   const advance = () => {
     const next = spec.options[(index + 1) % spec.options.length];
@@ -74,7 +83,7 @@ export function SetupRow({ spec }: SetupRowProps) {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.12 }}
       className="font-bold text-sm md:text-base uppercase tracking-wider truncate"
-      style={{ fontFamily: 'Oxanium, sans-serif', color: selected?.color ?? '#ffffff' }}
+      style={{ fontFamily: 'Oxanium, sans-serif', color: selected?.color ?? valueFallback }}
       data-testid={`setup-value-${spec.id}`}
     >
       {selected?.label}
@@ -82,7 +91,7 @@ export function SetupRow({ spec }: SetupRowProps) {
   );
 
   const label = (
-    <span className="uppercase shrink-0" style={LABEL_STYLE}>
+    <span className="uppercase shrink-0" style={{ ...LABEL_STYLE, color: labelColor }}>
       {spec.label}
     </span>
   );
@@ -90,7 +99,7 @@ export function SetupRow({ spec }: SetupRowProps) {
   const rowClass = 'w-full flex items-center justify-between gap-3 py-3';
 
   return (
-    <div className="border-b" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+    <div className="border-b" style={{ borderColor: dividerColor }}>
       {interactive ? (
         <button
           type="button"

@@ -4,8 +4,9 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { LiveCircuitMap } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
-import { operationRow, weatherRow, viewRow } from "@/components/setup/setupRows";
-import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, parseDifficulty, DIFFICULTY_MODE_COLORS, LOCKED_LEVEL_COLORS, SETUP_INACTIVE_TEXT } from "@/lib/gameLogic";
+import { SetupRow } from "@/components/setup/SetupRow";
+import { levelRow, operationRow, weatherRow, viewRow } from "@/components/setup/setupRows";
+import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, parseDifficulty, LOCKED_LEVEL_COLORS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Timer, Delete, Home, Globe, ChevronLeft, Zap } from "lucide-react";
@@ -1380,83 +1381,36 @@ export default function Multiplayer() {
             )}
           </div>
 
-          {/* Difficulty: Adaptive (default) or Locked — host configures, guest accepts via Ready */}
-          <div className="bg-secondary rounded-xl p-4 w-full max-w-sm">
-            <div className="text-sm font-medium mb-3 text-center">Difficulty</div>
+          {/* LEVEL — the shared setup row (Adaptive + one rung per level), the same language as
+              Free Practice / Grand Prix / Lane Racer. Host taps to cycle; the guest sees the
+              host's choice as a locked readout and accepts it by tapping Ready. `variant="light"`
+              because this waiting-room card is light, unlike the dark track_select card. */}
+          <div className="bg-secondary rounded-xl px-4 w-full max-w-sm">
             {isHost ? (
-              <>
-                <div className="flex justify-center gap-2 mb-2">
-                  {([
-                    ['adaptive', 'Adaptive'],
-                    ['locked', 'Locked'],
-                  ] as const).map(([mode, label]) => {
-                    const active = difficultyMode === mode;
-                    return (
-                      <button
-                        key={mode}
-                        type="button"
-                        onClick={() => syncDifficultySettings(mode, lockedDifficulty)}
-                        className="px-4 py-2 text-sm font-bold uppercase tracking-wider transition-all"
-                        style={{
-                          fontFamily: 'Oxanium, sans-serif',
-                          color: active ? DIFFICULTY_MODE_COLORS[mode] : SETUP_INACTIVE_TEXT,
-                          background: 'transparent',
-                          opacity: active ? 1 : 0.45,
-                        }}
-                        data-testid={`mp-difficulty-${mode}`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-                {/* Always visible (greyed under Adaptive) so lobby rhythm matches Locked */}
-                <div
-                  className={cn(
-                    "flex justify-center flex-wrap gap-2",
-                    difficultyMode !== 'locked' && "pointer-events-none"
-                  )}
-                  aria-hidden={difficultyMode !== 'locked'}
-                >
-                  {DRIVERS.map((d) => {
-                    const interactive = difficultyMode === 'locked';
-                    const active = interactive && lockedDifficulty === d.difficulty;
-                    return (
-                      <button
-                        key={d.id}
-                        type="button"
-                        tabIndex={interactive ? 0 : -1}
-                        onClick={() => syncDifficultySettings('locked', d.difficulty)}
-                        className="px-3 py-1.5 text-xs font-bold uppercase tracking-wider transition-all"
-                        style={{
-                          fontFamily: 'Oxanium, sans-serif',
-                          color: active ? LOCKED_LEVEL_COLORS[d.difficulty] : SETUP_INACTIVE_TEXT,
-                          background: 'transparent',
-                          opacity: active ? 1 : 0.45,
-                        }}
-                        data-testid={`mp-locked-level-${d.id}`}
-                      >
-                        {d.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
+              <SetupRow
+                variant="light"
+                spec={levelRow(difficultyMode, lockedDifficulty, (opt) =>
+                  syncDifficultySettings(opt.mode, opt.locked ?? lockedDifficulty),
+                )}
+              />
             ) : (
-              <div className="text-center space-y-1">
-                <p
-                  className="font-bold uppercase tracking-wider"
-                  style={{
-                    fontFamily: 'Oxanium, sans-serif',
-                    color: difficultyMode === 'adaptive'
-                      ? DIFFICULTY_MODE_COLORS.adaptive
-                      : DIFFICULTY_MODE_COLORS.locked,
-                  }}
-                >
-                  {difficultyMode === 'adaptive' ? 'Adaptive' : `Locked · ${lockedLevelLabel}`}
-                </p>
-                <p className="text-xs text-muted-foreground">Host sets difficulty — Ready to accept</p>
-              </div>
+              (() => {
+                const spec = levelRow(difficultyMode, lockedDifficulty, () => {});
+                const selected =
+                  spec.options.find((o) => o.id === spec.selectedId) ?? spec.options[0];
+                // A single-option spec renders as a static, non-interactive readout.
+                return (
+                  <>
+                    <SetupRow
+                      variant="light"
+                      spec={{ ...spec, options: [selected], onSelect: () => {} }}
+                    />
+                    <p className="text-xs text-muted-foreground text-center pt-2 pb-1">
+                      Host sets the level — Ready to accept
+                    </p>
+                  </>
+                );
+              })()
             )}
           </div>
 
