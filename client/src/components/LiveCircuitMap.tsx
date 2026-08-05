@@ -375,7 +375,9 @@ export function LiveCircuitMap({
   const isResults = variant === 'results';
   const nativeIPad = !isResults && isNativeIPad();
   /** Near-square Hungary reads small at the Spa phone budget — taller phone slot only. */
-  const phoneHungaryBoost = !isResults && !nativeIPad && circuit?.id === 'hungary';
+  // Near-square art (Hungary, Zandvoort) gets a taller phone slot than wide layouts.
+  const phoneHungaryBoost =
+    !isResults && !nativeIPad && (circuit?.id === 'hungary' || circuit?.id === 'zandvoort');
   /** Sector paint matches the black ribbon width when known (per-circuit from extract). */
   const sectorStroke = meta.ribbon
     ? isResults
