@@ -2,16 +2,23 @@
 
 Handoff summary of the latest work plus standing context future sessions will need. All facts below were verified against the code at commit `d20252a` (working tree clean).
 
+## Open tasks (next session)
+
+1. **Flashcards difficulty** — maybe "all purple to clear" is too strict; consider a softer clear condition.
+2. **Flashcards polish** — see if there is room for more polish in the flashcards mode.
+3. **Setup screen UIs** — update the LANE RACER and GRAND PRIX setup screens.
+4. **Leaderboards scope (debate)** — consider limiting leaderboards to only the modes in the RACE WEEKEND menu.
+
 ## TL;DR
 
-The app is at **v1.3.11** (`package.json` + `capacitor.config.ts` agree), themed to **Round 11 / Hungary (Hungaroring)**, and deployed to the iPhone 17 simulator. The latest session (today, commits co-authored with Cursor) shipped:
+The app is at **v1.3.12** (`package.json` + `capacitor.config.ts` + both `MARKETING_VERSION`s agree), themed to **Round 12 / Netherlands (Circuit Zandvoort)**, pushed to `main` (`221b9ad`), synced to the iOS project, and deployed to the iPhone 17 simulator. Today's work, in order:
 
 1. **Quick Race** — one-tap 20-question Adaptive race on the current GP circuit (`e2136ec`).
-2. **Two-level Paddock menu** — Free Practice / Grand Prix / Lane Racer nested under RACE WEEKEND (`e2136ec`).
-3. **Driving School** — 10 gated flashcard stages + Reaction Test moved under it (`a22e9d5`).
-4. **Tuning pass** — looser purple timing, flashcard layout-jump fix, Garage Realism/Power-Ups toggles removed, power-ups hardcoded per mode (`d20252a`).
-
-Uncommitted on top of `d20252a`: Lane Racer moved to the DRIVING SCHOOL submenu, RACE WEEKEND caption "PRACTICE · QUALIFY · RACE", quick-race card relabeled RACE NOW ("Hungaroring · 20 LAPS"), and a full Regulations resync (Realism Mode article removed; Race Now + Driving School articles added; Race/Weather/Overtake/Aero/Leaderboard/Garage articles updated to current mechanics).
+2. **Two-level Paddock menu** — later reshuffled: Lane Racer under DRIVING SCHOOL, RACE WEEKEND = Practice/Qualify/Race, quick-race card labeled **RACE NOW** (`04bbc32`).
+3. **Driving School** — 10 gated flashcard stages + Reaction Test (`a22e9d5`); flashcards are now **real cards**: square-cornered fixed-size card that lights up purple/green/red with the grade inside (`d0345b0`, `221b9ad`).
+4. **Regulations fully resynced** to current mechanics (`04bbc32`).
+5. **Quick Race UX**: tap the map/grid to switch views (no header chip), big side-by-side 4×5 YOU/BOT sector grids in the center slot (`c1dc82e`), first-run onboarding card (`71b00ad`), TRACK LIMITS flash moved off the timer + red map ring removed (`33f492a`).
+6. **Zandvoort rotation** (`4d7d282`, `960e093`) — see rotation notes below; the map ribbon/gap saga is instructive: the source art's corridors are only 14–25px (2700px scale), so ribbon thickness had to be *reduced* (8px erosion) to keep true gaps; sector 1 starts at the S/F line.
 
 ---
 
@@ -43,7 +50,8 @@ Two-level structure (see the comment at `Hub.tsx:94`):
 ## Standing context (accumulated since spring; still current)
 
 ### Weekly GP rotation
-- `client/src/lib/currentGrandPrix.ts` holds `CURRENT_GRAND_PRIX` — currently **round 11, `circuitId: 'hungary'`, Hungaroring, rainProbability 0.25, simLapCount 70**, red/white/green gradient. This is the single config for Quick Race, Free Practice, Grand Prix, and the Weekend Briefing.
+- `client/src/lib/currentGrandPrix.ts` holds `CURRENT_GRAND_PRIX` — currently **round 12, `circuitId: 'zandvoort'`, Circuit Zandvoort, rainProbability 0.40, simLapCount 72**, Dutch-flag gradient. This is the single config for Race Now, Free Practice, Grand Prix, and the Weekend Briefing.
+- **New circuits need more than the skill doc says** (Zandvoort commit `4d7d282` is the worked example): an entry in `CIRCUIT_MENU_ART` (`circuitMenuArt.ts` — required or the GP-locked track row is empty), a live-map centerline in `circuitPathData.json` via `npx tsx script/extractCircuitCenterline.ts <id>` (add the ~700px silhouette to its `ASSET_BY_ID` first), and the silhouette in `CIRCUIT_IMAGES` (`circuitPaths.ts`). QA maps at `/dev/circuit-maps`.
 - `client/src/lib/grandPrixHistory.ts` feeds the Grand Prix info page (`/grand-prix`, `GrandPrixInfo.tsx`) with podium/quali data.
 - **Use the `/weekend` skill** (`.claude/skills/weekend`) — it's the rotation runbook (assets, `SIM_LAP_COUNTS`, version bump, deploy).
 - `mapStageClass` on `CURRENT_GRAND_PRIX` is deliberately `undefined` — all menu silhouettes share `DEFAULT_MAP_STAGE_CLASS`; fix thin/square circuits in the asset, not with a per-circuit size boost.
