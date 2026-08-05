@@ -138,6 +138,8 @@ const createFreePracticeCircuit = (op: string): Circuit => ({
   paths: getCircuitPathsForId(CURRENT_GRAND_PRIX.circuitId),
 });
 
+const QUICK_RACE_INTRO_KEY = 'quickRaceIntroSeen';
+
 const createQuickRaceCircuit = (op: string): Circuit => ({
   id: CURRENT_GRAND_PRIX.circuitId,
   name: CURRENT_GRAND_PRIX.name,
@@ -518,6 +520,15 @@ export default function Game() {
   const [gameStatus, setGameStatus] = useState<'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>(() =>
     routeMode === 'quick-race' ? 'countdown' : 'selecting',
   );
+  /** First-run Quick Race onboarding — holds the start lights until dismissed. */
+  const [showQuickRaceIntro, setShowQuickRaceIntro] = useState(() => {
+    if (routeMode !== 'quick-race') return false;
+    try {
+      return !localStorage.getItem(QUICK_RACE_INTRO_KEY);
+    } catch {
+      return false;
+    }
+  });
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -650,7 +661,7 @@ export default function Game() {
 
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
-    if (gameStatus === 'countdown' && selectedCircuit && selectedDriver) {
+    if (gameStatus === 'countdown' && selectedCircuit && selectedDriver && !showQuickRaceIntro) {
       // Resolve random weather at countdown start using circuit-specific rain probability
       let resolvedWeather: 'dry' | 'wet';
       const currentRaceLength = raceLength;
@@ -735,7 +746,7 @@ export default function Game() {
 
       return () => clearInterval(interval);
     }
-  }, [gameStatus, selectedCircuit, selectedDriver, selectedWeather, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, isQuickRace, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation]);
+  }, [gameStatus, selectedCircuit, selectedDriver, selectedWeather, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, isQuickRace, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation, showQuickRaceIntro]);
 
 
   // Timer Logic - only runs during racing and not paused
@@ -2008,6 +2019,56 @@ export default function Game() {
 
   // Countdown screen with F1 starting lights
   if (gameStatus === 'countdown') {
+    // First-run Quick Race onboarding: explain the race and the tap-to-switch view before the lights.
+    if (isQuickRace && showQuickRaceIntro) {
+      return (
+        <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideHeader>
+          <div className="flex-1 flex flex-col items-center justify-center px-6 overflow-hidden pb-16">
+            <div className="w-full max-w-sm bg-black rounded-2xl border-4 border-zinc-800 shadow-2xl p-6 text-center space-y-5">
+              <div>
+                <div
+                  className="text-red-500 text-[10px] font-bold uppercase tracking-[0.3em]"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                >
+                  Welcome to
+                </div>
+                <h2
+                  className="text-white text-3xl font-bold uppercase tracking-wider mt-1"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                >
+                  Quick Race
+                </h2>
+              </div>
+              <p className="text-white/80 text-sm leading-relaxed">
+                Race {raceLength} laps against the bot — every correct answer is a lap. First across the line wins.
+              </p>
+              <p className="text-white/60 text-sm leading-relaxed">
+                {state.raceMapView === 'track'
+                  ? 'During the race, tap the track map to switch to the sector view — tap again to come back.'
+                  : 'During the race, tap the sector squares to switch to the track map — tap again to come back.'}
+              </p>
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.setItem(QUICK_RACE_INTRO_KEY, '1');
+                  } catch {
+                    /* non-persistent storage: intro just shows again next time */
+                  }
+                  if (state.soundEnabled) playCarouselClick();
+                  setShowQuickRaceIntro(false);
+                }}
+                className="w-full h-12 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold uppercase tracking-wider transition-colors"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+                data-testid="button-quick-race-intro-go"
+              >
+                Lights Out
+              </button>
+            </div>
+          </div>
+        </GameLayout>
+      );
+    }
+
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideHeader>
         <div className="flex-1 flex flex-col items-center justify-center gap-12 overflow-hidden pb-16">
