@@ -442,12 +442,7 @@ export function LiveCircuitMap({
             data-testid="circuit-map-wet-tint"
           />
         )}
-        {currentSectorRed && (
-          <div
-            className="pointer-events-none absolute inset-0 z-[2] rounded-lg ring-2 ring-red-500/50"
-            data-testid="circuit-map-sector-warning"
-          />
-        )}
+        {/* No full-map red ring on penalties — the current sector already paints red on the track. */}
 
         <svg
           viewBox={viewBox}

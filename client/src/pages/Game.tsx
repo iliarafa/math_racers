@@ -2959,35 +2959,6 @@ export default function Game() {
 
         {/* Main content - compact header zone */}
         <div className="relative flex flex-col items-center px-4 pt-1">
-          {/* Track Limits Warning — track view: overlay on timer (idle reserves no space) */}
-          {state.raceMapView === 'track' && (
-            <AnimatePresence>
-              {showPenalty && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-2 pointer-events-none"
-                >
-                  {showBlackWhiteFlag && (
-                    <img
-                      src={trackLimitsFlag}
-                      alt="Black and White Flag"
-                      className="h-8 w-12 object-cover rounded"
-                    />
-                  )}
-                  <motion.div
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 0.3, repeat: 3 }}
-                    className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
-                  >
-                    TRACK LIMITS
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          )}
-
           {/* Timer on top with weather indicator for realism random */}
           <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
             <Timer className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -3098,7 +3069,7 @@ export default function Game() {
         {(state.raceMapView === 'track' || isQuickRace) && (
           <div
             className={cn(
-              'w-full max-w-md md:max-w-xl lg:max-w-3xl mx-auto px-4 overflow-visible',
+              'relative w-full max-w-md md:max-w-xl lg:max-w-3xl mx-auto px-4 overflow-visible',
               state.raceMapView === 'track' && selectedCircuit?.id === 'hungary' ? '-translate-y-3 mt-0 mb-4' : 'my-2',
               isQuickRace && 'cursor-pointer'
             )}
@@ -3118,6 +3089,34 @@ export default function Game() {
             }
             data-testid={isQuickRace ? 'button-race-view-toggle' : undefined}
           >
+            {/* Track Limits Warning — track view: floats over the map, clear of the timer */}
+            {state.raceMapView === 'track' && (
+              <AnimatePresence>
+                {showPenalty && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-2 pointer-events-none"
+                  >
+                    {showBlackWhiteFlag && (
+                      <img
+                        src={trackLimitsFlag}
+                        alt="Black and White Flag"
+                        className="h-8 w-12 object-cover rounded"
+                      />
+                    )}
+                    <motion.div
+                      animate={{ opacity: [1, 0.3, 1] }}
+                      transition={{ duration: 0.3, repeat: 3 }}
+                      className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
+                    >
+                      TRACK LIMITS
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
             {state.raceMapView === 'track' ? (
               <LiveCircuitMap
                 circuit={selectedCircuit}
