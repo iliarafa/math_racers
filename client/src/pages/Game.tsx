@@ -2867,19 +2867,22 @@ export default function Game() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  toggleRaceMapView();
-                  if (state.soundEnabled) playCarouselClick();
-                }}
-                className="px-2.5 py-1 rounded border border-black/20 bg-black/5 text-[10px] font-bold uppercase tracking-widest text-black/70 hover:bg-black/10 transition-colors"
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-                data-testid="button-race-view-toggle"
-                aria-label={`Switch to ${state.raceMapView === 'track' ? 'sectors' : 'track'} view`}
-              >
-                {state.raceMapView === 'track' ? 'Track' : 'Sectors'}
-              </button>
+              {/* Quick Race switches views by tapping the map/grid instead of a header chip */}
+              {!isQuickRace && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleRaceMapView();
+                    if (state.soundEnabled) playCarouselClick();
+                  }}
+                  className="px-2.5 py-1 rounded border border-black/20 bg-black/5 text-[10px] font-bold uppercase tracking-widest text-black/70 hover:bg-black/10 transition-colors"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  data-testid="button-race-view-toggle"
+                  aria-label={`Switch to ${state.raceMapView === 'track' ? 'sectors' : 'track'} view`}
+                >
+                  {state.raceMapView === 'track' ? 'Track' : 'Sectors'}
+                </button>
+              )}
               {!isPracticeMode && (
                 <button
                   onClick={() => setIsPaused(true)}
@@ -3029,37 +3032,71 @@ export default function Game() {
         </div>
 
         {/* Progress — track layout only here; sector squares sit above keypad.
+            Quick Race: this slot shows map OR big sector grids, and tapping it switches views.
             Hungary: nudge up into the top-of-art dip so the ribbon clears Lap/Limits. */}
-        {state.raceMapView === 'track' && (
+        {(state.raceMapView === 'track' || isQuickRace) && (
           <div
             className={cn(
               'w-full max-w-md md:max-w-xl lg:max-w-3xl mx-auto px-4 overflow-visible',
-              selectedCircuit?.id === 'hungary' ? '-translate-y-3 mt-0 mb-4' : 'my-2'
+              state.raceMapView === 'track' && selectedCircuit?.id === 'hungary' ? '-translate-y-3 mt-0 mb-4' : 'my-2',
+              isQuickRace && 'cursor-pointer'
             )}
+            onClick={
+              isQuickRace
+                ? () => {
+                    toggleRaceMapView();
+                    if (state.soundEnabled) playCarouselClick();
+                  }
+                : undefined
+            }
+            role={isQuickRace ? 'button' : undefined}
+            aria-label={
+              isQuickRace
+                ? `Switch to ${state.raceMapView === 'track' ? 'sectors' : 'track'} view`
+                : undefined
+            }
+            data-testid={isQuickRace ? 'button-race-view-toggle' : undefined}
           >
-            <LiveCircuitMap
-              circuit={selectedCircuit}
-              progress={progress}
-              rivalProgress={botProgress}
-              raceLength={raceLength}
-              sectorResults={lapResults}
-              rivalSectorResults={raceMode === 'bot' ? botLapResults : undefined}
-              showRival={raceMode === 'bot' && !isPracticeMode}
-              currentSectorRed={currentSectorRed}
-              overtakeActive={overtakeActive}
-              aeroActive={aeroActive}
-              isWet={currentWeather === 'wet'}
-              rivalLabel="BOT"
-              hideFooter
-            />
+            {state.raceMapView === 'track' ? (
+              <LiveCircuitMap
+                circuit={selectedCircuit}
+                progress={progress}
+                rivalProgress={botProgress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalSectorResults={raceMode === 'bot' ? botLapResults : undefined}
+                showRival={raceMode === 'bot' && !isPracticeMode}
+                currentSectorRed={currentSectorRed}
+                overtakeActive={overtakeActive}
+                aeroActive={aeroActive}
+                isWet={currentWeather === 'wet'}
+                rivalLabel="BOT"
+                hideFooter
+              />
+            ) : (
+              <SectorProgressGrid
+                big
+                progress={progress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalProgress={botProgress}
+                rivalSectorResults={botLapResults}
+                showRival={raceMode === 'bot'}
+                currentSectorRed={currentSectorRed}
+                layout="dual"
+                labelRight={`Warnings: ${mistakes}`}
+                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+                rivalLabel="BOT"
+              />
+            )}
           </div>
         )}
 
         </div>
         {/* Large Keypad with integrated Power-ups row */}
         <div className="landscape-right flex-1 flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11">
-          {/* Sectors view: grid sits just above power-ups / numpad */}
-          {state.raceMapView === 'sectors' && (
+          {/* Sectors view: grid sits just above power-ups / numpad (Quick Race renders it big in the map slot instead) */}
+          {state.raceMapView === 'sectors' && !isQuickRace && (
             <SectorProgressGrid
               className="my-0 mb-1"
               progress={progress}
