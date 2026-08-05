@@ -28,6 +28,13 @@ const COLOR_DOT: Record<CardColor, string> = {
   red: 'bg-red-500',
 };
 
+/** Lit card face while a graded answer flashes. */
+const CARD_LIT: Record<Exclude<CardColor, 'pending'>, string> = {
+  purple: 'bg-purple-500 border-purple-600',
+  green: 'bg-green-500 border-green-600',
+  red: 'bg-red-500 border-red-600',
+};
+
 function playTone(ok: boolean) {
   try {
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -237,43 +244,54 @@ export default function DrivingSchool() {
             ))}
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center gap-3">
-            <div className="text-5xl sm:text-6xl font-bold tracking-tight" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-              {current.question.display}
-            </div>
-            <div
-              className={cn(
-                'text-5xl sm:text-6xl font-bold min-h-[1.2em]',
-                feedback === 'idle' && 'text-muted-foreground/40',
-                feedback === 'correct' && 'text-green-600',
-                feedback === 'incorrect' && 'text-red-600',
-              )}
-              data-testid="flashcard-answer"
-            >
-              {answer || '0'}
-            </div>
-            {/* Fixed-height slot so the color chip never shifts the keypad */}
-            <div className="h-7 flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                {feedback !== 'idle' && current.color !== 'pending' && (
-                  <motion.div
-                    key={current.color}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.12 }}
-                    className={cn(
-                      'text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full text-white',
-                      current.color === 'purple' && 'bg-purple-600',
-                      current.color === 'green' && 'bg-green-600',
-                      current.color === 'red' && 'bg-red-600',
-                    )}
-                  >
-                    {current.color}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+            {/* The flashcard: fixed-size framed card; the whole face lights up with the grade */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current.id}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -24 }}
+                transition={{ duration: 0.12 }}
+                className="w-full max-w-xs"
+              >
+                {(() => {
+                  const lit = feedback !== 'idle' && current.color !== 'pending';
+                  return (
+                    <motion.div
+                      animate={lit ? { scale: [1, 1.04, 1] } : { scale: 1 }}
+                      transition={{ duration: 0.25 }}
+                      className={cn(
+                        'aspect-[4/3] w-full rounded-2xl border-2 shadow-lg flex flex-col items-center justify-center gap-2 transition-colors duration-150',
+                        lit ? cn(CARD_LIT[current.color as Exclude<CardColor, 'pending'>], 'text-white') : 'bg-card border-border',
+                      )}
+                      data-testid="flashcard-card"
+                    >
+                      <div className="text-5xl sm:text-6xl font-bold tracking-tight" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                        {current.question.display}
+                      </div>
+                      <div
+                        className={cn(
+                          'text-4xl sm:text-5xl font-bold min-h-[1.2em]',
+                          lit ? 'text-white/90' : 'text-muted-foreground/40',
+                        )}
+                        data-testid="flashcard-answer"
+                      >
+                        {answer || '0'}
+                      </div>
+                      {/* Reserved label slot — identical height lit or idle so the card never resizes */}
+                      <div className="h-5 flex items-center justify-center">
+                        {lit && (
+                          <span className="text-[11px] font-bold uppercase tracking-[0.3em]" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                            {current.color}
+                          </span>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Numpad */}
