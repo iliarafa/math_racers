@@ -98,6 +98,7 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   barcelona: 66,
   austria: 70,
   hungary: 70,
+  zandvoort: 72,
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -328,6 +329,14 @@ export const CIRCUITS: Circuit[] = [
     name: "HUNGARY",
     type: "Variables",
     description: "Hungaroring, Mogyoród",
+    mapUrl: "",
+    paths: { s1: "", s2: "", s3: "" }
+  },
+  {
+    id: "zandvoort",
+    name: "ZANDVOORT",
+    type: "Variables",
+    description: "Circuit Zandvoort, Netherlands",
     mapUrl: "",
     paths: { s1: "", s2: "", s3: "" }
   }

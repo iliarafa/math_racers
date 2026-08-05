@@ -1,5 +1,5 @@
-import circuitHungary from "@/assets/circuit_hungary.png";
-import flagHungary from "@/assets/flag_hungary.png";
+import circuitZandvoort from "@/assets/circuit_zandvoort.png";
+import flagNetherlands from "@/assets/flag_netherlands.png";
 
 /** Height of the setup-card silhouette stage when a circuit needs no special treatment. */
 export const DEFAULT_MAP_STAGE_CLASS = 'h-32 md:h-52';
@@ -9,18 +9,18 @@ export const DEFAULT_MAP_STAGE_CLASS = 'h-32 md:h-52';
 // Also add the new track/flag asset imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 export const CURRENT_GRAND_PRIX = {
-  round: 11,
-  circuitId: 'hungary',
-  name: 'HUNGARY',
+  round: 12,
+  circuitId: 'zandvoort',
+  name: 'NETHERLANDS',
   /** Proper circuit name (e.g. 'Hungaroring', 'Spa-Francorchamps') — shown on the GP card. */
-  circuitName: 'Hungaroring',
-  country: 'HUNGARY',
-  trackImage: circuitHungary,
-  flagImage: flagHungary,
-  rainProbability: 0.25,
-  simLapCount: 70,
-  gradient: 'linear-gradient(90deg, #CE2939 0%, #FFFFFF 50%, #477050 100%)',
-  welcomeBlurb: 'This week we head to the Hungaroring near Budapest — a tight, twisty lap that rewards precision and patience — for the Hungarian Grand Prix.',
+  circuitName: 'Zandvoort',
+  country: 'NETHERLANDS',
+  trackImage: circuitZandvoort,
+  flagImage: flagNetherlands,
+  rainProbability: 0.40,
+  simLapCount: 72,
+  gradient: 'linear-gradient(90deg, #AE1C28 0%, #FFFFFF 50%, #21468B 100%)',
+  welcomeBlurb: 'This week we head to Circuit Zandvoort in the seaside dunes of the Netherlands — a short, banked rollercoaster by the North Sea — for the Dutch Grand Prix.',
   /**
    * Optional per-circuit override for the setup-card silhouette stage.
    *

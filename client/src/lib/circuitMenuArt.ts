@@ -7,6 +7,7 @@ import circuitMonzaBlack from '@/assets/circuit_monza_black.png';
 import circuitSuzukaBlack from '@/assets/circuit_suzuka_black.png';
 import circuitSilverstoneBlack from '@/assets/circuit_silverstone_black.png';
 import circuitHungaryBlack from '@/assets/circuit_hungary_black.png';
+import circuitZandvoort from '@/assets/circuit_zandvoort.png';
 
 import flagBelgium from '@/assets/flag_belgium.png';
 import flagMonaco from '@/assets/flag_monaco.png';
@@ -14,6 +15,7 @@ import flagItaly from '@/assets/flag_italy.png';
 import flagJapan from '@/assets/flag_japan.png';
 import flagUK from '@/assets/flag_uk.png';
 import flagHungary from '@/assets/flag_hungary.png';
+import flagNetherlands from '@/assets/flag_netherlands.png';
 
 export interface CircuitMenuArt {
   /** Thin-line `_black` silhouette, rendered inverted on the dark setup card. */
@@ -41,6 +43,9 @@ export const CIRCUIT_MENU_ART: Record<string, CircuitMenuArt> = {
   suzuka: { image: circuitSuzukaBlack, flag: flagJapan },
   silverstone: { image: circuitSilverstoneBlack, flag: flagUK },
   hungary: { image: circuitHungaryBlack, flag: flagHungary },
+  // Zandvoort art is the ~700px rotation silhouette (not thin-line _black) — fine while
+  // the menu is locked to the current GP; revisit if the full picker reopens.
+  zandvoort: { image: circuitZandvoort, flag: flagNetherlands },
 };
 
 /**

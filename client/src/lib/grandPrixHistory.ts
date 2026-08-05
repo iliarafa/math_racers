@@ -3,6 +3,7 @@ import austriaDetail from "@/assets/austria_detail_track.png";
 import silverstoneDetail from "@/assets/silverstone_detail_track.png";
 import spaDetail from "@/assets/spa_detail_track.png";
 import hungaryDetail from "@/assets/hungary_detail_track.png";
+import zandvoortDetail from "@/assets/zandvoort_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -312,6 +313,64 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Esteban Ocon', team: 'Haas', time: '1:16.023' },
         { name: 'Nico Hulkenberg', team: 'Kick Sauber', time: '1:16.081' },
         { name: 'Alexander Albon', team: 'Williams', time: '1:16.223' },
+      ],
+    },
+  },
+  zandvoort: {
+    officialName: 'FORMULA 1 HEINEKEN DUTCH GRAND PRIX 2026',
+    firstHeld: 1952,
+    trackLength: '4.259 km',
+    laps: 72,
+    lapRecord: { driver: 'Lewis Hamilton', time: '1:11.097', year: 2021 },
+    mostWins: { driver: 'Jim Clark', count: 4 },
+    summary:
+      'Circuit Zandvoort sits in the sand dunes right beside the North Sea, and its twisting lap feels like a rollercoaster — especially the final corner, a steeply banked bowl that slingshots cars onto the main straight. The Dutch Grand Prix was first held here in 1952, and after a long break it returned in 2021 to a sea of orange-clad Max Verstappen fans. The track is short and narrow, so there is no room for mistakes and qualifying matters a lot. Sea breezes and sudden showers off the coast can shake up the race at any moment.',
+    detailMapImage: zandvoortDetail,
+    lastYear: {
+      season: 2025,
+      race: [
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:38:29.849' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '+1.271' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+3.233' },
+        { name: 'George Russell', team: 'Mercedes', time: '+5.654' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+6.327' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+9.044' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+9.497' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+11.709' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+13.597' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+14.063' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+14.511' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+17.063' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+17.376' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '+19.725' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+21.565' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+22.029' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+23.629' },
+        { name: 'Lando Norris', team: 'McLaren', time: 'DNF' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: 'DNF' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: 'DNF' },
+      ],
+      quali: [
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:08.662' },
+        { name: 'Lando Norris', team: 'McLaren', time: '1:08.674' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:08.925' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:09.208' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:09.255' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:09.340' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:09.390' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:09.500' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:09.505' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:09.630' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:09.493' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:09.622' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:09.622' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:09.637' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:09.652' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:10.104' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:10.195' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:10.197' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:10.262' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: 'No time' },
       ],
     },
   },

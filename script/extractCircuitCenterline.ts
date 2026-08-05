@@ -25,6 +25,7 @@ const ASSET_BY_ID: Record<string, string> = {
   suzuka: 'circuit_suzuka_black.png',
   silverstone: 'circuit_silverstone_black.png',
   hungary: 'circuit_hungary.png',
+  zandvoort: 'circuit_zandvoort.png',
 };
 
 function loadTrack(file: string): { w: number; h: number; track: Uint8Array } {
@@ -930,10 +931,10 @@ function main() {
   // Keep dense samples — light cleanup only (RDP cuts chicanes / straights)
   let cycle = cleanup(snapped);
 
-  // Hungary: DT ridge can sit off geometric mid on a thick ribbon — second
-  // pass locks sectors to the visual centerline (Spa quality bar). Keep the
-  // search inside ~one half-width so chicanes cannot jump to a parallel arm.
-  if (id === 'hungary') {
+  // Thick-ribbon circuits (Hungary, Zandvoort): DT ridge can sit off geometric
+  // mid — second pass locks sectors to the visual centerline (Spa quality bar).
+  // Keep the search inside ~one half-width so chicanes cannot jump to a parallel arm.
+  if (id === 'hungary' || id === 'zandvoort') {
     const geomLimit = Math.max(6, Math.ceil(ridgeMed) + 2);
     const geom: Pt[] = [];
     for (let i = 0; i < cycle.length; i++) {

@@ -8,6 +8,7 @@ import circuitMonacoBlack from '@/assets/circuit_monaco_black.png';
 import circuitSuzukaBlack from '@/assets/circuit_suzuka_black.png';
 import circuitSilverstoneBlack from '@/assets/circuit_silverstone_black.png';
 import circuitHungary from '@/assets/circuit_hungary.png';
+import circuitZandvoort from '@/assets/circuit_zandvoort.png';
 
 /** Generic oval used when a circuit has no map art / path data. */
 export const FALLBACK_CIRCUIT_PATH =
@@ -39,6 +40,7 @@ const CIRCUIT_IMAGES: Record<string, string> = {
   suzuka: circuitSuzukaBlack,
   silverstone: circuitSilverstoneBlack,
   hungary: circuitHungary,
+  zandvoort: circuitZandvoort,
 };
 
 type PathJsonEntry = {
