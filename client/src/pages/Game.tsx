@@ -2873,7 +2873,7 @@ export default function Game() {
                   toggleRaceMapView();
                   if (state.soundEnabled) playCarouselClick();
                 }}
-                className="px-2.5 py-1 rounded border border-white/20 bg-white/5 text-[10px] font-bold uppercase tracking-widest text-white/80 hover:bg-white/10 transition-colors"
+                className="px-2.5 py-1 rounded border border-black/20 bg-black/5 text-[10px] font-bold uppercase tracking-widest text-black/70 hover:bg-black/10 transition-colors"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-race-view-toggle"
                 aria-label={`Switch to ${state.raceMapView === 'track' ? 'sectors' : 'track'} view`}
