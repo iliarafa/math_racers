@@ -138,6 +138,15 @@ const createFreePracticeCircuit = (op: string): Circuit => ({
   paths: getCircuitPathsForId(CURRENT_GRAND_PRIX.circuitId),
 });
 
+const createQuickRaceCircuit = (op: string): Circuit => ({
+  id: CURRENT_GRAND_PRIX.circuitId,
+  name: CURRENT_GRAND_PRIX.name,
+  type: op,
+  description: 'Quick Race',
+  mapUrl: '',
+  paths: getCircuitPathsForId(CURRENT_GRAND_PRIX.circuitId),
+});
+
 const OPERATION_OPTIONS = [
   { label: '+', type: 'Addition' },
   { label: '−', type: 'Subtraction' },
@@ -359,12 +368,13 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView, toggleRaceMapView } = useGameState();
   const { isPremium, isLoading: isPurchaseLoading } = usePurchase();
   const [, setLocation] = useLocation();
-  /** `/game/free-practice` | `/game/grand-prix` — replaces the old mode_select screen. */
+  /** `/game/free-practice` | `/game/grand-prix` | `/game/quick-race` — replaces the old mode_select screen. */
   const routeMode = useParams<{ mode?: string }>().mode;
-  const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot'); // Default to bot for race mode
+  const isQuickRace = routeMode === 'quick-race';
+  const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot');
   const [botProgress, setBotProgress] = useState(0);
   const [botLapResults, setBotLapResults] = useState<Array<{
     sectorColor: 'purple' | 'green' | 'yellow';
@@ -376,19 +386,27 @@ export default function Game() {
     () => DRIVERS.find(d => d.id === 'karting') ?? null,
   );
   const currentDifficultyRef = useRef<Difficulty>('easy');
-  const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(null);
-  const [selectedWeather, setSelectedWeather] = useState<Weather>(() => loadSetupWeather());
+  const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(() =>
+    routeMode === 'quick-race' ? createQuickRaceCircuit('Addition') : null,
+  );
+  const [selectedWeather, setSelectedWeather] = useState<Weather>(() =>
+    routeMode === 'quick-race' ? 'dry' : loadSetupWeather(),
+  );
   const [actualWeather, setActualWeather] = useState<'dry' | 'wet'>('dry');
   // Alternating weather state for Realism mode with random weather
   const [weatherChangePoints, setWeatherChangePoints] = useState<number[]>([]);
   const [initialWeather, setInitialWeather] = useState<'dry' | 'wet'>('dry');
 
-  const [isPracticeMode, setIsPracticeMode] = useState(false);
+  const [isPracticeMode, setIsPracticeMode] = useState(() => routeMode !== 'quick-race');
   const [isGrandPrix, setIsGrandPrix] = useState(() => routeMode === 'grand-prix');
-  const [isPreSeasonTesting, setIsPreSeasonTesting] = useState(() => routeMode !== 'grand-prix');
+  const [isPreSeasonTesting, setIsPreSeasonTesting] = useState(
+    () => routeMode !== 'grand-prix' && routeMode !== 'quick-race',
+  );
   const [pstSessionLog, setPstSessionLog] = useState(false);
   const pstStintsRef = useRef<Array<{ startIndex: number; endIndex: number; time: number }>>([]); // tracks each stint's lap range and elapsed time
-  const [selectedOperation, setSelectedOperation] = useState<string>(() => loadSetupOperation());
+  const [selectedOperation, setSelectedOperation] = useState<string>(() =>
+    routeMode === 'quick-race' ? 'Addition' : loadSetupOperation(),
+  );
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [pendingScoreSubmission, setPendingScoreSubmission] = useState<{
     playerId: string;
@@ -411,14 +429,22 @@ export default function Game() {
   const [grandPrixPracticeCompleted, setGrandPrixPracticeCompleted] = useState(false);
   const [grandPrixQualifyingCompleted, setGrandPrixQualifyingCompleted] = useState(false);
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
-  // Free Practice only — GP Practice is always adaptive
-  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() => loadDifficultyMode());
+  // Free Practice only — GP Practice is always adaptive; Quick Race is always adaptive
+  const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() =>
+    routeMode === 'quick-race' ? 'adaptive' : loadDifficultyMode(),
+  );
   const [lockedDifficulty, setLockedDifficulty] = useState<Difficulty>(() => loadLockedDifficulty());
 
-  // Force sim mode on for Grand Prix and Pre-Season Testing
-  const effectiveSimMode = (isGrandPrix || isPreSeasonTesting) ? true : state.simMode;
+  // Force sim mode on for Grand Prix and Pre-Season Testing; Quick Race is always short (20)
+  const effectiveSimMode = isQuickRace
+    ? false
+    : (isGrandPrix || isPreSeasonTesting) ? true : state.simMode;
+
+  /** Session override — Quick Race never uses power-ups; Garage pref stays untouched. */
+  const powerUpsEnabled = isQuickRace ? false : state.powerUpsEnabled;
 
   const raceLength = (() => {
+    if (isQuickRace) return RACE_LENGTH;
     if (isPracticeMode && !isGrandPrix) return 100;
     if (!selectedCircuit) return RACE_LENGTH;
     if (isGrandPrix && grandPrixPhase === 'rw_practice') return GRAND_PRIX_PRACTICE_LENGTH;
@@ -485,7 +511,9 @@ export default function Game() {
   const questionStartTimeRef = useRef<number>(Date.now());
   // Track the best time for each sector and who holds it (F1-style competitive timing)
   const [revealedAttempts, setRevealedAttempts] = useState<Set<string>>(new Set());
-  const [gameStatus, setGameStatus] = useState<'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>('selecting');
+  const [gameStatus, setGameStatus] = useState<'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>(() =>
+    routeMode === 'quick-race' ? 'countdown' : 'selecting',
+  );
   const [elapsedTime, setElapsedTime] = useState(0);
   const [countdownLight, setCountdownLight] = useState(0);
   const [finalMistakes, setFinalMistakes] = useState(0);
@@ -656,11 +684,11 @@ export default function Game() {
       setAeroAvailable(false);
       setAeroActive(false);
 
-      // GP Practice is always adaptive. Free Practice may be Adaptive or Locked.
+      // GP Practice is always adaptive. Free Practice may be Adaptive or Locked. Quick Race is always adaptive.
       const isGpPractice = isGrandPrix && grandPrixPhase === 'rw_practice';
       const isPstAdaptive = isPreSeasonTesting && difficultyMode === 'adaptive';
       const isPstLocked = isPreSeasonTesting && difficultyMode === 'locked';
-      const isDynamicPractice = isGpPractice || isPstAdaptive;
+      const isDynamicPractice = isGpPractice || isPstAdaptive || isQuickRace;
 
       const raceDifficulty = (isGrandPrix && grandPrixLockedDifficulty && grandPrixPhase !== 'rw_practice')
         ? grandPrixLockedDifficulty
@@ -689,7 +717,7 @@ export default function Game() {
           if (soundEnabledRef.current) {
             playBeep(1200, 200);
           }
-          setQuestion(generateQuestion(selectedCircuit.id, raceDifficulty, isWet, 0, undefined, (isGrandPrix || isPreSeasonTesting) ? selectedOperation : undefined));
+          setQuestion(generateQuestion(selectedCircuit.id, raceDifficulty, isWet, 0, undefined, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
           setGameStatus('racing');
           return;
@@ -703,7 +731,7 @@ export default function Game() {
 
       return () => clearInterval(interval);
     }
-  }, [gameStatus, selectedCircuit, selectedDriver, selectedWeather, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation]);
+  }, [gameStatus, selectedCircuit, selectedDriver, selectedWeather, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, isQuickRace, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation]);
 
 
   // Timer Logic - only runs during racing and not paused
@@ -729,11 +757,19 @@ export default function Game() {
 
   // Guard: a race can't run without a circuit, so fall back to setup.
   // The driver no longer needs guarding — it is seeded at mount for both modes.
+  // Quick Race has no setup screen — keep countdown if the circuit is briefly unset.
   useEffect(() => {
     if (!selectedCircuit && (gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed')) {
-      setGameStatus('selecting');
+      if (!isQuickRace) setGameStatus('selecting');
     }
-  }, [selectedCircuit, gameStatus]);
+  }, [selectedCircuit, gameStatus, isQuickRace]);
+
+  // Quick Race: never linger on selecting — push into countdown once circuit+driver are ready.
+  useEffect(() => {
+    if (isQuickRace && gameStatus === 'selecting' && selectedCircuit && selectedDriver) {
+      setGameStatus('countdown');
+    }
+  }, [isQuickRace, gameStatus, selectedCircuit, selectedDriver]);
 
   /**
    * Entering `/game/:mode` does the work the old operation_select screen did on tap.
@@ -741,20 +777,35 @@ export default function Game() {
    * That screen forced the karting driver, built the circuit around the chosen operation
    * and reset the Grand Prix phase flags before handing off to setup. With the screen gone
    * the once-per-entry half of that runs here; the per-change half is `chooseOperation`.
+   * Quick Race skips setup and goes straight to countdown with fixed defaults.
    */
   useEffect(() => {
     const grandPrix = routeMode === 'grand-prix';
+    const quickRace = routeMode === 'quick-race';
     const kartingDriver = DRIVERS.find(d => d.id === 'karting');
     if (kartingDriver) {
       setSelectedDriver(kartingDriver);
       localStorage.setItem('lastSelectedDriverId', kartingDriver.id);
     }
     setIsGrandPrix(grandPrix);
-    setIsPreSeasonTesting(!grandPrix);
-    setIsPracticeMode(true);
-    setRaceMode('solo');
+    setIsPreSeasonTesting(!grandPrix && !quickRace);
     dynamicDifficultyRef.current = null;
-    if (grandPrix) {
+    if (quickRace) {
+      setIsPracticeMode(false);
+      setRaceMode('bot');
+      setSelectedOperation('Addition');
+      setSelectedWeather('dry');
+      setDifficultyMode('adaptive');
+      setSelectedCircuit(createQuickRaceCircuit('Addition'));
+      setRaceMapView('track');
+      setSelectedTab('race');
+      setBotProgress(0);
+      setBotLapResults([]);
+      sectorBestTimesRef.current = [];
+      setGameStatus('countdown');
+    } else if (grandPrix) {
+      setIsPracticeMode(true);
+      setRaceMode('solo');
       setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
       setGrandPrixPhase('rw_practice');
       setGrandPrixLockedDifficulty(null);
@@ -762,9 +813,13 @@ export default function Game() {
       setGrandPrixPracticeCompleted(false);
       setGrandPrixQualifyingCompleted(false);
       setSelectedTab('rw_practice');
+      setGameStatus('selecting');
     } else {
+      setIsPracticeMode(true);
+      setRaceMode('solo');
       setSelectedCircuit(createFreePracticeCircuit(selectedOperation));
       setSelectedTab('testing');
+      setGameStatus('selecting');
     }
     initAudio();
     // Deliberately keyed on the route only — re-running on operation change would
@@ -1049,7 +1104,7 @@ export default function Game() {
       incrementLaps();
       // OVERTAKE energy harvesting: speed-based, faster answers harvest more energy
       // Only when OVERTAKE is not active and power-ups enabled
-      if ((raceMode === 'bot' || isPracticeMode) && !overtakeActive && state.powerUpsEnabled && !(isGrandPrix && grandPrixPhase !== 'rw_race')) {
+      if ((raceMode === 'bot' || isPracticeMode) && !overtakeActive && powerUpsEnabled && !(isGrandPrix && grandPrixPhase !== 'rw_race')) {
         const energyGain = calculateEnergyHarvest(
           responseTime,
           currentDifficultyRef.current,
@@ -1058,10 +1113,11 @@ export default function Game() {
         setOvertakeEnergy(prev => Math.min(prev + energyGain, 100));
       }
 
-      // Update dynamic difficulty for GP Practice (always) and Free Practice Adaptive only
+      // Update dynamic difficulty for GP Practice, Free Practice Adaptive, and Quick Race
       const shouldAdaptDifficulty =
         (isGrandPrix && grandPrixPhase === 'rw_practice') ||
-        (isPreSeasonTesting && difficultyMode === 'adaptive');
+        (isPreSeasonTesting && difficultyMode === 'adaptive') ||
+        isQuickRace;
       if (shouldAdaptDifficulty && dynamicDifficultyRef.current) {
         const slowerThanBot = responseTime > question.botTime;
         const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, true, responseTime, question.operation || 'Addition', slowerThanBot, 'hard');
@@ -1264,7 +1320,7 @@ export default function Game() {
           setAnswer("");
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
-          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', boostFactor, question?.display, (isGrandPrix || isPreSeasonTesting) ? selectedOperation : undefined));
+          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', boostFactor, question?.display, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1277,10 +1333,11 @@ export default function Game() {
       }
       resetStreak();
 
-      // Update dynamic difficulty for GP Practice (always) and Free Practice Adaptive only
+      // Update dynamic difficulty for GP Practice, Free Practice Adaptive, and Quick Race
       const shouldAdaptDifficultyWrong =
         (isGrandPrix && grandPrixPhase === 'rw_practice') ||
-        (isPreSeasonTesting && difficultyMode === 'adaptive');
+        (isPreSeasonTesting && difficultyMode === 'adaptive') ||
+        isQuickRace;
       if (shouldAdaptDifficultyWrong && dynamicDifficultyRef.current) {
         const updated = updateDynamicDifficulty(dynamicDifficultyRef.current, false, responseTime, question.operation || 'Addition', false, 'hard');
         dynamicDifficultyRef.current = updated;
@@ -1462,12 +1519,6 @@ export default function Game() {
     setShowPenalty(false);
     setElapsedTime(0);
     setCountdownLight(0);
-    // Back to setup in the same mode. This used to dump the player at the mode menu,
-    // which meant re-picking mode and operation to race the same session again; the mode
-    // now lives in the route, so the driver and circuit stay valid.
-    setGameStatus('selecting');
-    setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(selectedOperation) : createFreePracticeCircuit(selectedOperation));
-    setIsPracticeMode(true);
     setIsPaused(false);
     setFeedback('idle');
     setAnswer("");
@@ -1477,6 +1528,7 @@ export default function Game() {
     wrongAttemptsRef.current = [];
     setCurrentSectorRed(false);
     // selectedWeather is a saved setup preference — only the resolved race weather resets
+    // (Quick Race always forces dry below)
     setActualWeather('dry');
     // Reset alternating weather state
     setWeatherChangePoints([]);
@@ -1514,15 +1566,35 @@ export default function Game() {
     setGrandPrixQualifyingCompleted(false);
     dynamicDifficultyRef.current = null;
     setDynamicDifficultyDisplay('beginner');
-    // Mode comes from the route now, so it survives a restart rather than being cleared.
-    setSelectedTab(isGrandPrix ? 'rw_practice' : 'testing');
-    setRaceMode('solo');
     setPstSessionLog(false);
     pstStintsRef.current = [];
     setPstCycleCount(0);
     setShowNamePrompt(false);
     setPendingScoreSubmission(null);
     setNameInput('');
+
+    if (isQuickRace) {
+      // Same fixed defaults, skip setup — straight back to lights.
+      setSelectedOperation('Addition');
+      setSelectedWeather('dry');
+      setDifficultyMode('adaptive');
+      setSelectedCircuit(createQuickRaceCircuit('Addition'));
+      setRaceMapView('track');
+      setIsPracticeMode(false);
+      setRaceMode('bot');
+      setSelectedTab('race');
+      setGameStatus('countdown');
+      return;
+    }
+
+    // Back to setup in the same mode. This used to dump the player at the mode menu,
+    // which meant re-picking mode and operation to race the same session again; the mode
+    // now lives in the route, so the driver and circuit stay valid.
+    setGameStatus('selecting');
+    setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(selectedOperation) : createFreePracticeCircuit(selectedOperation));
+    setIsPracticeMode(true);
+    setSelectedTab(isGrandPrix ? 'rw_practice' : 'testing');
+    setRaceMode('solo');
   };
 
   /** Leave the session entirely: reset, then back to the Paddock. */
@@ -1799,6 +1871,17 @@ export default function Game() {
     return <Paywall onBack={() => setLocation('/hub')} onPurchaseSuccess={() => setGameStatus('selecting')} />;
   }
 
+  // Quick Race never shows setup — hold a brief shell while the route effect starts countdown.
+  if (gameStatus === 'selecting' && isQuickRace) {
+    return (
+      <GameLayout trackName={selectedCircuit?.name || CURRENT_GRAND_PRIX.name} lockViewport hideHeader>
+        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm uppercase tracking-widest">
+          Loading…
+        </div>
+      </GameLayout>
+    );
+  }
+
   // Pre-race setup — the pit-wall card. One screen for both modes; Free Practice and
   // Grand Prix differ only in which rows they contribute.
   if (gameStatus === 'selecting') {
@@ -2052,11 +2135,22 @@ export default function Game() {
         <div className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="text-[7rem] leading-none font-bold text-red-600" style={{ fontFamily: 'Oxanium, sans-serif' }}>DNF</div>
           <div className="mt-8 flex flex-col gap-3 w-full max-w-xs md:max-w-md">
-            <Link href="/garage">
-              <button className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all">
-                Back to Garage
+            {isQuickRace ? (
+              <button onClick={quitToPaddock} className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all" data-testid="button-crash-paddock">
+                Back to Paddock
               </button>
-            </Link>
+            ) : (
+              <Link href="/garage">
+                <button className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all">
+                  Back to Garage
+                </button>
+              </Link>
+            )}
+            {isQuickRace && (
+              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-crash-race-again">
+                <RotateCcw className="w-4 h-4" /> Race Again
+              </button>
+            )}
             <button onClick={() => setShowCrashDebrief(true)} className="w-full bg-black text-yellow-400 h-12 rounded-lg font-medium hover:bg-black/90 transition-all">
               Debrief
             </button>
@@ -2401,11 +2495,17 @@ export default function Game() {
               <button onClick={restartRace} className="w-full bg-green-600 hover:bg-green-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2" data-testid="button-race-again">
                 <RotateCcw className="w-4 h-4" /> Race Again
               </button>
-              <Link href="/">
-                <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-main-menu">
-                  <Home className="w-4 h-4" /> Main Menu
+              {isQuickRace ? (
+                <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-main-menu">
+                  <Home className="w-4 h-4" /> Back to Paddock
                 </button>
-              </Link>
+              ) : (
+                <Link href="/">
+                  <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-main-menu">
+                    <Home className="w-4 h-4" /> Main Menu
+                  </button>
+                </Link>
+              )}
             </div>
 
           </div>
@@ -2631,6 +2731,20 @@ export default function Game() {
                 Resume
               </button>
               <button
+                onClick={() => {
+                  toggleRaceMapView();
+                  if (state.soundEnabled) playCarouselClick();
+                }}
+                className="bg-white/10 border border-white/25 text-white px-6 py-3 rounded-lg font-bold uppercase tracking-wider hover:bg-white/15 transition-all mx-auto"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+                data-testid="button-pause-view-toggle"
+              >
+                View: {state.raceMapView === 'track' ? 'Track' : 'Sectors'}
+                <span className="block text-[10px] font-medium opacity-70 mt-1 tracking-widest">
+                  Tap to switch to {state.raceMapView === 'track' ? 'Sectors' : 'Track'}
+                </span>
+              </button>
+              <button
                 onClick={quitToPaddock}
                 className="bg-secondary text-secondary-foreground px-6 py-2 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center gap-2 mx-auto"
                 data-testid="button-quit-race"
@@ -2740,6 +2854,8 @@ export default function Game() {
                 <span className="text-xs text-white px-2 py-0.5 rounded" style={{ backgroundColor: '#f59e0b' }}>QUALIFYING</span>
               ) : isGrandPrix && grandPrixPhase === 'rw_race' ? (
                 <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE DAY</span>
+              ) : isQuickRace ? (
+                <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">QUICK RACE</span>
               ) : isPracticeMode ? (
                 <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
               ) : (
@@ -2747,6 +2863,19 @@ export default function Game() {
               )}
             </div>
             <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  toggleRaceMapView();
+                  if (state.soundEnabled) playCarouselClick();
+                }}
+                className="px-2.5 py-1 rounded border border-white/20 bg-white/5 text-[10px] font-bold uppercase tracking-widest text-white/80 hover:bg-white/10 transition-colors"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+                data-testid="button-race-view-toggle"
+                aria-label={`Switch to ${state.raceMapView === 'track' ? 'sectors' : 'track'} view`}
+              >
+                {state.raceMapView === 'track' ? 'Track' : 'Sectors'}
+              </button>
               {!isPracticeMode && (
                 <button
                   onClick={() => setIsPaused(true)}
@@ -2900,7 +3029,7 @@ export default function Game() {
         {state.raceMapView === 'track' && (
           <div
             className={cn(
-              'w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto px-4 overflow-visible',
+              'w-full max-w-md md:max-w-xl lg:max-w-3xl mx-auto px-4 overflow-visible',
               selectedCircuit?.id === 'hungary' ? '-translate-y-3 mt-0 mb-4' : 'my-2'
             )}
           >
@@ -2946,7 +3075,7 @@ export default function Game() {
           )}
 
           {/* Status Messages - floating above keypad */}
-          {((raceMode === 'bot' && state.powerUpsEnabled) || (isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
+          {((raceMode === 'bot' && powerUpsEnabled) || (isPracticeMode && powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
             <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
               <div className="flex gap-2 items-center">
                 <AnimatePresence>
@@ -3039,7 +3168,7 @@ export default function Game() {
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 w-full max-w-md md:max-w-xl lg:max-w-2xl">
             {/* Power-ups row - integrated as extended keypad row */}
-            {((raceMode === 'bot' && state.powerUpsEnabled) || (isPracticeMode && state.powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (
+            {((raceMode === 'bot' && powerUpsEnabled) || (isPracticeMode && powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (
               <>
                 {/* AERO Button - above 7 */}
                 <button

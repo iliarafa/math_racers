@@ -397,15 +397,20 @@ export function LiveCircuitMap({
     <div
       className={cn(
         'w-full mx-auto overflow-visible',
-        isResults ? 'max-w-md' : nativeIPad ? 'max-w-2xl' : 'max-w-md md:max-w-xl',
+        isResults
+          ? 'max-w-md'
+          : nativeIPad
+            ? 'max-w-2xl'
+            : 'max-w-md md:max-w-xl lg:max-w-2xl',
         className
       )}
       data-testid="live-circuit-map"
     >
       {/*
         HUD: max-h-40 budget (previous phone size). Hungary phone gets a modest
-        taller slot (near-square art). Native iPad gets 16rem. Stage aspect
-        matches the padded viewBox so contain-fit never crops strokes/cars.
+        taller slot (near-square art). Native iPad gets 16rem. Desktop web (lg+)
+        steps up further — phone / Capacitor iPad budgets stay unchanged. Stage
+        aspect matches the padded viewBox so contain-fit never crops strokes/cars.
       */}
       <div
         className={cn(
@@ -415,8 +420,8 @@ export function LiveCircuitMap({
             : nativeIPad
               ? 'max-h-64 max-w-full [--map-max-h:16rem]'
               : phoneHungaryBoost
-                ? 'max-h-48 sm:max-h-52 max-w-full [--map-max-h:12rem] sm:[--map-max-h:13rem]'
-                : 'max-h-40 sm:max-h-44 max-w-full [--map-max-h:10rem] sm:[--map-max-h:11rem]'
+                ? 'max-h-48 sm:max-h-52 lg:max-h-80 max-w-full [--map-max-h:12rem] sm:[--map-max-h:13rem] lg:[--map-max-h:20rem]'
+                : 'max-h-40 sm:max-h-44 lg:max-h-64 max-w-full [--map-max-h:10rem] sm:[--map-max-h:11rem] lg:[--map-max-h:16rem]'
         )}
         style={{
           aspectRatio: `${vbW} / ${vbH}`,
