@@ -29,8 +29,7 @@ export const CARDS_PER_STAGE = 20;
 const PROGRESS_KEY = 'drivingSchoolHighestCleared';
 
 /**
- * Driving School purple is intentionally easier than race practice (0.5× botTime).
- * Correct within the bot's expected time → purple; correct but slower → green.
+ * Correct within the bot's expected time (1.0× botTime) → purple; correct but slower → green.
  */
 export const PURPLE_TIME_FACTOR = 1.0;
 

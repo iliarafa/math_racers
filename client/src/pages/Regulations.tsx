@@ -28,14 +28,11 @@ const chapters: Chapter[] = [
       {
         id: "race",
         title: "Race",
-        description: "Answer 20 math questions correctly to cross the finish line. In Realism Mode, races use full Grand Prix distances (44–78 laps per circuit).",
+        description: "Beat your opponent to the finish line — every correct answer moves you forward one lap. Race Now and Qualifying run 20 laps; Grand Prix Race Day runs the full race distance.",
         details: [
-          "#Circuits",
-          "SPA — Addition",
-          "Monaco — Subtraction",
-          "Monza — Multiplication",
-          "Suzuka — Division",
-          "Silverstone — Variables / Algebra",
+          "#Math",
+          "You choose the math operation — Addition, Subtraction, Multiplication, Division, or Variables — wherever a race has a MATH selector (Free Practice, Grand Prix, Lane Racer, Multiplayer)",
+          "Lane Racer and Multiplayer offer 10 circuits: Spa, Monaco, Monza, Suzuka, Silverstone, Canada, Miami, Barcelona, Austria, and Hungary",
           "#Difficulty",
           "Karting through F1 use kid-sized number ranges (Adaptive soft-caps at F1):",
           "Karting — addition/subtraction about 1 to 10; times tables up to 5",
@@ -76,7 +73,7 @@ const chapters: Chapter[] = [
         richDetails: [
           { color: "text-white/70", label: "Dry", text: "standard difficulty" },
           { color: "text-white/70", label: "Wet", text: "bumps questions half a difficulty level harder" },
-          { color: "text-white/70", label: "Random", text: "rain probability varies per circuit. In Realism Mode with Random weather, conditions alternate 3 to 5 times during the race" },
+          { color: "text-white/70", label: "Random", text: "rain probability varies per circuit. In Grand Prix and Free Practice, Random weather can flip between dry and wet 3 to 5 times during the session" },
         ],
       },
     ],
@@ -89,9 +86,9 @@ const chapters: Chapter[] = [
       {
         id: "overtake",
         title: "Overtake",
-        description: "Build energy by answering correctly. Faster answers charge more energy.",
+        description: "Build energy by answering correctly. Faster answers charge more energy. Power-ups run in Grand Prix only.",
         details: [
-          "Activates when behind and within two sectors of your opponent (always available in Practice)",
+          "Activates when behind and within two sectors of your opponent (always available in Grand Prix Practice)",
           "2× progress per correct answer while active",
           "Questions are 1.5× harder (half a difficulty level)",
           "In wet weather, the difficulty boost stacks — wet + OVERTAKE = full difficulty level up",
@@ -104,10 +101,10 @@ const chapters: Chapter[] = [
       {
         id: "active-aero",
         title: "Active Aero",
-        description: "Engage AERO in designated zones for a 2× sector boost per correct answer.",
+        description: "Engage AERO in designated zones for a 2× sector boost per correct answer. Power-ups run in Grand Prix only.",
         details: [
-          "Two activation zones in Standard Mode (at 25% and 65% of race)",
-          "Five activation zones in Realism Mode (at 15%, 30%, 50%, 70%, 85%)",
+          "Grand Prix Practice — one zone per 10 questions (three zones in the 30-question session)",
+          "Qualifying and Race Day — five zones (at 15%, 30%, 50%, 70%, 85% of race distance)",
           "Each zone lasts for 3 questions",
           "A wrong answer while AERO is active deactivates it",
         ],
@@ -120,6 +117,16 @@ const chapters: Chapter[] = [
     title: "Race Formats",
     articles: [
       {
+        id: "race-now",
+        title: "Race Now",
+        description: "One tap from the Paddock straight to the grid — a 20-lap race against the bot at this week's Grand Prix circuit.",
+        details: [
+          "No setup — the race starts immediately at the current Grand Prix circuit",
+          "Addition questions with Adaptive difficulty (starts at Karting, adjusts as you go)",
+          "Dry weather, no power-ups — pure racing",
+        ],
+      },
+      {
         id: "grand-prix",
         title: "Grand Prix",
         description: "A full race weekend at the Hungaroring (Hungarian Grand Prix) with three sequential phases.",
@@ -127,17 +134,8 @@ const chapters: Chapter[] = [
           "Select your math operation, then progress through Practice, Qualifying, and Race Day",
           "Practice (30 questions) — always Adaptive; difficulty adjusts as you go (no Adaptive/Locked toggle)",
           "Qualifying (20 questions) — difficulty locks at the level reached in Practice and determines pole position",
-          "Race Day (full simulation length) — uses the Practice lock; pole position grants a 2-sector head start on your first correct answer",
+          "Race Day (full race distance — 70 laps at the Hungaroring) — uses the Practice lock; pole position grants a 2-sector head start on your first correct answer",
           "Power-ups (OVERTAKE and AERO) are on for Practice, Qualifying, and Race Day",
-        ],
-      },
-      {
-        id: "realism",
-        title: "Realism Mode",
-        description: "Full Grand Prix distance with stricter rules.",
-        details: [
-          "Full lap count per circuit (44–78 laps)",
-          "Five AERO zones instead of two",
         ],
       },
       {
@@ -169,7 +167,7 @@ const chapters: Chapter[] = [
       {
         id: "lane-racer",
         title: "Lane Racer",
-        description: "Arcade lane racing — pick the correct answer lane as numbers scroll toward you.",
+        description: "Arcade lane racing — pick the correct answer lane as numbers scroll toward you. Found under DRIVING SCHOOL in the Paddock.",
         details: [
           "Choose track, team, operation, and level before you start",
           "Level — Adaptive (default, Karting→F1) or Locked Karting / F3 / F2 / F1 / Pro; Adaptive adjusts during the race, Locked stays fixed",
@@ -193,7 +191,7 @@ const chapters: Chapter[] = [
         details: [
           "Host creates a room and shares the code",
           "Guest joins with the code",
-          "Both players race the same set of questions",
+          "Host picks the track and math operation — both players race the same set of questions",
           "Host sets Adaptive (default, caps at F1) or Locked Karting / F3 / F2 / F1 / Pro for the room — one shared difficulty track",
           "Guest must tap Ready before the host can start; host difficulty changes clear Ready",
           "Real-time progress visible during the race",
@@ -204,12 +202,15 @@ const chapters: Chapter[] = [
       {
         id: "leaderboard",
         title: "Leaderboard",
-        description: "Compete for the highest scores on the Free Practice and Grand Prix leaderboards.",
+        description: "Compete for the highest scores on the Free Practice, Lane Racer, and Grand Prix leaderboards.",
         details: [
           "#Free Practice",
           "Complete all 100 questions to submit your score",
           "Filter entries by math operation",
           "Search for players by name",
+          "#Lane Racer",
+          "Finish a Lane Racer race to submit your score",
+          "Filter entries by circuit and math operation",
           "#Grand Prix",
           "Race Day completions are submitted to the Grand Prix leaderboard",
         ],
@@ -228,10 +229,21 @@ const chapters: Chapter[] = [
         details: [
           "Sound — toggle game audio",
           "Racer Log — badges and race history grouped by series",
-          "Leaderboard — Free Practice standings",
+          "Leaderboard — Free Practice, Lane Racer, and Grand Prix standings",
           "Regulations — rules and guide (this page)",
           "Strategy — math reference guide with tips for each operation",
           "Reset — wipes all progress (requires confirmation)",
+        ],
+      },
+      {
+        id: "driving-school",
+        title: "Driving School",
+        description: "Learn the facts before you race — flashcard stages plus the Reaction Test, under DRIVING SCHOOL in the Paddock.",
+        details: [
+          "Flashcards — 10 gated stages: Addition (to 10, to 20), Subtraction (to 10, to 20), Multiplication (to 5, 8, 10), Division (to 5, 8, 10)",
+          "Each stage is a 20-card deck — answer within the bot's expected time for purple; correct but slower is green; wrong is red",
+          "Cards that aren't purple return to the deck — a stage is cleared when every card is purple",
+          "Clearing a stage unlocks the next; progress is saved on your device",
         ],
       },
       {

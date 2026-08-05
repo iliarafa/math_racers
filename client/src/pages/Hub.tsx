@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
-import { useGameState } from "@/lib/gameLogic";
+import { useGameState, RACE_LENGTH } from "@/lib/gameLogic";
 import { usePurchase } from "@/hooks/use-purchase";
 import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
@@ -91,9 +91,9 @@ type HubView = 'paddock' | 'weekend' | 'school';
 /**
  * The Paddock — multi-level mode menu.
  *
- * Menu A: Weekend Briefing, Quick Race, RACE WEEKEND, DRIVING SCHOOL, Garage.
- * RACE WEEKEND: Free Practice, Grand Prix, Lane Racer.
- * DRIVING SCHOOL: Flashcards, Reaction Test.
+ * Menu A: Weekend Briefing, RACE NOW (quick race), RACE WEEKEND, DRIVING SCHOOL, Garage.
+ * RACE WEEKEND: Free Practice, Grand Prix.
+ * DRIVING SCHOOL: Flashcards, Reaction Test, Lane Racer.
  */
 export default function Hub() {
   const { state } = useGameState();
@@ -187,8 +187,8 @@ export default function Hub() {
 
               <HubCard
                 href="/game/quick-race"
-                title="QUICK RACE"
-                subtitle={`${CURRENT_GRAND_PRIX.circuitName} · ADAPTIVE`}
+                title="RACE NOW"
+                subtitle={`${CURRENT_GRAND_PRIX.circuitName} · ${RACE_LENGTH} LAPS`}
                 testId="link-quick-race"
                 soundEnabled={state.soundEnabled}
                 style={quickRaceCardStyle}
@@ -197,7 +197,7 @@ export default function Hub() {
 
               <HubCard
                 title="RACE WEEKEND"
-                subtitle="PRACTICE · GP · ARCADE"
+                subtitle="PRACTICE · QUALIFY · RACE"
                 testId="link-race-weekend"
                 soundEnabled={state.soundEnabled}
                 onClick={() => setView('weekend')}
@@ -205,7 +205,7 @@ export default function Hub() {
 
               <HubCard
                 title="DRIVING SCHOOL"
-                subtitle="FLASHCARDS · REACTION"
+                subtitle="FLASHCARDS · REACTION · ARCADE"
                 testId="link-driving-school"
                 soundEnabled={state.soundEnabled}
                 onClick={() => setView('school')}
@@ -239,14 +239,6 @@ export default function Hub() {
                 testId="link-grand-prix"
                 soundEnabled={state.soundEnabled}
               />
-
-              <HubCard
-                href="/lane-racer"
-                title="LANE RACER"
-                subtitle="ARCADE MODE"
-                testId="link-lane-racer"
-                soundEnabled={state.soundEnabled}
-              />
             </>
           )}
 
@@ -265,6 +257,14 @@ export default function Hub() {
                 title="REACTION TEST"
                 subtitle="F1 START LIGHTS"
                 testId="link-reaction-test"
+                soundEnabled={state.soundEnabled}
+              />
+
+              <HubCard
+                href="/lane-racer"
+                title="LANE RACER"
+                subtitle="ARCADE MODE"
+                testId="link-lane-racer"
                 soundEnabled={state.soundEnabled}
               />
             </>
