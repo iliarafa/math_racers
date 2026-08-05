@@ -101,18 +101,6 @@ export default function Garage() {
                 <Zap className={cn("w-10 h-10", state.powerUpsEnabled ? "text-green-500" : "text-white")} />
                 <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Power-Ups</span>
               </div>
-              <Link href="/reaction">
-                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-reflex-training">
-                  <div className="flex gap-0.5 h-10 items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                    <div className="w-2 h-2 rounded-full bg-red-600" />
-                  </div>
-                  <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Reflex</span>
-                </div>
-              </Link>
               <Link href="/racer-log">
                 <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-racer-log">
                   <ClipboardList className="w-10 h-10 text-white" />

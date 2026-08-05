@@ -178,7 +178,7 @@ export default function ReactionTest() {
   };
 
   return (
-    <GameLayout trackName="Reflex Training" lockViewport hideGarageButton centerHeader backHref="/garage">
+    <GameLayout trackName="Reflex Training" lockViewport hideGarageButton centerHeader backHref="/hub">
       <div className="flex-1 flex flex-col items-center justify-center max-w-xl md:max-w-2xl mx-auto w-full px-4 space-y-4 md:space-y-8 overflow-hidden">
         
         <div className="flex flex-col items-stretch space-y-4 md:space-y-8">

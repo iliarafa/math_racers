@@ -86,19 +86,22 @@ function HubCard({ href, title, subtitle, note, testId, soundEnabled, onClick, s
   return button;
 }
 
-type HubView = 'paddock' | 'weekend';
+type HubView = 'paddock' | 'weekend' | 'school';
 
 /**
- * The Paddock — two-level mode menu.
+ * The Paddock — multi-level mode menu.
  *
- * Menu A: Weekend Briefing, Quick Race, WEEKEND (folder), Garage.
- * Menu B (WEEKEND drill-in): Free Practice, Grand Prix, Lane Racer.
- * Multiplayer stays routable but is not listed here.
+ * Menu A: Weekend Briefing, Quick Race, RACE WEEKEND, DRIVING SCHOOL, Garage.
+ * RACE WEEKEND: Free Practice, Grand Prix, Lane Racer.
+ * DRIVING SCHOOL: Flashcards, Reaction Test.
  */
 export default function Hub() {
   const { state } = useGameState();
   const { isPremium } = usePurchase();
   const [view, setView] = useState<HubView>('paddock');
+
+  const title =
+    view === 'weekend' ? 'Race Weekend' : view === 'school' ? 'Driving School' : 'Paddock';
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
@@ -114,9 +117,9 @@ export default function Hub() {
         </Link>
       </div>
 
-      {/* Title + optional back on WEEKEND drill-in */}
+      {/* Title + back on drill-ins */}
       <div className="relative z-10 mt-2 md:mt-8 mb-5 md:mb-8 flex justify-center items-center">
-        {view === 'weekend' && (
+        {view !== 'paddock' && (
           <button
             type="button"
             onClick={() => {
@@ -125,7 +128,7 @@ export default function Hub() {
             }}
             className="absolute left-4 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
             aria-label="Back to paddock"
-            data-testid="button-weekend-back"
+            data-testid="button-hub-back"
           >
             <ChevronLeft size={24} />
           </button>
@@ -134,7 +137,7 @@ export default function Hub() {
           className="text-2xl md:text-3xl font-semibold uppercase tracking-wider text-white"
           style={{ fontFamily: 'Oxanium, sans-serif' }}
         >
-          {view === 'weekend' ? 'Weekend' : 'Paddock'}
+          {title}
         </h2>
       </div>
 
@@ -142,9 +145,8 @@ export default function Hub() {
       <div className="relative z-10 flex flex-col items-center px-6 overflow-y-auto flex-1" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
         <div className="flex flex-col w-full max-w-sm md:max-w-lg gap-4">
 
-          {view === 'paddock' ? (
+          {view === 'paddock' && (
             <>
-              {/* Weekend Briefing */}
               <Link
                 href="/grand-prix"
                 onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
@@ -194,11 +196,19 @@ export default function Hub() {
               />
 
               <HubCard
-                title="WEEKEND"
+                title="RACE WEEKEND"
                 subtitle="PRACTICE · GP · ARCADE"
-                testId="link-weekend"
+                testId="link-race-weekend"
                 soundEnabled={state.soundEnabled}
                 onClick={() => setView('weekend')}
+              />
+
+              <HubCard
+                title="DRIVING SCHOOL"
+                subtitle="FLASHCARDS · REACTION"
+                testId="link-driving-school"
+                soundEnabled={state.soundEnabled}
+                onClick={() => setView('school')}
               />
 
               <HubCard
@@ -209,7 +219,9 @@ export default function Hub() {
                 soundEnabled={state.soundEnabled}
               />
             </>
-          ) : (
+          )}
+
+          {view === 'weekend' && (
             <>
               <HubCard
                 href="/game/free-practice"
@@ -233,6 +245,26 @@ export default function Hub() {
                 title="LANE RACER"
                 subtitle="ARCADE MODE"
                 testId="link-lane-racer"
+                soundEnabled={state.soundEnabled}
+              />
+            </>
+          )}
+
+          {view === 'school' && (
+            <>
+              <HubCard
+                href="/driving-school"
+                title="FLASHCARDS"
+                subtitle="10 GATED STAGES"
+                testId="link-flashcards"
+                soundEnabled={state.soundEnabled}
+              />
+
+              <HubCard
+                href="/reaction"
+                title="REACTION TEST"
+                subtitle="F1 START LIGHTS"
+                testId="link-reaction-test"
                 soundEnabled={state.soundEnabled}
               />
             </>
