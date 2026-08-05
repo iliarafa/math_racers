@@ -262,7 +262,7 @@ export default function DrivingSchool() {
                       animate={lit ? { scale: [1, 1.04, 1] } : { scale: 1 }}
                       transition={{ duration: 0.25 }}
                       className={cn(
-                        'aspect-[4/3] w-full rounded-2xl border-2 shadow-lg flex flex-col items-center justify-center gap-2 transition-colors duration-150',
+                        'aspect-[4/3] w-full rounded-none border-2 shadow-lg flex flex-col items-center justify-center gap-2 transition-colors duration-150',
                         lit ? cn(CARD_LIT[current.color as Exclude<CardColor, 'pending'>], 'text-white') : 'bg-card border-border',
                       )}
                       data-testid="flashcard-card"
