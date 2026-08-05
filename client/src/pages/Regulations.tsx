@@ -128,7 +128,7 @@ const chapters: Chapter[] = [
           "Practice (30 questions) — always Adaptive; difficulty adjusts as you go (no Adaptive/Locked toggle)",
           "Qualifying (20 questions) — difficulty locks at the level reached in Practice and determines pole position",
           "Race Day (full simulation length) — uses the Practice lock; pole position grants a 2-sector head start on your first correct answer",
-          "Power-ups are only active during Race Day",
+          "Power-ups (OVERTAKE and AERO) are on for Practice, Qualifying, and Race Day",
         ],
       },
       {
@@ -227,9 +227,6 @@ const chapters: Chapter[] = [
         description: "Your dashboard for settings, stats, and navigation. Tap buttons to toggle settings — green icon means active.",
         details: [
           "Sound — toggle game audio",
-          "Realism — toggle simulation distances and extra AERO zones",
-          "Power-Ups — toggle OVERTAKE and AERO systems",
-          "Reflex — F1-style reaction time test",
           "Racer Log — badges and race history grouped by series",
           "Leaderboard — Free Practice standings",
           "Regulations — rules and guide (this page)",

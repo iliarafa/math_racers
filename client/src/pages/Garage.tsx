@@ -1,16 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useGameState } from "@/lib/gameLogic";
-import { cn } from "@/lib/utils";
-import { TrendingUp, Volume2, VolumeX, Flag, Gauge, Zap, Trophy, ClipboardList, RotateCcw, ChevronLeft } from "lucide-react";
+import { TrendingUp, Volume2, VolumeX, Flag, Trophy, ClipboardList, RotateCcw, ChevronLeft } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { isNativePlatform } from "@/lib/purchases";
 import garageSound from "@/assets/garsound.m4a";
 import garageBackground from "@assets/garage_background.mp4";
 
 export default function Garage() {
-  const { state, toggleSound, toggleSimMode, togglePowerUps, resetAllData } = useGameState();
-  const { isPremium, restore } = usePurchase();
+  const { state, toggleSound, resetAllData } = useGameState();
+  const { restore } = usePurchase();
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -84,22 +83,6 @@ export default function Garage() {
                   <VolumeX className="w-10 h-10 text-white" />
                 )}
                 <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Sound</span>
-              </div>
-              <div
-                onClick={isPremium ? toggleSimMode : undefined}
-                className={cn("rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 transition-all", isPremium ? "cursor-pointer active:scale-[0.97]" : "opacity-40")}
-                data-testid="button-realism"
-              >
-                <Gauge className={cn("w-10 h-10", state.simMode ? "text-green-500" : "text-white")} />
-                <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Realism</span>
-              </div>
-              <div
-                onClick={togglePowerUps}
-                className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
-                data-testid="button-powerups"
-              >
-                <Zap className={cn("w-10 h-10", state.powerUpsEnabled ? "text-green-500" : "text-white")} />
-                <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Power-Ups</span>
               </div>
               <Link href="/racer-log">
                 <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-racer-log">

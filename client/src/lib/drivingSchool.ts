@@ -28,10 +28,15 @@ export const DRIVING_SCHOOL_STAGES: DrivingSchoolStage[] = [
 export const CARDS_PER_STAGE = 20;
 const PROGRESS_KEY = 'drivingSchoolHighestCleared';
 
-/** Same rule as race practice: correct and under half botTime → purple. */
+/**
+ * Driving School purple is intentionally easier than race practice (0.5× botTime).
+ * Correct within the bot's expected time → purple; correct but slower → green.
+ */
+export const PURPLE_TIME_FACTOR = 1.0;
+
 export function gradeFlashcard(correct: boolean, responseTimeMs: number, botTimeMs: number): CardColor {
   if (!correct) return 'red';
-  if (responseTimeMs < botTimeMs * 0.5) return 'purple';
+  if (responseTimeMs < botTimeMs * PURPLE_TIME_FACTOR) return 'purple';
   return 'green';
 }
 

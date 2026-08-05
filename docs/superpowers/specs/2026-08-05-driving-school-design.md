@@ -17,7 +17,7 @@ Remove Reflex tile from Garage. Reaction Test `backHref` → `/hub` (Driving Sch
 
 - 10 gated stages (stage 1 open; clear N unlocks N+1)
 - 20 cards per stage; numpad answers
-- Colors: wrong = red; correct & ≥ 0.5×botTime = green; correct & &lt; 0.5×botTime = purple
+- Colors: wrong = red; correct & ≥ botTime = green; correct & &lt; botTime = purple (looser than race practice’s 0.5×)
 - Finish deck → re-queue non-purple until all purple → stage cleared
 - Progress in localStorage
 - Standalone page; reuse `generateQuestion` + race timing

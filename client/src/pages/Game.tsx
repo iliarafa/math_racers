@@ -440,8 +440,12 @@ export default function Game() {
     ? false
     : (isGrandPrix || isPreSeasonTesting) ? true : state.simMode;
 
-  /** Session override — Quick Race never uses power-ups; Garage pref stays untouched. */
-  const powerUpsEnabled = isQuickRace ? false : state.powerUpsEnabled;
+  /**
+   * Power-ups by mode (Garage toggle removed):
+   * Grand Prix — on for Practice, Qualifying, and Race Day.
+   * Quick Race / Free Practice — off.
+   */
+  const powerUpsEnabled = isGrandPrix;
 
   const raceLength = (() => {
     if (isQuickRace) return RACE_LENGTH;
@@ -1104,7 +1108,7 @@ export default function Game() {
       incrementLaps();
       // OVERTAKE energy harvesting: speed-based, faster answers harvest more energy
       // Only when OVERTAKE is not active and power-ups enabled
-      if ((raceMode === 'bot' || isPracticeMode) && !overtakeActive && powerUpsEnabled && !(isGrandPrix && grandPrixPhase !== 'rw_race')) {
+      if ((raceMode === 'bot' || isPracticeMode) && !overtakeActive && powerUpsEnabled) {
         const energyGain = calculateEnergyHarvest(
           responseTime,
           currentDifficultyRef.current,
@@ -3075,7 +3079,7 @@ export default function Game() {
           )}
 
           {/* Status Messages - floating above keypad */}
-          {((raceMode === 'bot' && powerUpsEnabled) || (isPracticeMode && powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (showBoostMessage || showAeroMessage) && (
+          {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
             <div className="flex justify-center mb-2 h-6 w-full max-w-md md:max-w-xl">
               <div className="flex gap-2 items-center">
                 <AnimatePresence>
@@ -3168,7 +3172,7 @@ export default function Game() {
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 w-full max-w-md md:max-w-xl lg:max-w-2xl">
             {/* Power-ups row - integrated as extended keypad row */}
-            {((raceMode === 'bot' && powerUpsEnabled) || (isPracticeMode && powerUpsEnabled) || isGrandPrix || isPreSeasonTesting) && (
+            {powerUpsEnabled && (
               <>
                 {/* AERO Button - above 7 */}
                 <button
@@ -3218,11 +3222,11 @@ export default function Game() {
                 <button
                   onPointerDown={(e) => {
                     e.preventDefault();
-                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || (!isPracticeMode && botFinished) || (isGrandPrix && grandPrixPhase !== 'rw_race'))) {
+                    if (!((overtakeEnergy <= 0 && !overtakeActive) || isPaused || (!isPracticeMode && botFinished))) {
                       handleOvertake();
                     }
                   }}
-                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || (!isPracticeMode && botFinished) || (isGrandPrix && grandPrixPhase !== 'rw_race')}
+                  disabled={(overtakeEnergy <= 0 && !overtakeActive) || isPaused || (!isPracticeMode && botFinished)}
                   className={cn(
                     "h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl font-bold text-lg sm:text-xl lg:text-2xl transition-all active:scale-95 touch-manipulation select-none",
                     overtakeActive

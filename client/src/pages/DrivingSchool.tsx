@@ -252,23 +252,28 @@ export default function DrivingSchool() {
             >
               {answer || '0'}
             </div>
-            <AnimatePresence>
-              {feedback !== 'idle' && current.color !== 'pending' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className={cn(
-                    'text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full text-white',
-                    current.color === 'purple' && 'bg-purple-600',
-                    current.color === 'green' && 'bg-green-600',
-                    current.color === 'red' && 'bg-red-600',
-                  )}
-                >
-                  {current.color}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Fixed-height slot so the color chip never shifts the keypad */}
+            <div className="h-7 flex items-center justify-center">
+              <AnimatePresence mode="wait">
+                {feedback !== 'idle' && current.color !== 'pending' && (
+                  <motion.div
+                    key={current.color}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.12 }}
+                    className={cn(
+                      'text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full text-white',
+                      current.color === 'purple' && 'bg-purple-600',
+                      current.color === 'green' && 'bg-green-600',
+                      current.color === 'red' && 'bg-red-600',
+                    )}
+                  >
+                    {current.color}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Numpad */}
