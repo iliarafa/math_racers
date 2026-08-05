@@ -8,6 +8,7 @@ Handoff summary of the latest work plus standing context future sessions will ne
 2. **Flashcards polish** — see if there is room for more polish in the flashcards mode.
 3. **Setup screen UIs** — update the LANE RACER and GRAND PRIX setup screens.
 4. **Leaderboards scope (debate)** — consider limiting leaderboards to only the modes in the RACE WEEKEND menu.
+5. **Quick Race UI** — push the sector grid down closer to the numpad and make the operation a bit bigger. (A first attempt at bigger-operation/smaller-grid was reverted — this asks for repositioning the grid *down*, not shrinking it.)
 
 ## TL;DR
 
