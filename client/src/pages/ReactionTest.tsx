@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
+import { REACTION_LICENCE_MS, loadReactionBestMs, saveReactionTimeMs } from "@/lib/drivingSchoolLicence";
 import { cn } from "@/lib/utils";
 import { RotateCcw, Zap } from "lucide-react";
 
@@ -47,6 +48,7 @@ export default function ReactionTest() {
   const [gameState, setGameState] = useState<GameState>('idle');
   const [lights, setLights] = useState<boolean[]>([false, false, false, false, false]);
   const [reactionTime, setReactionTime] = useState<number | null>(null);
+  const [bestMs, setBestMs] = useState<number | null>(() => loadReactionBestMs());
   const startTimeRef = useRef<number | null>(null);
   const sequenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const soundEnabledRef = useRef(state.soundEnabled);
@@ -122,8 +124,9 @@ export default function ReactionTest() {
       setLights([false, false, false, false, false]);
     } else if (gameState === 'go') {
       const endTime = Date.now();
-      const reaction = (endTime - startTimeRef.current!) / 1000;
-      setReactionTime(reaction);
+      const reactionMs = endTime - startTimeRef.current!;
+      setReactionTime(reactionMs / 1000);
+      setBestMs(saveReactionTimeMs(reactionMs));
       setGameState('result');
     }
   };
@@ -218,6 +221,24 @@ export default function ReactionTest() {
             {(gameState === 'jumpstart' || gameState === 'result') && <RotateCcw className="w-6 h-6" />}
             {getButtonText()}
           </button>
+
+          {/* Licence line: best time + pass state (target from the Driving School licence path) */}
+          <div
+            className="h-5 flex items-center justify-center gap-2 text-xs uppercase tracking-wider"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+            data-testid="reaction-licence-line"
+          >
+            {bestMs !== null && bestMs < REACTION_LICENCE_MS ? (
+              <span className="text-purple-500 font-bold">
+                Best {(bestMs / 1000).toFixed(3)}s · Licence passed
+              </span>
+            ) : (
+              <span className="text-muted-foreground">
+                {bestMs !== null ? `Best ${(bestMs / 1000).toFixed(3)}s · ` : ''}
+                Licence target under {(REACTION_LICENCE_MS / 1000).toFixed(2)}s
+              </span>
+            )}
+          </div>
         </div>
 
 
