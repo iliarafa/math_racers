@@ -224,11 +224,11 @@ export default function Hub() {
         </h2>
         {view === 'school' && (
           <p
-            className="mt-1.5 px-8 text-center text-[11px] uppercase tracking-[0.18em] text-white/45"
+            className="mt-1.5 text-center text-[9px] uppercase tracking-[0.16em] text-white/45 whitespace-nowrap"
             style={{ fontFamily: 'Oxanium, sans-serif', fontWeight: 300 }}
             data-testid="school-caption"
           >
-            Complete all sectors to receive your superlicence
+            Complete to earn your superlicence
           </p>
         )}
       </div>
