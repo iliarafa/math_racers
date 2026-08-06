@@ -47,10 +47,11 @@ function playGradeSound(color: Exclude<CardColor, 'pending'>) {
       const sweepGain = ctx.createGain();
       sweep.connect(sweepGain);
       sweepGain.connect(ctx.destination);
-      sweep.type = 'sawtooth';
+      sweep.type = 'sine';
       sweep.frequency.setValueAtTime(600, now);
-      sweep.frequency.exponentialRampToValueAtTime(1400, now + 0.18);
-      sweepGain.gain.setValueAtTime(0.12, now);
+      sweep.frequency.exponentialRampToValueAtTime(1200, now + 0.18);
+      sweepGain.gain.setValueAtTime(0.0001, now);
+      sweepGain.gain.exponentialRampToValueAtTime(0.12, now + 0.03);
       sweepGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
       sweep.start(now);
       sweep.stop(now + 0.2);
@@ -60,12 +61,12 @@ function playGradeSound(color: Exclude<CardColor, 'pending'>) {
       blip.connect(blipGain);
       blipGain.connect(ctx.destination);
       blip.type = 'sine';
-      blip.frequency.value = 1760;
+      blip.frequency.value = 1319;
       blipGain.gain.setValueAtTime(0.0001, now);
-      blipGain.gain.setValueAtTime(0.15, now + 0.18);
-      blipGain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+      blipGain.gain.setValueAtTime(0.1, now + 0.18);
+      blipGain.gain.exponentialRampToValueAtTime(0.01, now + 0.34);
       blip.start(now + 0.18);
-      blip.stop(now + 0.32);
+      blip.stop(now + 0.34);
     } else if (color === 'green') {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
