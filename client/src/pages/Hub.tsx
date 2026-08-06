@@ -288,20 +288,20 @@ export default function Hub() {
               />
 
               <HubCard
-                title="RACE WEEKEND"
-                subtitle="PRACTICE · QUALIFY · RACE"
-                testId="link-race-weekend"
-                soundEnabled={state.soundEnabled}
-                onClick={() => setView('weekend')}
-              />
-
-              <HubCard
                 title="DRIVING SCHOOL"
                 subtitle="FLASHCARDS · REACTION · ARCADE"
                 badge={licence.complete ? { label: 'completed', color: '#19c37d' } : undefined}
                 testId="link-driving-school"
                 soundEnabled={state.soundEnabled}
                 onClick={() => setView('school')}
+              />
+
+              <HubCard
+                title="RACE WEEKEND"
+                subtitle="PRACTICE · QUALIFY · RACE"
+                testId="link-race-weekend"
+                soundEnabled={state.soundEnabled}
+                onClick={() => setView('weekend')}
               />
 
               <HubCard
