@@ -8,6 +8,7 @@ import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { getLicenceStatus } from "@/lib/drivingSchoolLicence";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
+import logoWhiteImage from "@assets/logo-white.svg";
 
 const hubCardStyle: React.CSSProperties = {
   backgroundColor: 'rgba(255,255,255,0.12)',
@@ -179,7 +180,7 @@ export default function Hub() {
       <div className="flex justify-center relative z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
         <Link href="/">
           <img
-            src={logoImage}
+            src={view === 'school' ? logoWhiteImage : logoImage}
             alt="F1 Math Racer"
             className="h-8 md:h-12 object-contain cursor-pointer hover:opacity-70 transition-opacity"
           />
