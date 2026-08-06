@@ -98,16 +98,21 @@ export class LaneRacerEngine {
   private kerbs: KerbSegment[] = [];
   private nextKerbY: number = 0;
   private carImage: HTMLImageElement;
+  private rivalImage: HTMLImageElement;
   private asphaltPattern: CanvasPattern | null = null;
   private difficulty: Difficulty;
   private safeBottomInset: number = 0;
+  /** Rival progress lead (rivalProg − playerProgress); null hides the rival car. */
+  private rivalDelta: number | null = null;
+  private rivalLaneVisual = 1;
 
-  constructor(canvas: HTMLCanvasElement, callbacks: LaneRacerCallbacks, totalQuestions: number, teamId: TeamId = 'mercedes', difficulty: Difficulty = 'beginner') {
+  constructor(canvas: HTMLCanvasElement, callbacks: LaneRacerCallbacks, totalQuestions: number, teamId: TeamId = 'mercedes', difficulty: Difficulty = 'beginner', rivalTeamId: TeamId = 'ferrari') {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
     this.callbacks = callbacks;
     this.totalQuestions = totalQuestions;
     this.carImage = carImages[teamId] || carImages['mercedes'];
+    this.rivalImage = carImages[rivalTeamId] || carImages['ferrari'];
     this.difficulty = difficulty;
     this.state = {
       carLane: 1,
@@ -176,6 +181,10 @@ export class LaneRacerEngine {
 
   setSafeBottomInset(px: number) {
     this.safeBottomInset = px;
+  }
+
+  setRivalDelta(delta: number | null) {
+    this.rivalDelta = delta;
   }
 
   /** Apply series pace on next-question boundary (Adaptive promote/demote). Snaps to new base. */
@@ -267,6 +276,12 @@ export class LaneRacerEngine {
     // Update road scroll
     const scrollAmount = s.speed * dt * scale;
     s.roadOffset = (s.roadOffset + scrollAmount) % 40;
+
+    // Rival drifts toward the lane farthest from the player so close racing reads side-by-side.
+    if (this.rivalDelta !== null) {
+      const target = s.carLane === 1 ? this.rivalLaneVisual < 1 ? 0 : 2 : 2 - s.carLane;
+      this.rivalLaneVisual += (target - this.rivalLaneVisual) * Math.min(1, 0.03 * dt);
+    }
     s.totalScroll += scrollAmount;
 
     // Remove kerbs that scrolled off bottom, spawn new ones ahead
@@ -494,6 +509,22 @@ export class LaneRacerEngine {
     ctx.setLineDash([]);
     ctx.lineDashOffset = 0;
 
+    // Rival car (non-colliding): vertical offset maps the live progress gap.
+    // Drawn under the tokens so answers stay readable.
+    if (this.rivalDelta !== null) {
+      const rCarW = Math.round(laneWidth * 0.4);
+      const rCarH = rCarW * 2;
+      const playerY = h * 0.82 - rCarH / 2;
+      const rivalY = playerY - this.rivalDelta * h * 6;
+      if (rivalY > -rCarH * 1.5 && rivalY < h + rCarH * 1.5) {
+        const rivalX = roadLeft + this.rivalLaneVisual * laneWidth + (laneWidth - rCarW) / 2;
+        ctx.save();
+        ctx.globalAlpha = 0.92;
+        this.drawCar(rivalX, rivalY, rCarW, rCarH, this.rivalImage);
+        ctx.restore();
+      }
+    }
+
     // Answer tokens
     for (const token of s.tokens) {
       const tokenX = roadLeft + token.lane * laneWidth + (laneWidth - tokenW) / 2;
@@ -620,10 +651,10 @@ export class LaneRacerEngine {
     ctx.fillText(`${kmh}`, w - pad, yBase - Math.round(w * 0.026));
   }
 
-  private drawCar(x: number, y: number, w: number = CAR_WIDTH, h: number = CAR_HEIGHT) {
+  private drawCar(x: number, y: number, w: number = CAR_WIDTH, h: number = CAR_HEIGHT, image: HTMLImageElement = this.carImage) {
     const ctx = this.ctx;
-    if (this.carImage.complete && this.carImage.naturalWidth > 0) {
-      ctx.drawImage(this.carImage, x, y, w, h);
+    if (image.complete && image.naturalWidth > 0) {
+      ctx.drawImage(image, x, y, w, h);
     }
   }
 }

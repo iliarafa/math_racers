@@ -22,6 +22,8 @@ interface LaneRacerCanvas3DProps {
   callbacks: LaneRacerEngineCallbacks;
   totalQuestions: number;
   teamId: TeamId;
+  /** Livery for the visible rival car; omit to hide it. */
+  rivalTeamId?: TeamId;
   difficulty: Difficulty;
   /** When true, game loop holds (used to prime WebGL under starting lights). */
   paused?: boolean;
@@ -33,11 +35,13 @@ const NATIVE_SOFT_FOLLOW = isNativePlatform();
 function SceneRoot({
   controller,
   teamId,
+  rivalTeamId,
   structureVersion,
   softFollow,
 }: {
   controller: LaneRacerController3D;
   teamId: TeamId;
+  rivalTeamId?: TeamId;
   structureVersion: number;
   softFollow: boolean;
 }) {
@@ -89,7 +93,7 @@ function SceneRoot({
     camera.lookAt(cx, 0.45, 0.2);
   });
 
-  return <LaneRacerSceneKeyed controller={controller} teamId={teamId} structureVersion={structureVersion} />;
+  return <LaneRacerSceneKeyed controller={controller} teamId={teamId} rivalTeamId={rivalTeamId} structureVersion={structureVersion} />;
 }
 
 function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
@@ -168,7 +172,7 @@ function HudOverlay({ controller }: { controller: LaneRacerController3D }) {
 }
 
 export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3DProps>(
-  function LaneRacerCanvas3D({ callbacks, totalQuestions, teamId, difficulty, paused = false }, ref) {
+  function LaneRacerCanvas3D({ callbacks, totalQuestions, teamId, rivalTeamId, difficulty, paused = false }, ref) {
     const softFollow = NATIVE_SOFT_FOLLOW;
     // Do not remount when Adaptive pace steps mid-race — apply via setPaceDifficulty.
     const controller = useMemo(
@@ -211,6 +215,7 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
       destroy: () => controllerRef.current.destroy(),
       setSafeBottomInset: (px) => controllerRef.current.setSafeBottomInset(px),
       setPaceDifficulty: (d) => controllerRef.current.setPaceDifficulty(d),
+      setRivalDelta: (delta) => controllerRef.current.setRivalDelta(delta),
     }), []);
 
     return (
@@ -229,6 +234,7 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
           <SceneRoot
             controller={controller}
             teamId={teamId}
+            rivalTeamId={rivalTeamId}
             structureVersion={structureVersion}
             softFollow={softFollow}
           />

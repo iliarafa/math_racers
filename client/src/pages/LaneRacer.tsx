@@ -174,6 +174,10 @@ export default function LaneRacer() {
   const prevDisplayRef = useRef<string | undefined>(undefined);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
+  // Rival marker/scene car — a livery distinct from the player's selected team.
+  // Declared before the engine-init effect below, which lists it as a dependency.
+  const rivalTeamId = (TEAMS.find((t) => t.id !== selectedTeam)?.id ?? 'ferrari') as TeamId;
+
   const difficultyLabel =
     DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
   const difficultyColor =
@@ -388,7 +392,7 @@ export default function LaneRacer() {
       onWrong: handleWrong,
       onMiss: handleMiss,
       onFinished: handleFinished,
-    }, raceLength, selectedTeam, appliedPaceDifficultyRef.current);
+    }, raceLength, selectedTeam, appliedPaceDifficultyRef.current, rivalTeamId);
 
     engineRef.current = engine;
     startTimeRef.current = Date.now();
@@ -415,7 +419,7 @@ export default function LaneRacer() {
       window.removeEventListener('resize', measureSafeBottom);
       resizeObserver.disconnect();
     };
-  }, [gameStatus, renderMode, raceLength, selectedTeam, handleCorrect, handleWrong, handleMiss, handleFinished]);
+  }, [gameStatus, renderMode, raceLength, selectedTeam, rivalTeamId, handleCorrect, handleWrong, handleMiss, handleFinished]);
 
   // Track race start time for 3D mode (2D sets this in its init effect above)
   useEffect(() => {
@@ -550,10 +554,13 @@ export default function LaneRacer() {
   const playerProgress = raceLength > 0 ? Math.min(1, questionNum / raceLength) : 0;
   const rivalProg = rivalProgress(elapsedMs, rivalTargetMs);
   const position = rivalPosition(playerProgress, rivalProg);
-  // Rival marker car — a livery distinct from the player's selected team
-  const rivalTeamId = (TEAMS.find((t) => t.id !== selectedTeam)?.id ?? 'ferrari') as TeamId;
   // Progress line color: green when ahead of the rival marker, yellow when behind
   const progressColor = position === 1 ? '#19c37d' : '#ffcc00';
+
+  // Drive the in-scene rival car from the live progress gap (both renderers).
+  useEffect(() => {
+    engineRef.current?.setRivalDelta(gameStatus === 'racing' ? rivalProg - playerProgress : null);
+  }, [gameStatus, rivalProg, playerProgress]);
 
   // Setup
   if (gameStatus === 'setup') {
@@ -721,6 +728,7 @@ export default function LaneRacer() {
                 callbacks={engineCallbacks}
                 totalQuestions={raceLength}
                 teamId={selectedTeam}
+                rivalTeamId={rivalTeamId}
                 difficulty={paceDifficulty}
                 paused={!isRacing}
               />
