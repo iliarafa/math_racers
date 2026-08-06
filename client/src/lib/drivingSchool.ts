@@ -33,7 +33,7 @@ const PROGRESS_KEY = 'drivingSchoolHighestCleared';
  */
 export const PURPLE_TIME_FACTOR = 1.0;
 
-export function gradeFlashcard(correct: boolean, responseTimeMs: number, botTimeMs: number): CardColor {
+export function gradeFlashcard(correct: boolean, responseTimeMs: number, botTimeMs: number): Exclude<CardColor, 'pending'> {
   if (!correct) return 'red';
   if (responseTimeMs < botTimeMs * PURPLE_TIME_FACTOR) return 'purple';
   return 'green';

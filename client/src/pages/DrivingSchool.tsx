@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronLeft, Delete, Lock, RotateCcw } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { cn } from "@/lib/utils";
-import { playCarouselClick } from "@/lib/uiSound";
+import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import { useGameState } from "@/lib/gameLogic";
 import {
   DRIVING_SCHOOL_STAGES,
@@ -35,20 +35,63 @@ const CARD_LIT: Record<Exclude<CardColor, 'pending'>, string> = {
   red: 'bg-red-500 border-red-600',
 };
 
-function playTone(ok: boolean) {
+/** One distinct F1-flavored sound per grade: purple = DRS chirp, green = ding, red = penalty buzzer. */
+function playGradeSound(color: Exclude<CardColor, 'pending'>) {
   try {
-    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = ok ? 880 : 220;
-    osc.type = 'square';
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.12);
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+
+    if (color === 'purple') {
+      // Rising sweep with a blip on top — fastest-lap reward.
+      const sweep = ctx.createOscillator();
+      const sweepGain = ctx.createGain();
+      sweep.connect(sweepGain);
+      sweepGain.connect(ctx.destination);
+      sweep.type = 'sawtooth';
+      sweep.frequency.setValueAtTime(600, now);
+      sweep.frequency.exponentialRampToValueAtTime(1400, now + 0.18);
+      sweepGain.gain.setValueAtTime(0.12, now);
+      sweepGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      sweep.start(now);
+      sweep.stop(now + 0.2);
+
+      const blip = ctx.createOscillator();
+      const blipGain = ctx.createGain();
+      blip.connect(blipGain);
+      blipGain.connect(ctx.destination);
+      blip.type = 'sine';
+      blip.frequency.value = 1760;
+      blipGain.gain.setValueAtTime(0.0001, now);
+      blipGain.gain.setValueAtTime(0.15, now + 0.18);
+      blipGain.gain.exponentialRampToValueAtTime(0.01, now + 0.32);
+      blip.start(now + 0.18);
+      blip.stop(now + 0.32);
+    } else if (color === 'green') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+      osc.start(now);
+      osc.stop(now + 0.18);
+    } else {
+      // Two detuned low squares — stewards' buzzer.
+      for (const freq of [196, 208]) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'square';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      }
+    }
   } catch {
     /* ignore */
   }
@@ -129,7 +172,7 @@ export default function DrivingSchool() {
     const responseTime = Date.now() - questionStartRef.current;
     const correct = val === current.question.answer;
     const color = gradeFlashcard(correct, responseTime, current.question.botTime);
-    if (state.soundEnabled) playTone(correct);
+    if (state.soundEnabled) playGradeSound(color);
 
     const nextDeck = deck.map((card, i) =>
       i === currentIndex ? { ...card, color } : card,
