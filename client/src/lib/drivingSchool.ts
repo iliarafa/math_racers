@@ -26,6 +26,8 @@ export const DRIVING_SCHOOL_STAGES: DrivingSchoolStage[] = [
 ];
 
 export const CARDS_PER_STAGE = 20;
+/** A stage clears with a purple majority — no reds, and at least this many purples. */
+export const PURPLE_MAJORITY = 15;
 const PROGRESS_KEY = 'drivingSchoolHighestCleared';
 
 /**
@@ -67,6 +69,13 @@ export type FlashcardItem = {
   question: Question;
   color: CardColor;
 };
+
+/** Purple-majority clear: no red (or pending) cards and at least PURPLE_MAJORITY purples. */
+export function isStageCleared(deck: FlashcardItem[]): boolean {
+  const purple = deck.filter((c) => c.color === 'purple').length;
+  const blocked = deck.some((c) => c.color === 'red' || c.color === 'pending');
+  return !blocked && purple >= PURPLE_MAJORITY;
+}
 
 /** Build a 20-card deck for a stage (unique-ish displays). */
 export function buildStageDeck(stage: DrivingSchoolStage): FlashcardItem[] {

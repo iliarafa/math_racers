@@ -9,8 +9,10 @@ import { useGameState } from "@/lib/gameLogic";
 import {
   DRIVING_SCHOOL_STAGES,
   CARDS_PER_STAGE,
+  PURPLE_MAJORITY,
   buildStageDeck,
   gradeFlashcard,
+  isStageCleared,
   isStageUnlocked,
   loadHighestClearedStage,
   saveHighestClearedStage,
@@ -136,13 +138,8 @@ export default function DrivingSchool() {
       setQueuePos(nextPos);
       return;
     }
-    // End of pass — re-drill non-purple or clear
-    const redo = nextDeck
-      .map((card, i) => ({ card, i }))
-      .filter(({ card }) => card.color !== 'purple')
-      .map(({ i }) => i);
-
-    if (redo.length === 0) {
+    // End of pass — clear on a purple majority with no reds, else re-drill non-purple
+    if (isStageCleared(nextDeck)) {
       setDeck(nextDeck);
       if (stage) {
         saveHighestClearedStage(stage.id);
@@ -151,6 +148,11 @@ export default function DrivingSchool() {
       setScreen('cleared');
       return;
     }
+
+    const redo = nextDeck
+      .map((card, i) => ({ card, i }))
+      .filter(({ card }) => card.color !== 'purple')
+      .map(({ i }) => i);
 
     setDeck(nextDeck);
     setQueue(redo);
@@ -208,10 +210,14 @@ export default function DrivingSchool() {
             Stage {stage.id} cleared
           </div>
           <div className="text-4xl font-bold text-purple-500" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-            ALL PURPLE
+            {purpleCount === CARDS_PER_STAGE ? 'PERFECT' : 'STAGE CLEARED'}
           </div>
           <p className="text-muted-foreground text-center text-sm max-w-sm">
-            {stage.title} — every card was purple. Next stage unlocked.
+            {stage.title} —{' '}
+            {purpleCount === CARDS_PER_STAGE
+              ? 'every card was purple.'
+              : `${purpleCount}/${CARDS_PER_STAGE} purple.`}{' '}
+            Next stage unlocked.
           </p>
           <div className="grid gap-3 w-full max-w-xs">
             {stage.id < DRIVING_SCHOOL_STAGES.length && (
@@ -384,7 +390,7 @@ export default function DrivingSchool() {
             Flashcards
           </h2>
           <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">
-            All purple to clear · 20 cards
+            {PURPLE_MAJORITY}+ purple · no reds · 20 cards
           </p>
         </div>
 
