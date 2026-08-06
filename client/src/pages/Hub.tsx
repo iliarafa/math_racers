@@ -201,7 +201,7 @@ export default function Hub() {
       </div>
 
       {/* Title + back on drill-ins */}
-      <div className="relative z-10 mt-2 md:mt-8 mb-5 md:mb-8 flex justify-center items-center">
+      <div className="relative z-10 mt-2 md:mt-8 mb-5 md:mb-8 flex flex-col justify-center items-center">
         {view !== 'paddock' && (
           <button
             type="button"
@@ -209,7 +209,7 @@ export default function Hub() {
               if (state.soundEnabled) playCarouselClick();
               setView('paddock');
             }}
-            className="absolute left-4 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
+            className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
             aria-label="Back to paddock"
             data-testid="button-hub-back"
           >
@@ -222,6 +222,15 @@ export default function Hub() {
         >
           {title}
         </h2>
+        {view === 'school' && (
+          <p
+            className="mt-1.5 px-8 text-center text-[11px] uppercase tracking-[0.18em] text-white/45"
+            style={{ fontFamily: 'Oxanium, sans-serif', fontWeight: 300 }}
+            data-testid="school-caption"
+          >
+            Complete all sectors to receive your superlicence
+          </p>
+        )}
       </div>
 
       {/* Modes */}
