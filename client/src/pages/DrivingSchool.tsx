@@ -306,17 +306,18 @@ export default function DrivingSchool() {
                       animate={lit ? { scale: [1, 1.04, 1] } : { scale: 1 }}
                       transition={{ duration: 0.25 }}
                       className={cn(
-                        'aspect-[5/3] w-full max-h-full rounded-none border-2 shadow-lg flex flex-col items-center justify-center gap-2 transition-colors duration-150',
+                        'aspect-[5/3] w-full max-h-full [container-type:size] rounded-none border-2 shadow-lg flex flex-col items-center justify-center transition-colors duration-150',
                         lit ? cn(CARD_LIT[current.color as Exclude<CardColor, 'pending'>], 'text-white') : 'bg-card border-border',
                       )}
                       data-testid="flashcard-card"
                     >
-                      <div className="text-6xl sm:text-7xl font-bold tracking-tight" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                      {/* cqh-based sizes scale with the card on short viewports, capped at the full-size type */}
+                      <div className="text-[min(4.5rem,28cqh)] font-bold tracking-tight" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                         {current.question.display}
                       </div>
                       <div
                         className={cn(
-                          'text-5xl sm:text-6xl font-bold min-h-[1.2em]',
+                          'text-[min(3.75rem,23cqh)] font-bold min-h-[1.2em] my-[min(0.5rem,3cqh)]',
                           lit ? 'text-white/90' : 'text-muted-foreground/40',
                         )}
                         data-testid="flashcard-answer"
@@ -324,9 +325,9 @@ export default function DrivingSchool() {
                         {answer || '0'}
                       </div>
                       {/* Reserved label slot — identical height lit or idle so the card never resizes */}
-                      <div className="h-5 flex items-center justify-center">
+                      <div className="h-[min(1.25rem,10cqh)] flex items-center justify-center">
                         {lit && (
-                          <span className="text-[11px] font-bold uppercase tracking-[0.3em]" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                          <span className="text-[min(0.6875rem,7cqh)] font-bold uppercase tracking-[0.3em]" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                             {current.color}
                           </span>
                         )}
