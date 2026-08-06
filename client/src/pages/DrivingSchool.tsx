@@ -271,32 +271,28 @@ export default function DrivingSchool() {
 
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
             {/* The flashcard: fixed-size framed card; the whole face lights up with the grade */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={current.id}
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -24 }}
-                transition={{ duration: 0.12 }}
-                className="w-full h-full min-h-0 flex flex-col items-center justify-center"
+            <div className="w-full h-full min-h-0 flex flex-col items-center justify-center">
+              {/* Lap-style counter hugging the card; static — only the card animates */}
+              <div
+                className="w-full grid grid-cols-3 items-center text-xs uppercase tracking-wider text-muted-foreground mb-2"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
-                {/* Lap-style counter hugging the card (replaces the old progress-dots row) */}
-                <div
-                  className="w-full grid grid-cols-3 items-center text-xs uppercase tracking-wider text-muted-foreground mb-2"
-                  style={{ fontFamily: 'Oxanium, sans-serif' }}
-                >
-                  <span data-testid="flashcard-counter">Card {queuePos + 1}/{queue.length}</span>
-                  <span className="text-center" data-testid="flashcard-lap">Lap {lap}</span>
-                  <span className="text-right text-purple-500 font-bold" data-testid="flashcard-purple-count">
-                    {purpleCount}/{CARDS_PER_STAGE} purple
-                  </span>
-                </div>
+                <span data-testid="flashcard-counter">Card {queuePos + 1}/{queue.length}</span>
+                <span className="text-center" data-testid="flashcard-lap">Lap {lap}</span>
+                <span className="text-right text-purple-500 font-bold" data-testid="flashcard-purple-count">
+                  {purpleCount}/{CARDS_PER_STAGE} purple
+                </span>
+              </div>
+              <AnimatePresence mode="wait">
                 {(() => {
                   const lit = feedback !== 'idle' && current.color !== 'pending';
                   return (
                     <motion.div
-                      animate={lit ? { scale: [1, 1.04, 1] } : { scale: 1 }}
-                      transition={{ duration: 0.25 }}
+                      key={current.id}
+                      initial={{ opacity: 0, x: 24 }}
+                      animate={lit ? { opacity: 1, x: 0, scale: [1, 1.04, 1] } : { opacity: 1, x: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: -24 }}
+                      transition={{ x: { duration: 0.12 }, opacity: { duration: 0.12 }, scale: { duration: 0.25 } }}
                       className={cn(
                         'aspect-[5/3] w-full max-h-full [container-type:size] rounded-none border-2 shadow-lg flex flex-col items-center justify-center transition-colors duration-150',
                         lit ? cn(CARD_LIT[current.color as Exclude<CardColor, 'pending'>], 'text-white') : 'bg-card border-border',
@@ -327,8 +323,8 @@ export default function DrivingSchool() {
                     </motion.div>
                   );
                 })()}
-              </motion.div>
-            </AnimatePresence>
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Numpad */}
