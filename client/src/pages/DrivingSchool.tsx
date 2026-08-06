@@ -21,13 +21,6 @@ import {
 
 type Screen = 'stages' | 'session' | 'cleared';
 
-const COLOR_DOT: Record<CardColor, string> = {
-  pending: 'bg-white/20',
-  purple: 'bg-purple-500',
-  green: 'bg-green-500',
-  red: 'bg-red-500',
-};
-
 /** Lit card face while a graded answer flashes. */
 const CARD_LIT: Record<Exclude<CardColor, 'pending'>, string> = {
   purple: 'bg-purple-500 border-purple-600',
@@ -275,17 +268,6 @@ export default function DrivingSchool() {
               Exit
             </button>
             <span>{passLabel}</span>
-            <span className="text-purple-500 font-bold">{purpleCount}/{CARDS_PER_STAGE} purple</span>
-          </div>
-
-          {/* Progress dots */}
-          <div className="flex flex-wrap gap-1.5 justify-center py-3">
-            {deck.map((card) => (
-              <div
-                key={card.id}
-                className={cn('w-2.5 h-2.5 rounded-full', COLOR_DOT[card.color])}
-              />
-            ))}
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
@@ -299,6 +281,16 @@ export default function DrivingSchool() {
                 transition={{ duration: 0.12 }}
                 className="w-full h-full min-h-0 flex flex-col items-center justify-center"
               >
+                {/* Lap-style counter hugging the card (replaces the old progress-dots row) */}
+                <div
+                  className="w-full flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground mb-2"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                >
+                  <span data-testid="flashcard-counter">Card {queuePos + 1}/{queue.length}</span>
+                  <span className="text-purple-500 font-bold" data-testid="flashcard-purple-count">
+                    {purpleCount}/{CARDS_PER_STAGE} purple
+                  </span>
+                </div>
                 {(() => {
                   const lit = feedback !== 'idle' && current.color !== 'pending';
                   return (
