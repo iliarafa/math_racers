@@ -6,6 +6,7 @@ import { useGameState, RACE_LENGTH } from "@/lib/gameLogic";
 import { usePurchase } from "@/hooks/use-purchase";
 import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
+import { getLicenceStatus } from "@/lib/drivingSchoolLicence";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 
 const hubCardStyle: React.CSSProperties = {
@@ -49,6 +50,8 @@ interface HubCardProps {
   title: string;
   subtitle: string;
   note?: string;
+  /** Small pill on the title row (licence path step / completed marker). */
+  badge?: { label: string; color: string };
   testId: string;
   soundEnabled: boolean;
   onClick?: () => void;
@@ -56,7 +59,7 @@ interface HubCardProps {
   titleStyle?: React.CSSProperties;
 }
 
-function HubCard({ href, title, subtitle, note, testId, soundEnabled, onClick, style, titleStyle }: HubCardProps) {
+function HubCard({ href, title, subtitle, note, badge, testId, soundEnabled, onClick, style, titleStyle }: HubCardProps) {
   const handleClick = () => {
     if (soundEnabled) playCarouselClick();
     onClick?.();
@@ -70,7 +73,27 @@ function HubCard({ href, title, subtitle, note, testId, soundEnabled, onClick, s
       data-testid={testId}
       type="button"
     >
-      <span className="block" style={{ ...hubTitleStyle, ...titleStyle }}>{title}</span>
+      <span className="flex items-center justify-between gap-3">
+        <span className="block" style={{ ...hubTitleStyle, ...titleStyle }}>{title}</span>
+        {badge && (
+          <span
+            style={{
+              fontFamily: 'Oxanium, sans-serif',
+              fontSize: '0.65rem',
+              fontWeight: 'bold',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: badge.color,
+              border: `1px solid ${badge.color}`,
+              borderRadius: '6px',
+              padding: '2px 8px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {badge.label}
+          </span>
+        )}
+      </span>
       <span className="block" style={hubSubStyle}>{subtitle}</span>
       {note && (
         <span className="block" style={{ ...hubSubStyle, fontSize: '0.65rem', color: '#999', marginTop: '6px' }}>
@@ -102,6 +125,15 @@ export default function Hub() {
 
   const title =
     view === 'weekend' ? 'Race Weekend' : view === 'school' ? 'Driving School' : 'Paddock';
+
+  // Licence path: flashcards → reaction → lane racer (soft gating — nothing locked).
+  const licence = getLicenceStatus();
+  const licenceSteps = [licence.flashcards, licence.reaction, licence.laneRacer];
+  const currentStep = licenceSteps.findIndex((done) => !done);
+  const stepBadge = (i: number): HubCardProps['badge'] =>
+    licenceSteps[i]
+      ? { label: '✓ done', color: '#19c37d' }
+      : { label: `step ${i + 1}`, color: i === currentStep ? '#ffcc00' : 'rgba(255,255,255,0.4)' };
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
@@ -206,6 +238,7 @@ export default function Hub() {
               <HubCard
                 title="DRIVING SCHOOL"
                 subtitle="FLASHCARDS · REACTION · ARCADE"
+                badge={licence.complete ? { label: 'completed', color: '#19c37d' } : undefined}
                 testId="link-driving-school"
                 soundEnabled={state.soundEnabled}
                 onClick={() => setView('school')}
@@ -248,6 +281,7 @@ export default function Hub() {
                 href="/driving-school"
                 title="FLASHCARDS"
                 subtitle="10 GATED STAGES"
+                badge={stepBadge(0)}
                 testId="link-flashcards"
                 soundEnabled={state.soundEnabled}
               />
@@ -255,7 +289,8 @@ export default function Hub() {
               <HubCard
                 href="/reaction"
                 title="REACTION TEST"
-                subtitle="F1 START LIGHTS"
+                subtitle="F1 START LIGHTS · UNDER 0.33S"
+                badge={stepBadge(1)}
                 testId="link-reaction-test"
                 soundEnabled={state.soundEnabled}
               />
@@ -263,7 +298,8 @@ export default function Hub() {
               <HubCard
                 href="/lane-racer"
                 title="LANE RACER"
-                subtitle="ARCADE MODE"
+                subtitle="BEAT THE RIVAL · FULL RACE"
+                badge={stepBadge(2)}
                 testId="link-lane-racer"
                 soundEnabled={state.soundEnabled}
               />
