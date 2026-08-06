@@ -52,7 +52,7 @@ Two-level structure (see the comment at `Hub.tsx:94`):
 - **Story arc with soft gating** (nothing locked): 1. clear all 10 flashcard stages → 2. Reaction Test best **< 0.33s** (`REACTION_LICENCE_MS = 330`) → 3. **P1 in any completed Lane Racer race** (finish time under the rival target).
 - localStorage keys: `reactionBestMs` (min kept, written by `ReactionTest.tsx`), `laneRacerP1Win` (`'1'`, written by the finish effect in `LaneRacer.tsx`); flashcards derive from `drivingSchoolHighestCleared >= 10`. `getLicenceStatus()` derives everything — no stored aggregate.
 - Hub: school submenu cards carry step badges (✓ done / current yellow / upcoming dim); the DRIVING SCHOOL card shows a green COMPLETED pill when all three are done.
-- **Visible rival car** (2D + 3D): the live gap (`rivalProg − playerProgress`) feeds `setRivalDelta` on the engine ref each frame; the rival renders ahead/alongside/hidden-when-passed. 2D: sprite under tokens (`laneRacerEngine.ts`); 3D: `AnimatedRivalCar` in `LaneRacerScene.tsx` with the rival livery.
+- **Rival representation: progress-strip marker only.** An in-scene rival car (2D+3D) was tried (`647fd45`) and reverted (`7574f9c`) — its "drift to the lane farthest from the player" rule produced an endless distracting lane-swap dance. The rival lives on the progress strip (marker car, P1/P2, strip color) as before; the licence P1 win detection is independent and unaffected.
 
 ---
 
