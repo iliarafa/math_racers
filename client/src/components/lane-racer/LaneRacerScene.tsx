@@ -600,36 +600,6 @@ function AnimatedPlayerCar({ controller, teamId }: { controller: LaneRacerContro
   );
 }
 
-/** Rival car driven by the live progress gap: ahead down the road, alongside when close, hidden once passed. */
-function AnimatedRivalCar({ controller, teamId }: { controller: LaneRacerController3D; teamId: TeamId }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const rivalXRef = useRef(laneXForIndex(2));
-
-  useFrame((_, dt) => {
-    const group = groupRef.current;
-    if (!group) return;
-    const rs = controller.renderState;
-    const delta = rs.rivalDelta;
-    // Hidden when unset or clearly passed (it would sit behind the chase cam).
-    if (delta === null || delta < -0.045) {
-      group.visible = false;
-      return;
-    }
-    const z = THREE.MathUtils.clamp(1.2 - delta * 55, -46, 3.4);
-    // Drift toward the lane farthest from the player so close racing reads side-by-side.
-    const target = rs.carX > 0.1 ? laneXForIndex(0) : rs.carX < -0.1 ? laneXForIndex(2) : rivalXRef.current;
-    rivalXRef.current += (target - rivalXRef.current) * Math.min(1, dt * 2.2);
-    group.visible = true;
-    group.position.set(rivalXRef.current, 0, z);
-  });
-
-  return (
-    <group ref={groupRef} visible={false}>
-      <PlayerCar teamId={teamId} />
-    </group>
-  );
-}
-
 function Particles({ controller }: { controller: LaneRacerController3D }) {
   const meshRefs = useRef<THREE.Mesh[]>([]);
 
@@ -664,10 +634,9 @@ function Particles({ controller }: { controller: LaneRacerController3D }) {
 interface LaneRacerSceneProps {
   controller: LaneRacerController3D;
   teamId: TeamId;
-  rivalTeamId?: TeamId;
 }
 
-export function LaneRacerScene({ controller, teamId, rivalTeamId }: LaneRacerSceneProps) {
+export function LaneRacerScene({ controller, teamId }: LaneRacerSceneProps) {
   return (
     <>
       <color attach="background" args={[FOG_COLOR]} />
@@ -681,7 +650,6 @@ export function LaneRacerScene({ controller, teamId, rivalTeamId }: LaneRacerSce
       <Road controller={controller} />
 
       <AnimatedTokens controller={controller} />
-      {rivalTeamId && <AnimatedRivalCar controller={controller} teamId={rivalTeamId} />}
       <AnimatedPlayerCar controller={controller} teamId={teamId} />
       <Particles controller={controller} />
     </>
@@ -691,9 +659,8 @@ export function LaneRacerScene({ controller, teamId, rivalTeamId }: LaneRacerSce
 export function LaneRacerSceneKeyed({
   controller,
   teamId,
-  rivalTeamId,
   structureVersion,
 }: LaneRacerSceneProps & { structureVersion: number }) {
   void structureVersion;
-  return <LaneRacerScene controller={controller} teamId={teamId} rivalTeamId={rivalTeamId} />;
+  return <LaneRacerScene controller={controller} teamId={teamId} />;
 }

@@ -45,8 +45,6 @@ export interface LaneRacerRenderState {
   shakeMagnitude: number;
   carPunchScale: number;
   particles: Array<{ x: number; y: number; z: number; life: number; maxLife: number; color: string }>;
-  /** Rival progress lead (rivalProg − playerProgress); null hides the rival car. */
-  rivalDelta: number | null;
 }
 
 /** Early: flowing continuous X, flat (no lean). Late slide keeps lean. */
@@ -135,7 +133,6 @@ export class LaneRacerController3D {
     shakeMagnitude: 0,
     carPunchScale: 1,
     particles: [],
-    rivalDelta: null,
   };
 
   constructor(
@@ -152,10 +149,6 @@ export class LaneRacerController3D {
 
   setStructureChangeListener(listener: (() => void) | null) {
     this.onStructureChange = listener;
-  }
-
-  setRivalDelta(delta: number | null) {
-    this.renderState.rivalDelta = delta;
   }
 
   /** Apply series pace on next-question boundary (Adaptive promote/demote). Snaps to new base. */
@@ -438,5 +431,4 @@ export type LaneRacerEngineRef = {
   destroy(): void;
   setSafeBottomInset(px: number): void;
   setPaceDifficulty(difficulty: Difficulty): void;
-  setRivalDelta(delta: number | null): void;
 };
