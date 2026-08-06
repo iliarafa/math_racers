@@ -369,7 +369,6 @@ export default function Hub() {
                         href={row.href}
                         title={row.title}
                         subtitle={`SECTOR ${i + 1} · ${row.goal}`}
-                        badge={nodeState === 'current' ? { label: 'you are here', color: '#ffcc00' } : undefined}
                         testId={row.testId}
                         soundEnabled={state.soundEnabled}
                         style={nodeState === 'current' ? { borderColor: '#ffcc00' } : undefined}
