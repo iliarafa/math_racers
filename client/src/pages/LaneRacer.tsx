@@ -23,6 +23,7 @@ import type { Difficulty, DynamicDifficultyState, DifficultyMode, DifficultyDrum
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { operationRow, levelRow } from "@/components/setup/setupRows";
 import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
+import { hasLaneRacerWin, saveLaneRacerWin } from "@/lib/drivingSchoolLicence";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
 import { paceDifficultyForSpeed } from "@/lib/laneRacerHud";
@@ -530,6 +531,22 @@ export default function LaneRacer() {
     () => estimateRivalRaceTimeMs(raceLength, paceDifficulty, selectedOperation),
     [raceLength, paceDifficulty, selectedOperation],
   );
+
+  // Licence path: a completed full race finished ahead of the rival counts as the P1 win.
+  const [licenceWin, setLicenceWin] = useState<null | 'new' | 'repeat'>(null);
+  useEffect(() => {
+    if (gameStatus !== 'finished') {
+      setLicenceWin(null);
+      return;
+    }
+    if (licenceWin !== null) return;
+    const completed = raceLength > 0 && questionNum >= raceLength;
+    if (completed && totalTime < rivalTargetMs) {
+      const already = hasLaneRacerWin();
+      saveLaneRacerWin();
+      setLicenceWin(already ? 'repeat' : 'new');
+    }
+  }, [gameStatus, licenceWin, raceLength, questionNum, totalTime, rivalTargetMs]);
   const playerProgress = raceLength > 0 ? Math.min(1, questionNum / raceLength) : 0;
   const rivalProg = rivalProgress(elapsedMs, rivalTargetMs);
   const position = rivalPosition(playerProgress, rivalProg);
@@ -766,6 +783,16 @@ export default function LaneRacer() {
               <div className="text-xl font-medium text-white/80">
                 {accuracy === 100 ? 'Perfect Race' : accuracy >= 80 ? 'Podium Finish' : accuracy >= 50 ? 'Points Finish' : 'Did Not Score'}
               </div>
+              {licenceWin && (
+                <div className="text-sm font-bold uppercase tracking-widest text-green-400" data-testid="lane-racer-p1">
+                  P1 · Beat the rival
+                </div>
+              )}
+              {licenceWin === 'new' && (
+                <div className="text-xs uppercase tracking-wider text-purple-400" data-testid="lane-racer-licence-note">
+                  Driving School licence: final race won
+                </div>
+              )}
             </div>
 
             <div className="py-6 space-y-4">
