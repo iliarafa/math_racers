@@ -102,7 +102,7 @@ export default function DrivingSchool() {
   const [queuePos, setQueuePos] = useState(0);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
-  const [passLabel, setPassLabel] = useState<'PASS 1' | 'RE-DRILL'>('PASS 1');
+  const [lap, setLap] = useState(1);
   const questionStartRef = useRef(Date.now());
 
   const currentIndex = queue[queuePos];
@@ -125,7 +125,7 @@ export default function DrivingSchool() {
     setDeck(nextDeck);
     setQueue(nextDeck.map((_, i) => i));
     setQueuePos(0);
-    setPassLabel('PASS 1');
+    setLap(1);
     setScreen('session');
   };
 
@@ -155,7 +155,7 @@ export default function DrivingSchool() {
     setDeck(nextDeck);
     setQueue(redo);
     setQueuePos(0);
-    setPassLabel('RE-DRILL');
+    setLap((l) => l + 1);
   };
 
   const submitAnswer = () => {
@@ -267,7 +267,6 @@ export default function DrivingSchool() {
             >
               Exit
             </button>
-            <span>{passLabel}</span>
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
@@ -283,11 +282,12 @@ export default function DrivingSchool() {
               >
                 {/* Lap-style counter hugging the card (replaces the old progress-dots row) */}
                 <div
-                  className="w-full flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground mb-2"
+                  className="w-full grid grid-cols-3 items-center text-xs uppercase tracking-wider text-muted-foreground mb-2"
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
                 >
                   <span data-testid="flashcard-counter">Card {queuePos + 1}/{queue.length}</span>
-                  <span className="text-purple-500 font-bold" data-testid="flashcard-purple-count">
+                  <span className="text-center" data-testid="flashcard-lap">Lap {lap}</span>
+                  <span className="text-right text-purple-500 font-bold" data-testid="flashcard-purple-count">
                     {purpleCount}/{CARDS_PER_STAGE} purple
                   </span>
                 </div>
