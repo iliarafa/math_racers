@@ -109,6 +109,39 @@ function HubCard({ href, title, subtitle, note, badge, testId, soundEnabled, onC
   return button;
 }
 
+/** Sector station on the school track rail: done ✓ / current number / upcoming dashed. */
+function TrackNode({ state, num }: { state: 'done' | 'current' | 'upcoming'; num: number }) {
+  const base: React.CSSProperties = {
+    width: 32,
+    height: 32,
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'Oxanium, sans-serif',
+    fontSize: '0.85rem',
+    fontWeight: 'bold',
+  };
+  if (state === 'done') {
+    return <div style={{ ...base, backgroundColor: '#a855f7', color: '#ffffff' }}>✓</div>;
+  }
+  if (state === 'current') {
+    return <div style={{ ...base, backgroundColor: '#ffcc00', color: '#141216' }}>{num}</div>;
+  }
+  return (
+    <div
+      style={{
+        ...base,
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        border: '2px dashed rgba(255,255,255,0.35)',
+        color: 'rgba(255,255,255,0.5)',
+      }}
+    >
+      {num}
+    </div>
+  );
+}
+
 type HubView = 'paddock' | 'weekend' | 'school';
 
 /**
@@ -130,10 +163,6 @@ export default function Hub() {
   const licence = getLicenceStatus();
   const licenceSteps = [licence.flashcards, licence.reaction, licence.laneRacer];
   const currentStep = licenceSteps.findIndex((done) => !done);
-  const stepBadge = (i: number): HubCardProps['badge'] =>
-    licenceSteps[i]
-      ? { label: '✓ done', color: '#19c37d' }
-      : { label: `step ${i + 1}`, color: i === currentStep ? '#ffcc00' : 'rgba(255,255,255,0.4)' };
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
@@ -276,34 +305,83 @@ export default function Hub() {
           )}
 
           {view === 'school' && (
-            <>
-              <HubCard
-                href="/driving-school"
-                title="FLASHCARDS"
-                subtitle="10 GATED STAGES"
-                badge={stepBadge(0)}
-                testId="link-flashcards"
-                soundEnabled={state.soundEnabled}
+            <div className="relative">
+              {/* Track rail: ribbon + dashed centerline, from sector 1 down to the finish flag */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 14,
+                  top: 24,
+                  bottom: 16,
+                  width: 12,
+                  backgroundColor: 'rgba(0,0,0,0.45)',
+                  borderRadius: 6,
+                }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 19,
+                  top: 24,
+                  bottom: 16,
+                  width: 0,
+                  borderLeft: '2px dashed rgba(255,255,255,0.35)',
+                }}
               />
 
-              <HubCard
-                href="/reaction"
-                title="REACTION TEST"
-                subtitle="F1 START LIGHTS · UNDER 0.33S"
-                badge={stepBadge(1)}
-                testId="link-reaction-test"
-                soundEnabled={state.soundEnabled}
-              />
+              {(
+                [
+                  { href: '/driving-school', title: 'FLASHCARDS', goal: '10 STAGES', testId: 'link-flashcards' },
+                  { href: '/reaction', title: 'REACTION TEST', goal: 'UNDER 0.33S', testId: 'link-reaction-test' },
+                  { href: '/lane-racer', title: 'LANE RACER', goal: 'BEAT THE RIVAL', testId: 'link-lane-racer' },
+                ] as const
+              ).map((row, i) => {
+                const nodeState = licenceSteps[i] ? 'done' : i === currentStep ? 'current' : 'upcoming';
+                return (
+                  <div key={row.href} className="relative flex items-center gap-3 mb-4">
+                    <div className="w-10 flex justify-center shrink-0 z-[1]">
+                      <TrackNode state={nodeState} num={i + 1} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <HubCard
+                        href={row.href}
+                        title={row.title}
+                        subtitle={`SECTOR ${i + 1} · ${row.goal}`}
+                        badge={nodeState === 'current' ? { label: 'you are here', color: '#ffcc00' } : undefined}
+                        testId={row.testId}
+                        soundEnabled={state.soundEnabled}
+                        style={nodeState === 'current' ? { borderColor: '#ffcc00' } : undefined}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
 
-              <HubCard
-                href="/lane-racer"
-                title="LANE RACER"
-                subtitle="BEAT THE RIVAL · FULL RACE"
-                badge={stepBadge(2)}
-                testId="link-lane-racer"
-                soundEnabled={state.soundEnabled}
-              />
-            </>
+              {/* Finish line */}
+              <div className="relative flex items-center gap-3">
+                <div className="w-10 flex justify-center shrink-0 z-[1]">
+                  <div
+                    style={{
+                      width: 26,
+                      height: 26,
+                      borderRadius: 6,
+                      background: 'repeating-conic-gradient(#ffffff 0% 25%, #141216 0% 50%) 0 0 / 13px 13px',
+                    }}
+                  />
+                </div>
+                <span
+                  className="text-xs uppercase tracking-[0.14em]"
+                  style={{
+                    fontFamily: 'Oxanium, sans-serif',
+                    color: licence.complete ? '#19c37d' : 'rgba(255,255,255,0.5)',
+                    fontWeight: licence.complete ? 'bold' : 'normal',
+                  }}
+                  data-testid="school-finish-label"
+                >
+                  {licence.complete ? 'School completed' : 'Finish line'}
+                </span>
+              </div>
+            </div>
           )}
         </div>
       </div>
