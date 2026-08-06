@@ -57,6 +57,8 @@ const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
 function PersistentVideo() {
   const [location] = useLocation();
   const [isRacing, setIsRacing] = useState(false);
+  // Driving School view (inside /hub) keeps the black backdrop but no footage.
+  const [isSchoolView, setIsSchoolView] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -65,13 +67,23 @@ function PersistentVideo() {
     return () => window.removeEventListener('racingStateChange', handler);
   }, []);
 
+  useEffect(() => {
+    const handler = (e: Event) => setIsSchoolView((e as CustomEvent).detail.school);
+    window.addEventListener('hubSchoolViewChange', handler);
+    return () => window.removeEventListener('hubSchoolViewChange', handler);
+  }, []);
+
   const visible = VIDEO_ROUTES.includes(location) && !isRacing;
+  const videoPlaying = visible && !isSchoolView;
 
   useEffect(() => {
-    if (visible && videoRef.current) {
+    if (!videoRef.current) return;
+    if (videoPlaying) {
       videoRef.current.play().catch(() => {});
+    } else {
+      videoRef.current.pause();
     }
-  }, [visible]);
+  }, [videoPlaying]);
 
   return (
     <div className={`fixed inset-0 z-0 bg-black ${visible ? '' : 'hidden'}`}>
@@ -81,7 +93,7 @@ function PersistentVideo() {
         loop
         muted
         playsInline
-        className="w-full h-full object-cover opacity-40"
+        className={`w-full h-full object-cover opacity-40 ${videoPlaying ? '' : 'hidden'}`}
       >
         <source src={backgroundVideo} type="video/mp4" />
       </video>

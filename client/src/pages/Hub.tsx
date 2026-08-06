@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
@@ -159,6 +159,14 @@ export default function Hub() {
   const title =
     view === 'weekend' ? 'Race Weekend' : view === 'school' ? 'Driving School' : 'Paddock';
 
+  // Driving School drops the background video (App.tsx PersistentVideo listens).
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('hubSchoolViewChange', { detail: { school: view === 'school' } }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('hubSchoolViewChange', { detail: { school: false } }));
+    };
+  }, [view]);
+
   // Licence path: flashcards → reaction → lane racer (soft gating — nothing locked).
   const licence = getLicenceStatus();
   const licenceSteps = [licence.flashcards, licence.reaction, licence.laneRacer];
@@ -314,7 +322,7 @@ export default function Hub() {
                   top: 24,
                   bottom: 16,
                   width: 12,
-                  backgroundColor: 'rgba(0,0,0,0.45)',
+                  backgroundColor: 'rgba(255,255,255,0.12)',
                   borderRadius: 6,
                 }}
               />
