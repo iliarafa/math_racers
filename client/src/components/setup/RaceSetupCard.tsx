@@ -159,24 +159,126 @@ export function RaceSetupCard({
           </div>
         )}
 
-        <div className={mapImageSrc ? 'mt-0' : 'mt-4'}>
-          {rows.map((spec) => (
-            <SetupRow
-              key={spec.id}
-              /* The card owns the click so every row sounds identical and callers can't forget. */
-              spec={{ ...spec, onSelect: (id) => { click(); spec.onSelect(id); } }}
-            />
+        {/* Track path: every setting is a numbered station on the rail; the start button is THE GRID. */}
+        <div className={cn('relative', mapImageSrc ? 'mt-0' : 'mt-4')}>
+          {/* Rail: ribbon + dashed centerline, from station 1 down to the GRID node */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 8,
+              top: 14,
+              bottom: 30,
+              width: 8,
+              backgroundColor: 'rgba(255,255,255,0.12)',
+              borderRadius: 4,
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              left: 11,
+              top: 14,
+              bottom: 30,
+              width: 0,
+              borderLeft: '2px dashed rgba(255,255,255,0.3)',
+            }}
+          />
+
+          {rows.map((spec, i) => (
+            <div key={spec.id} className="relative flex items-center gap-2.5 mb-2">
+              <div className="w-6 flex justify-center shrink-0 z-[1]">
+                <div
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(0,0,0,0.35)',
+                    border: '2px solid rgba(255,255,255,0.25)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'Oxanium, sans-serif',
+                    fontSize: '0.7rem',
+                    fontWeight: 'bold',
+                    color: 'rgba(255,255,255,0.8)',
+                  }}
+                >
+                  {i + 1}
+                </div>
+              </div>
+              <div
+                className="flex-1 min-w-0 rounded-xl px-3"
+                style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+              >
+                <SetupRow
+                  /* The card owns the click so every row sounds identical and callers can't forget. */
+                  spec={{ ...spec, onSelect: (id) => { click(); spec.onSelect(id); } }}
+                  bare
+                />
+              </div>
+            </div>
           ))}
 
           {readouts?.map((r) => (
-            <div
-              key={r.label}
-              className="flex items-center justify-between gap-3 py-3 border-b"
-              style={{ borderColor: 'rgba(255,255,255,0.07)' }}
-              data-testid={`setup-readout-${r.label.toLowerCase()}`}
-            >
-              <span
-                className="uppercase"
+            <div key={r.label} className="relative flex items-center gap-2.5 mb-2">
+              <div className="w-6 flex justify-center shrink-0 z-[1]">
+                <div
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: 'rgba(255,255,255,0.3)',
+                  }}
+                />
+              </div>
+              <div
+                className="flex-1 min-w-0 rounded-xl px-3 py-3 flex items-center justify-between gap-3"
+                style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                data-testid={`setup-readout-${r.label.toLowerCase()}`}
+              >
+                <span
+                  className="uppercase"
+                  style={{
+                    fontFamily: 'Oxanium, sans-serif',
+                    fontSize: '9px',
+                    letterSpacing: '0.24em',
+                    color: 'rgba(255,255,255,0.4)',
+                  }}
+                >
+                  {r.label}
+                </span>
+                <span
+                  className="font-bold text-sm md:text-base uppercase tracking-wider"
+                  style={{ fontFamily: 'Oxanium, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+                >
+                  {r.value}
+                </span>
+              </div>
+            </div>
+          ))}
+
+          {children && (
+            <div className="relative flex gap-2.5 mb-2">
+              <div className="w-6 shrink-0" />
+              <div className="flex-1 min-w-0">{children}</div>
+            </div>
+          )}
+
+          {/* THE GRID — the finish of the setup path */}
+          <div className="relative flex items-center gap-2.5 mt-3">
+            <div className="w-6 flex justify-center shrink-0 z-[1]">
+              <div
+                style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 5,
+                  background: 'repeating-conic-gradient(#ffffff 0% 25%, #141216 0% 50%) 0 0 / 11px 11px',
+                }}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div
+                className="uppercase mb-1"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
                   fontSize: '9px',
@@ -184,41 +286,32 @@ export function RaceSetupCard({
                   color: 'rgba(255,255,255,0.4)',
                 }}
               >
-                {r.label}
-              </span>
-              <span
-                className="font-bold text-sm md:text-base uppercase tracking-wider"
-                style={{ fontFamily: 'Oxanium, sans-serif', color: 'rgba(255,255,255,0.5)' }}
+                The grid
+              </div>
+              <motion.button
+                whileHover={!start.disabled ? { scale: 1.02 } : undefined}
+                whileTap={!start.disabled ? { scale: 0.98 } : undefined}
+                onClick={() => {
+                  if (start.disabled) return;
+                  click();
+                  start.onStart();
+                }}
+                className={cn(
+                  'w-full py-3.5 rounded-xl font-bold text-base md:text-lg uppercase tracking-wider text-white',
+                  start.disabled && 'opacity-40 cursor-not-allowed',
+                )}
+                style={{
+                  fontFamily: 'Oxanium, sans-serif',
+                  backgroundColor: start.disabled ? '#999999' : TONE_COLORS[start.tone],
+                  animation: start.disabled ? 'none' : `pulse-${start.tone} 2s infinite`,
+                }}
+                data-testid="button-start-race"
               >
-                {r.value}
-              </span>
+                {start.label}
+              </motion.button>
             </div>
-          ))}
+          </div>
         </div>
-
-        {children}
-
-        <motion.button
-          whileHover={!start.disabled ? { scale: 1.02 } : undefined}
-          whileTap={!start.disabled ? { scale: 0.98 } : undefined}
-          onClick={() => {
-            if (start.disabled) return;
-            click();
-            start.onStart();
-          }}
-          className={cn(
-            'mt-4 w-full py-3.5 rounded-xl font-bold text-base md:text-lg uppercase tracking-wider text-white',
-            start.disabled && 'opacity-40 cursor-not-allowed',
-          )}
-          style={{
-            fontFamily: 'Oxanium, sans-serif',
-            backgroundColor: start.disabled ? '#999999' : TONE_COLORS[start.tone],
-            animation: start.disabled ? 'none' : `pulse-${start.tone} 2s infinite`,
-          }}
-          data-testid="button-start-race"
-        >
-          {start.label}
-        </motion.button>
 
         {onBack && (
           <button

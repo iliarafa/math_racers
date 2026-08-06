@@ -27,6 +27,8 @@ interface SetupRowProps {
    * left alone, so the level rungs keep their series colours on either surface.
    */
   variant?: 'dark' | 'light';
+  /** Skip the border-b frame — for callers that provide their own (the setup path stations). */
+  bare?: boolean;
 }
 
 const LABEL_STYLE: React.CSSProperties = {
@@ -49,7 +51,7 @@ const LABEL_STYLE: React.CSSProperties = {
  * (no tap, no cursor, no click sound). This is how the TRACK row appears while the menu is
  * pinned to one circuit — see `LOCK_MENU_TO_CURRENT_GP` in `circuitMenuArt.ts`.
  */
-export function SetupRow({ spec, variant = 'dark' }: SetupRowProps) {
+export function SetupRow({ spec, variant = 'dark', bare = false }: SetupRowProps) {
   const rawIndex = spec.options.findIndex((o) => o.id === spec.selectedId);
   const index = rawIndex >= 0 ? rawIndex : 0;
   const selected = spec.options[index] ?? spec.options[0];
@@ -99,7 +101,7 @@ export function SetupRow({ spec, variant = 'dark' }: SetupRowProps) {
   const rowClass = 'w-full flex items-center justify-between gap-3 py-3';
 
   return (
-    <div className="border-b" style={{ borderColor: dividerColor }}>
+    <div className={bare ? undefined : 'border-b'} style={bare ? undefined : { borderColor: dividerColor }}>
       {interactive ? (
         <button
           type="button"

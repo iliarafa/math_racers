@@ -6,7 +6,7 @@ Handoff summary of the latest work plus standing context future sessions will ne
 
 1. ~~**Flashcards difficulty**~~ — DONE 2026-08-06 (`4f2ccbb`): purple-majority clear (≥15/20 purple, no reds; greens allowed). PERFECT screen for 20/20.
 2. **Flashcards polish** — see if there is room for more polish in the flashcards mode.
-3. **Setup screen UIs** — update the LANE RACER and GRAND PRIX setup screens.
+3. ~~**Setup screen UIs**~~ — DONE 2026-08-06: all four setup screens (FP/GP/Lane Racer/Multiplayer) share the track-path style — numbered stations on a rail inside `RaceSetupCard`, readouts as dot stations, start button as the checkered THE GRID station. Rows keep tap-to-cycle (`SetupRow` gained a `bare` prop).
 4. **Leaderboards scope (debate)** — consider limiting leaderboards to only the modes in the RACE WEEKEND menu.
 5. **Quick Race UI** — push the sector grid down closer to the numpad and make the operation a bit bigger. (A first attempt at bigger-operation/smaller-grid was reverted — this asks for repositioning the grid *down*, not shrinking it.)
 6. ~~**Flashcards sounds**~~ — DONE 2026-08-06 (`3087b45`): `playGradeSound` in `DrivingSchool.tsx` gives each grade an F1-themed sound (purple = rising DRS chirp + blip, green = triangle ding, red = detuned penalty buzzer), using the shared `getAudioContext()` from `uiSound.ts`.
