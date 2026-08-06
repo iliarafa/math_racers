@@ -4,7 +4,7 @@ Handoff summary of the latest work plus standing context future sessions will ne
 
 ## Open tasks (next session)
 
-1. **Flashcards difficulty** — maybe "all purple to clear" is too strict; consider a softer clear condition.
+1. ~~**Flashcards difficulty**~~ — DONE 2026-08-06 (`4f2ccbb`): purple-majority clear (≥15/20 purple, no reds; greens allowed). PERFECT screen for 20/20.
 2. **Flashcards polish** — see if there is room for more polish in the flashcards mode.
 3. **Setup screen UIs** — update the LANE RACER and GRAND PRIX setup screens.
 4. **Leaderboards scope (debate)** — consider limiting leaderboards to only the modes in the RACE WEEKEND menu.
@@ -41,11 +41,18 @@ Two-level structure (see the comment at `Hub.tsx:94`):
 
 ### Driving School (`client/src/pages/DrivingSchool.tsx`, `client/src/lib/drivingSchool.ts`)
 - **10 gated stages** (`DRIVING_SCHOOL_STAGES`): Addition →10/→20, Subtraction →10/→20, Multiplication →5/→8/→10, Division →5/→8/→10. Stage N+1 unlocks when N is cleared.
-- **20 cards per stage** (`CARDS_PER_STAGE`). Cards grade purple (correct within `botTime × PURPLE_TIME_FACTOR`), green (correct but slower), red (wrong). Non-purple cards are re-queued; **a stage clears only when every card is purple**.
+- **20 cards per stage** (`CARDS_PER_STAGE`). Cards grade purple (correct within `botTime × PURPLE_TIME_FACTOR`), green (correct but slower), red (wrong). **Clear rule (2026-08-06): purple majority — ≥15/20 purple (`PURPLE_MAJORITY`) and no reds; greens allowed** (`isStageCleared`). Below threshold or with reds, all non-purple cards re-drill (each re-drill pass is a new LAP). Cleared screen: PERFECT at 20/20 purple, STAGE CLEARED + tally otherwise.
 - `PURPLE_TIME_FACTOR = 1.0` (loosened in `d20252a`).
 - Progress persists in localStorage key `drivingSchoolHighestCleared`.
 - Questions come from `generateQuestion(...)` with a per-stage operation override.
+- Session UI (2026-08-06): landscape 5:3 card spanning the column, container-query type scaling, per-grade F1 sounds (`playGradeSound`), CARD n/m · LAP n · purple-tally counter row (dots removed), chevron-only exit.
 - Design spec: `docs/superpowers/specs/2026-08-05-driving-school-design.md`; plan: `docs/superpowers/plans/2026-08-05-driving-school.md`.
+
+### Driving School licence path (2026-08-06, `client/src/lib/drivingSchoolLicence.ts`)
+- **Story arc with soft gating** (nothing locked): 1. clear all 10 flashcard stages → 2. Reaction Test best **< 0.33s** (`REACTION_LICENCE_MS = 330`) → 3. **P1 in any completed Lane Racer race** (finish time under the rival target).
+- localStorage keys: `reactionBestMs` (min kept, written by `ReactionTest.tsx`), `laneRacerP1Win` (`'1'`, written by the finish effect in `LaneRacer.tsx`); flashcards derive from `drivingSchoolHighestCleared >= 10`. `getLicenceStatus()` derives everything — no stored aggregate.
+- Hub: school submenu cards carry step badges (✓ done / current yellow / upcoming dim); the DRIVING SCHOOL card shows a green COMPLETED pill when all three are done.
+- **Visible rival car** (2D + 3D): the live gap (`rivalProg − playerProgress`) feeds `setRivalDelta` on the engine ref each frame; the rival renders ahead/alongside/hidden-when-passed. 2D: sprite under tokens (`laneRacerEngine.ts`); 3D: `AnimatedRivalCar` in `LaneRacerScene.tsx` with the rival livery.
 
 ---
 
