@@ -9,6 +9,7 @@ import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { getLicenceStatus } from "@/lib/drivingSchoolLicence";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import logoWhiteImage from "@assets/logo-white.svg";
+import schoolBgImage from "@assets/driving-school-bg.jpg";
 
 const hubCardStyle: React.CSSProperties = {
   backgroundColor: 'rgba(255,255,255,0.12)',
@@ -175,6 +176,18 @@ export default function Hub() {
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
+
+      {/* Driving School backdrop: hand-drawn kerb art over black (video is hidden on this view) */}
+      {view === 'school' && (
+        <div className="absolute inset-0 z-0 bg-black">
+          <img
+            src={schoolBgImage}
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover opacity-55"
+          />
+        </div>
+      )}
 
       {/* Logo */}
       <div className="flex justify-center relative z-10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
