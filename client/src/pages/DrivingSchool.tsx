@@ -297,7 +297,7 @@ export default function DrivingSchool() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -24 }}
                 transition={{ duration: 0.12 }}
-                className="w-full max-w-xs"
+                className="w-full h-full min-h-0 flex flex-col items-center justify-center"
               >
                 {(() => {
                   const lit = feedback !== 'idle' && current.color !== 'pending';
@@ -306,17 +306,17 @@ export default function DrivingSchool() {
                       animate={lit ? { scale: [1, 1.04, 1] } : { scale: 1 }}
                       transition={{ duration: 0.25 }}
                       className={cn(
-                        'aspect-[4/3] w-full rounded-none border-2 shadow-lg flex flex-col items-center justify-center gap-2 transition-colors duration-150',
+                        'aspect-[5/3] w-full max-h-full rounded-none border-2 shadow-lg flex flex-col items-center justify-center gap-2 transition-colors duration-150',
                         lit ? cn(CARD_LIT[current.color as Exclude<CardColor, 'pending'>], 'text-white') : 'bg-card border-border',
                       )}
                       data-testid="flashcard-card"
                     >
-                      <div className="text-5xl sm:text-6xl font-bold tracking-tight" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                      <div className="text-6xl sm:text-7xl font-bold tracking-tight" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                         {current.question.display}
                       </div>
                       <div
                         className={cn(
-                          'text-4xl sm:text-5xl font-bold min-h-[1.2em]',
+                          'text-5xl sm:text-6xl font-bold min-h-[1.2em]',
                           lit ? 'text-white/90' : 'text-muted-foreground/40',
                         )}
                         data-testid="flashcard-answer"
