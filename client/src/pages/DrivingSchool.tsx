@@ -377,7 +377,7 @@ export default function DrivingSchool() {
 
   // Stage select
   return (
-    <GameLayout trackName="Flashcards" lockViewport hideGarageButton centerHeader backHref="/hub">
+    <GameLayout lockViewport hideGarageButton centerHeader backHref="/hub">
       <div className="flex-1 flex flex-col px-4 pb-8 overflow-y-auto">
         <div className="text-center py-4">
           <h2 className="text-xl font-bold uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
