@@ -355,7 +355,7 @@ export default function Hub() {
                 [
                   { href: '/driving-school', title: 'FLASHCARDS', goal: '10 STAGES', testId: 'link-flashcards' },
                   { href: '/reaction', title: 'REACTION TEST', goal: 'UNDER 0.33S', testId: 'link-reaction-test' },
-                  { href: '/lane-racer', title: 'LANE RACER', goal: 'BEAT THE RIVAL', testId: 'link-lane-racer' },
+                  { href: '/lane-racer', title: 'LANE RACER', goal: 'BEAT THE INSTRUCTOR', testId: 'link-lane-racer' },
                 ] as const
               ).map((row, i) => {
                 const nodeState = licenceSteps[i] ? 'done' : i === currentStep ? 'current' : 'upcoming';
