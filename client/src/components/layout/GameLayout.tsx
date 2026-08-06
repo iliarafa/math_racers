@@ -15,9 +15,24 @@ interface GameLayoutProps {
   headerRight?: React.ReactNode;
   headerAfterLogo?: React.ReactNode;
   backHref?: string;
+  /** When set, the back chevron calls this instead of navigating to backHref. */
+  onBack?: () => void;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref, onBack }: GameLayoutProps) {
+  const backChevron = (className: string) =>
+    onBack ? (
+      <button onClick={onBack} className={className} data-testid="button-back">
+        <ChevronLeft size={24} />
+      </button>
+    ) : backHref ? (
+      <Link href={backHref}>
+        <button className={className} data-testid="button-back">
+          <ChevronLeft size={24} />
+        </button>
+      </Link>
+    ) : null;
+
   return (
     <div className={cn(
       "text-foreground flex flex-col",
@@ -32,21 +47,9 @@ export function GameLayout({ children, trackName, hideHeader = false, hideLogo =
     }}>
       {!hideHeader && (
         <header className={cn("py-3 px-3 md:py-4 md:px-6 flex items-center sticky top-0 z-50", darkBackground ? "bg-neutral-800/80 backdrop-blur-sm" : "bg-[#ffffff]", centerHeader ? "justify-center relative" : "justify-between", !hideGarageButton && (darkBackground ? "border-b border-white/10" : "border-b border-border"))}>
-          {backHref && centerHeader && (
-            <Link href={backHref}>
-              <button className={cn("absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 transition-colors", darkBackground ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-black")}>
-                <ChevronLeft size={24} />
-              </button>
-            </Link>
-          )}
+          {centerHeader && backChevron(cn("absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 transition-colors", darkBackground ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-black"))}
           <div className="flex items-center gap-4 md:gap-6">
-            {backHref && !centerHeader && (
-              <Link href={backHref}>
-                <button className={cn("flex items-center justify-center w-10 h-10 transition-colors", darkBackground ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-black")}>
-                  <ChevronLeft size={24} />
-                </button>
-              </Link>
-            )}
+            {!centerHeader && backChevron(cn("flex items-center justify-center w-10 h-10 transition-colors", darkBackground ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-black"))}
             {!hideLogo && (
               <Link href="/">
                 <img

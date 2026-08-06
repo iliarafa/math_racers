@@ -252,23 +252,12 @@ export default function DrivingSchool() {
         lockViewport
         hideGarageButton
         centerHeader
-        backHref="/hub"
+        onBack={() => {
+          setScreen('stages');
+          setStage(null);
+        }}
       >
         <div className="flex-1 flex flex-col min-h-0 w-full max-w-md md:max-w-xl mx-auto px-4">
-          <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground pt-2" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-            <button
-              type="button"
-              onClick={() => {
-                setScreen('stages');
-                setStage(null);
-              }}
-              className="hover:text-foreground"
-              data-testid="button-abort-session"
-            >
-              Exit
-            </button>
-          </div>
-
           <div className="flex-1 flex flex-col items-center justify-center min-h-0">
             {/* The flashcard: fixed-size framed card; the whole face lights up with the grade */}
             <div className="w-full h-full min-h-0 flex flex-col items-center justify-center">
