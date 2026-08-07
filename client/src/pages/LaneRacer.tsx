@@ -845,7 +845,7 @@ export default function LaneRacer() {
 
         {showNamePrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
+            <div className="bg-[#111] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
               <div className="text-center space-y-1">
                 <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
                 <p className="text-sm text-white/50">This will appear on the global leaderboard</p>
@@ -882,7 +882,7 @@ export default function LaneRacer() {
                     setSubmitted(true);
                     setShowNamePrompt(false);
                   }}
-                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
+                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 bg-white/5 hover:bg-white/10 transition-colors"
                 >
                   Skip
                 </button>

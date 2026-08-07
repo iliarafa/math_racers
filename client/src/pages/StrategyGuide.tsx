@@ -61,7 +61,7 @@ function MultiplicationGrid() {
                     onMouseEnter={() => setHoveredCell({ row, col })}
                     onMouseLeave={() => setHoveredCell(null)}
                     className={cn(
-                      "p-1.5 md:p-2.5 text-center transition-all cursor-pointer border border-white/10",
+                      "p-1.5 md:p-2.5 text-center transition-all cursor-pointer",
                       isIntersection
                         ? "bg-yellow-400 text-black font-bold scale-110 z-10 shadow-lg shadow-yellow-400/50"
                         : isHighlighted
@@ -412,7 +412,6 @@ export default function StrategyGuide() {
         
         .tech-card {
           background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
-          border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 8px;
           padding: 16px;
         }

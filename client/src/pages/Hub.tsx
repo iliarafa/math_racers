@@ -15,7 +15,6 @@ const hubCardStyle: React.CSSProperties = {
   backgroundColor: 'rgba(255,255,255,0.12)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(255,255,255,0.2)',
   borderRadius: '12px',
   padding: '16px 20px',
   width: '100%',
@@ -380,7 +379,7 @@ export default function Hub() {
                         subtitle={`SECTOR ${i + 1} · ${row.goal}`}
                         testId={row.testId}
                         soundEnabled={state.soundEnabled}
-                        style={nodeState === 'current' ? { borderColor: '#ffcc00' } : undefined}
+                        style={nodeState === 'current' ? { border: '1px solid #ffcc00' } : undefined}
                       />
                     </div>
                   </div>

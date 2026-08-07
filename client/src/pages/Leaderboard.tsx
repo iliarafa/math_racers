@@ -303,10 +303,10 @@ export default function Leaderboard() {
                     <div
                       key={entry.id}
                       className={cn(
-                        "flex items-center gap-3 p-3 rounded-xl border transition-colors",
+                        "flex items-center gap-3 p-3 rounded-xl transition-colors",
                         isCurrentPlayer
-                          ? "bg-yellow-400/10 border-yellow-400/30"
-                          : "bg-white/5 border-white/10 hover:border-white/20"
+                          ? "bg-yellow-400/10 border border-yellow-400/30"
+                          : "bg-white/5 hover:bg-white/10"
                       )}
                     >
                       {/* Rank */}
@@ -368,7 +368,7 @@ export default function Leaderboard() {
               {hasMore && !showAll && (
                 <button
                   onClick={() => setShowAll(true)}
-                  className="w-full mt-3 py-3 text-sm uppercase tracking-wider text-white/40 hover:text-white transition-colors border border-white/10 rounded-xl bg-white/5 hover:border-white/20"
+                  className="w-full mt-3 py-3 text-sm uppercase tracking-wider text-white/40 hover:text-white transition-colors rounded-xl bg-white/5 hover:bg-white/10"
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
                 >
                   Show All ({filteredEntries.length - INITIAL_COUNT} more)

@@ -25,9 +25,9 @@ type Screen = 'stages' | 'session' | 'cleared';
 
 /** Lit card face while a graded answer flashes. */
 const CARD_LIT: Record<Exclude<CardColor, 'pending'>, string> = {
-  purple: 'bg-purple-500 border-purple-600',
-  green: 'bg-green-500 border-green-600',
-  red: 'bg-red-500 border-red-600',
+  purple: 'bg-purple-500',
+  green: 'bg-green-500',
+  red: 'bg-red-500',
 };
 
 /** One distinct F1-flavored sound per grade: purple = DRS chirp, green = ding, red = penalty buzzer. */
@@ -289,8 +289,8 @@ export default function DrivingSchool() {
                       exit={{ opacity: 0, x: -24 }}
                       transition={{ x: { duration: 0.12 }, opacity: { duration: 0.12 }, scale: { duration: 0.25 } }}
                       className={cn(
-                        'aspect-[5/3] w-full max-h-full [container-type:size] rounded-none border-2 shadow-lg flex flex-col items-center justify-center transition-colors duration-150',
-                        lit ? cn(CARD_LIT[current.color as Exclude<CardColor, 'pending'>], 'text-white') : 'bg-card border-border',
+                        'aspect-[5/3] w-full max-h-full [container-type:size] rounded-none shadow-lg flex flex-col items-center justify-center transition-colors duration-150',
+                        lit ? cn(CARD_LIT[current.color as Exclude<CardColor, 'pending'>], 'text-white') : 'bg-card',
                       )}
                       data-testid="flashcard-card"
                     >
@@ -405,10 +405,10 @@ export default function DrivingSchool() {
                 disabled={!unlocked}
                 onClick={() => startStage(s)}
                 className={cn(
-                  'w-full text-left rounded-xl border px-4 py-3 transition-all',
+                  'w-full text-left rounded-xl px-4 py-3 transition-all',
                   unlocked
-                    ? 'bg-secondary/80 border-border hover:bg-secondary active:scale-[0.99]'
-                    : 'bg-muted/40 border-border/50 opacity-50 cursor-not-allowed',
+                    ? 'bg-secondary/80 hover:bg-secondary active:scale-[0.99]'
+                    : 'bg-muted/40 opacity-50 cursor-not-allowed',
                 )}
                 data-testid={`stage-${s.id}`}
               >

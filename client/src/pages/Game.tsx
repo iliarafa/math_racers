@@ -2318,7 +2318,7 @@ export default function Game() {
         </div>
         {showNamePrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
+            <div className="bg-[#111] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
               <div className="text-center space-y-1">
                 <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
                 <p className="text-sm text-white/50">This will appear on the global leaderboard</p>
@@ -2361,7 +2361,7 @@ export default function Game() {
                     setPendingGPSubmission(null);
                     setShowNamePrompt(false);
                   }}
-                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
+                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 bg-white/5 hover:bg-white/10 transition-colors"
                 >
                   Skip
                 </button>
@@ -2625,25 +2625,25 @@ export default function Game() {
 
                 {/* Sector Summary */}
                 <div className="grid grid-cols-4 gap-2 md:gap-3 mb-6">
-                  <div className="bg-purple-600/20 border border-purple-600/30 rounded-lg p-2 md:p-4 text-center">
+                  <div className="bg-purple-600/20 rounded-lg p-2 md:p-4 text-center">
                     <div className="text-2xl font-bold text-purple-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                       {lapResults.filter(l => l.sectorColor === 'purple').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Purple</div>
                   </div>
-                  <div className="bg-green-600/20 border border-green-600/30 rounded-lg p-2 md:p-4 text-center">
+                  <div className="bg-green-600/20 rounded-lg p-2 md:p-4 text-center">
                     <div className="text-2xl font-bold text-green-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                       {lapResults.filter(l => l.sectorColor === 'green').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Green</div>
                   </div>
-                  <div className="bg-yellow-600/20 border border-yellow-600/30 rounded-lg p-2 md:p-4 text-center">
+                  <div className="bg-yellow-600/20 rounded-lg p-2 md:p-4 text-center">
                     <div className="text-2xl font-bold text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                       {lapResults.filter(l => l.sectorColor === 'yellow').length}
                     </div>
                     <div className="text-[10px] md:text-xs text-gray-400 uppercase tracking-wide">Yellow</div>
                   </div>
-                  <div className="bg-red-600/20 border border-red-600/30 rounded-lg p-2 md:p-4 text-center">
+                  <div className="bg-red-600/20 rounded-lg p-2 md:p-4 text-center">
                     <div className="text-2xl font-bold text-red-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                       {lapResults.filter(l => l.sectorColor === 'red').length}
                     </div>
@@ -2660,7 +2660,7 @@ export default function Game() {
                       <div
                         key={index}
                         className={cn(
-                          "flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg p-3",
+                          "flex items-center gap-3 bg-white/5 rounded-lg p-3",
                           hasWrong && "cursor-pointer"
                         )}
                         onClick={hasWrong ? () => setRevealedAttempts(prev => {
@@ -2727,7 +2727,7 @@ export default function Game() {
         {/* GP Name Prompt Overlay */}
         {showNamePrompt && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
+            <div className="bg-[#111] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
               <div className="text-center space-y-1">
                 <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
                 <p className="text-sm text-white/50">This will appear on the Grand Prix leaderboard</p>
@@ -2762,7 +2762,7 @@ export default function Game() {
                     setPendingGPSubmission(null);
                     setShowNamePrompt(false);
                   }}
-                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
+                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 bg-white/5 hover:bg-white/10 transition-colors"
                 >
                   Skip
                 </button>
@@ -2833,7 +2833,7 @@ export default function Game() {
                   toggleRaceMapView();
                   if (state.soundEnabled) playCarouselClick();
                 }}
-                className="bg-white/10 border border-white/25 text-white px-6 py-3 rounded-lg font-bold uppercase tracking-wider hover:bg-white/15 transition-all mx-auto"
+                className="bg-white/10 text-white px-6 py-3 rounded-lg font-bold uppercase tracking-wider hover:bg-white/15 transition-all mx-auto"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-pause-view-toggle"
               >
@@ -2871,7 +2871,7 @@ export default function Game() {
                     const prevTime = si > 0 ? pstStintsRef.current[si - 1].time : 0;
                     const stintTime = stint.time - prevTime;
                     return (
-                      <div key={si} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                      <div key={si} className="bg-white/5 rounded-lg px-3 py-2">
                         <div className="text-xs font-bold text-white uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                           Stint {si + 1}
                         </div>
@@ -2969,7 +2969,7 @@ export default function Game() {
                     toggleRaceMapView();
                     if (state.soundEnabled) playCarouselClick();
                   }}
-                  className="px-2.5 py-1 rounded border border-black/20 bg-black/5 text-[10px] font-bold uppercase tracking-widest text-black/70 hover:bg-black/10 transition-colors"
+                  className="px-2.5 py-1 rounded bg-black/5 text-[10px] font-bold uppercase tracking-widest text-black/70 hover:bg-black/10 transition-colors"
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
                   data-testid="button-race-view-toggle"
                   aria-label={`Switch to ${state.raceMapView === 'track' ? 'sectors' : 'track'} view`}
@@ -3444,7 +3444,7 @@ export default function Game() {
       {/* Name Prompt Overlay */}
       {showNamePrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
+          <div className="bg-[#111] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
             <div className="text-center space-y-1">
               <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
               <p className="text-sm text-white/50">This will appear on the global leaderboard</p>
@@ -3487,7 +3487,7 @@ export default function Game() {
                   setPendingGPSubmission(null);
                   setShowNamePrompt(false);
                 }}
-                className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 border border-[#333] hover:bg-white/5 transition-colors"
+                className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 bg-white/5 hover:bg-white/10 transition-colors"
               >
                 Skip
               </button>

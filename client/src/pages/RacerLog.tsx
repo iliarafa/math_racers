@@ -60,10 +60,10 @@ export default function RacerLog() {
             <div className="flex flex-wrap gap-3">
               <div
                 className={cn(
-                  'flex flex-col items-center justify-center gap-1 rounded-md border px-3 py-2 min-w-[7.5rem]',
+                  'flex flex-col items-center justify-center gap-1 rounded-md px-3 py-2 min-w-[7.5rem]',
                   hasPurpleBadge
-                    ? 'bg-purple-600 border-purple-300/50 text-white'
-                    : 'bg-transparent border-white/20 text-white/30'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white/5 text-white/30'
                 )}
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="badge-everything-is-purple"

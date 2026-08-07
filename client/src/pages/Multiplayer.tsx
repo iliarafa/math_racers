@@ -1167,7 +1167,7 @@ export default function Multiplayer() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-[350px] md:max-w-[450px] rounded-[24px] p-6 sm:p-8 backdrop-blur-xl"
-          style={{ backgroundColor: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
+          style={{ backgroundColor: 'rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}
         >
           {/* Header Section */}
           <div className="flex flex-col items-center text-center pb-6 mb-6 border-b border-white/10">

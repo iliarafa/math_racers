@@ -15,7 +15,7 @@ The **setup card** is the glass "pit wall" panel shown before a race starts. One
 
 ## Card anatomy (top to bottom)
 
-The card is `w-[292px] md:w-[420px]`, rounded glass (`backdrop-blur-xl`, white 12% fill, 20% border).
+The card is `w-[292px] md:w-[420px]`, rounded glass (`backdrop-blur-xl`, white 12% fill, drop shadow — **no border**: the app-wide rule since 2026-08-06 is that glass containers carry no grey outlines; fills and shadows define the edges).
 
 1. **Eyebrow** — tiny tracked uppercase line (`ROUND 12 · FREE PRACTICE`), centered.
 2. **Title line** — centered flex group: a small flag chip (`h-[18px] w-[27px]`, `md:h-5 md:w-[30px]`, `object-cover`, rounded) followed by the circuit/country name (`text-xl md:text-2xl`, nowrap). The old large flag block under the title is gone (2026-08-06) — do not reintroduce it; it was what forced the art to share horizontal space and caused the width↔art tuning cycles.

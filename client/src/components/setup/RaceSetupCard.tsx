@@ -84,7 +84,6 @@ export function RaceSetupCard({
         className="w-[292px] md:w-[420px] rounded-[20px] px-5 py-4 md:px-6 md:py-5 flex flex-col select-none backdrop-blur-xl"
         style={{
           backgroundColor: 'rgba(255,255,255,0.12)',
-          border: '1px solid rgba(255,255,255,0.2)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
         }}
         data-testid={testId}
@@ -208,7 +207,7 @@ export function RaceSetupCard({
               </div>
               <div
                 className="flex-1 min-w-0 rounded-xl px-3"
-                style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
               >
                 <SetupRow
                   /* The card owns the click so every row sounds identical and callers can't forget. */
@@ -233,7 +232,7 @@ export function RaceSetupCard({
               </div>
               <div
                 className="flex-1 min-w-0 rounded-xl px-3 py-3 flex items-center justify-between gap-3"
-                style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
                 data-testid={`setup-readout-${r.label.toLowerCase()}`}
               >
                 <span
@@ -335,7 +334,6 @@ export function RaceSetupCard({
               className="w-full max-w-sm rounded-[20px] p-6 backdrop-blur-xl"
               style={{
                 backgroundColor: 'rgba(30,30,32,0.96)',
-                border: '1px solid rgba(255,255,255,0.2)',
               }}
               onClick={(e) => e.stopPropagation()}
               data-testid="setup-help-sheet"

@@ -301,7 +301,7 @@ function renderArticleContent(article: Article) {
             }
             if (detail.startsWith("~")) {
               return (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-md px-3 py-2 font-mono text-xs md:text-sm text-white/60 text-center my-1">
+                <div key={i} className="bg-white/5 rounded-md px-3 py-2 font-mono text-xs md:text-sm text-white/60 text-center my-1">
                   {detail.slice(1)}
                 </div>
               );
@@ -327,7 +327,7 @@ function renderArticleContent(article: Article) {
             <thead>
               <tr className="text-left bg-white/5">
                 {article.table.headers.map((h, i) => (
-                  <th key={i} className="font-normal text-white/60 text-[10px] uppercase tracking-wider border border-white/10 px-3 py-1.5">
+                  <th key={i} className="font-normal text-white/60 text-[10px] uppercase tracking-wider border-b border-white/10 px-3 py-1.5">
                     {h}
                   </th>
                 ))}
@@ -336,8 +336,8 @@ function renderArticleContent(article: Article) {
             <tbody>
               {article.table.rows.map((row, i) => (
                 <tr key={i} className="text-white/60">
-                  <td className="font-bold text-white border border-white/10 px-3 py-1.5">{row[0]}</td>
-                  <td className="font-mono border border-white/10 px-3 py-1.5">{row[1]}</td>
+                  <td className="font-bold text-white border-b border-white/5 px-3 py-1.5">{row[0]}</td>
+                  <td className="font-mono border-b border-white/5 px-3 py-1.5">{row[1]}</td>
                 </tr>
               ))}
             </tbody>
