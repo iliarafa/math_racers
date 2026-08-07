@@ -81,7 +81,7 @@ export function RaceSetupCard({
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
-        className="w-[292px] md:w-[420px] rounded-[20px] px-5 py-4 md:px-6 md:py-5 flex flex-col select-none backdrop-blur-xl"
+        className="w-[272px] md:w-[372px] rounded-[20px] px-5 py-4 md:px-6 md:py-5 flex flex-col select-none backdrop-blur-xl"
         style={{
           backgroundColor: 'rgba(255,255,255,0.12)',
           border: '1px solid rgba(255,255,255,0.2)',
@@ -126,7 +126,7 @@ export function RaceSetupCard({
                (the art's empty frame does the overlapping; the title sits above it).
                Taller than the old band default so the art renders wide enough to reach
                the tiles' right edge on the narrowed card. */
-            <div className={cn('w-[68%] shrink-0 -ml-[24%] overflow-visible p-1', mapStageClass ?? 'h-44 md:h-64')}>
+            <div className={cn('w-[68%] shrink-0 -ml-[24%] overflow-visible p-1', mapStageClass ?? 'h-40 md:h-56')}>
               <img
                 src={mapImageSrc}
                 alt={`${header.title} circuit`}
