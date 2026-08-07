@@ -1,14 +1,15 @@
 # Session Notes — 2026-08-06
 
-Handoff summary of the latest work plus standing context future sessions will need. All facts below were verified against the code at commit `47457ff` (working tree clean, pushed to `main`, synced + deployed to the iPhone 17 simulator).
+Handoff summary of the latest work plus standing context future sessions will need. All facts below were verified against the code at commit `695c3ba` (working tree clean, pushed to `main`, synced + deployed to the iPhone 17 simulator).
 
 ## Open tasks (next session)
 
-1. **Flashcards polish** — see if there is room for more polish in the flashcards mode.
-2. **Leaderboards scope (debate)** — consider limiting leaderboards to only the modes in the RACE WEEKEND menu.
-3. **Quick Race UI** — push the sector grid down closer to the numpad and make the operation a bit bigger. (A first attempt at bigger-operation/smaller-grid was reverted — this asks for repositioning the grid *down*, not shrinking it.)
-4. **Superlicence reward screen (idea, not committed)** — a stamped superlicence card as the school-completion celebration; the mockup direction exists from the school-page redesign round.
-5. **Weekend rotation** — Zandvoort (round 12) is still current; the next `/weekend` rotation is due whenever the calendar moves on.
+1. **Finalize the setup-card width** — the setup menus' card went 350→292→272px (md 500→420→372) while aligning the circuit art's straight with the station tiles; treat the current numbers as a draft and settle the final width/art size. The coupling: art height drives its rendered width (`h × naturalW/naturalH`); tiles' right edge meets the art's right edge only at matching card widths (see `RaceSetupCard.tsx` — card width class + the `h-40 md:h-56` art stage class change together).
+2. **Flashcards polish** — see if there is room for more polish in the flashcards mode.
+3. **Leaderboards scope (debate)** — consider limiting leaderboards to only the modes in the RACE WEEKEND menu.
+4. **Quick Race UI** — push the sector grid down closer to the numpad and make the operation a bit bigger. (A first attempt at bigger-operation/smaller-grid was reverted — this asks for repositioning the grid *down*, not shrinking it.)
+5. **Superlicence reward screen (idea, not committed)** — a stamped superlicence card as the school-completion celebration; the mockup direction exists from the school-page redesign round.
+6. **Weekend rotation** — Zandvoort (round 12) is still current; the next `/weekend` rotation is due whenever the calendar moves on.
 
 ## TL;DR
 
@@ -48,6 +49,7 @@ An in-scene Lane Racer rival car was tried and reverted (see licence-path notes)
 
 ### Setup screens as track paths (`client/src/components/setup/RaceSetupCard.tsx`, `SetupRow.tsx`)
 - Inside the shared setup card, every setting row is a **numbered station** on a rail (mini glass card + node), readouts (GP LAPS) are dot stations, and the start button is the final checkered **THE GRID** station (`c415d0b`). Tap-to-cycle unchanged; `SetupRow` gained a `bare` prop (no border when framed by a station). All four modes (FP/GP/Lane Racer/Multiplayer host settings) inherit it with no caller changes.
+- **Header (later that day, `066dfa3`→`695c3ba`):** the full-width map band is gone — eyebrow across the top, title (nowrap, may overlay the art's empty frame) over a large rounded flag on the left, circuit art on the right in a 68%-wide box pulled left (`-ml-[24%]`) so it sneaks under the title; "?" absolute in the corner. Card narrowed to **272px (md 372px)** with art at **`h-40 md:h-56`** so the art's right straight sits ~flush (≈4px) with the station tiles' right edge. Art size and card width are coupled (see open task 1); an `object-right` approach was tried and reverted (`ee60d45`/`b439552`) — it reopened the flag↔art gap. `DEFAULT_MAP_STAGE_CLASS` is no longer used by this card (local `h-40 md:h-56` default).
 
 ### Free Practice session length (`client/src/pages/Game.tsx`, `47457ff`)
 - LAPS is a real station: 25/50/100 (`FP_LAP_OPTIONS`), persisted as `freePracticeLaps`, default 100; `raceLength` reads it for FP.
