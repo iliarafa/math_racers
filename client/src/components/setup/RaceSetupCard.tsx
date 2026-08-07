@@ -90,39 +90,49 @@ export function RaceSetupCard({
         }}
         data-testid={testId}
       >
-        {/* Header — eyebrow, circuit, flag, and the "?" that owns the mode rules */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            {header.eyebrow && (
-              <div
-                className="uppercase"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  fontSize: '9px',
-                  letterSpacing: '0.3em',
-                  color: 'rgba(255,255,255,0.35)',
-                }}
-              >
-                {header.eyebrow}
-              </div>
-            )}
-            <div className="flex items-center gap-2.5">
-              <h2
-                className="text-xl md:text-2xl font-bold uppercase tracking-wider text-white leading-tight"
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-              >
-                {header.title}
-              </h2>
-              {header.flagSrc && (
-                <img
-                  src={header.flagSrc}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-4 w-6 object-cover rounded-sm"
-                />
-              )}
-            </div>
+        {/* Header — eyebrow full-width, then title+flag left with circuit art right, "?" in the corner */}
+        {header.eyebrow && (
+          <div
+            className="uppercase"
+            style={{
+              fontFamily: 'Oxanium, sans-serif',
+              fontSize: '9px',
+              letterSpacing: '0.3em',
+              color: 'rgba(255,255,255,0.35)',
+            }}
+          >
+            {header.eyebrow}
           </div>
+        )}
+        <div className="relative flex items-start gap-3">
+          <div className="min-w-0 flex-1 pt-1">
+            <h2
+              className="text-xl md:text-2xl font-bold uppercase tracking-wider text-white leading-tight"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              {header.title}
+            </h2>
+            {header.flagSrc && (
+              <img
+                src={header.flagSrc}
+                alt=""
+                aria-hidden="true"
+                className="mt-4 h-12 w-[4.5rem] md:h-14 md:w-[5.25rem] object-cover rounded-lg"
+              />
+            )}
+          </div>
+
+          {mapImageSrc && (
+            <div className={cn('w-[52%] shrink-0 overflow-visible p-1', mapStageClass ?? DEFAULT_MAP_STAGE_CLASS)}>
+              <img
+                src={mapImageSrc}
+                alt={`${header.title} circuit`}
+                className="h-full w-full object-contain"
+                style={invertMap ? { filter: 'invert(1)' } : undefined}
+              />
+            </div>
+          )}
+
           {helpText && (
             <button
               type="button"
@@ -130,7 +140,10 @@ export function RaceSetupCard({
                 click();
                 setHelpOpen(true);
               }}
-              className="shrink-0 w-7 h-7 flex items-center justify-center text-white/45 hover:text-white transition-colors outline-none focus:outline-none"
+              className={cn(
+                'w-7 h-7 flex items-center justify-center text-white/45 hover:text-white transition-colors outline-none focus:outline-none',
+                mapImageSrc ? 'absolute right-0 top-0 z-[1]' : 'shrink-0',
+              )}
               style={{
                 fontFamily: 'Oxanium, sans-serif',
                 fontSize: '12px',
@@ -145,19 +158,6 @@ export function RaceSetupCard({
         </div>
 
         {header.phase && <div className="mt-3">{header.phase}</div>}
-
-        {mapImageSrc && (
-          <div className="flex items-center justify-center py-2 md:py-4 overflow-visible px-2">
-            <div className={cn('w-full overflow-visible p-1', mapStageClass ?? DEFAULT_MAP_STAGE_CLASS)}>
-              <img
-                src={mapImageSrc}
-                alt={`${header.title} circuit`}
-                className="h-full w-full object-contain"
-                style={invertMap ? { filter: 'invert(1)' } : undefined}
-              />
-            </div>
-          </div>
-        )}
 
         {/* Track path: every setting is a numbered station on the rail; the start button is THE GRID. */}
         <div className={cn('relative', mapImageSrc ? 'mt-0' : 'mt-4')}>
