@@ -8,7 +8,6 @@
  */
 import {
   DIFFICULTY_DRUM_OPTIONS,
-  difficultyDrumColor,
   type Difficulty,
   type DifficultyDrumOption,
   type DifficultyMode,
@@ -26,8 +25,6 @@ export const OPERATION_SETUP_OPTIONS: SetupOption[] = [
   { id: 'Division', label: 'Division' },
   { id: 'Variables', label: 'Variables' },
 ];
-
-const VIEW_ACTIVE_COLOR = '#22c55e';
 
 export function operationRow(selected: string, onSelect: (op: string) => void): SetupRowSpec {
   return {
@@ -59,11 +56,7 @@ export function levelRow(
   return {
     id: 'level',
     label: 'Level',
-    options: DIFFICULTY_DRUM_OPTIONS.map((o) => ({
-      id: o.id,
-      label: o.label,
-      color: difficultyDrumColor(o),
-    })),
+    options: DIFFICULTY_DRUM_OPTIONS.map((o) => ({ id: o.id, label: o.label })),
     selectedId,
     onSelect: (id) => {
       const opt = DIFFICULTY_DRUM_OPTIONS.find((o) => o.id === id);
@@ -79,7 +72,7 @@ export function weatherRow(
   return {
     id: 'weather',
     label: 'Weather',
-    options: WEATHER_DRUM_OPTIONS.map((o) => ({ id: o.id, label: o.label, color: o.color })),
+    options: WEATHER_DRUM_OPTIONS.map((o) => ({ id: o.id, label: o.label })),
     selectedId: weather,
     onSelect: (id) => onSelect(id as Weather),
   };
@@ -90,8 +83,8 @@ export function viewRow(view: RaceMapView, onSelect: (view: RaceMapView) => void
     id: 'view',
     label: 'View',
     options: [
-      { id: 'track', label: 'Track', color: VIEW_ACTIVE_COLOR },
-      { id: 'sectors', label: 'Sectors', color: VIEW_ACTIVE_COLOR },
+      { id: 'track', label: 'Track' },
+      { id: 'sectors', label: 'Sectors' },
     ],
     selectedId: view,
     onSelect: (id) => onSelect(id as RaceMapView),

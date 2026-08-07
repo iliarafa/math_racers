@@ -16,7 +16,6 @@ import {
   DRIVERS,
   initDynamicDifficulty,
   updateDynamicDifficulty,
-  CHASE_CAM_ACTIVE_COLOR,
   createDifficultyPrefs,
 } from "@/lib/gameLogic";
 import type { Difficulty, DynamicDifficultyState, DifficultyMode, DifficultyDrumOption } from "@/lib/gameLogic";
@@ -602,7 +601,7 @@ export default function LaneRacer() {
         // LaneRacerCanvas3D (NATIVE_SOFT_FOLLOW).
         options: [
           { id: '2d', label: 'Off' },
-          { id: '3d', label: 'On', color: CHASE_CAM_ACTIVE_COLOR },
+          { id: '3d', label: 'On' },
         ],
         selectedId: renderMode,
         onSelect: (id) => selectRenderMode(id as RendererMode),

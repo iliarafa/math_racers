@@ -174,12 +174,7 @@ export function driverForDifficulty(difficulty: Difficulty): Driver {
   return DRIVERS.find(d => d.difficulty === difficulty) ?? DRIVERS[0];
 }
 
-/** Setup selection text colors (active = highlighted text, no pill backgrounds). */
-export const DIFFICULTY_MODE_COLORS = {
-  adaptive: '#22c55e',
-  locked: '#a855f7',
-} as const;
-
+/** Series colours for the in-race HUD's level readout (setup rows render plain white). */
 export const LOCKED_LEVEL_COLORS: Record<Difficulty, string> = {
   beginner: '#00e5ff', // Karting — electric blue
   easy: '#ec4899',     // F3 — magenta; readable on both the light race HUD and the dark setup drums (was #000000)
@@ -187,9 +182,6 @@ export const LOCKED_LEVEL_COLORS: Record<Difficulty, string> = {
   hard: '#ef4444',     // F1 — red
   pro: '#f59e0b',      // Pro — amber (distinct from F1 red)
 };
-
-export const SETUP_INACTIVE_TEXT = 'rgba(255,255,255,0.35)';
-export const CHASE_CAM_ACTIVE_COLOR = '#ff2800';
 
 export interface DifficultyDrumOption {
   id: string;
@@ -219,11 +211,6 @@ export function difficultyDrumIndex(mode: DifficultyMode, locked: Difficulty): n
   if (mode !== 'locked') return 0;
   const i = DIFFICULTY_DRUM_OPTIONS.findIndex((o) => o.mode === 'locked' && o.locked === locked);
   return i >= 0 ? i : 1;
-}
-
-export function difficultyDrumColor(opt: DifficultyDrumOption): string {
-  if (opt.mode === 'adaptive') return DIFFICULTY_MODE_COLORS.adaptive;
-  return LOCKED_LEVEL_COLORS[opt.locked!];
 }
 
 export const POSITION_POINTS: Record<number, number> = {

@@ -1,9 +1,6 @@
 import circuitZandvoort from "@/assets/circuit_zandvoort.png";
 import flagNetherlands from "@/assets/flag_netherlands.png";
 
-/** Height of the setup-card silhouette stage when a circuit needs no special treatment. */
-export const DEFAULT_MAP_STAGE_CLASS = 'h-32 md:h-52';
-
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
 // Also add the new track/flag asset imports above and update
@@ -22,12 +19,13 @@ export const CURRENT_GRAND_PRIX = {
   gradient: 'linear-gradient(90deg, #AE1C28 0%, #FFFFFF 50%, #21468B 100%)',
   welcomeBlurb: 'This week we head to Circuit Zandvoort in the seaside dunes of the Netherlands — a short, banked rollercoaster by the North Sea — for the Dutch Grand Prix.',
   /**
-   * Optional per-circuit override for the setup-card silhouette stage.
+   * Optional per-circuit override for the setup-card silhouette stage's HEIGHT classes
+   * (replaces RaceSetupCard's `h-36 md:h-52` default; see setup_cards.md).
    *
-   * Kept `undefined` deliberately: every menu silhouette now renders in the shared
-   * DEFAULT_MAP_STAGE_CLASS (Spa's stage) so sizes stay consistent. A per-circuit boost is
-   * what made Hungary look bigger than the rest — don't reintroduce one to fix a thin or
-   * square circuit; fix the asset (Spa-framed thin-line art) instead.
+   * Kept `undefined` deliberately: the card centers every silhouette in one symmetric
+   * stage, so sizes stay consistent across circuits. A per-circuit boost is what made
+   * Hungary look bigger than the rest — don't reintroduce one to fix a thin or square
+   * circuit; fix the asset (Spa-framed thin-line art) instead.
    */
   mapStageClass: undefined as string | undefined,
 };

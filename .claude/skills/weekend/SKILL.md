@@ -11,6 +11,7 @@ Re-themes the app to the week's F1 circuit: Free Practice card, Grand Prix mode,
 - Existing circuit: `d17e8a0` (Round 9 / Silverstone)
 - New circuit: `4d7d282` (Round 12 / Zandvoort) — complete worked example incl. menu art + live-map centerline
 - `SESSION_NOTES.md` is STALE (describes the old Round-5 setup with config inline in Game.tsx). Ignore it.
+- Setup-card specifics (what the cards read from the rotation, art rules, QA list): `setup_cards.md` at the repo root.
 
 ## Step 0 — Gather inputs (before touching code)
 

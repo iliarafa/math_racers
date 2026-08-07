@@ -81,7 +81,7 @@ export function RaceSetupCard({
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
-        className="w-[272px] md:w-[372px] rounded-[20px] px-5 py-4 md:px-6 md:py-5 flex flex-col select-none backdrop-blur-xl"
+        className="w-[292px] md:w-[420px] rounded-[20px] px-5 py-4 md:px-6 md:py-5 flex flex-col select-none backdrop-blur-xl"
         style={{
           backgroundColor: 'rgba(255,255,255,0.12)',
           border: '1px solid rgba(255,255,255,0.2)',
@@ -89,10 +89,14 @@ export function RaceSetupCard({
         }}
         data-testid={testId}
       >
-        {/* Header — eyebrow full-width, then title+flag left with circuit art right, "?" in the corner */}
+        {/* Header — a centered column: eyebrow, the title line (small flag + name), then
+            the circuit art centered beneath it. The art keeps equal comfortable padding
+            on both sides by construction: it is centered in a symmetric stage whose px
+            floor caps squat silhouettes (Monaco) and whose height class caps tall ones
+            (Zandvoort). "?" floats in the corner. */}
         {header.eyebrow && (
           <div
-            className="uppercase"
+            className="uppercase text-center"
             style={{
               fontFamily: 'Oxanium, sans-serif',
               fontSize: '9px',
@@ -103,30 +107,26 @@ export function RaceSetupCard({
             {header.eyebrow}
           </div>
         )}
-        <div className="relative flex items-start mb-3">
-          <div className="min-w-0 flex-1 pt-1 relative z-[1]">
+        <div className="relative mb-3">
+          <div className="flex items-center justify-center gap-2 pt-1">
+            {header.flagSrc && (
+              <img
+                src={header.flagSrc}
+                alt=""
+                aria-hidden="true"
+                className="h-[18px] w-[27px] md:h-5 md:w-[30px] object-cover rounded shrink-0"
+              />
+            )}
             <h2
               className="text-xl md:text-2xl font-bold uppercase tracking-wider text-white leading-tight whitespace-nowrap"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
             >
               {header.title}
             </h2>
-            {header.flagSrc && (
-              <img
-                src={header.flagSrc}
-                alt=""
-                aria-hidden="true"
-                className="mt-4 h-12 w-[4.5rem] md:h-14 md:w-[5.25rem] object-cover rounded-lg"
-              />
-            )}
           </div>
 
           {mapImageSrc && (
-            /* Wider than its slot and pulled left so the art can sneak under the title
-               (the art's empty frame does the overlapping; the title sits above it).
-               Taller than the old band default so the art renders wide enough to reach
-               the tiles' right edge on the narrowed card. */
-            <div className={cn('w-[68%] shrink-0 -ml-[24%] overflow-visible p-1', mapStageClass ?? 'h-40 md:h-56')}>
+            <div className={cn('w-full overflow-visible mt-2 px-6', mapStageClass ?? 'h-36 md:h-52')}>
               <img
                 src={mapImageSrc}
                 alt={`${header.title} circuit`}
@@ -143,10 +143,7 @@ export function RaceSetupCard({
                 click();
                 setHelpOpen(true);
               }}
-              className={cn(
-                'w-7 h-7 flex items-center justify-center text-white/45 hover:text-white transition-colors outline-none focus:outline-none',
-                mapImageSrc ? 'absolute right-0 top-0 z-[1]' : 'shrink-0',
-              )}
+              className="absolute right-0 top-0 z-[1] w-7 h-7 flex items-center justify-center text-white/45 hover:text-white transition-colors outline-none focus:outline-none"
               style={{
                 fontFamily: 'Oxanium, sans-serif',
                 fontSize: '12px',
@@ -267,7 +264,7 @@ export function RaceSetupCard({
             </div>
           )}
 
-          {/* THE GRID — the finish of the setup path */}
+          {/* The checkered node — the finish of the setup path; the start button needs no label. */}
           <div className="relative flex items-center gap-2.5 mt-3">
             <div className="w-6 flex justify-center shrink-0 z-[1]">
               <div
@@ -280,17 +277,6 @@ export function RaceSetupCard({
               />
             </div>
             <div className="flex-1 min-w-0">
-              <div
-                className="uppercase mb-1"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  fontSize: '9px',
-                  letterSpacing: '0.24em',
-                  color: 'rgba(255,255,255,0.4)',
-                }}
-              >
-                The grid
-              </div>
               <motion.button
                 whileHover={!start.disabled ? { scale: 1.02 } : undefined}
                 whileTap={!start.disabled ? { scale: 0.98 } : undefined}

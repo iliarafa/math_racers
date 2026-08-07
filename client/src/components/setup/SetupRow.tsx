@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 export interface SetupOption {
   id: string;
   label: string;
-  /** Active text colour. Falls back to white. Ignored for thumb options. */
-  color?: string;
   /** Picture options (team cars): the thumb *is* the value — no text is shown beside it. */
   thumb?: string;
   /** Per-thumb transform, e.g. a rotation for the cars. */
@@ -23,8 +21,7 @@ interface SetupRowProps {
   spec: SetupRowSpec;
   /**
    * `dark` (default) suits the glass pit-wall card; `light` recolours the label, divider and
-   * value fallback for light surfaces (Multiplayer's waiting-room card). Option `color`s are
-   * left alone, so the level rungs keep their series colours on either surface.
+   * value text for light surfaces (Multiplayer's waiting-room card).
    */
   variant?: 'dark' | 'light';
   /** Skip the border-b frame — for callers that provide their own (the setup path stations). */
@@ -58,7 +55,7 @@ export function SetupRow({ spec, variant = 'dark', bare = false }: SetupRowProps
   const interactive = spec.options.length > 1;
   const labelColor = variant === 'light' ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.4)';
   const dividerColor = variant === 'light' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.07)';
-  const valueFallback = variant === 'light' ? '#111827' : '#ffffff';
+  const valueColor = variant === 'light' ? '#111827' : '#ffffff';
 
   const advance = () => {
     const next = spec.options[(index + 1) % spec.options.length];
@@ -85,7 +82,7 @@ export function SetupRow({ spec, variant = 'dark', bare = false }: SetupRowProps
       animate={{ opacity: 1 }}
       transition={{ duration: 0.12 }}
       className="font-bold text-sm md:text-base uppercase tracking-wider truncate"
-      style={{ fontFamily: 'Oxanium, sans-serif', color: selected?.color ?? valueFallback }}
+      style={{ fontFamily: 'Oxanium, sans-serif', color: valueColor }}
       data-testid={`setup-value-${spec.id}`}
     >
       {selected?.label}
