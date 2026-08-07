@@ -186,7 +186,7 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 
 **Pre-Season Testing (PST)**
 - Uses Bahrain circuit with player-selected operation
-- Fixed 100-question session; completing all 100 finishes the race and submits score to leaderboard
+- Session length selectable at setup: 25, 50, or 100 laps (persisted as `freePracticeLaps`); completing the session finishes the race, but only full 100-lap sessions submit a score to the leaderboard
 - "End Session" before 100 questions navigates home with no leaderboard entry
 - Dynamic difficulty adjusts per-answer based on response time and accuracy
 - Score formula: `(laps / time) * accuracy * difficultyMultiplier * 1000` (max 100,000)

@@ -140,6 +140,9 @@ const createFreePracticeCircuit = (op: string): Circuit => ({
 
 const QUICK_RACE_INTRO_KEY = 'quickRaceIntroSeen';
 
+/** Free Practice session lengths; only the full 100 posts to the leaderboard. */
+const FP_LAP_OPTIONS = [25, 50, 100];
+
 const createQuickRaceCircuit = (op: string): Circuit => ({
   id: CURRENT_GRAND_PRIX.circuitId,
   name: CURRENT_GRAND_PRIX.name,
@@ -405,6 +408,23 @@ export default function Game() {
     () => routeMode !== 'grand-prix' && routeMode !== 'quick-race',
   );
   const [pstSessionLog, setPstSessionLog] = useState(false);
+  /** Free Practice session length. Only full 100-lap sessions post to the leaderboard. */
+  const [fpLaps, setFpLapsState] = useState<number>(() => {
+    try {
+      const n = parseInt(localStorage.getItem('freePracticeLaps') ?? '', 10);
+      return FP_LAP_OPTIONS.includes(n) ? n : 100;
+    } catch {
+      return 100;
+    }
+  });
+  const setFpLaps = (n: number) => {
+    setFpLapsState(n);
+    try {
+      localStorage.setItem('freePracticeLaps', String(n));
+    } catch {
+      /* ignore */
+    }
+  };
   const pstStintsRef = useRef<Array<{ startIndex: number; endIndex: number; time: number }>>([]); // tracks each stint's lap range and elapsed time
   const [selectedOperation, setSelectedOperation] = useState<string>(() =>
     routeMode === 'quick-race' ? 'Addition' : loadSetupOperation(),
@@ -451,7 +471,7 @@ export default function Game() {
 
   const raceLength = (() => {
     if (isQuickRace) return RACE_LENGTH;
-    if (isPracticeMode && !isGrandPrix) return 100;
+    if (isPracticeMode && !isGrandPrix) return fpLaps;
     if (!selectedCircuit) return RACE_LENGTH;
     if (isGrandPrix && grandPrixPhase === 'rw_practice') return GRAND_PRIX_PRACTICE_LENGTH;
     if (isGrandPrix && grandPrixPhase === 'rw_qualifying') return RACE_LENGTH;
@@ -1252,37 +1272,40 @@ export default function Game() {
 
       if (newProgress >= raceLength) {
         if (isPreSeasonTesting) {
-          // PST: 100 questions done — submit score to leaderboard and finish
-          const achievedDiff =
-            difficultyMode === 'locked'
-              ? lockedDifficulty
-              : (dynamicDifficultyRef.current?.currentDifficulty || currentDifficultyRef.current || 'beginner');
-          const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
-          const score = calculatePSTScore(elapsedTime, mistakes, achievedDiff, raceLength);
+          // Free Practice session done. Only full 100-lap sessions post to the
+          // leaderboard — shorter sprints skew the rate-based score.
+          if (raceLength >= 100) {
+            const achievedDiff =
+              difficultyMode === 'locked'
+                ? lockedDifficulty
+                : (dynamicDifficultyRef.current?.currentDifficulty || currentDifficultyRef.current || 'beginner');
+            const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
+            const score = calculatePSTScore(elapsedTime, mistakes, achievedDiff, raceLength);
 
-          const submission = {
-            playerId: state.playerId,
-            operation: selectedOperation,
-            score,
-            totalTime: elapsedTime,
-            mistakes,
-            accuracy,
-            difficultyAchieved: achievedDiff,
-          };
+            const submission = {
+              playerId: state.playerId,
+              operation: selectedOperation,
+              score,
+              totalTime: elapsedTime,
+              mistakes,
+              accuracy,
+              difficultyAchieved: achievedDiff,
+            };
 
-          if (!state.playerName) {
-            setPendingScoreSubmission(submission);
-            setShowNamePrompt(true);
-            setNameInput('');
-          } else {
-            submitLeaderboardEntry({
-              ...submission,
-              playerName: state.playerName,
-            }).then(() => {
-              console.log('[PST] Leaderboard entry submitted successfully');
-            }).catch((err) => {
-              console.error('[PST] Leaderboard submission failed:', err);
-            });
+            if (!state.playerName) {
+              setPendingScoreSubmission(submission);
+              setShowNamePrompt(true);
+              setNameInput('');
+            } else {
+              submitLeaderboardEntry({
+                ...submission,
+                playerName: state.playerName,
+              }).then(() => {
+                console.log('[PST] Leaderboard entry submitted successfully');
+              }).catch((err) => {
+                console.error('[PST] Leaderboard submission failed:', err);
+              });
+            }
           }
 
           finishRace(mistakes);
@@ -1913,6 +1936,16 @@ export default function Game() {
       ...(isGrandPrix ? [] : [levelRow(difficultyMode, lockedDifficulty, chooseLevel)]),
       weatherRow(selectedWeather, chooseWeather),
       viewRow(state.raceMapView, chooseRaceMapView),
+      // Free Practice chooses its session length; Grand Prix laps stay a readout.
+      ...(isGrandPrix
+        ? []
+        : [{
+            id: 'laps',
+            label: 'Laps',
+            options: FP_LAP_OPTIONS.map((n) => ({ id: String(n), label: String(n) })),
+            selectedId: String(fpLaps),
+            onSelect: (id: string) => setFpLaps(parseInt(id, 10)),
+          }]),
     ];
 
     const start = selectedTab === 'rw_qualifying'
@@ -1925,7 +1958,7 @@ export default function Game() {
 
     const helpText = isGrandPrix
       ? `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`
-      : '100 questions with Adaptive difficulty (or locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Finish all 100 to post your score on the Leaderboard, or end your session anytime.';
+      : 'Choose 25, 50 or 100 laps with Adaptive difficulty (or locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Only full 100-lap sessions post to the Leaderboard.';
 
     const phaseTabs = isGrandPrix ? (
       <div className="flex items-center justify-center gap-5 pt-1" data-testid="gp-phase-tabs">
@@ -1995,7 +2028,7 @@ export default function Game() {
             mapImageSrc={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
             mapStageClass={CURRENT_GRAND_PRIX.mapStageClass}
             rows={rows}
-            readouts={[{ label: 'Laps', value: String(raceLength) }]}
+            readouts={isGrandPrix ? [{ label: 'Laps', value: String(raceLength) }] : undefined}
             start={{ ...start, onStart: handleStartRace }}
             onBack={() => setLocation('/hub')}
             helpText={helpText}
