@@ -125,12 +125,11 @@ export function RaceSetupCard({
           {mapImageSrc && (
             /* Wider than its slot and pulled left so the art can sneak under the title
                (the art's empty frame does the overlapping; the title sits above it). */
-            <div className={cn('w-[68%] shrink-0 -ml-[24%] overflow-visible py-1 pl-1', mapStageClass ?? DEFAULT_MAP_STAGE_CLASS)}>
-              {/* Right-anchored so the art's straight aligns with the station tiles' right edge. */}
+            <div className={cn('w-[68%] shrink-0 -ml-[24%] overflow-visible p-1', mapStageClass ?? DEFAULT_MAP_STAGE_CLASS)}>
               <img
                 src={mapImageSrc}
                 alt={`${header.title} circuit`}
-                className="h-full w-full object-contain object-right"
+                className="h-full w-full object-contain"
                 style={invertMap ? { filter: 'invert(1)' } : undefined}
               />
             </div>
