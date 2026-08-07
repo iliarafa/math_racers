@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DEFAULT_MAP_STAGE_CLASS } from '@/lib/currentGrandPrix';
 import { playCarouselClick } from '@/lib/uiSound';
 import { SetupRow, type SetupRowSpec } from './SetupRow';
 
@@ -82,7 +81,7 @@ export function RaceSetupCard({
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
-        className="w-[350px] md:w-[500px] rounded-[20px] px-5 py-4 md:px-6 md:py-5 flex flex-col select-none backdrop-blur-xl"
+        className="w-[292px] md:w-[420px] rounded-[20px] px-5 py-4 md:px-6 md:py-5 flex flex-col select-none backdrop-blur-xl"
         style={{
           backgroundColor: 'rgba(255,255,255,0.12)',
           border: '1px solid rgba(255,255,255,0.2)',
@@ -107,7 +106,7 @@ export function RaceSetupCard({
         <div className="relative flex items-start mb-3">
           <div className="min-w-0 flex-1 pt-1 relative z-[1]">
             <h2
-              className="text-xl md:text-2xl font-bold uppercase tracking-wider text-white leading-tight"
+              className="text-xl md:text-2xl font-bold uppercase tracking-wider text-white leading-tight whitespace-nowrap"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
             >
               {header.title}
@@ -124,8 +123,10 @@ export function RaceSetupCard({
 
           {mapImageSrc && (
             /* Wider than its slot and pulled left so the art can sneak under the title
-               (the art's empty frame does the overlapping; the title sits above it). */
-            <div className={cn('w-[68%] shrink-0 -ml-[24%] overflow-visible p-1', mapStageClass ?? DEFAULT_MAP_STAGE_CLASS)}>
+               (the art's empty frame does the overlapping; the title sits above it).
+               Taller than the old band default so the art renders wide enough to reach
+               the tiles' right edge on the narrowed card. */
+            <div className={cn('w-[68%] shrink-0 -ml-[24%] overflow-visible p-1', mapStageClass ?? 'h-44 md:h-64')}>
               <img
                 src={mapImageSrc}
                 alt={`${header.title} circuit`}
