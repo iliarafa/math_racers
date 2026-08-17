@@ -697,7 +697,7 @@ export function calculatePSTScore(
     easy: 1.5,
     medium: 2.0,
     hard: 3.0,
-    pro: 3.5,
+    pro: 3.0,
   };
   const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
   const score = (lapCount / timeInSeconds) * (correctAnswers / lapCount) * multiplier * 1000;
@@ -720,7 +720,7 @@ export function calculateGPScore(
     easy: 1.5,
     medium: 2.0,
     hard: 3.0,
-    pro: 3.5,
+    pro: 3.0,
   };
   const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
   let score = (raceLength / timeInSeconds) * (correctAnswers / raceLength) * multiplier * 1000;
@@ -742,7 +742,7 @@ export function calculateLaneRacerScore(
     easy: 1.5,
     medium: 2.0,
     hard: 3.0,
-    pro: 3.5,
+    pro: 3.0,
   };
   const multiplier = difficultyMultipliers[difficultyAchieved] ?? 1.0;
   const score = (raceLength / timeInSeconds) * (correctCount / raceLength) * multiplier * 1000;
