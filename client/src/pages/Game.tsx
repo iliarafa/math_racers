@@ -2597,6 +2597,18 @@ export default function Game() {
             </div>
 
             <div className="grid gap-3">
+              {isGrandPrix && (
+                <>
+                  <Link href={leaderboardHref}>
+                    <button className="w-full bg-yellow-400 text-black h-12 rounded-lg font-bold hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                      View Leaderboard
+                    </button>
+                  </Link>
+                  {leaderboardNotice && (
+                    <p className="text-xs text-white/50 text-center">{leaderboardNotice}</p>
+                  )}
+                </>
+              )}
               <button
                 onClick={() => setShowAnalytics(true)}
                 className="w-full bg-black hover:bg-black/80 text-yellow-400 h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
