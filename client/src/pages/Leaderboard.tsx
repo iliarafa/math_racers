@@ -1,8 +1,16 @@
 import { useState, useEffect } from "react";
-import { Link } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { useGameState } from "@/lib/gameLogic";
-import { getLeaderboard, getLaneRacerLeaderboard, getGPLeaderboard } from "@/lib/supabase";
+import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
+import { GP_HISTORY } from "@/lib/grandPrixHistory";
+import { CIRCUITS, loadSetupOperation, useGameState } from "@/lib/gameLogic";
+import {
+  LEADERBOARD_OPERATIONS,
+  circuitPickerIds,
+  leaderboardEmptyMessage,
+  resolveLeaderboardView,
+  type LeaderboardTab,
+} from "@/lib/leaderboardRules";
+import { getFpLeaderboard, getGpWeekendLeaderboard } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Trophy, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,12 +30,6 @@ interface LeaderboardEntry {
   polePosition?: boolean;
 }
 
-const OPERATIONS = ['All', 'Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'];
-const CIRCUIT_FILTERS = ['All', 'Monza', 'Spa', 'Monaco', 'Suzuka', 'Silverstone', 'Miami', 'Canada'];
-const CIRCUIT_ID_MAP: Record<string, string> = {
-  Monza: 'monza', Spa: 'spa', Monaco: 'monaco', Suzuka: 'suzuka', Silverstone: 'silverstone', Miami: 'miami', Canada: 'canada',
-};
-
 const DIFFICULTY_LABELS: Record<string, string> = {
   beginner: 'Karting',
   easy: 'F3',
@@ -36,6 +38,15 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   pro: 'Pro',
 };
 
+const pickerIds = circuitPickerIds(CURRENT_GRAND_PRIX.circuitId, Object.keys(GP_HISTORY));
+
+function circuitLabel(id: string): string {
+  if (id === CURRENT_GRAND_PRIX.circuitId) return CURRENT_GRAND_PRIX.circuitName;
+  const fromCircuits = CIRCUITS.find((c) => c.id === id);
+  if (fromCircuits) return fromCircuits.name.charAt(0) + fromCircuits.name.slice(1).toLowerCase();
+  return id;
+}
+
 function formatTime(ms: number) {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
@@ -43,20 +54,17 @@ function formatTime(ms: number) {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
 }
 
-type TabMode = 'pst' | 'lane-racer' | 'grand-prix';
-
 export default function Leaderboard() {
   const { state } = useGameState();
-  const [activeTab, setActiveTab] = useState<TabMode>(() => {
-    const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode');
-    if (mode === 'lane-racer') return 'lane-racer';
-    if (mode === 'grand-prix') return 'grand-prix';
-    return 'pst';
+  const initial = resolveLeaderboardView({
+    search: window.location.search,
+    currentCircuitId: CURRENT_GRAND_PRIX.circuitId,
+    persistedOperation: loadSetupOperation(),
   });
+  const [activeTab, setActiveTab] = useState<LeaderboardTab>(initial.tab);
+  const [selectedOp, setSelectedOp] = useState(initial.operation);
+  const [selectedCircuit, setSelectedCircuit] = useState<string | 'all'>(initial.circuitId);
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [selectedOp, setSelectedOp] = useState('All');
-  const [selectedCircuit, setSelectedCircuit] = useState('All');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
@@ -67,79 +75,33 @@ export default function Leaderboard() {
     setError(null);
     setShowAll(false);
     setSearchQuery('');
-    const op = selectedOp !== 'All' ? selectedOp : undefined;
-
-    if (activeTab === 'pst') {
-      getLeaderboard(op, 50)
-        .then(data => {
-          setEntries(data.map((e: any) => ({
-            id: e.id,
-            playerId: e.player_id,
-            playerName: e.player_name,
-            operation: e.operation,
-            score: e.score,
-            totalTime: e.total_time,
-            mistakes: e.mistakes,
-            accuracy: e.accuracy,
-            difficultyAchieved: e.difficulty_achieved,
-            createdAt: e.created_at,
-          })));
-          setLoading(false);
-        })
-        .catch(() => {
-          setEntries([]);
-          setError('offline');
-          setLoading(false);
-        });
-    } else if (activeTab === 'grand-prix') {
-      getGPLeaderboard(undefined, op, 50)
-        .then(data => {
-          setEntries(data.map((e: any) => ({
-            id: e.id,
-            playerId: e.player_id,
-            playerName: e.player_name,
-            operation: e.operation,
-            score: e.score,
-            totalTime: e.total_time,
-            mistakes: e.mistakes,
-            accuracy: e.accuracy,
-            difficultyAchieved: e.difficulty_achieved,
-            createdAt: e.created_at,
-            circuitName: e.circuit_name,
-            polePosition: e.pole_position,
-          })));
-          setLoading(false);
-        })
-        .catch(() => {
-          setEntries([]);
-          setError('offline');
-          setLoading(false);
-        });
-    } else {
-      const circuitId = selectedCircuit !== 'All' ? CIRCUIT_ID_MAP[selectedCircuit] : undefined;
-      getLaneRacerLeaderboard(circuitId, op, 50)
-        .then(data => {
-          setEntries(data.map((e: any) => ({
-            id: e.id,
-            playerId: e.player_id,
-            playerName: e.player_name,
-            operation: e.operation,
-            score: e.score,
-            totalTime: e.total_time,
-            mistakes: e.mistakes,
-            accuracy: e.accuracy,
-            difficultyAchieved: e.difficulty_achieved,
-            createdAt: e.created_at,
-            circuitName: e.circuit_name,
-          })));
-          setLoading(false);
-        })
-        .catch(() => {
-          setEntries([]);
-          setError('offline');
-          setLoading(false);
-        });
-    }
+    const circuitId = selectedCircuit === 'all' ? undefined : selectedCircuit;
+    const fetchRows = activeTab === 'free-practice'
+      ? getFpLeaderboard({ operation: selectedOp, circuitId, limit: 50 })
+      : getGpWeekendLeaderboard({ operation: selectedOp, circuitId, limit: 50 });
+    fetchRows
+      .then((data) => {
+        setEntries(data.map((e: any) => ({
+          id: e.id,
+          playerId: e.player_id,
+          playerName: e.player_name,
+          operation: e.operation,
+          score: e.score,
+          totalTime: e.total_time,
+          mistakes: e.mistakes,
+          accuracy: e.accuracy,
+          difficultyAchieved: e.difficulty_achieved,
+          createdAt: e.created_at,
+          circuitName: e.circuit_name,
+          polePosition: e.pole_position,
+        })));
+        setLoading(false);
+      })
+      .catch(() => {
+        setEntries([]);
+        setError('offline');
+        setLoading(false);
+      });
   }, [selectedOp, activeTab, selectedCircuit]);
 
   const INITIAL_COUNT = 50;
@@ -160,17 +122,17 @@ export default function Leaderboard() {
               <h1 className="text-lg md:text-xl font-bold tracking-widest uppercase text-white">Leaderboard</h1>
             </div>
             <p className="text-xs text-white/70 mt-1 ml-9">
-              {activeTab === 'pst' ? 'Record 100 laps in Free Practice to enter.' : activeTab === 'grand-prix' ? 'Finish a Grand Prix Race Day to enter.' : 'Complete a Lane Racer race to enter.'}
+              {activeTab === 'free-practice' ? 'Record 100 laps in Free Practice to enter.' : 'Finish a Grand Prix Race Day to enter.'}
             </p>
           </div>
 
           {/* Tab toggle */}
           <div className="flex gap-2 mb-5">
             <button
-              onClick={() => { setActiveTab('pst'); setSelectedOp('All'); setSelectedCircuit('All'); }}
+              onClick={() => setActiveTab('free-practice')}
               className={cn(
                 "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors",
-                activeTab === 'pst'
+                activeTab === 'free-practice'
                   ? "bg-yellow-400 text-black"
                   : "bg-white/10 text-white/50 hover:text-white"
               )}
@@ -179,19 +141,7 @@ export default function Leaderboard() {
               Free Practice
             </button>
             <button
-              onClick={() => { setActiveTab('lane-racer'); setSelectedOp('All'); setSelectedCircuit('All'); }}
-              className={cn(
-                "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors",
-                activeTab === 'lane-racer'
-                  ? "bg-yellow-400 text-black"
-                  : "bg-white/10 text-white/50 hover:text-white"
-              )}
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-            >
-              Lane Racer
-            </button>
-            <button
-              onClick={() => { setActiveTab('grand-prix'); setSelectedOp('All'); setSelectedCircuit('All'); }}
+              onClick={() => setActiveTab('grand-prix')}
               className={cn(
                 "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors",
                 activeTab === 'grand-prix'
@@ -214,7 +164,7 @@ export default function Leaderboard() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-neutral-900 border-white/20">
-                {OPERATIONS.map(op => (
+                {LEADERBOARD_OPERATIONS.map(op => (
                   <SelectItem
                     key={op}
                     value={op}
@@ -227,28 +177,33 @@ export default function Leaderboard() {
               </SelectContent>
             </Select>
 
-            {activeTab === 'lane-racer' && (
-              <Select value={selectedCircuit} onValueChange={setSelectedCircuit}>
-                <SelectTrigger
-                  className="w-48 bg-white/10 border-white/20 text-white text-xs font-medium uppercase tracking-wider"
+            <Select value={selectedCircuit} onValueChange={setSelectedCircuit}>
+              <SelectTrigger
+                className="w-48 bg-white/10 border-white/20 text-white text-xs font-medium uppercase tracking-wider"
+                style={{ fontFamily: 'Oxanium, sans-serif' }}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-neutral-900 border-white/20">
+                {pickerIds.map(id => (
+                  <SelectItem
+                    key={id}
+                    value={id}
+                    className="text-white text-xs font-medium uppercase tracking-wider focus:bg-yellow-400 focus:text-black"
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  >
+                    {circuitLabel(id)}
+                  </SelectItem>
+                ))}
+                <SelectItem
+                  value="all"
+                  className="text-white text-xs font-medium uppercase tracking-wider focus:bg-yellow-400 focus:text-black"
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
                 >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-neutral-900 border-white/20">
-                  {CIRCUIT_FILTERS.map(c => (
-                    <SelectItem
-                      key={c}
-                      value={c}
-                      className="text-white text-xs font-medium uppercase tracking-wider focus:bg-yellow-400 focus:text-black"
-                      style={{ fontFamily: 'Oxanium, sans-serif' }}
-                    >
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+                  All circuits
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* Search */}
             <div className="flex-1 relative">
@@ -284,7 +239,7 @@ export default function Leaderboard() {
               <Trophy className="w-12 h-12 text-white/40" />
               <div className="text-white/70 text-sm uppercase tracking-widest">No entries yet</div>
               <p className="text-white/50 text-xs">
-                {activeTab === 'pst' ? 'Complete a 57-lap PST cycle to appear here' : activeTab === 'grand-prix' ? 'Finish a Grand Prix Race Day to appear here' : 'Complete a Lane Racer race to appear here'}
+                {leaderboardEmptyMessage(activeTab, selectedOp, selectedCircuit === 'all' ? 'all' : circuitLabel(selectedCircuit))}
               </p>
             </div>
           ) : visibleEntries.length === 0 ? (
@@ -336,7 +291,7 @@ export default function Leaderboard() {
                           )}
                         </div>
                         <div className="flex items-center gap-3 mt-0.5">
-                          {(activeTab === 'lane-racer' || activeTab === 'grand-prix') && entry.circuitName && (
+                          {entry.circuitName && (
                             <>
                               <span className="text-[10px] text-white/70 uppercase tracking-wider">{entry.circuitName}</span>
                               <span className="text-[10px] text-white/50">•</span>
