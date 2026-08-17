@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -144,3 +144,71 @@ export const insertLaneRacerLeaderboardSchema = createInsertSchema(laneRacerLead
 
 export type InsertLaneRacerLeaderboardEntry = z.infer<typeof insertLaneRacerLeaderboardSchema>;
 export type LaneRacerLeaderboardEntry = typeof laneRacerLeaderboard.$inferSelect;
+
+export const fpLeaderboard = pgTable("fp_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  playerId: varchar("player_id").notNull(),
+  playerName: text("player_name").notNull(),
+  circuitId: varchar("circuit_id", { length: 20 }).notNull(),
+  circuitName: varchar("circuit_name", { length: 50 }).notNull(),
+  operation: varchar("operation", { length: 20 }).notNull(),
+  score: integer("score").notNull(),
+  totalTime: integer("total_time").notNull(),
+  mistakes: integer("mistakes").notNull(),
+  accuracy: integer("accuracy").notNull(),
+  difficultyAchieved: varchar("difficulty_achieved", { length: 20 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("fp_leaderboard_player_circuit_op").on(table.playerId, table.circuitId, table.operation),
+]);
+
+export const insertFpLeaderboardSchema = createInsertSchema(fpLeaderboard).pick({
+  playerId: true,
+  playerName: true,
+  circuitId: true,
+  circuitName: true,
+  operation: true,
+  score: true,
+  totalTime: true,
+  mistakes: true,
+  accuracy: true,
+  difficultyAchieved: true,
+});
+
+export type InsertFpLeaderboardEntry = z.infer<typeof insertFpLeaderboardSchema>;
+export type FpLeaderboardEntry = typeof fpLeaderboard.$inferSelect;
+
+export const gpWeekendLeaderboard = pgTable("gp_weekend_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  playerId: varchar("player_id").notNull(),
+  playerName: text("player_name").notNull(),
+  circuitId: varchar("circuit_id", { length: 20 }).notNull(),
+  circuitName: varchar("circuit_name", { length: 50 }).notNull(),
+  operation: varchar("operation", { length: 20 }).notNull(),
+  score: integer("score").notNull(),
+  totalTime: integer("total_time").notNull(),
+  mistakes: integer("mistakes").notNull(),
+  accuracy: integer("accuracy").notNull(),
+  difficultyAchieved: varchar("difficulty_achieved", { length: 20 }).notNull(),
+  polePosition: boolean("pole_position").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("gp_weekend_player_circuit_op").on(table.playerId, table.circuitId, table.operation),
+]);
+
+export const insertGpWeekendLeaderboardSchema = createInsertSchema(gpWeekendLeaderboard).pick({
+  playerId: true,
+  playerName: true,
+  circuitId: true,
+  circuitName: true,
+  operation: true,
+  score: true,
+  totalTime: true,
+  mistakes: true,
+  accuracy: true,
+  difficultyAchieved: true,
+  polePosition: true,
+});
+
+export type InsertGpWeekendLeaderboardEntry = z.infer<typeof insertGpWeekendLeaderboardSchema>;
+export type GpWeekendLeaderboardEntry = typeof gpWeekendLeaderboard.$inferSelect;
