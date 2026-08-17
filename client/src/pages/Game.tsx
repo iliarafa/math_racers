@@ -12,7 +12,7 @@ import type { Weather, RaceMapView, DifficultyDrumOption } from "@/lib/gameLogic
 import { loadSetupWeather, saveSetupWeather, loadSetupOperation, saveSetupOperation } from "@/lib/gameLogic";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { operationRow, levelRow, weatherRow, viewRow } from "@/components/setup/setupRows";
-import { submitLeaderboardEntry, submitGPLeaderboardEntry, GPLeaderboardSubmission } from "@/lib/supabase";
+import { submitFpLeaderboardEntry, submitGpWeekendEntry, GpWeekendLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy } from "lucide-react";
@@ -432,6 +432,8 @@ export default function Game() {
   const [showNamePrompt, setShowNamePrompt] = useState(false);
   const [pendingScoreSubmission, setPendingScoreSubmission] = useState<{
     playerId: string;
+    circuitId: string;
+    circuitName: string;
     operation: string;
     score: number;
     totalTime: number;
@@ -439,7 +441,18 @@ export default function Game() {
     accuracy: number;
     difficultyAchieved: string;
   } | null>(null);
-  const [pendingGPSubmission, setPendingGPSubmission] = useState<Omit<GPLeaderboardSubmission, 'playerName'> | null>(null);
+  const [pendingGPSubmission, setPendingGPSubmission] = useState<Omit<GpWeekendLeaderboardSubmission, 'playerName'> | null>(null);
+  const [leaderboardNotice, setLeaderboardNotice] = useState<string | null>(null);
+
+  const handleWriteResult = (result: 'inserted' | 'updated' | 'kept') => {
+    if (result === 'inserted' || result === 'updated') {
+      setLeaderboardNotice('Personal best posted');
+    }
+  };
+
+  const handleWriteError = () => {
+    setLeaderboardNotice('Couldn’t reach the leaderboard.');
+  };
   const [pstCycleCount, setPstCycleCount] = useState(0);
   const [nameInput, setNameInput] = useState('');
   // Grand Prix session state
@@ -468,6 +481,10 @@ export default function Game() {
    * Quick Race / Free Practice — off.
    */
   const powerUpsEnabled = isGrandPrix;
+
+  const leaderboardHref = isGrandPrix
+    ? `/leaderboard?mode=grand-prix&circuit=${CURRENT_GRAND_PRIX.circuitId}&operation=${encodeURIComponent(selectedOperation)}`
+    : `/leaderboard?mode=free-practice&circuit=${CURRENT_GRAND_PRIX.circuitId}&operation=${encodeURIComponent(selectedOperation)}`;
 
   const raceLength = (() => {
     if (isQuickRace) return RACE_LENGTH;
@@ -1284,6 +1301,8 @@ export default function Game() {
 
             const submission = {
               playerId: state.playerId,
+              circuitId: CURRENT_GRAND_PRIX.circuitId,
+              circuitName: CURRENT_GRAND_PRIX.circuitName,
               operation: selectedOperation,
               score,
               totalTime: elapsedTime,
@@ -1297,14 +1316,10 @@ export default function Game() {
               setShowNamePrompt(true);
               setNameInput('');
             } else {
-              submitLeaderboardEntry({
+              submitFpLeaderboardEntry({
                 ...submission,
                 playerName: state.playerName,
-              }).then(() => {
-                console.log('[PST] Leaderboard entry submitted successfully');
-              }).catch((err) => {
-                console.error('[PST] Leaderboard submission failed:', err);
-              });
+              }).then(handleWriteResult).catch(handleWriteError);
             }
           }
 
@@ -1321,7 +1336,7 @@ export default function Game() {
           const gpSubmission = {
             playerId: state.playerId,
             circuitId: CURRENT_GRAND_PRIX.circuitId,
-            circuitName: CURRENT_GRAND_PRIX.name,
+            circuitName: CURRENT_GRAND_PRIX.circuitName,
             operation: selectedOperation,
             totalTime: elapsedTime,
             mistakes,
@@ -1336,14 +1351,10 @@ export default function Game() {
             setShowNamePrompt(true);
             setNameInput('');
           } else {
-            submitGPLeaderboardEntry({
+            submitGpWeekendEntry({
               ...gpSubmission,
               playerName: state.playerName.trim(),
-            }).then(() => {
-              console.log('[GP] Leaderboard entry submitted successfully');
-            }).catch((err) => {
-              console.error('[GP] Leaderboard submission failed:', err);
-            });
+            }).then(handleWriteResult).catch(handleWriteError);
           }
 
           finishRace(mistakes);
@@ -2036,7 +2047,7 @@ export default function Game() {
           />
 
           {isGrandPrix && (
-            <Link href="/leaderboard?mode=grand-prix">
+            <Link href={leaderboardHref}>
               <button
                 className="mt-4 flex items-center gap-2 transition-colors text-xs uppercase tracking-wider text-white/45 hover:text-white"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
@@ -2305,11 +2316,14 @@ export default function Game() {
               )}
             </div>
             <div className="grid gap-3">
-              <Link href="/leaderboard">
+              <Link href={leaderboardHref}>
                 <button className="w-full bg-yellow-400 text-black h-12 rounded-lg font-bold hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                   View Leaderboard
                 </button>
               </Link>
+              {leaderboardNotice && (
+                <p className="text-xs text-white/50 text-center">{leaderboardNotice}</p>
+              )}
               <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
                 <Home className="w-4 h-4" /> Back to Paddock
               </button>
@@ -2332,16 +2346,16 @@ export default function Game() {
                     const trimmed = nameInput.trim();
                     setPlayerName(trimmed);
                     if (pendingScoreSubmission) {
-                      submitLeaderboardEntry({
+                      submitFpLeaderboardEntry({
                         ...pendingScoreSubmission,
                         playerName: trimmed,
-                      }).catch(() => { /* silent */ });
+                      }).then(handleWriteResult).catch(handleWriteError);
                     }
                     if (pendingGPSubmission) {
-                      submitGPLeaderboardEntry({
+                      submitGpWeekendEntry({
                         ...pendingGPSubmission,
                         playerName: trimmed,
-                      }).catch(() => { /* silent */ });
+                      }).then(handleWriteResult).catch(handleWriteError);
                     }
                     setPendingScoreSubmission(null);
                     setPendingGPSubmission(null);
@@ -2371,16 +2385,16 @@ export default function Game() {
                       const trimmed = nameInput.trim();
                       setPlayerName(trimmed);
                       if (pendingScoreSubmission) {
-                        submitLeaderboardEntry({
+                        submitFpLeaderboardEntry({
                           ...pendingScoreSubmission,
                           playerName: trimmed,
-                        }).catch(() => { /* silent */ });
+                        }).then(handleWriteResult).catch(handleWriteError);
                       }
                       if (pendingGPSubmission) {
-                        submitGPLeaderboardEntry({
+                        submitGpWeekendEntry({
                           ...pendingGPSubmission,
                           playerName: trimmed,
-                        }).catch(() => { /* silent */ });
+                        }).then(handleWriteResult).catch(handleWriteError);
                       }
                       setPendingScoreSubmission(null);
                       setPendingGPSubmission(null);
@@ -2741,10 +2755,10 @@ export default function Game() {
                     const trimmed = nameInput.trim();
                     setPlayerName(trimmed);
                     if (pendingGPSubmission) {
-                      submitGPLeaderboardEntry({
+                      submitGpWeekendEntry({
                         ...pendingGPSubmission,
                         playerName: trimmed,
-                      }).catch(() => { /* silent */ });
+                      }).then(handleWriteResult).catch(handleWriteError);
                     }
                     setPendingGPSubmission(null);
                     setShowNamePrompt(false);
@@ -2772,10 +2786,10 @@ export default function Game() {
                       const trimmed = nameInput.trim();
                       setPlayerName(trimmed);
                       if (pendingGPSubmission) {
-                        submitGPLeaderboardEntry({
+                        submitGpWeekendEntry({
                           ...pendingGPSubmission,
                           playerName: trimmed,
-                        }).catch(() => { /* silent */ });
+                        }).then(handleWriteResult).catch(handleWriteError);
                       }
                       setPendingGPSubmission(null);
                       setShowNamePrompt(false);
@@ -3458,16 +3472,16 @@ export default function Game() {
                   const trimmed = nameInput.trim();
                   setPlayerName(trimmed);
                   if (pendingScoreSubmission) {
-                    submitLeaderboardEntry({
+                    submitFpLeaderboardEntry({
                       ...pendingScoreSubmission,
                       playerName: trimmed,
-                    }).catch(() => { /* silent */ });
+                    }).then(handleWriteResult).catch(handleWriteError);
                   }
                   if (pendingGPSubmission) {
-                    submitGPLeaderboardEntry({
+                    submitGpWeekendEntry({
                       ...pendingGPSubmission,
                       playerName: trimmed,
-                    }).catch(() => { /* silent */ });
+                    }).then(handleWriteResult).catch(handleWriteError);
                   }
                   setPendingScoreSubmission(null);
                   setPendingGPSubmission(null);
@@ -3497,16 +3511,16 @@ export default function Game() {
                     const trimmed = nameInput.trim();
                     setPlayerName(trimmed);
                     if (pendingScoreSubmission) {
-                      submitLeaderboardEntry({
+                      submitFpLeaderboardEntry({
                         ...pendingScoreSubmission,
                         playerName: trimmed,
-                      }).catch(() => { /* silent */ });
+                      }).then(handleWriteResult).catch(handleWriteError);
                     }
                     if (pendingGPSubmission) {
-                      submitGPLeaderboardEntry({
+                      submitGpWeekendEntry({
                         ...pendingGPSubmission,
                         playerName: trimmed,
-                      }).catch(() => { /* silent */ });
+                      }).then(handleWriteResult).catch(handleWriteError);
                     }
                     setPendingScoreSubmission(null);
                     setPendingGPSubmission(null);
