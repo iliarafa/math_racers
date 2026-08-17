@@ -21,7 +21,6 @@ import {
 import type { Difficulty, DynamicDifficultyState, DifficultyMode, DifficultyDrumOption } from "@/lib/gameLogic";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { operationRow, levelRow } from "@/components/setup/setupRows";
-import { submitLaneRacerLeaderboardEntry } from "@/lib/supabase";
 import { hasLaneRacerWin, saveLaneRacerWin } from "@/lib/drivingSchoolLicence";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
@@ -101,7 +100,7 @@ function playBeep(freq: number, duration: number, volume = 0.15) {
 }
 
 export default function LaneRacer() {
-  const { state, setPlayerName } = useGameState();
+  const { state } = useGameState();
   const [, navigate] = useLocation();
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
   const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[DEFAULT_CIRCUIT_INDEX]);
@@ -146,20 +145,6 @@ export default function LaneRacer() {
   const [totalTime, setTotalTime] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [raceLength, setRaceLength] = useState(RACE_LENGTH);
-  const [showNamePrompt, setShowNamePrompt] = useState(false);
-  const [nameInput, setNameInput] = useState('');
-  const [pendingSubmission, setPendingSubmission] = useState<{
-    playerId: string;
-    circuitId: string;
-    circuitName: string;
-    operation: string;
-    score: number;
-    totalTime: number;
-    mistakes: number;
-    accuracy: number;
-    difficultyAchieved: string;
-  } | null>(null);
-  const [submitted, setSubmitted] = useState(false);
   const [renderMode, setRenderMode] = useState<RendererMode>(() => {
     const saved = localStorage.getItem(RENDERER_STORAGE_KEY);
     return saved === '3d' ? '3d' : '2d';
@@ -180,43 +165,6 @@ export default function LaneRacer() {
       : dynamicDifficultyDisplay === 'medium' ? '#38bdf8'
         : dynamicDifficultyDisplay === 'easy' ? '#e5e5e5'
           : '#22c55e';
-
-  // Auto-submit leaderboard entry when race finishes
-  useEffect(() => {
-    if (gameStatus !== 'finished' || submitted || showNamePrompt || pendingSubmission) return;
-
-    const accuracy = questionNum > 0 ? Math.round((correctCount / questionNum) * 100) : 0;
-    const mistakes = raceLength - correctCount;
-    const achieved =
-      difficultyMode === 'locked'
-        ? lockedDifficulty
-        : (dynamicDifficultyRef.current?.currentDifficulty ?? dynamicDifficultyDisplay);
-    const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, achieved);
-
-    const submission = {
-      playerId: state.playerId,
-      circuitId: selectedCircuit.id,
-      circuitName: selectedCircuit.name,
-      operation: selectedOperation,
-      score,
-      totalTime,
-      mistakes,
-      accuracy,
-      difficultyAchieved: achieved,
-    };
-
-    if (state.playerName) {
-      setSubmitted(true);
-      submitLaneRacerLeaderboardEntry({
-        ...submission,
-        playerName: state.playerName,
-      }).catch(() => { /* silent */ });
-    } else {
-      setPendingSubmission(submission);
-      setShowNamePrompt(true);
-      setNameInput('');
-    }
-  }, [correctCount, difficultyMode, dynamicDifficultyDisplay, gameStatus, lockedDifficulty, pendingSubmission, questionNum, raceLength, selectedCircuit.id, selectedCircuit.name, selectedOperation, showNamePrompt, state.playerId, state.playerName, submitted, totalTime]);
 
   const spawnQuestion = useCallback(() => {
     // Adaptive: apply pending series pace on this spawn boundary (not mid-token).
@@ -823,16 +771,11 @@ export default function LaneRacer() {
 
             <div className="grid gap-3">
               <button
-                onClick={() => { setGameStatus('setup'); setSubmitted(false); }}
+                onClick={() => { setGameStatus('setup'); }}
                 className="w-full bg-green-600 hover:bg-green-700 text-white h-12 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
               >
                 Race Again
               </button>
-              <Link href="/leaderboard?mode=lane-racer">
-                <button className="w-full bg-yellow-400 hover:bg-yellow-300 text-black h-12 rounded-lg font-bold transition-all flex items-center justify-center gap-2" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-                  View Leaderboard
-                </button>
-              </Link>
               <Link href="/hub">
                 <button className="w-full bg-white/10 text-white h-12 rounded-lg font-medium hover:bg-white/20 transition-all flex items-center justify-center gap-2">
                   Paddock
@@ -842,76 +785,6 @@ export default function LaneRacer() {
 
           </div>
         </div>
-
-        {showNamePrompt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="bg-[#111] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
-              <div className="text-center space-y-1">
-                <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
-                <p className="text-sm text-white/50">This will appear on the global leaderboard</p>
-              </div>
-              <input
-                type="text"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value.slice(0, 20))}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && nameInput.trim()) {
-                    const trimmed = nameInput.trim();
-                    setPlayerName(trimmed);
-                    if (pendingSubmission) {
-                      submitLaneRacerLeaderboardEntry({
-                        ...pendingSubmission,
-                        playerName: trimmed,
-                      }).catch(() => { /* silent */ });
-                    }
-                    setPendingSubmission(null);
-                    setSubmitted(true);
-                    setShowNamePrompt(false);
-                  }
-                }}
-                autoFocus
-                maxLength={20}
-                placeholder="Your name..."
-                className="w-full px-4 py-3 bg-black border border-[#444] rounded-xl text-white text-center text-lg focus:outline-none focus:border-yellow-400 transition-colors"
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-              />
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setPendingSubmission(null);
-                    setSubmitted(true);
-                    setShowNamePrompt(false);
-                  }}
-                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 bg-white/5 hover:bg-white/10 transition-colors"
-                >
-                  Skip
-                </button>
-                <button
-                  onClick={() => {
-                    if (nameInput.trim()) {
-                      const trimmed = nameInput.trim();
-                      setPlayerName(trimmed);
-                      if (pendingSubmission) {
-                        submitLaneRacerLeaderboardEntry({
-                          ...pendingSubmission,
-                          playerName: trimmed,
-                        }).catch(() => { /* silent */ });
-                      }
-                      setPendingSubmission(null);
-                      setSubmitted(true);
-                      setShowNamePrompt(false);
-                    }
-                  }}
-                  disabled={!nameInput.trim()}
-                  className="flex-1 py-3 rounded-xl text-sm font-bold text-black bg-yellow-400 hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  style={{ fontFamily: 'Oxanium, sans-serif' }}
-                >
-                  Submit
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </GameLayout>
     );
   }
