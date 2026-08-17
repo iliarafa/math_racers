@@ -1052,6 +1052,7 @@ export default function Game() {
     } else {
       setRaceMode('solo');
     }
+    setLeaderboardNotice(null);
     setGameStatus('countdown');
   };
 
@@ -1621,6 +1622,7 @@ export default function Game() {
     setShowNamePrompt(false);
     setPendingScoreSubmission(null);
     setNameInput('');
+    setLeaderboardNotice(null);
 
     if (isQuickRace) {
       // Same fixed defaults, skip setup — straight back to lights.
