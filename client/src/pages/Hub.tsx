@@ -7,6 +7,7 @@ import { usePurchase } from "@/hooks/use-purchase";
 import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { getLicenceStatus } from "@/lib/drivingSchoolLicence";
+import { DrivingSchoolWhatsNew } from "@/components/DrivingSchoolWhatsNew";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import logoWhiteImage from "@assets/logo-white.svg";
 import schoolBgImage from "@assets/driving-school-bg.jpg";
@@ -155,7 +156,13 @@ type HubView = 'paddock' | 'weekend' | 'school';
 export default function Hub() {
   const { state } = useGameState();
   const { isPremium } = usePurchase();
-  const [view, setView] = useState<HubView>('paddock');
+  const [view, setView] = useState<HubView>(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('school') === '1' ? 'school' : 'paddock';
+    } catch {
+      return 'paddock';
+    }
+  });
 
   const title =
     view === 'weekend' ? 'Race Weekend' : view === 'school' ? 'Driving School' : 'Paddock';
@@ -168,7 +175,7 @@ export default function Hub() {
     };
   }, [view]);
 
-  // Licence path: flashcards → reaction → lane racer (soft gating — nothing locked).
+  // Licence path: flashcards → reaction → lane racer. Grand Prix waits on complete.
   const licence = getLicenceStatus();
   const licenceSteps = [licence.flashcards, licence.reaction, licence.laneRacer];
   const currentStep = licenceSteps.findIndex((done) => !done);
@@ -324,12 +331,14 @@ export default function Hub() {
               />
 
               <HubCard
-                href="/game/grand-prix"
+                href={licence.complete ? "/game/grand-prix" : undefined}
                 title="GRAND PRIX"
                 subtitle={`ROUND ${CURRENT_GRAND_PRIX.round}`}
-                note={isPremium ? undefined : 'Full version'}
+                note={licence.complete ? (isPremium ? undefined : 'Full version') : 'Graduate Driving School'}
+                badge={licence.complete ? undefined : { label: 'locked', color: '#ffcc00' }}
                 testId="link-grand-prix"
                 soundEnabled={state.soundEnabled}
+                onClick={licence.complete ? undefined : () => setView('school')}
               />
             </>
           )}
@@ -414,6 +423,13 @@ export default function Hub() {
           )}
         </div>
       </div>
+
+      {view === "paddock" && (
+        <DrivingSchoolWhatsNew
+          soundEnabled={state.soundEnabled}
+          onOpenSchool={() => setView("school")}
+        />
+      )}
     </div>
   );
 }

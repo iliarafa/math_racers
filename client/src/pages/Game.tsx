@@ -18,6 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
+import { hasSuperlicence } from "@/lib/drivingSchoolLicence";
 
 /** Temporary QA: force purple-lap lit (level → ALL PURPLE) as soon as Free Practice starts. */
 const FORCE_PURPLE_LAP_PREVIEW = false;
@@ -1915,6 +1916,39 @@ export default function Game() {
       setOvertakeStartEnergy(0);
     }
   }, [botFinished, overtakeActive]);
+
+  if (isGrandPrix && !hasSuperlicence()) {
+    return (
+      <GameLayout trackName={CURRENT_GRAND_PRIX.name} lockViewport hideGarageButton>
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+          <div
+            className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#ffcc00]"
+            style={{ fontFamily: "Oxanium, sans-serif" }}
+          >
+            Superlicence
+          </div>
+          <h2
+            className="mt-2 text-2xl font-bold uppercase tracking-wider text-white"
+            style={{ fontFamily: "Oxanium, sans-serif" }}
+          >
+            Locked
+          </h2>
+          <p className="mt-3 max-w-sm text-center text-sm leading-relaxed text-white/75">
+            Graduate Driving School to race a Grand Prix.
+          </p>
+          <button
+            type="button"
+            onClick={() => setLocation("/hub?school=1")}
+            className="mt-6 h-12 w-full max-w-sm rounded-lg bg-yellow-400 font-bold uppercase tracking-wider text-black hover:bg-yellow-300"
+            style={{ fontFamily: "Oxanium, sans-serif" }}
+            data-testid="button-gp-open-school"
+          >
+            Open Driving School
+          </button>
+        </div>
+      </GameLayout>
+    );
+  }
 
   // Grand Prix is premium. The entitlement is currently granted to everyone
   // (see PurchaseContext), so this gate is inert — it stays wired for when it isn't.

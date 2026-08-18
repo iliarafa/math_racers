@@ -1,9 +1,9 @@
 import { DRIVING_SCHOOL_STAGES, loadHighestClearedStage } from '@/lib/drivingSchool';
 
 /**
- * Driving School licence path (soft gating): flashcards → reaction test → lane racer.
- * Nothing is locked — these milestones are tracked wherever they happen and the
- * Paddock badge appears once all three are done.
+ * Driving School licence path: flashcards → reaction test → lane racer.
+ * Grand Prix stays locked until all three are done (`hasSuperlicence`).
+ * Race Now and Free Practice stay open.
  */
 
 /** Best reaction time must beat this to pass the licence step. */
@@ -65,4 +65,8 @@ export function getLicenceStatus(): LicenceStatus {
   const reaction = best !== null && best < REACTION_LICENCE_MS;
   const laneRacer = hasLaneRacerWin();
   return { flashcards, reaction, laneRacer, complete: flashcards && reaction && laneRacer };
+}
+
+export function hasSuperlicence(): boolean {
+  return getLicenceStatus().complete;
 }
