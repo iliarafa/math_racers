@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, ChevronLeft, Delete, Lock, RotateCcw } from "lucide-react";
+import { Check, Delete, Lock, RotateCcw } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { cn } from "@/lib/utils";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import { useGameState } from "@/lib/gameLogic";
+import schoolBgImage from "@assets/driving-school-bg.jpg";
 import {
   DRIVING_SCHOOL_STAGES,
   CARDS_PER_STAGE,
@@ -95,7 +95,6 @@ function playGradeSound(color: Exclude<CardColor, 'pending'>) {
 
 export default function DrivingSchool() {
   const { state } = useGameState();
-  const [, setLocation] = useLocation();
   const [highestCleared, setHighestCleared] = useState(() => loadHighestClearedStage());
   const [screen, setScreen] = useState<Screen>('stages');
   const [stage, setStage] = useState<DrivingSchoolStage | null>(null);
@@ -383,14 +382,27 @@ export default function DrivingSchool() {
 
   // Stage select
   return (
-    <GameLayout lockViewport hideGarageButton centerHeader backHref="/hub">
+    <GameLayout
+      lockViewport
+      hideGarageButton
+      centerHeader
+      backHref="/hub"
+      darkBackground
+      backdropSrc={schoolBgImage}
+    >
       <div className="flex-1 flex flex-col px-4 pb-8 overflow-y-auto">
         <div className="text-center py-4">
-          <h2 className="text-xl font-bold uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+          <h2
+            className="text-xl font-bold uppercase tracking-wider text-white"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
             Flashcards
           </h2>
-          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-widest">
-            {PURPLE_MAJORITY}+ purple · no reds · 20 cards
+          <p
+            className="mt-1 text-xs uppercase tracking-widest text-white/45"
+            style={{ fontFamily: 'Oxanium, sans-serif' }}
+          >
+            {PURPLE_MAJORITY} purple. No reds. {CARDS_PER_STAGE} cards.
           </p>
         </div>
 
@@ -398,6 +410,7 @@ export default function DrivingSchool() {
           {DRIVING_SCHOOL_STAGES.map((s) => {
             const unlocked = isStageUnlocked(s.id, highestCleared);
             const cleared = highestCleared >= s.id;
+            const current = unlocked && !cleared && s.id === highestCleared + 1;
             return (
               <button
                 key={s.id}
@@ -406,42 +419,45 @@ export default function DrivingSchool() {
                 onClick={() => startStage(s)}
                 className={cn(
                   'w-full text-left rounded-xl px-4 py-3 transition-all',
-                  unlocked
-                    ? 'bg-secondary/80 hover:bg-secondary active:scale-[0.99]'
-                    : 'bg-muted/40 opacity-50 cursor-not-allowed',
+                  unlocked ? 'active:scale-[0.99]' : 'opacity-45 cursor-not-allowed',
                 )}
+                style={{
+                  backgroundColor: 'rgba(255,255,255,0.12)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  borderLeft: current ? '3px solid #a855f7' : undefined,
+                  paddingLeft: current ? 17 : undefined,
+                }}
                 data-testid={`stage-${s.id}`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest text-muted-foreground" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    <div
+                      className="text-[10px] uppercase tracking-widest text-white/45"
+                      style={{ fontFamily: 'Oxanium, sans-serif' }}
+                    >
                       {s.subtitle}
-                      {cleared && <span className="ml-2 text-purple-600">Cleared</span>}
+                      {cleared && <span className="ml-2 text-purple-400">Cleared</span>}
                     </div>
-                    <div className="font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                    <div
+                      className="font-bold text-white"
+                      style={{ fontFamily: 'Oxanium, sans-serif' }}
+                    >
                       {s.title}
                     </div>
                   </div>
                   {!unlocked ? (
-                    <Lock className="w-5 h-5 text-muted-foreground shrink-0" />
+                    <Lock className="w-5 h-5 text-white/45 shrink-0" />
                   ) : cleared ? (
                     <div className="w-3 h-3 rounded-full bg-purple-500 shrink-0" />
                   ) : (
-                    <RotateCcw className="w-5 h-5 text-muted-foreground shrink-0" />
+                    <RotateCcw className="w-5 h-5 text-white/55 shrink-0" />
                   )}
                 </div>
               </button>
             );
           })}
         </div>
-
-        <button
-          type="button"
-          onClick={() => setLocation('/hub')}
-          className="mt-6 mx-auto flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="w-4 h-4" /> Back to Paddock
-        </button>
       </div>
     </GameLayout>
   );

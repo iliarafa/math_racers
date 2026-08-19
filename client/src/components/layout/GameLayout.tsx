@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Wrench, Flag, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
+import logoWhiteImage from "@assets/logo-white.svg";
 
 interface GameLayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,8 @@ interface GameLayoutProps {
   hideLogo?: boolean;
   lockViewport?: boolean;
   darkBackground?: boolean;
+  /** Full-bleed art behind a dark page. Header goes translucent so the image shows through. */
+  backdropSrc?: string;
   hideGarageButton?: boolean;
   centerHeader?: boolean;
   headerRight?: React.ReactNode;
@@ -19,7 +22,7 @@ interface GameLayoutProps {
   onBack?: () => void;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref, onBack }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, backdropSrc, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref, onBack }: GameLayoutProps) {
   const backChevron = (className: string) =>
     onBack ? (
       <button onClick={onBack} className={className} data-testid="button-back">
@@ -33,11 +36,13 @@ export function GameLayout({ children, trackName, hideHeader = false, hideLogo =
       </Link>
     ) : null;
 
+  const overlayChrome = Boolean(backdropSrc);
+
   return (
     <div className={cn(
       "text-foreground flex flex-col",
       lockViewport ? "h-screen overflow-hidden" : "min-h-screen",
-      darkBackground ? "bg-neutral-800" : "bg-background"
+      overlayChrome ? "relative bg-black" : darkBackground ? "bg-neutral-800" : "bg-background"
     )} style={{ 
       fontFamily: 'Oxanium, sans-serif',
       paddingTop: 'env(safe-area-inset-top)',
@@ -45,15 +50,23 @@ export function GameLayout({ children, trackName, hideHeader = false, hideLogo =
       paddingLeft: 'env(safe-area-inset-left)',
       paddingRight: 'env(safe-area-inset-right)'
     }}>
+      {backdropSrc && (
+        <img
+          src={backdropSrc}
+          alt=""
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-0 h-full w-full object-cover opacity-55"
+        />
+      )}
       {!hideHeader && (
-        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex items-center sticky top-0 z-50", darkBackground ? "bg-neutral-800/80 backdrop-blur-sm" : "bg-[#ffffff]", centerHeader ? "justify-center relative" : "justify-between", !hideGarageButton && (darkBackground ? "border-b border-white/10" : "border-b border-border"))}>
+        <header className={cn("py-3 px-3 md:py-4 md:px-6 flex items-center sticky top-0 z-50", overlayChrome ? "bg-transparent" : darkBackground ? "bg-neutral-800/80 backdrop-blur-sm" : "bg-[#ffffff]", centerHeader ? "justify-center relative" : "justify-between", !hideGarageButton && !overlayChrome && (darkBackground ? "border-b border-white/10" : "border-b border-border"))}>
           {centerHeader && backChevron(cn("absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 transition-colors", darkBackground ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-black"))}
           <div className="flex items-center gap-4 md:gap-6">
             {!centerHeader && backChevron(cn("flex items-center justify-center w-10 h-10 transition-colors", darkBackground ? "text-white/60 hover:text-white" : "text-gray-500 hover:text-black"))}
             {!hideLogo && (
               <Link href="/">
                 <img
-                  src={logoImage}
+                  src={darkBackground ? logoWhiteImage : logoImage}
                   alt="Math Racer"
                   className="h-8 md:h-10 w-auto cursor-pointer hover:opacity-70 transition-opacity"
                 />
@@ -84,9 +97,9 @@ export function GameLayout({ children, trackName, hideHeader = false, hideLogo =
       )}
       {/* Main Content Area */}
       <main className={cn(
-        "flex-1 flex flex-col max-w-5xl md:max-w-6xl mx-auto w-full min-h-0",
+        "relative z-10 flex-1 flex flex-col max-w-5xl md:max-w-6xl mx-auto w-full min-h-0",
         lockViewport ? "p-0" : "p-6 md:p-10",
-        darkBackground && "bg-neutral-800"
+        darkBackground && !overlayChrome && "bg-neutral-800"
       )}>
         {children}
       </main>
