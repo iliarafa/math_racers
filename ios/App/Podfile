@@ -24,6 +24,10 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      # Capacitor's Cordova framework headers use double-quoted imports, which
+      # Xcode 27's module verifier rejects outright. Nothing we can fix upstream
+      # (still present in @capacitor/ios 8.5.0), so skip verification for pods.
+      config.build_settings['ENABLE_MODULE_VERIFIER'] = 'NO'
     end
   end
 end
