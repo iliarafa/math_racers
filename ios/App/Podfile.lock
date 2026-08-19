@@ -2,12 +2,12 @@ PODS:
   - Capacitor (8.0.2):
     - CapacitorCordova
   - CapacitorCordova (8.0.2)
-  - PurchasesHybridCommon (17.41.1):
-    - RevenueCat (= 5.59.2)
-  - RevenueCat (5.59.2)
-  - RevenuecatPurchasesCapacitor (12.2.1):
+  - PurchasesHybridCommon (18.29.0):
+    - RevenueCat (= 5.83.0)
+  - RevenueCat (5.83.0)
+  - RevenuecatPurchasesCapacitor (13.4.0):
     - Capacitor
-    - PurchasesHybridCommon (= 17.41.1)
+    - PurchasesHybridCommon (= 18.29.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -30,9 +30,9 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Capacitor: 2b79172ad27f3be2d103cce88b8eb9803fdcc744
   CapacitorCordova: 921bdb690ebe82421b24fce45552fd3dea2ae43a
-  PurchasesHybridCommon: 8eb130ab98f8dab600dea932a2599dee79304bb5
-  RevenueCat: f352b3661288080bd8bf30bbb96e331940e73c88
-  RevenuecatPurchasesCapacitor: a8d45cdd64bc736647718a2bdf764fa17b01a028
+  PurchasesHybridCommon: 94a0fde86cfecdc487fb64667b68f527af930265
+  RevenueCat: a83de0391a1061302699cb55eb1ff0662f5768b5
+  RevenuecatPurchasesCapacitor: 9205ff494ad81e19bccef77a88a34599c11ed319
 
 PODFILE CHECKSUM: a35b1a00feda3c6e6281ca8e76c6b019cd0f354c
 
