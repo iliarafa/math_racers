@@ -1,23 +1,23 @@
-import circuitZandvoort from "@/assets/circuit_zandvoort.png";
-import flagNetherlands from "@/assets/flag_netherlands.png";
+import circuitMonzaBlack from "@/assets/circuit_monza_black.png";
+import flagItaly from "@/assets/flag_italy.png";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
 // Also add the new track/flag asset imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 export const CURRENT_GRAND_PRIX = {
-  round: 12,
-  circuitId: 'zandvoort',
-  name: 'NETHERLANDS',
+  round: 13,
+  circuitId: 'monza',
+  name: 'MONZA',
   /** Proper circuit name (e.g. 'Hungaroring', 'Spa-Francorchamps') — shown on the GP card. */
-  circuitName: 'Zandvoort',
-  country: 'NETHERLANDS',
-  trackImage: circuitZandvoort,
-  flagImage: flagNetherlands,
-  rainProbability: 0.40,
-  simLapCount: 72,
-  gradient: 'linear-gradient(90deg, #AE1C28 0%, #FFFFFF 50%, #21468B 100%)',
-  welcomeBlurb: 'This week we head to Circuit Zandvoort in the seaside dunes of the Netherlands — a short, banked rollercoaster by the North Sea — for the Dutch Grand Prix.',
+  circuitName: 'Monza',
+  country: 'ITALY',
+  trackImage: circuitMonzaBlack,
+  flagImage: flagItaly,
+  rainProbability: 0.20,
+  simLapCount: 53,
+  gradient: 'linear-gradient(90deg, #008C45 0%, #FFFFFF 50%, #CD212A 100%)',
+  welcomeBlurb: 'This week we head to the Autodromo Nazionale di Monza — the Temple of Speed, just north of Milan — for the Italian Grand Prix.',
   /**
    * Optional per-circuit override for the setup-card silhouette stage's HEIGHT classes
    * (replaces RaceSetupCard's `h-36 md:h-52` default; see setup_cards.md).
