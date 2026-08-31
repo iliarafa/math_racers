@@ -4,6 +4,7 @@ import silverstoneDetail from "@/assets/silverstone_detail_track.png";
 import spaDetail from "@/assets/spa_detail_track.png";
 import hungaryDetail from "@/assets/hungary_detail_track.png";
 import zandvoortDetail from "@/assets/zandvoort_detail_track.png";
+import monzaDetail from "@/assets/monza_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -383,6 +384,7 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
     mostWins: { driver: 'Schumacher & Hamilton', count: 5 },
     summary:
       'Monza is called the Temple of Speed — a parkland circuit just north of Milan with long straights, hard braking into chicanes, and the famous Parabolica that slingshots cars onto the start-finish straight. The Italian Grand Prix has been a Formula 1 World Championship race since 1950, and the Tifosi — Ferrari’s home fans — make it one of the loudest weekends of the year. Cars run very little downforce here so they can go as fast as possible in a straight line, which makes slipstreaming and overtaking a big part of the race. A win at Monza, especially in a Ferrari, is one of the most celebrated trophies in the sport.',
+    detailMapImage: monzaDetail,
     lastYear: {
       season: 2025,
       race: [
