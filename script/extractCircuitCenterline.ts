@@ -261,7 +261,9 @@ function rotateToStartFinish(id: string, pts: Pt[], w: number, h: number): Pt[] 
   if (id !== 'monza' || pts.length < 8) return pts;
 
   // Pit straight sits along the bottom of the silhouette; cars run left toward T1.
-  const tx = w * 0.58;
+  // The S/F checkered line measures 0.767 of the track bbox width on
+  // monza_detail_track.png; the black art is bbox-cropped, so it transfers.
+  const tx = w * 0.77;
   const ty = h * 0.92;
   let i0 = 0;
   let best = Infinity;
@@ -968,10 +970,13 @@ function main() {
   // Keep dense samples — light cleanup only (RDP cuts chicanes / straights)
   let cycle = cleanup(snapped);
 
-  // Thick-ribbon circuits (Hungary, Zandvoort): DT ridge can sit off geometric
-  // mid — second pass locks sectors to the visual centerline (Spa quality bar).
+  // Second pass locks sectors to the visual centerline (Spa quality bar) where
+  // the DT ridge sits off the geometric mid: thick ribbons (Hungary, Zandvoort)
+  // and border-kissing silhouettes (Monza's pit straight rides row h-1, so the
+  // in-bounds-only DT falsely peaks on the clipped outer row — same failure as
+  // Spa's tip, see bandGeomMid).
   // Keep the search inside ~one half-width so chicanes cannot jump to a parallel arm.
-  if (id === 'hungary' || id === 'zandvoort') {
+  if (id === 'hungary' || id === 'zandvoort' || id === 'monza') {
     const geomLimit = Math.max(6, Math.ceil(ridgeMed) + 2);
     const geom: Pt[] = [];
     for (let i = 0; i < cycle.length; i++) {
@@ -983,7 +988,7 @@ function main() {
       );
     }
     cycle = cleanup(geom);
-    console.log(`Hungary geom-mid snap (limit=${geomLimit}): ${geom.length} samples`);
+    console.log(`${id} geom-mid snap (limit=${geomLimit}): ${geom.length} samples`);
   }
 
   if (id === 'spa') {

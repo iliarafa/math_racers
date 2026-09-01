@@ -138,8 +138,8 @@ npx tsx script/extractCircuitCenterline.ts spa
 
 | Surface | Asset / data today | Status |
 |---------|-------------------|--------|
-| Live Map / FP / GP setup | `circuit_hungary.png` **667×698** | Thick ribbon; path in JSON |
-| Path JSON `hungary` | viewBox **667×698**, ~**1564** samples, **`ribbon: 26`** | Written by extract |
+| Live Map / FP / GP setup | `circuit_hungary.png` **698×667** | Thick ribbon; path in JSON |
+| Path JSON `hungary` | viewBox **698×667**, **2476** samples, **`ribbon: 19`** | Written by extract |
 | Extract asset | `ASSET_BY_ID.hungary` → `circuit_hungary.png` | Same thick PNG |
 | Lane Racer | `CIRCUIT_MAP_IMAGES.hungary` → **same** `circuit_hungary.png` | **Gap vs Spa** — Spa uses thin `_black` |
 | Lane Racer stage | `itemHeight={140}`, `h-24`, `maxWidth: 140` | **Do not change** |
@@ -150,7 +150,7 @@ Hungary Live Map was rebuilt toward Spa weight (see commits `6afe18c` … `51db1
 
 - [ ] Open `/dev/circuit-maps` — Hungary PNG + centerline centered in ribbon (no edge sag / V-spikes).
 - [ ] If a tip kisses the image border and DT lies: add **Hungary-tuned** geom-mid polish (copy Spa *method*, new windows). Do not paste Spa `220–290` / `280–330` / `40–85`.
-- [ ] Confirm `LiveCircuitMap` uses `meta.ribbon` (Hungary `26` → race stroke `max(8, 24)`). `viewPad` is derived from stroke + car pad so edge-tight art does not clip.
+- [ ] Confirm `LiveCircuitMap` uses `meta.ribbon` (Hungary `19` → race stroke `max(8, 17)`). `viewPad` is derived from stroke + car pad so edge-tight art does not clip.
 - [ ] Visual weight target is **Spa**, not Austria. Do not reopen dilate/pad/crop loops casually; if weight is wrong, fix the **PNG**, then re-extract from committed seed.
 - [ ] Regenerate only when art or seed policy changes:
 
@@ -195,6 +195,19 @@ npx tsx script/extractCircuitCenterline.ts spa   # if checkout wiped Spa
 # iOS after shipping path / HUD / asset wiring
 npm run build && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios
 ```
+
+---
+
+## Monza (Round 13) — done 2026-09-01
+
+| Item | Value |
+|------|-------|
+| Extract / Live Map asset | `circuit_monza_black.png` **360×195** (thin, Spa-scale) |
+| Path JSON `monza` | **860** samples, **`ribbon: 8`**, fractional coords |
+| Geom-mid pass | **Gated in** (`id === 'monza'`): the silhouette kisses all four borders — the pit straight rides row `h-1`, so the in-bounds-only DT falsely peaks on the clipped outer row (rule 3's Spa-tip failure). Limit stays the shared `max(6, ceil(ridgeMed)+2)`. |
+| Progress 0 | `rotateToStartFinish` anchors `pts[0]` at **`(0.77w, 0.92h)`** — the S/F checkered line measures 0.767 of the track bbox width on `monza_detail_track.png` (bbox-cropped art, so the fraction transfers); the direction check keeps cars running **−x toward T1** (Sector 1 on the briefing map). |
+| Re-seed guard | `legacyCount < 80` — the pre-extraction entry was a 27-pt outer bbox, not a centerline |
+| Trap | `track_monza.png` (700×350) is a **logo lockup** ("MONZA × MULTIPLY"), not a silhouette — never use it as an extract source or underlay. |
 
 ---
 
