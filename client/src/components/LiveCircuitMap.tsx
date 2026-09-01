@@ -378,17 +378,11 @@ export function LiveCircuitMap({
   // Near-square art (Hungary, Zandvoort) gets a taller phone slot than wide layouts.
   const phoneHungaryBoost =
     !isResults && !nativeIPad && (circuit?.id === 'hungary' || circuit?.id === 'zandvoort');
-  /** Sector paint matches the black ribbon width when known (per-circuit from extract). */
-  const sectorStroke = meta.ribbon
-    ? isResults
-      ? meta.ribbon
-      : Math.max(8, meta.ribbon - 2)
-    : isResults
-      ? 10
-      : 8;
-  /** Pad viewBox from stroke + car marker so edge-tight art (Spa-style) never clips. */
-  const carPad = isResults ? 14 : 12;
-  const viewPad = Math.ceil(sectorStroke / 2) + carPad;
+  /** One stroke width for the black ribbon and the sector paint — same path, same width. */
+  const trackStroke = meta.ribbon ?? (isResults ? 10 : 8);
+  const sectorStroke = trackStroke;
+  /** Pad viewBox so edge cars / strokes are not clipped. Path units stay 0..w × 0..h. */
+  const viewPad = Math.ceil(trackStroke / 2) + (isResults ? 14 : 12);
   const vbW = meta.w + viewPad * 2;
   const vbH = meta.h + viewPad * 2;
   const viewBox = `${-viewPad} ${-viewPad} ${vbW} ${vbH}`;
@@ -450,27 +444,19 @@ export function LiveCircuitMap({
           role="img"
           aria-label={`${circuitName} live map`}
         >
-          {/* Option A: black track = provided silhouette PNG (pixel-perfect). */}
-          {meta.image ? (
-            <image
-              href={meta.image}
-              x={0}
-              y={0}
-              width={meta.w}
-              height={meta.h}
-              preserveAspectRatio="none"
-              data-testid="circuit-map-track-art"
-            />
-          ) : (
-            <path
-              d={meta.d}
-              fill="none"
-              stroke="#111111"
-              strokeWidth={isResults ? 12 : 10}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )}
+          {/*
+            Black ribbon is the same path as cars + sectors. A separate PNG
+            silhouette cannot stay locked across WebKit/SVG image sizing.
+          */}
+          <path
+            d={meta.d}
+            fill="none"
+            stroke="#111111"
+            strokeWidth={trackStroke}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            data-testid="circuit-map-track-art"
+          />
 
           {/* Measure path for car / sector math */}
           <path ref={measureRef} d={meta.d} fill="none" stroke="transparent" strokeWidth={1} />

@@ -254,6 +254,38 @@ function toPathD(pts: Pt[]): string {
 }
 
 /**
+ * Rotate a closed polyline so index 0 is the start/finish, in racing direction.
+ * The live map treats path-start as progress 0 — a random contour seed looks "off".
+ */
+function rotateToStartFinish(id: string, pts: Pt[], w: number, h: number): Pt[] {
+  if (id !== 'monza' || pts.length < 8) return pts;
+
+  // Pit straight sits along the bottom of the silhouette; cars run left toward T1.
+  const tx = w * 0.58;
+  const ty = h * 0.92;
+  let i0 = 0;
+  let best = Infinity;
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i];
+    if (p.y < h * 0.78) continue;
+    const d = Math.hypot(p.x - tx, p.y - ty);
+    if (d < best) {
+      best = d;
+      i0 = i;
+    }
+  }
+
+  const rotated = [...pts.slice(i0), ...pts.slice(0, i0)];
+  const look = Math.min(20, rotated.length - 1);
+  let dx = 0;
+  for (let i = 1; i <= look; i++) dx += rotated[i].x - rotated[0].x;
+  if (dx > 0) {
+    return [rotated[0], ...rotated.slice(1).reverse()];
+  }
+  return rotated;
+}
+
+/**
  * Bootstrap a closed seed polyline when circuitPathData.json has no entry.
  * Walks the outer mask contour (Moore neighborhood), samples evenly, then
  * the normal densify→ridge-snap pass pulls it onto the medial centerline.
@@ -859,12 +891,17 @@ function main() {
   const dt = distanceTransform(track, w, h);
 
   let entry = json[id];
-  if (!entry?.d) {
+  const legacyCount = entry?.points ?? (entry?.d ? parsePolyline(entry.d).length : 0);
+  // Monza's original entry was a 27-pt outer bbox, not a centerline — re-seed.
+  if (!entry?.d || (id === 'monza' && legacyCount < 80)) {
     // New circuit: bootstrap a seed from the PNG mask at native pixel size.
     const seedPts = bootstrapSeedFromMask(track, w, h, 10);
     entry = { w, h, points: seedPts.length, d: toPathD(seedPts) };
     json[id] = entry;
-    console.log(`Created seed entry for ${id} at ${w}×${h}`);
+    console.log(
+      `Created seed entry for ${id} at ${w}×${h}` +
+        (legacyCount ? ` (replaced ${legacyCount}-pt outline)` : '')
+    );
   }
 
   if (entry.w !== w || entry.h !== h) {
@@ -972,9 +1009,16 @@ function main() {
     cycle = roundSharpSideApex(cycle, track, w, h, 'right', 40, 85);
   }
 
-  // Map back to JSON viewBox
-  const out = cycle.map((p) => ({ x: p.x / sx, y: p.y / sy }));
-  console.log(`Centerline points=${out.length} maxX=${Math.max(...out.map((p) => p.x)).toFixed(1)}`);
+  // Map back to JSON viewBox, then put progress 0 on the real S/F.
+  const out = rotateToStartFinish(
+    id,
+    cycle.map((p) => ({ x: p.x / sx, y: p.y / sy })),
+    entry.w,
+    entry.h
+  );
+  console.log(
+    `Centerline points=${out.length} start=(${out[0].x.toFixed(1)},${out[0].y.toFixed(1)}) maxX=${Math.max(...out.map((p) => p.x)).toFixed(1)}`
+  );
 
   // Ribbon width in path units ≈ 2 × medial half-width (for LiveCircuitMap sector strokes).
   const ribbon = Math.max(8, Math.round(ridgeMed * 2));
