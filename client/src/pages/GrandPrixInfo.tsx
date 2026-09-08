@@ -160,24 +160,52 @@ export default function GrandPrixInfo() {
                   <FactRow label="Race Laps" value={String(history.laps)} />
                   <FactRow
                     label="Lap Record"
-                    value={`${history.lapRecord.time} — ${history.lapRecord.driver} (${history.lapRecord.year})`}
+                    value={
+                      history.lapRecord
+                        ? `${history.lapRecord.time} — ${history.lapRecord.driver} (${history.lapRecord.year})`
+                        : 'No race lap record yet'
+                    }
                   />
                   <FactRow
                     label="Most Wins"
-                    value={`${history.mostWins.driver} — ${history.mostWins.count} wins`}
+                    value={
+                      history.mostWins
+                        ? `${history.mostWins.driver} — ${history.mostWins.count} wins`
+                        : 'None yet — first race'
+                    }
                   />
                 </div>
               </section>
 
-              {/* Last year results */}
-              <ResultTable
-                title={`${history.lastYear.season} Race Results`}
-                rows={history.lastYear.race}
-              />
-              <ResultTable
-                title={`${history.lastYear.season} Qualifying Results`}
-                rows={history.lastYear.quali}
-              />
+              {history.lastYear ? (
+                <>
+                  <ResultTable
+                    title={`${history.lastYear.season} Race Results`}
+                    rows={history.lastYear.race}
+                  />
+                  <ResultTable
+                    title={`${history.lastYear.season} Qualifying Results`}
+                    rows={history.lastYear.quali}
+                  />
+                </>
+              ) : (
+                <section className="mt-8">
+                  <h2
+                    className="text-xs font-bold tracking-widest uppercase text-white/40 mb-3"
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  >
+                    Previous Year
+                  </h2>
+                  <div className="rounded-lg bg-black px-4 py-6">
+                    <p
+                      className="text-sm leading-relaxed text-white/70"
+                      style={{ fontFamily: 'Oxanium, sans-serif' }}
+                    >
+                      The Madrid Grand Prix is new — this is the first Formula 1 race at the Madring, so there are no previous-year race or qualifying results.
+                    </p>
+                  </div>
+                </section>
+              )}
 
               {/* History summary */}
               <section className="mt-10">

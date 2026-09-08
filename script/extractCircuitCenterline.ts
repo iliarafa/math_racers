@@ -26,6 +26,7 @@ const ASSET_BY_ID: Record<string, string> = {
   silverstone: 'circuit_silverstone_black.png',
   hungary: 'circuit_hungary.png',
   zandvoort: 'circuit_zandvoort.png',
+  madrid: 'circuit_madrid.png',
 };
 
 function loadTrack(file: string): { w: number; h: number; track: Uint8Array } {
@@ -976,7 +977,7 @@ function main() {
   // in-bounds-only DT falsely peaks on the clipped outer row — same failure as
   // Spa's tip, see bandGeomMid).
   // Keep the search inside ~one half-width so chicanes cannot jump to a parallel arm.
-  if (id === 'hungary' || id === 'zandvoort' || id === 'monza') {
+  if (id === 'hungary' || id === 'zandvoort' || id === 'monza' || id === 'madrid') {
     const geomLimit = Math.max(6, Math.ceil(ridgeMed) + 2);
     const geom: Pt[] = [];
     for (let i = 0; i < cycle.length; i++) {

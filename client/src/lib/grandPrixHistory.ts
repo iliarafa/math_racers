@@ -5,6 +5,7 @@ import spaDetail from "@/assets/spa_detail_track.png";
 import hungaryDetail from "@/assets/hungary_detail_track.png";
 import zandvoortDetail from "@/assets/zandvoort_detail_track.png";
 import monzaDetail from "@/assets/monza_detail_track.png";
+import madridDetail from "@/assets/madrid_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -15,11 +16,11 @@ export type GrandPrixHistory = {
   firstHeld: number;
   trackLength: string;
   laps: number;
-  lapRecord: { driver: string; time: string; year: number };
-  mostWins: { driver: string; count: number };
+  lapRecord?: { driver: string; time: string; year: number };
+  mostWins?: { driver: string; count: number };
   summary: string;
   detailMapImage?: string;
-  lastYear: {
+  lastYear?: {
     season: number;
     race: PodiumEntry[];
     quali: QualiEntry[];
@@ -432,6 +433,15 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:20.279' },
       ],
     },
+  },
+  madrid: {
+    officialName: 'FORMULA 1 TAG HEUER GRAN PREMIO DE ESPAÑA 2026',
+    firstHeld: 2026,
+    trackLength: '5.416 km',
+    laps: 57,
+    summary:
+      'The Spanish Grand Prix has a new home in 2026: Circuito IFEMA Madrid, nicknamed the Madring. It is a brand-new hybrid street circuit around the IFEMA exhibition centre — 5.416 km, 22 corners, and the first world-championship race in Madrid since Jarama in 1981. The headline corner is La Monumental, a long banked right-hander built for tens of thousands of fans. Because this is the circuit’s first Formula 1 weekend, there is no race lap record yet and no previous-year results to show.',
+    detailMapImage: madridDetail,
   },
 };
 

@@ -1,23 +1,23 @@
-import circuitMonzaBlack from "@/assets/circuit_monza_black.png";
-import flagItaly from "@/assets/flag_italy.png";
+import circuitMadrid from "@/assets/circuit_madrid.png";
+import flagSpain from "@/assets/flag_spain.png";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
 // Also add the new track/flag asset imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 export const CURRENT_GRAND_PRIX = {
-  round: 13,
-  circuitId: 'monza',
-  name: 'MONZA',
+  round: 14,
+  circuitId: 'madrid',
+  name: 'MADRID',
   /** Proper circuit name (e.g. 'Hungaroring', 'Spa-Francorchamps') — shown on the GP card. */
-  circuitName: 'Monza',
-  country: 'ITALY',
-  trackImage: circuitMonzaBlack,
-  flagImage: flagItaly,
-  rainProbability: 0.20,
-  simLapCount: 53,
-  gradient: 'linear-gradient(90deg, #008C45 0%, #FFFFFF 50%, #CD212A 100%)',
-  welcomeBlurb: 'This week we head to the Autodromo Nazionale di Monza — the Temple of Speed, just north of Milan — for the Italian Grand Prix.',
+  circuitName: 'Madring',
+  country: 'SPAIN',
+  trackImage: circuitMadrid,
+  flagImage: flagSpain,
+  rainProbability: 0.10,
+  simLapCount: 57,
+  gradient: 'linear-gradient(90deg, #AA151B 0%, #F1BF00 50%, #AA151B 100%)',
+  welcomeBlurb: 'This week we head to Madrid — a brand-new street circuit around the IFEMA exhibition centre — for the Spanish Grand Prix.',
   /**
    * Optional per-circuit override for the setup-card silhouette stage's HEIGHT classes
    * (replaces RaceSetupCard's `h-36 md:h-52` default; see setup_cards.md).
