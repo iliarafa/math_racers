@@ -130,7 +130,8 @@ function calculateBotTime(
   operationType: string,
   num1?: number,
   num2?: number,
-  isWet: boolean = false
+  isWet: boolean = false,
+  deterministic: boolean = false
 ): number {
   // Base times in milliseconds by difficulty (exponential scaling)
   // Gap between levels increases as difficulty rises to match exponential difficulty increase
@@ -180,9 +181,24 @@ function calculateBotTime(
 
   // Apply modifiers and add randomness (±25%)
   const modifiedTime = baseTime * operationModifier * complexityModifier;
+  if (deterministic) return Math.round(modifiedTime);
   const randomFactor = 0.75 + Math.random() * 0.5; // 0.75 to 1.25
 
   return Math.round(modifiedTime * randomFactor);
+}
+
+/**
+ * The bot's expected time for a question with no random roll — the same base, operation and
+ * complexity modifiers as race bots. Driving School flashcards grade against this so no card is
+ * randomly tighter than its neighbours.
+ */
+export function expectedBotTimeMs(
+  difficulty: Difficulty,
+  operationType: string,
+  num1?: number,
+  num2?: number,
+): number {
+  return calculateBotTime(difficulty, operationType, num1, num2, false, true);
 }
 
 // Operation-specific ranges by difficulty

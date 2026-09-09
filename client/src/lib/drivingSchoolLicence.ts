@@ -8,7 +8,7 @@ import { DRIVING_SCHOOL_STAGES, loadHighestClearedStage } from '@/lib/drivingSch
  */
 
 /** Best reaction time must beat this to pass the licence step. */
-export const REACTION_LICENCE_MS = 330;
+export const REACTION_LICENCE_MS = 400;
 
 const REACTION_BEST_KEY = 'reactionBestMs';
 const LANE_RACER_WIN_KEY = 'laneRacerP1Win';

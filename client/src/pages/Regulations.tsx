@@ -242,8 +242,8 @@ const chapters: Chapter[] = [
         description: "Learn the facts before you race — flashcards, Reaction Test, and Lane Racer, under DRIVING SCHOOL in the Paddock. Graduate to race a Grand Prix.",
         details: [
           "Flashcards — 10 gated stages: Addition (to 10, to 20), Subtraction (to 10, to 20), Multiplication (to 5, 8, 10), Division (to 5, 8, 10)",
-          "Each stage is a 20-card deck — answer within the bot's expected time for purple; correct but slower is green; wrong is red",
-          "Cards that aren't purple return to the deck — a stage is cleared when every card is purple",
+          "Each stage is a 20-card deck — answer correctly within 1.5× the bot's expected time for purple; correct but slower is green; wrong is red",
+          "A stage is cleared with 15 purple cards out of 20 and no reds — greens are allowed. Cards that aren't purple return for another lap, and purples stay purple, so keep going and you get there",
           "Clearing a stage unlocks the next; progress is saved on your device",
           "Licence path — clear every flashcard stage, beat the Reaction Test target, and win Lane Racer to graduate",
           "Grand Prix unlocks when you graduate — Lane Racer stays in school and is not on the public board",

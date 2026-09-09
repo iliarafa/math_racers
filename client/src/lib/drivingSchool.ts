@@ -1,3 +1,4 @@
+import { expectedBotTimeMs } from '@shared/mathEngine';
 import { generateQuestion, type Difficulty, type Question } from '@/lib/gameLogic';
 
 export type CardColor = 'purple' | 'green' | 'red' | 'pending';
@@ -31,9 +32,11 @@ export const PURPLE_MAJORITY = 15;
 const PROGRESS_KEY = 'drivingSchoolHighestCleared';
 
 /**
- * Correct within the bot's expected time (1.0× botTime) → purple; correct but slower → green.
+ * Correct within 1.5× the bot's expected time → purple; correct but slower → green.
+ * The bar is deterministic (expectedBotTimeMs) so no card is randomly tighter than its neighbours;
+ * timing runs from the card appearing to the ✓ tap, so 1.5× leaves room for typing.
  */
-export const PURPLE_TIME_FACTOR = 1.0;
+export const PURPLE_TIME_FACTOR = 1.5;
 
 export function gradeFlashcard(correct: boolean, responseTimeMs: number, botTimeMs: number): Exclude<CardColor, 'pending'> {
   if (!correct) return 'red';
@@ -91,6 +94,8 @@ export function buildStageDeck(stage: DrivingSchoolStage): FlashcardItem[] {
       stage.operation,
     );
     previousDisplay = question.display;
+    // Replace the race bot's randomised time with the deterministic expected time.
+    question.botTime = expectedBotTimeMs(stage.difficulty, stage.operation, question.num1, question.num2);
     deck.push({
       id: `${stage.id}-${i}-${question.display}`,
       question,

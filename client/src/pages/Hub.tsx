@@ -6,7 +6,7 @@ import { useGameState, RACE_LENGTH } from "@/lib/gameLogic";
 import { usePurchase } from "@/hooks/use-purchase";
 import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
-import { getLicenceStatus, grandPrixDevBypass, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
+import { getLicenceStatus, grandPrixDevBypass, REACTION_LICENCE_MS, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
 import { SuperlicenceSplash } from "@/components/SuperlicenceSplash";
 import { DrivingSchoolWhatsNew } from "@/components/DrivingSchoolWhatsNew";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
@@ -378,7 +378,7 @@ export default function Hub() {
               {(
                 [
                   { href: '/driving-school', title: 'FLASHCARDS', goal: '10 STAGES', testId: 'link-flashcards' },
-                  { href: '/reaction', title: 'REACTION TEST', goal: 'UNDER 0.33S', testId: 'link-reaction-test' },
+                  { href: '/reaction', title: 'REACTION TEST', goal: `UNDER ${(REACTION_LICENCE_MS / 1000).toFixed(2)}S`, testId: 'link-reaction-test' },
                   { href: '/lane-racer', title: 'LANE RACER', goal: 'BEAT THE INSTRUCTOR', testId: 'link-lane-racer' },
                 ] as const
               ).map((row, i) => {

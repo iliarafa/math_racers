@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { REACTION_LICENCE_MS } from "@/lib/drivingSchoolLicence";
 import { createPortal } from "react-dom";
 import { playCarouselClick } from "@/lib/uiSound";
 import { getLicenceStatus } from "@/lib/drivingSchoolLicence";
@@ -92,7 +93,7 @@ export function DrivingSchoolWhatsNew({
             >
               Reaction Test
             </div>
-            <p className="mt-1 text-sm text-white">Beat 0.33s on the lights.</p>
+            <p className="mt-1 text-sm text-white">Beat {(REACTION_LICENCE_MS / 1000).toFixed(2)}s on the lights.</p>
           </div>
           <div className="rounded-xl bg-white/5 px-4 py-3">
             <div

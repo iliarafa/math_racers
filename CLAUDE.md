@@ -186,6 +186,10 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 - Session log shows stint-by-stint breakdown during racing
 - Name prompt on first submission (max 20 chars)
 
+**Driving School (Superlicence path)**
+- Flashcards: 10 gated stages of 20 cards. A card is purple when answered correctly within `PURPLE_TIME_FACTOR` (1.5×) of a deterministic expected bot time (`expectedBotTimeMs`, no random roll); correct but slower is green; wrong is red. A stage clears at the end of a lap with no reds and at least `PURPLE_MAJORITY` (15) purples; purples persist and only non-purple cards return next lap.
+- Licence = all 10 stages + Reaction Test best under `REACTION_LICENCE_MS` (400 ms) + one Lane Racer win. Grand Prix stays locked until then (dev-server-only bypass: `grandPrixDevBypass`). Earning it shows the one-time `SuperlicenceSplash`.
+
 ### Racing HUD Variants (Game.tsx)
 Each mode has its own HUD rules. A layout change in one does not imply the same change in the others; verify the mode you touched and leave the rest alone unless asked.
 - **Race Day** (`isGpRace`): GameLayout header hidden; LAP x/y and RETIRE are absolute labels top-left/top-right; no progress grid; question + answer centered in the column with viewport-only sizes and a transform offset on the question; clock sits above the keypad; whole screen flashes on answer.
