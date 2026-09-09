@@ -73,6 +73,43 @@ export function hasSuperlicence(): boolean {
 }
 
 /**
+ * One-time "Superlicence granted" celebration (SuperlicenceSplash).
+ * Values: unset = never initialised, '0' = armed (not yet shown), '1' = shown.
+ */
+const CELEBRATED_KEY = 'superlicenceCelebrated';
+
+/**
+ * Run once at app boot, before any page renders. On the first launch with this feature a
+ * player who already holds the licence is marked as shown, so nobody gets a retroactive
+ * splash; everyone else is armed. Later launches leave the value alone, so a licence
+ * completed in a previous session still celebrates on the next Hub visit.
+ */
+export function initSuperlicenceCelebration(): void {
+  try {
+    if (localStorage.getItem(CELEBRATED_KEY) !== null) return;
+    localStorage.setItem(CELEBRATED_KEY, hasSuperlicence() ? '1' : '0');
+  } catch {
+    /* ignore */
+  }
+}
+
+export function shouldCelebrateSuperlicence(): boolean {
+  try {
+    return hasSuperlicence() && localStorage.getItem(CELEBRATED_KEY) !== '1';
+  } catch {
+    return false;
+  }
+}
+
+export function markSuperlicenceCelebrated(): void {
+  try {
+    localStorage.setItem(CELEBRATED_KEY, '1');
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
  * Dev-only bypass so the Grand Prix screens can be reviewed on the Vite dev server without
  * grinding Driving School. Never true in a built bundle, so the shipped app (native or web)
  * keeps the Superlicence lock. Note the Capacitor app also serves from a `localhost` origin,

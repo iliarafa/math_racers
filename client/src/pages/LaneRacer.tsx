@@ -21,7 +21,8 @@ import {
 import type { Difficulty, DynamicDifficultyState, DifficultyMode, DifficultyDrumOption } from "@/lib/gameLogic";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { operationRow, levelRow } from "@/components/setup/setupRows";
-import { hasLaneRacerWin, saveLaneRacerWin } from "@/lib/drivingSchoolLicence";
+import { hasLaneRacerWin, saveLaneRacerWin, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
+import { SuperlicenceSplash } from "@/components/SuperlicenceSplash";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
 import { paceDifficultyForSpeed } from "@/lib/laneRacerHud";
@@ -481,6 +482,7 @@ export default function LaneRacer() {
 
   // Licence path: a completed full race finished ahead of the rival counts as the P1 win.
   const [licenceWin, setLicenceWin] = useState<null | 'new' | 'repeat'>(null);
+  const [showSuperlicenceSplash, setShowSuperlicenceSplash] = useState(false);
   useEffect(() => {
     if (gameStatus !== 'finished') {
       setLicenceWin(null);
@@ -492,6 +494,8 @@ export default function LaneRacer() {
       const already = hasLaneRacerWin();
       saveLaneRacerWin();
       setLicenceWin(already ? 'repeat' : 'new');
+      // If this win completed Driving School, the Superlicence splash leads the result.
+      if (shouldCelebrateSuperlicence()) setShowSuperlicenceSplash(true);
     }
   }, [gameStatus, licenceWin, raceLength, questionNum, totalTime, rivalTargetMs]);
   const playerProgress = raceLength > 0 ? Math.min(1, questionNum / raceLength) : 0;
@@ -726,6 +730,9 @@ export default function LaneRacer() {
     const score = calculateLaneRacerScore(totalTime, correctCount, raceLength, achieved);
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport darkBackground>
+        {showSuperlicenceSplash && (
+          <SuperlicenceSplash secondaryLabel="See race result" onClose={() => setShowSuperlicenceSplash(false)} />
+        )}
         <div className="flex-1 flex flex-col items-center justify-start max-w-xl mx-auto w-full overflow-y-auto p-4">
           <div className="rounded-xl p-6 w-full text-center space-y-6">
 

@@ -8,6 +8,10 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { PurchaseProvider } from "@/contexts/PurchaseContext";
 import { useGameState } from "@/lib/gameLogic";
 import { Volume2, VolumeX } from "lucide-react";
+import { initSuperlicenceCelebration } from "@/lib/drivingSchoolLicence";
+
+// Decide once, before any page renders, whether the Superlicence splash is still owed.
+initSuperlicenceCelebration();
 import laneRacerMusic from "@assets/laneracer3.mp3";
 import backgroundVideo from "@assets/background.mp4";
 import NotFound from "@/pages/not-found";

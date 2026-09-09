@@ -6,7 +6,8 @@ import { useGameState, RACE_LENGTH } from "@/lib/gameLogic";
 import { usePurchase } from "@/hooks/use-purchase";
 import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
-import { getLicenceStatus, grandPrixDevBypass } from "@/lib/drivingSchoolLicence";
+import { getLicenceStatus, grandPrixDevBypass, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
+import { SuperlicenceSplash } from "@/components/SuperlicenceSplash";
 import { DrivingSchoolWhatsNew } from "@/components/DrivingSchoolWhatsNew";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import logoWhiteImage from "@assets/logo-white.svg";
@@ -167,6 +168,10 @@ export default function Hub() {
   const title =
     view === 'weekend' ? 'Race Weekend' : view === 'school' ? 'Driving School' : 'Paddock';
 
+  // Superlicence earned somewhere other than the Lane Racer finish (out-of-order steps):
+  // celebrate on the next Hub visit. Lane Racer shows the splash itself in the usual order.
+  const [showSplash, setShowSplash] = useState(() => shouldCelebrateSuperlicence());
+
   // Driving School drops the background video (App.tsx PersistentVideo listens).
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('hubSchoolViewChange', { detail: { school: view === 'school' } }));
@@ -183,6 +188,7 @@ export default function Hub() {
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
+      {showSplash && <SuperlicenceSplash onClose={() => setShowSplash(false)} />}
 
       {/* Driving School backdrop: hand-drawn kerb art over black (video is hidden on this view) */}
       {view === 'school' && (
