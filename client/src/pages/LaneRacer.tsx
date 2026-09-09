@@ -504,21 +504,27 @@ export default function LaneRacer() {
 
   // Setup
   if (gameStatus === 'setup') {
+    // TRACK row only when there is a real choice. While the picker is locked to the
+    // current GP (LOCK_MENU_TO_CURRENT_GP) the hero band already names and draws the
+    // circuit, so a single-option row would just repeat it.
+    const trackRow: SetupRowSpec[] = CIRCUIT_OPTIONS.length > 1
+      ? [{
+          id: 'track',
+          label: 'Track',
+          // Text-only: the hero band shows the circuit silhouette and updates as you cycle.
+          options: CIRCUIT_OPTIONS.map((c) => ({ id: c.id, label: c.name })),
+          selectedId: selectedCircuit.id,
+          onSelect: (id) => {
+            const i = CIRCUIT_OPTIONS.findIndex((c) => c.id === id);
+            if (i >= 0) {
+              setCurrentCircuitIndex(i);
+              setSelectedCircuit(CIRCUIT_OPTIONS[i]);
+            }
+          },
+        }]
+      : [];
     const rows: SetupRowSpec[] = [
-      {
-        id: 'track',
-        label: 'Track',
-        // Text-only: the hero band shows the circuit silhouette and updates as you cycle.
-        options: CIRCUIT_OPTIONS.map((c) => ({ id: c.id, label: c.name })),
-        selectedId: selectedCircuit.id,
-        onSelect: (id) => {
-          const i = CIRCUIT_OPTIONS.findIndex((c) => c.id === id);
-          if (i >= 0) {
-            setCurrentCircuitIndex(i);
-            setSelectedCircuit(CIRCUIT_OPTIONS[i]);
-          }
-        },
-      },
+      ...trackRow,
       {
         id: 'team',
         label: 'Team',
@@ -582,6 +588,7 @@ export default function LaneRacer() {
             testId="lr-setup"
             header={{ eyebrow: 'Lane Racer', title: selectedCircuit.name, flagSrc: CIRCUIT_MENU_ART[selectedCircuit.id]?.flag }}
             mapImageSrc={CIRCUIT_MENU_ART[selectedCircuit.id]?.image}
+            invertMap={CIRCUIT_MENU_ART[selectedCircuit.id]?.invert ?? true}
             /* No per-circuit stage override — every silhouette uses the same stage (Spa's). */
             rows={rows}
             start={{ label: 'Start', tone: 'green', onStart: startGame }}

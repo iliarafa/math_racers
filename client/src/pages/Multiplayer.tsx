@@ -1459,19 +1459,25 @@ export default function Multiplayer() {
   if (gameStatus === "track_select") {
     const displayCircuit = selectedCircuit || MENU_CIRCUITS[0];
 
+    // TRACK row only when there is a real choice. While the picker is locked to the
+    // current GP (LOCK_MENU_TO_CURRENT_GP) the hero band already names and draws the
+    // circuit, so a single-option row would just repeat it.
+    const trackRow: SetupRowSpec[] = MENU_CIRCUITS.length > 1
+      ? [{
+          id: 'track',
+          label: 'Track',
+          // Only circuits with proper thin-line art are selectable — see circuitMenuArt.ts.
+          // The hero band shows the silhouette and updates as you cycle.
+          options: MENU_CIRCUITS.map((c) => ({ id: c.id, label: c.name })),
+          selectedId: displayCircuit.id,
+          onSelect: (id) => {
+            const circuit = MENU_CIRCUITS.find((c) => c.id === id);
+            if (circuit) setSelectedCircuit(circuit);
+          },
+        }]
+      : [];
     const rows: SetupRowSpec[] = [
-      {
-        id: 'track',
-        label: 'Track',
-        // Only circuits with proper thin-line art are selectable — see circuitMenuArt.ts.
-        // The hero band shows the silhouette and updates as you cycle.
-        options: MENU_CIRCUITS.map((c) => ({ id: c.id, label: c.name })),
-        selectedId: displayCircuit.id,
-        onSelect: (id) => {
-          const circuit = MENU_CIRCUITS.find((c) => c.id === id);
-          if (circuit) setSelectedCircuit(circuit);
-        },
-      },
+      ...trackRow,
       operationRow(selectedOperation, setSelectedOperation),
     ];
 
@@ -1499,6 +1505,7 @@ export default function Multiplayer() {
               flagSrc: CIRCUIT_MENU_ART[displayCircuit.id]?.flag,
             }}
             mapImageSrc={CIRCUIT_MENU_ART[displayCircuit.id]?.image}
+            invertMap={CIRCUIT_MENU_ART[displayCircuit.id]?.invert ?? true}
             rows={rows}
             /* Level is not a choice here — both cars race the host's stored preference. */
             readouts={[{ label: 'Level', value: difficultyMode === 'adaptive' ? 'Adaptive' : lockedLevelLabel }]}

@@ -8,7 +8,7 @@ import circuitSuzukaBlack from '@/assets/circuit_suzuka_black.png';
 import circuitSilverstoneBlack from '@/assets/circuit_silverstone_black.png';
 import circuitHungaryBlack from '@/assets/circuit_hungary_black.png';
 import circuitZandvoort from '@/assets/circuit_zandvoort.png';
-import circuitMadrid from '@/assets/circuit_madrid.png';
+import madridSetupTrack from '@/assets/madrid_setup_track.png';
 
 import flagBelgium from '@/assets/flag_belgium.png';
 import flagMonaco from '@/assets/flag_monaco.png';
@@ -23,6 +23,11 @@ export interface CircuitMenuArt {
   /** Thin-line `_black` silhouette, rendered inverted on the dark setup card. */
   image: string;
   flag: string;
+  /**
+   * `false` when `image` is full-colour detail art (sector ribbon, DRS zones, start line)
+   * that must NOT be inverted on the card. Defaults to `true` (black line art).
+   */
+  invert?: boolean;
 }
 
 /**
@@ -48,9 +53,9 @@ export const CIRCUIT_MENU_ART: Record<string, CircuitMenuArt> = {
   // Zandvoort art is the ~700px rotation silhouette (not thin-line _black) — fine while
   // the menu is locked to the current GP; revisit if the full picker reopens.
   zandvoort: { image: circuitZandvoort, flag: flagNetherlands },
-  // Madrid art is the ~700px rotation silhouette (not thin-line _black) — fine while
-  // the menu is locked to the current GP; revisit if the full picker reopens.
-  madrid: { image: circuitMadrid, flag: flagSpain },
+  // Madrid uses the same full-colour detail map as the Free Practice / GP setup card
+  // (sector ribbon, DRS zones, start line) — shown as-is, never inverted.
+  madrid: { image: madridSetupTrack, flag: flagSpain, invert: false },
 };
 
 /**

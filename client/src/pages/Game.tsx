@@ -2757,6 +2757,11 @@ export default function Game() {
   const isGpRace = isGrandPrix && grandPrixPhase === 'rw_race';
 
   // Racing phase
+  const gridLargeTenCol =
+    isGrandPrix && (grandPrixPhase === 'rw_practice' || grandPrixPhase === 'rw_qualifying');
+  const gridLayout: 'single' | 'dual' =
+    effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual';
+
   return (
     <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideGarageButton hideHeader={isGpRace} shellStyle={isGpRace ? {
         backgroundColor: gpRaceFlash ? GP_RACE_FLASH[gpRaceFlash] : '#ffffff',
@@ -3134,8 +3139,13 @@ export default function Game() {
           )}
           {!isGpRace && (
           <SectorProgressGrid
-            className="my-0 mb-1"
-            largeTenCol={isGrandPrix && (grandPrixPhase === 'rw_practice' || grandPrixPhase === 'rw_qualifying')}
+            /* Career / Quick Race (dual BOT + player grid, not the GP 10-col grid) gets extra
+               room below so the squares sit clear of the keypad. Other HUDs keep mb-1. */
+            className={cn(
+              "my-0",
+              !gridLargeTenCol && gridLayout === 'dual' ? "mb-5" : "mb-1",
+            )}
+            largeTenCol={gridLargeTenCol}
             progress={progress}
             raceLength={raceLength}
             sectorResults={lapResults}
@@ -3143,9 +3153,7 @@ export default function Game() {
             rivalSectorResults={botLapResults}
             showRival={raceMode === 'bot' && !isPracticeMode}
             currentSectorRed={currentSectorRed}
-            layout={
-              effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual'
-            }
+            layout={gridLayout}
             labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
             labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
             rivalLabel="BOT"
