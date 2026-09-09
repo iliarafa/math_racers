@@ -2,6 +2,11 @@ import { useRef, useState } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { GameLayout } from "@/components/layout/GameLayout";
+import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
+import { REACTION_LICENCE_MS } from "@/lib/drivingSchoolLicence";
+
+/** The GP config stores the name uppercase (MADRID) for HUD labels; prose wants Madrid. */
+const gpTitleCase = (name: string) => name.charAt(0) + name.slice(1).toLowerCase();
 
 interface Article {
   id: string;
@@ -32,7 +37,7 @@ const chapters: Chapter[] = [
         details: [
           "#Math",
           "You choose the math operation — Addition, Subtraction, Multiplication, Division, or Variables — wherever a race has a MATH selector (Free Practice, Grand Prix, Lane Racer, Multiplayer)",
-          "Lane Racer and Multiplayer offer 10 circuits: Spa, Monaco, Monza, Suzuka, Silverstone, Canada, Miami, Barcelona, Austria, and Hungary",
+          "Every race this week runs at the current Grand Prix circuit — Lane Racer and Multiplayer follow the calendar too, so there is no track to pick",
           "#Difficulty",
           "Karting through F1 use kid-sized number ranges (Adaptive soft-caps at F1):",
           "Karting — addition/subtraction about 1 to 10; times tables up to 5",
@@ -117,27 +122,29 @@ const chapters: Chapter[] = [
       {
         id: "grand-prix",
         title: "Grand Prix",
-        description: "A full race weekend at the Hungaroring (Hungarian Grand Prix) with three sequential phases.",
+        description: `A full race weekend at the ${CURRENT_GRAND_PRIX.circuitName} (Round ${CURRENT_GRAND_PRIX.round}, ${gpTitleCase(CURRENT_GRAND_PRIX.name)} Grand Prix) with three sequential phases.`,
         details: [
           "Grand Prix stays locked until you graduate Driving School (flashcards, Reaction Test, Lane Racer)",
           "Select your math operation, then progress through Practice, Qualifying, and Race Day",
           "Practice (30 questions) — always Adaptive; difficulty adjusts as you go (no Adaptive/Locked toggle)",
           "Qualifying (20 questions) — difficulty locks at the level reached in Practice and determines pole position",
-          "Race Day (full race distance — 70 laps at the Hungaroring) — uses the Practice lock; pole position grants a 2-sector head start on your first correct answer",
+          `Race Day (full race distance — ${CURRENT_GRAND_PRIX.simLapCount} laps at the ${CURRENT_GRAND_PRIX.circuitName}) — uses the Practice lock; pole position grants a 2-sector head start on your first correct answer`,
+          "On iPad the whole weekend runs in landscape — hold the iPad sideways when the lights are about to start",
           "Power-ups (OVERTAKE and AERO) are on for Practice, Qualifying, and Race Day",
         ],
       },
       {
         id: "free-practice",
         title: "Free Practice",
-        description: "Free Practice is available to everyone — no purchase required. Select any math operation and race 100 questions.",
+        description: "Free Practice is available to everyone — no purchase required. Select any math operation and a session of 25, 50, or 100 laps.",
         details: [
           "Adaptive (default) — difficulty adjusts from your speed and accuracy (starts at Karting, soft-caps at F1).",
           "Locked — pick Karting / F3 / F2 / F1 / Pro; level stays fixed for the session (no promotion or demotion).",
           "No penalties — wrong answers don't count against you.",
           "ALL PURPLE — complete a full circuit tour with every sector purple and the level label temporarily shows ALL PURPLE.",
           "Everything Is Purple — the first time you do this, unlock a persistent badge in Racer Log (Free Practice only — not Grand Prix Practice).",
-          "Your mission — complete all 100 questions to submit your score to the Leaderboard.",
+          "Your mission — only a full 100-lap session submits your score to the Leaderboard; 25- and 50-lap sessions are for practice.",
+          "On iPad, Free Practice runs in landscape like the rest of Race Weekend.",
           "BOX — click to exit to the pits and log your current stint. Go back to the track to start a new one.",
           "~(questions / time) × accuracy × difficulty multiplier × 1000 (max 100,000)",
         ],
@@ -158,7 +165,7 @@ const chapters: Chapter[] = [
         title: "Lane Racer",
         description: "Arcade lane racing — pick the correct answer lane as numbers scroll toward you. Found under DRIVING SCHOOL in the Paddock.",
         details: [
-          "Choose track, team, operation, and level before you start",
+          "Choose team, operation, and level before you start — the track is this week's Grand Prix circuit",
           "Level — Adaptive (default, Karting→F1) or Locked Karting / F3 / F2 / F1 / Pro; Adaptive adjusts during the race, Locked stays fixed",
           "Car speed scales with level (Karting slowest → F1 fastest); Pro uses F1 speed. Adaptive applies speed changes on the next question after a promote/demote",
           "Chase Cam — optional 3D chase view",
@@ -250,6 +257,7 @@ const chapters: Chapter[] = [
           "Wait for the lights to go out, then tap as fast as you can",
           "Tapping before the green light is a jump start (disqualified)",
           "Perfect (under 0.2s), Excellent (under 0.3s), Good (under 0.4s), Average (under 0.5s), Slow (over 0.5s)",
+          `Licence target — a best time under ${(REACTION_LICENCE_MS / 1000).toFixed(2)}s counts toward your Superlicence`,
         ],
       },
       {
