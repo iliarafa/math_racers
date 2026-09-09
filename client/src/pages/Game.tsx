@@ -429,6 +429,7 @@ export default function Game() {
   const [grandPrixPracticeCompleted, setGrandPrixPracticeCompleted] = useState(false);
   const [grandPrixQualifyingCompleted, setGrandPrixQualifyingCompleted] = useState(false);
   const [gpRaceFlash, setGpRaceFlash] = useState<'purple' | 'green' | 'yellow' | 'red' | null>(null);
+  const [showFinalLap, setShowFinalLap] = useState(false);
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
   // Free Practice only — GP Practice is always adaptive; Quick Race is always adaptive
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() =>
@@ -1267,6 +1268,9 @@ export default function Game() {
       } else {
         // Capture overtakeActive state before setTimeout to use correct difficulty
         const wasOvertakeActive = overtakeActive;
+        if (!isPracticeMode && newProgress === raceLength - 1) {
+          setShowFinalLap(true);
+        }
         setTimeout(() => {
           setFeedback('idle');
           setGpRaceFlash(null);
@@ -1483,6 +1487,7 @@ export default function Game() {
     setFeedback('idle');
     setAnswer("");
     setQuestion(null);
+    setShowFinalLap(false);
     setMistakeLog([]);
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
@@ -1574,6 +1579,7 @@ export default function Game() {
     setFeedback('idle');
     setAnswer("");
     setQuestion(null);
+    setShowFinalLap(false);
     setMistakeLog([]);
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
@@ -2754,16 +2760,27 @@ export default function Game() {
       ) : undefined}>
       <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0 bg-transparent">
         {isGpRace && (
-          <button
-            onClick={() => setIsPaused(true)}
-            className={cn(
-              "absolute top-3 right-3 z-20 p-2 rounded-lg transition-colors",
-              gpRaceFlash ? "text-white hover:bg-white/15" : "text-foreground hover:bg-black/5"
-            )}
-            data-testid="button-pause"
-          >
-            <Pause className="w-5 h-5" />
-          </button>
+          <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between">
+            <span
+              className={cn(
+                "text-xs font-bold uppercase tracking-widest",
+                gpRaceFlash ? "text-white" : "text-muted-foreground"
+              )}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              LAP {Math.min(progress + 1, raceLength)}/{raceLength}
+            </span>
+            <button
+              onClick={() => setIsPaused(true)}
+              className={cn(
+                "p-2 rounded-lg transition-colors",
+                gpRaceFlash ? "text-white hover:bg-white/15" : "text-foreground hover:bg-black/5"
+              )}
+              data-testid="button-pause"
+            >
+              <Pause className="w-5 h-5" />
+            </button>
+          </div>
         )}
 
         {/* Pause Overlay */}
@@ -2997,6 +3014,18 @@ export default function Game() {
                   >
                     TRACK LIMITS
                   </motion.div>
+                </motion.div>
+              ) : showFinalLap ? (
+                <motion.div
+                  key="final-lap"
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: [1, 0.2, 1] }}
+                  transition={{ duration: 0.28, repeat: 2 }}
+                  onAnimationComplete={() => setShowFinalLap(false)}
+                  className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600 uppercase tracking-widest"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                >
+                  FINAL LAP
                 </motion.div>
               ) : feedback === 'correct' && !isGpRace ? (
                 <motion.div

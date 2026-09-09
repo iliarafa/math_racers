@@ -132,6 +132,7 @@ export default function Multiplayer() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const sectorBestTimesRef = useRef<Array<{ bestTime: number; holder: 'host' | 'guest' } | null>>([]);
   const [questionAttempts, setQuestionAttempts] = useState(0);
+  const [showFinalLap, setShowFinalLap] = useState(false);
   const [lapResults, setLapResults] = useState<Array<{
     result: 'correct' | 'incorrect';
     speed: 'fast' | 'normal' | 'slow';
@@ -414,6 +415,7 @@ export default function Multiplayer() {
         setLapResults([]);
         sectorBestTimesRef.current = [];
         setQuestionAttempts(0);
+        setShowFinalLap(false);
         setProgress(0);
         setMistakes(0);
         setOpponentProgress(0);
@@ -939,6 +941,9 @@ export default function Multiplayer() {
           }));
         }
       } else {
+        if (newProgress === raceLength - 1) {
+          setShowFinalLap(true);
+        }
         safeTimeout(() => {
           setFeedback("idle");
           setAnswer("");
@@ -1649,6 +1654,18 @@ export default function Multiplayer() {
                     >
                       TRACK LIMITS
                     </motion.div>
+                  </motion.div>
+                ) : showFinalLap ? (
+                  <motion.div
+                    key="final-lap"
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: [1, 0.2, 1] }}
+                    transition={{ duration: 0.28, repeat: 2 }}
+                    onAnimationComplete={() => setShowFinalLap(false)}
+                    className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600 uppercase tracking-widest"
+                    style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  >
+                    FINAL LAP
                   </motion.div>
                 ) : feedback === "correct" ? (
                   <motion.div
