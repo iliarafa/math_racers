@@ -12,6 +12,7 @@ Re-themes the app to the week's F1 circuit: Free Practice card, Grand Prix mode,
 - New circuit: `4d7d282` (Round 12 / Zandvoort) — complete worked example incl. menu art + live-map centerline
 - `SESSION_NOTES.md` is STALE (describes the old Round-5 setup with config inline in Game.tsx). Ignore it.
 - Setup-card specifics (what the cards read from the rotation, art rules, QA list): `setup_cards.md` at the repo root.
+- **Technical Regulations, Art. 7 (Grand Prix)** in `client/src/pages/Regulations.tsx` is generated from `CURRENT_GRAND_PRIX` (`circuitName`, `round`, `name`, `simLapCount`). It must read correctly for every round — see Step 2 (`circuitName`) and the Step 6 check. Never hard-code a circuit in that article again.
 
 ## Step 0 — Gather inputs (before touching code)
 
@@ -37,6 +38,7 @@ Getting dark-vs-colored backwards is the classic mistake: `trackImage` (Step 2) 
 The single config everything reads (Game.tsx builds FLAG/TRACK/MAP/RAIN lookups from `circuitId`). Update the asset imports and every `CURRENT_GRAND_PRIX` field:
 
 - `round`, `circuitId`, `name` (UPPERCASE circuit), `country` (UPPERCASE)
+- `circuitName` — the proper venue name, shown on the GP card and in Regulations Art. 7, where it is used as "at the `circuitName`" ("at the Hungaroring", "at the Madring"). Pick a form that reads naturally after "the" — e.g. `'Circuit de Monaco'`, `'Silverstone Circuit'`, `'Autodromo Nazionale Monza'` — not a bare town name.
 - `trackImage` (dark silhouette import), `flagImage`
 - `rainProbability` (circuit-realistic, e.g. Silverstone 0.45, Austria 0.35)
 - `simLapCount` (real race lap count)
@@ -74,7 +76,8 @@ e.g. 1.3.8 → 1.3.9:
 
 1. `npm run check`
 2. `npm run build`
-3. Browser on :8081 (launch.json server `dev`): Welcome page Free Practice card (flag, silhouette renders white, blurb), Grand Prix hero, `/grand-prix` briefing (facts, colored map NOT inverted, last-year race + quali tables), and — new circuit only — the Lane Racer/Multiplayer TRACK row (silhouette + flag from circuitMenuArt) and the in-race live circuit map (centerline follows the silhouette, sectors sit mid-track).
+3. Browser on :8081 (launch.json server `dev`): Welcome page Free Practice card (flag, silhouette renders white, blurb), Grand Prix hero, `/grand-prix` briefing (facts, colored map NOT inverted, last-year race + quali tables), and — new circuit only — the Lane Racer/Multiplayer setup card hero (silhouette + flag from circuitMenuArt; the TRACK row is hidden while the picker is locked to the current GP) and the in-race live circuit map (centerline follows the silhouette, sectors sit mid-track).
+4. **Regulations Art. 7** — open `/regulations`, expand "Art. 7 — Grand Prix", and read the description and the Race Day bullet aloud: "A full race weekend at the <circuitName> (Round <n>, <Name> Grand Prix)…" and "<simLapCount> laps at the <circuitName>". Both come from the config, so a wrong value here means Step 2 is wrong. If the sentence reads badly with the new `circuitName`, fix the name in the config, not the article.
 
 ## Step 7 — Deploy iOS
 
