@@ -430,6 +430,9 @@ export default function Game() {
   const [grandPrixQualifyingCompleted, setGrandPrixQualifyingCompleted] = useState(false);
   const [gpRaceFlash, setGpRaceFlash] = useState<'purple' | 'green' | 'yellow' | 'red' | null>(null);
   const [showFinalLap, setShowFinalLap] = useState(false);
+  const [showRetireConfirm, setShowRetireConfirm] = useState(false);
+  const [showRetireDnf, setShowRetireDnf] = useState(false);
+  const retireLeaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
   // Free Practice only — GP Practice is always adaptive; Quick Race is always adaptive
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() =>
@@ -718,6 +721,10 @@ export default function Game() {
     }
     return () => clearInterval(interval);
   }, [gameStatus, isPaused, showNamePrompt]);
+
+  useEffect(() => () => {
+    if (retireLeaveTimerRef.current) clearTimeout(retireLeaveTimerRef.current);
+  }, []);
 
   // Guard: a race can't run without a circuit, so fall back to setup.
   // The driver no longer needs guarding — it is seeded at mount for both modes.
@@ -1488,6 +1495,12 @@ export default function Game() {
     setAnswer("");
     setQuestion(null);
     setShowFinalLap(false);
+    setShowRetireConfirm(false);
+    setShowRetireDnf(false);
+    if (retireLeaveTimerRef.current) {
+      clearTimeout(retireLeaveTimerRef.current);
+      retireLeaveTimerRef.current = null;
+    }
     setMistakeLog([]);
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
@@ -1580,6 +1593,12 @@ export default function Game() {
     setAnswer("");
     setQuestion(null);
     setShowFinalLap(false);
+    setShowRetireConfirm(false);
+    setShowRetireDnf(false);
+    if (retireLeaveTimerRef.current) {
+      clearTimeout(retireLeaveTimerRef.current);
+      retireLeaveTimerRef.current = null;
+    }
     setMistakeLog([]);
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
@@ -2771,20 +2790,75 @@ export default function Game() {
               LAP {Math.min(progress + 1, raceLength)}/{raceLength}
             </span>
             <button
-              onClick={() => setIsPaused(true)}
-              className={cn(
-                "absolute top-3 right-3 z-20 p-2 rounded-lg transition-colors",
-                gpRaceFlash ? "text-white hover:bg-white/15" : "text-foreground hover:bg-black/5"
-              )}
-              data-testid="button-pause"
+              onClick={() => {
+                setIsPaused(true);
+                setShowRetireConfirm(true);
+              }}
+              className="absolute top-3 right-3 z-20 h-9 flex items-center p-2 text-xs font-bold uppercase tracking-widest text-red-600"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+              data-testid="button-retire"
             >
-              <Pause className="w-5 h-5" />
+              RETIRE
             </button>
           </>
         )}
 
+        {showRetireConfirm && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 px-6">
+            <div className="w-full max-w-xs rounded-xl bg-white p-6 text-center space-y-6">
+              <div className="text-xl font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                Retire from Race?
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowRetireConfirm(false);
+                    setIsPaused(false);
+                  }}
+                  className="flex-1 h-12 rounded-lg font-bold uppercase tracking-widest text-muted-foreground bg-secondary"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  data-testid="button-retire-no"
+                >
+                  No
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRetireConfirm(false);
+                    setShowRetireDnf(true);
+                  }}
+                  className="flex-1 h-12 rounded-lg font-bold uppercase tracking-widest text-red-600"
+                  style={{ fontFamily: 'Oxanium, sans-serif' }}
+                  data-testid="button-retire-yes"
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showRetireDnf && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-red-600">
+            <motion.div
+              initial={{ opacity: 1 }}
+              animate={{ opacity: [1, 0.12, 1, 0.12, 1, 0.12, 1] }}
+              transition={{ duration: 1.35, ease: 'linear' }}
+              onAnimationComplete={() => {
+                if (retireLeaveTimerRef.current) return;
+                retireLeaveTimerRef.current = setTimeout(() => {
+                  quitToPaddock();
+                }, 1200);
+              }}
+              className="font-bold leading-none text-white text-[clamp(5rem,18vh,8rem)]"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              DNF
+            </motion.div>
+          </div>
+        )}
+
         {/* Pause Overlay */}
-        {isPaused && (
+        {isPaused && !isGpRace && (
           <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center">
             <div className="text-center space-y-6">
               <div className="text-4xl font-bold">PAUSED</div>
