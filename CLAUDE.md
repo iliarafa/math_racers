@@ -186,6 +186,13 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 - Session log shows stint-by-stint breakdown during racing
 - Name prompt on first submission (max 20 chars)
 
+### Racing HUD Variants (Game.tsx)
+Each mode has its own HUD rules. A layout change in one does not imply the same change in the others; verify the mode you touched and leave the rest alone unless asked.
+- **Race Day** (`isGpRace`): GameLayout header hidden; LAP x/y and RETIRE are absolute labels top-left/top-right; no progress grid; question + answer centered in the column with viewport-only sizes and a transform offset on the question; clock sits above the keypad; whole screen flashes on answer.
+- **GP Practice / GP Qualifying** (`largeTenCol`): logo header, mode badge row with pause; clock at top of the column; large 10-column grid (3×10 practice, 2×10 qualifying) with cells capped at 32px; question + answer sized from the column's own height (`cqh`) so they never spill onto the grid. Practice adds the dynamic difficulty label under the clock.
+- **Free Practice / PST** (`isPracticeMode && !isGrandPrix`): BOX button in the header instead of a badge row; single fluid 20-column grid (cells shrink to fit the phone width); series label above the keypad; "Limits" counter.
+- **Career / Quick Race**: badge row with pause; dual 20-column grid (BOT row above player row); "Warnings" counter.
+
 ### Leaderboard (PST)
 - `POST /api/leaderboard` - Submit entry (playerId, playerName, operation, score, totalTime, mistakes, accuracy, difficultyAchieved)
 - `GET /api/leaderboard?operation=&limit=` - Fetch entries sorted by ranking (default 50, max 100)
