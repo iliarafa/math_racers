@@ -2760,16 +2760,27 @@ export default function Game() {
       ) : undefined}>
       <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0 bg-transparent">
         {isGpRace && (
-          <button
-            onClick={() => setIsPaused(true)}
-            className={cn(
-              "absolute top-3 right-3 z-20 p-2 rounded-lg transition-colors",
-              gpRaceFlash ? "text-white hover:bg-white/15" : "text-foreground hover:bg-black/5"
-            )}
-            data-testid="button-pause"
-          >
-            <Pause className="w-5 h-5" />
-          </button>
+          <>
+            <span
+              className={cn(
+                "absolute top-3 left-3 z-20 h-9 flex items-center p-2 text-xs font-bold uppercase tracking-widest pointer-events-none",
+                gpRaceFlash ? "text-white" : "text-muted-foreground"
+              )}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+            >
+              LAP {Math.min(progress + 1, raceLength)}/{raceLength}
+            </span>
+            <button
+              onClick={() => setIsPaused(true)}
+              className={cn(
+                "absolute top-3 right-3 z-20 p-2 rounded-lg transition-colors",
+                gpRaceFlash ? "text-white hover:bg-white/15" : "text-foreground hover:bg-black/5"
+              )}
+              data-testid="button-pause"
+            >
+              <Pause className="w-5 h-5" />
+            </button>
+          </>
         )}
 
         {/* Pause Overlay */}
