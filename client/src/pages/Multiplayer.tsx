@@ -1574,7 +1574,8 @@ export default function Multiplayer() {
             )}
           </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-4">
+          <div className="flex-1 flex flex-col items-center min-h-0 px-4">
+            <div className="shrink-0 h-[15%]" aria-hidden />
             <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6vh,1.75rem)]">
               <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
               {formatTime(elapsedTime)}
@@ -1588,14 +1589,14 @@ export default function Multiplayer() {
               {difficultyLabel}
             </div>
 
-            <div className="relative mt-2 sm:mt-3">
-              <div className="font-bold tracking-tight leading-none text-center px-2 max-w-full text-[clamp(2.75rem,7vh,4.5rem)]">
+            <div className="relative mt-6 sm:mt-8">
+              <div className="font-bold tracking-tight leading-none text-center px-2 max-w-full text-[clamp(2.75rem,7.6vh,4.75rem)]">
                 {currentQuestion ? currentQuestion.display : "..."}
               </div>
 
               <div
                 className={cn(
-                  "font-bold min-w-[80px] text-center leading-none mt-2 sm:mt-3 text-[clamp(2.75rem,7vh,4.5rem)]",
+                  "font-bold min-w-[80px] text-center leading-none -mt-2 text-[clamp(2.75rem,7.6vh,4.75rem)]",
                   feedback === "idle" && "text-muted-foreground/50",
                   feedback === "correct" && "text-green-600",
                   feedback === "incorrect" && "text-red-600"
