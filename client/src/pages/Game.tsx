@@ -622,14 +622,17 @@ export default function Game() {
     }
   }, []);
 
-  // Notify App.tsx when entering/leaving race states (hides video & pauses music)
+  // Notify App.tsx when entering/leaving race states (hides video & pauses music).
+  // Race Day (GP rw_race) also hides the global mute button: its header is hidden and
+  // RETIRE sits in the top-right corner where the button would otherwise overlap it.
   useEffect(() => {
     const isRacing = gameStatus === 'countdown' || gameStatus === 'go' || gameStatus === 'racing' || gameStatus === 'finished' || gameStatus === 'crashed';
-    window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: isRacing } }));
+    const hideSoundToggle = isRacing && isGrandPrix && grandPrixPhase === 'rw_race';
+    window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: isRacing, hideSoundToggle } }));
     return () => {
-      window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: false } }));
+      window.dispatchEvent(new CustomEvent('racingStateChange', { detail: { racing: false, hideSoundToggle: false } }));
     };
-  }, [gameStatus]);
+  }, [gameStatus, isGrandPrix, grandPrixPhase]);
 
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {

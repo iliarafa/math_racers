@@ -107,9 +107,15 @@ function MenuMusic() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [userInteracted, setUserInteracted] = useState(false);
   const [isRacing, setIsRacing] = useState(false);
+  // Race Day hides the mute button: it would sit on top of the RETIRE label.
+  const [hideToggle, setHideToggle] = useState(false);
 
   useEffect(() => {
-    const handler = (e: Event) => setIsRacing((e as CustomEvent).detail.racing);
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setIsRacing(detail.racing);
+      setHideToggle(Boolean(detail.hideSoundToggle));
+    };
     window.addEventListener('racingStateChange', handler);
     return () => window.removeEventListener('racingStateChange', handler);
   }, []);
@@ -138,6 +144,8 @@ function MenuMusic() {
       audio.pause();
     }
   }, [location, state.soundEnabled, userInteracted, isRacing]);
+
+  if (hideToggle) return null;
 
   return (
     <button
