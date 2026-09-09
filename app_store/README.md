@@ -5,7 +5,7 @@ Captioned cards built from real simulator screenshots.
 | Folder | Canvas | Device captured |
 |---|---|---|
 | `iphone_6.9/` | 1242 × 2688 | iPhone 17 Pro Max simulator (captured at 1320 × 2868, rendered to the 6.5" canvas) |
-| `ipad_13/` | 2064 × 2752 portrait; `01_race.png` is 2752 × 2064 landscape, since Race Weekend runs landscape on iPad | iPad Pro 13-inch (M5) simulator |
+| `ipad_13/` | 2064 × 2752 portrait; `01_race.png` and `07_superlicence.png` are 2752 × 2064 landscape (Race Weekend runs landscape on iPad; the splash was captured in landscape) | iPad Pro 13-inch (M5) simulator |
 
 Both sizes are ones App Store Connect accepts for the 6.9" iPhone and 13" iPad
 slots. Upload the files in numeric order — the first three are the ones most
