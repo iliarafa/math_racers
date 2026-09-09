@@ -288,26 +288,28 @@ export default function DrivingSchool() {
                       exit={{ opacity: 0, x: -24 }}
                       transition={{ x: { duration: 0.12 }, opacity: { duration: 0.12 }, scale: { duration: 0.25 } }}
                       className={cn(
-                        'aspect-[5/3] w-full max-h-full [container-type:size] rounded-none shadow-lg flex flex-col items-center justify-center transition-colors duration-150',
+                        'relative aspect-[5/3] w-full max-h-full [container-type:size] rounded-none shadow-lg flex flex-col items-center justify-center transition-colors duration-150',
                         lit ? cn(CARD_LIT[current.color as Exclude<CardColor, 'pending'>], 'text-white') : 'bg-card',
                       )}
                       data-testid="flashcard-card"
                     >
                       {/* cqh-based sizes scale with the card on short viewports, capped at the full-size type */}
-                      <div className="text-[min(4.5rem,28cqh)] font-bold tracking-tight" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                      {/* Question + answer are the only in-flow children, so flex centering lands
+                          the pair on the card's true centre; the colour label sits out of flow below. */}
+                      <div className="text-[min(4.5rem,28cqh)] leading-none font-bold tracking-tight" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                         {current.question.display}
                       </div>
                       <div
                         className={cn(
-                          'text-[min(3.75rem,23cqh)] font-bold min-h-[1.2em] my-[min(0.5rem,3cqh)]',
+                          'text-[min(3.75rem,23cqh)] leading-none font-bold min-h-[1em] mt-[min(1.25rem,8cqh)]',
                           lit ? 'text-white/90' : 'text-muted-foreground/40',
                         )}
                         data-testid="flashcard-answer"
                       >
                         {answer || '0'}
                       </div>
-                      {/* Reserved label slot — identical height lit or idle so the card never resizes */}
-                      <div className="h-[min(1.25rem,10cqh)] flex items-center justify-center">
+                      {/* Colour label, absolutely positioned so it never shifts the centred pair */}
+                      <div className="absolute inset-x-0 bottom-[min(0.75rem,5cqh)] h-[min(1.25rem,10cqh)] flex items-center justify-center">
                         {lit && (
                           <span className="text-[min(0.6875rem,7cqh)] font-bold uppercase tracking-[0.3em]" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                             {current.color}
