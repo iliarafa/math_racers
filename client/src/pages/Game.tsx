@@ -3,15 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Link, useLocation, useParams } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { LiveCircuitMap, getMapLapLength } from "@/components/LiveCircuitMap";
+import { getMapLapLength } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
 import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
-import type { Weather, RaceMapView, DifficultyDrumOption } from "@/lib/gameLogic";
-import { loadSetupWeather, saveSetupWeather, loadSetupOperation, saveSetupOperation } from "@/lib/gameLogic";
+import type { DifficultyDrumOption } from "@/lib/gameLogic";
+import { loadSetupOperation, saveSetupOperation } from "@/lib/gameLogic";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
-import { operationRow, levelRow, weatherRow, viewRow } from "@/components/setup/setupRows";
+import { operationRow, levelRow } from "@/components/setup/setupRows";
 import { submitFpLeaderboardEntry, submitGpWeekendEntry, GpWeekendLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -51,6 +51,8 @@ import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import circuitHungaryBlack from "@/assets/circuit_hungary_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
+import { getGrandPrixHistory } from "@/lib/grandPrixHistory";
+import madridSetupTrack from "@/assets/madrid_setup_track.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import chooseTrackVideo from "@assets/choose_TRACK.mp4";
@@ -95,32 +97,6 @@ const CheckeredFlag = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Weather icon components
-const SunIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-  </svg>
-);
-
-const RainCloudIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className}>
-    <path d="M19 14.5A3.5 3.5 0 0019 7.5h-1.26A6 6 0 006 9.5a6 6 0 00.5 2.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-    <path d="M8 16v3M12 15v4M16 16v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
-const RandomDiceIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={className}>
-    <rect x="3" y="3" width="18" height="18" rx="2" />
-    <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-    <circle cx="16" cy="8" r="1.5" fill="currentColor" />
-    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-    <circle cx="8" cy="16" r="1.5" fill="currentColor" />
-    <circle cx="16" cy="16" r="1.5" fill="currentColor" />
-  </svg>
-);
-
 const createGrandPrixCircuit = (op: string): Circuit => ({
   id: CURRENT_GRAND_PRIX.circuitId,
   name: CURRENT_GRAND_PRIX.name,
@@ -160,17 +136,6 @@ const OPERATION_OPTIONS = [
   { label: '÷', type: 'Division' },
   { label: 'x=?', type: 'Variables' },
 ];
-
-// Historical rain probability for each circuit (based on real F1 data)
-const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
-  "spa": 0.60,        // Spa-Francorchamps: 50-70% -> 60%
-  "silverstone": 0.50, // Silverstone: 40-60% -> 50%
-  "suzuka": 0.42,     // Suzuka: 35-50% -> 42%
-  "monaco": 0.25,     // Monaco: 20-30% -> 25%
-  "monza": 0.20,      // Monza: 15-25% -> 20%
-  "bahrain": 0.05,    // Bahrain: Very rare rain -> 5%
-  [CURRENT_GRAND_PRIX.circuitId]: CURRENT_GRAND_PRIX.rainProbability,
-};
 
 let audioInitialized = false;
 
@@ -374,7 +339,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLapTime, setPlayerName, setRaceMapView, toggleRaceMapView } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLapTime, setPlayerName } = useGameState();
   const { isPremium, isLoading: isPurchaseLoading } = usePurchase();
   const [, setLocation] = useLocation();
   /** `/game/free-practice` | `/game/grand-prix` | `/game/quick-race` — replaces the old mode_select screen. */
@@ -395,14 +360,6 @@ export default function Game() {
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(() =>
     routeMode === 'quick-race' ? createQuickRaceCircuit('Addition') : null,
   );
-  const [selectedWeather, setSelectedWeather] = useState<Weather>(() =>
-    routeMode === 'quick-race' ? 'dry' : loadSetupWeather(),
-  );
-  const [actualWeather, setActualWeather] = useState<'dry' | 'wet'>('dry');
-  // Alternating weather state for Realism mode with random weather
-  const [weatherChangePoints, setWeatherChangePoints] = useState<number[]>([]);
-  const [initialWeather, setInitialWeather] = useState<'dry' | 'wet'>('dry');
-
   const [isPracticeMode, setIsPracticeMode] = useState(() => routeMode !== 'quick-race');
   const [isGrandPrix, setIsGrandPrix] = useState(() => routeMode === 'grand-prix');
   const [isPreSeasonTesting, setIsPreSeasonTesting] = useState(
@@ -502,41 +459,6 @@ export default function Game() {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
   const [progress, setProgress] = useState(0);
-
-  // Check if we're in realism mode with random weather (alternating weather feature)
-  const isRealismRandom = !isPracticeMode && effectiveSimMode && selectedWeather === 'random';
-
-  // Generate random weather change points for a race
-  const generateWeatherSchedule = (length: number): number[] => {
-    const numChanges = 3 + Math.floor(Math.random() * 3); // 3-5 changes
-    const changePoints: number[] = [];
-    const minLap = Math.floor(length * 0.1);
-    const maxLap = Math.floor(length * 0.9);
-
-    for (let i = 0; i < numChanges; i++) {
-      const lap = minLap + Math.floor(Math.random() * (maxLap - minLap));
-      if (!changePoints.includes(lap)) {
-        changePoints.push(lap);
-      }
-    }
-
-    return changePoints.sort((a, b) => a - b);
-  };
-
-  // Get current weather based on progress and change points
-  const getCurrentWeather = (
-    currentProgress: number,
-    changePoints: number[],
-    startWeather: 'dry' | 'wet'
-  ): 'dry' | 'wet' => {
-    const changesPassed = changePoints.filter(p => currentProgress >= p).length;
-    return changesPassed % 2 === 0 ? startWeather : (startWeather === 'dry' ? 'wet' : 'dry');
-  };
-
-  // Compute current weather dynamically for realism random mode
-  const currentWeather = isRealismRandom
-    ? getCurrentWeather(progress, weatherChangePoints, initialWeather)
-    : actualWeather;
 
   const [lapResults, setLapResults] = useState<Array<{
     result: 'correct' | 'incorrect';
@@ -700,27 +622,7 @@ export default function Game() {
   // Countdown sequence: 5 lights, then immediately start racing
   useEffect(() => {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver && !showQuickRaceIntro) {
-      // Resolve random weather at countdown start using circuit-specific rain probability
-      let resolvedWeather: 'dry' | 'wet';
       const currentRaceLength = raceLength;
-
-      if (selectedWeather === 'random') {
-        const rainProbability = CIRCUIT_RAIN_PROBABILITY[selectedCircuit.id] || 0.5;
-        resolvedWeather = Math.random() < rainProbability ? 'wet' : 'dry';
-
-        // In realism mode with random weather, set up alternating weather
-        if (!isPracticeMode && effectiveSimMode) {
-          const schedule = generateWeatherSchedule(currentRaceLength);
-          setWeatherChangePoints(schedule);
-          setInitialWeather(resolvedWeather);
-        }
-      } else {
-        resolvedWeather = selectedWeather;
-        // Clear alternating weather state for non-random weather
-        setWeatherChangePoints([]);
-      }
-      setActualWeather(resolvedWeather);
-      const isWet = resolvedWeather === 'wet';
 
       // Initialize AERO zones based on race length and sim mode
       let zones: number[];
@@ -770,7 +672,7 @@ export default function Game() {
           if (soundEnabledRef.current) {
             playBeep(1200, 200);
           }
-          setQuestion(generateQuestion(selectedCircuit.id, raceDifficulty, isWet, 0, undefined, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
+          setQuestion(generateQuestion(selectedCircuit.id, raceDifficulty, false, 0, undefined, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
           setGameStatus('racing');
           return;
@@ -784,7 +686,7 @@ export default function Game() {
 
       return () => clearInterval(interval);
     }
-  }, [gameStatus, selectedCircuit, selectedDriver, selectedWeather, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, isQuickRace, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation, showQuickRaceIntro]);
+  }, [gameStatus, selectedCircuit, selectedDriver, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, isQuickRace, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation, showQuickRaceIntro]);
 
 
   // Timer Logic - only runs during racing and not paused
@@ -847,10 +749,8 @@ export default function Game() {
       setIsPracticeMode(false);
       setRaceMode('bot');
       setSelectedOperation('Addition');
-      setSelectedWeather('dry');
       setDifficultyMode('adaptive');
       setSelectedCircuit(createQuickRaceCircuit('Addition'));
-      setRaceMapView('track');
       setSelectedTab('race');
       setBotProgress(0);
       setBotLapResults([]);
@@ -996,12 +896,6 @@ export default function Game() {
   // Setup-card handlers. The card plays the click for every row, so these only apply
   // and persist — do not add a `playCarouselClick` here or it will double up.
 
-  /** Pick a setup weather: apply and persist. */
-  const chooseWeather = (weather: Weather) => {
-    setSelectedWeather(weather);
-    saveSetupWeather(weather);
-  };
-
   /** Pick a level, exploding the chosen rung back into mode + locked. */
   const chooseLevel = (opt: DifficultyDrumOption) => {
     if (opt.mode === 'adaptive') {
@@ -1019,11 +913,6 @@ export default function Game() {
     setSelectedOperation(op);
     saveSetupOperation(op);
     setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(op) : createFreePracticeCircuit(op));
-  };
-
-  /** Pick the race progress view. */
-  const chooseRaceMapView = (view: RaceMapView) => {
-    setRaceMapView(view);
   };
 
   const handleStartRace = () => {
@@ -1371,7 +1260,7 @@ export default function Game() {
           setAnswer("");
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
-          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, currentWeather === 'wet', boostFactor, question?.display, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
+          setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, false, boostFactor, question?.display, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1578,12 +1467,6 @@ export default function Game() {
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
     setCurrentSectorRed(false);
-    // selectedWeather is a saved setup preference — only the resolved race weather resets
-    // (Quick Race always forces dry below)
-    setActualWeather('dry');
-    // Reset alternating weather state
-    setWeatherChangePoints([]);
-    setInitialWeather('dry');
     resetStreak();
     penaltyTimeRef.current = 0;
     raceStartTimeRef.current = null;
@@ -1628,10 +1511,8 @@ export default function Game() {
     if (isQuickRace) {
       // Same fixed defaults, skip setup — straight back to lights.
       setSelectedOperation('Addition');
-      setSelectedWeather('dry');
       setDifficultyMode('adaptive');
       setSelectedCircuit(createQuickRaceCircuit('Addition'));
-      setRaceMapView('track');
       setIsPracticeMode(false);
       setRaceMode('bot');
       setSelectedTab('race');
@@ -1677,10 +1558,6 @@ export default function Game() {
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
     setCurrentSectorRed(false);
-    // selectedWeather is a saved setup preference — only the resolved race weather resets
-    setActualWeather('dry');
-    setWeatherChangePoints([]);
-    setInitialWeather('dry');
     resetStreak();
     penaltyTimeRef.current = 0;
     raceStartTimeRef.current = null;
@@ -1981,8 +1858,6 @@ export default function Game() {
       // Grand Prix contributes no LEVEL row — it is always adaptive through Practice and
       // then locks for the rest of the weekend.
       ...(isGrandPrix ? [] : [levelRow(difficultyMode, lockedDifficulty, chooseLevel)]),
-      weatherRow(selectedWeather, chooseWeather),
-      viewRow(state.raceMapView, chooseRaceMapView),
       // Free Practice chooses its session length; Grand Prix laps stay a readout.
       ...(isGrandPrix
         ? []
@@ -2006,6 +1881,11 @@ export default function Game() {
     const helpText = isGrandPrix
       ? `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`
       : 'Choose 25, 50 or 100 laps with Adaptive difficulty (or locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Only full 100-lap sessions post to the Leaderboard.';
+
+    const setupDetailMap =
+      CURRENT_GRAND_PRIX.circuitId === 'madrid'
+        ? madridSetupTrack
+        : getGrandPrixHistory(CURRENT_GRAND_PRIX.circuitId)?.detailMapImage;
 
     const phaseTabs = isGrandPrix ? (
       <div className="flex items-center justify-center gap-5 pt-1" data-testid="gp-phase-tabs">
@@ -2072,7 +1952,8 @@ export default function Game() {
               flagSrc: CURRENT_GRAND_PRIX.flagImage,
               phase: phaseTabs,
             }}
-            mapImageSrc={CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+            mapImageSrc={setupDetailMap ?? CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+            invertMap={!setupDetailMap}
             mapStageClass={CURRENT_GRAND_PRIX.mapStageClass}
             rows={rows}
             readouts={isGrandPrix ? [{ label: 'Laps', value: String(raceLength) }] : undefined}
@@ -2099,7 +1980,7 @@ export default function Game() {
 
   // Countdown screen with F1 starting lights
   if (gameStatus === 'countdown') {
-    // First-run Quick Race onboarding: explain the race and the tap-to-switch view before the lights.
+    // First-run Quick Race onboarding: explain the race before the lights.
     if (isQuickRace && showQuickRaceIntro) {
       return (
         <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideHeader>
@@ -2121,11 +2002,6 @@ export default function Game() {
               </div>
               <p className="text-white/80 text-sm leading-relaxed">
                 Race {raceLength} laps against the bot — every correct answer is a lap. First across the line wins.
-              </p>
-              <p className="text-white/60 text-sm leading-relaxed">
-                {state.raceMapView === 'track'
-                  ? 'During the race, tap the track map to switch to the sector view — tap again to come back.'
-                  : 'During the race, tap the sector squares to switch to the track map — tap again to come back.'}
               </p>
               <button
                 onClick={() => {
@@ -2316,17 +2192,6 @@ export default function Game() {
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Pre-Season Testing</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Testing Complete</div>
             </div>
-            {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
-              <LiveCircuitMap
-                circuit={selectedCircuit}
-                progress={progress}
-                raceLength={raceLength}
-                sectorResults={lapResults}
-                isWet={currentWeather === 'wet'}
-                variant="results"
-                labelLeft={`${selectedCircuit.name} · painted lap`}
-              />
-            )}
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Achieved Level</span>
@@ -2590,22 +2455,6 @@ export default function Game() {
                  </div>
                )}
             </div>
-
-            {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
-              <LiveCircuitMap
-                circuit={selectedCircuit}
-                progress={progress}
-                rivalProgress={botProgress}
-                raceLength={raceLength}
-                sectorResults={lapResults}
-                rivalSectorResults={raceMode === 'bot' ? botLapResults : undefined}
-                showRival={raceMode === 'bot' && !isPracticeMode}
-                isWet={currentWeather === 'wet'}
-                variant="results"
-                rivalLabel="BOT"
-                labelLeft={`${selectedCircuit.name} · painted lap`}
-              />
-            )}
 
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -2891,20 +2740,6 @@ export default function Game() {
                 Resume
               </button>
               <button
-                onClick={() => {
-                  toggleRaceMapView();
-                  if (state.soundEnabled) playCarouselClick();
-                }}
-                className="bg-white/10 text-white px-6 py-3 rounded-lg font-bold uppercase tracking-wider hover:bg-white/15 transition-all mx-auto"
-                style={{ fontFamily: 'Oxanium, sans-serif' }}
-                data-testid="button-pause-view-toggle"
-              >
-                View: {state.raceMapView === 'track' ? 'Track' : 'Sectors'}
-                <span className="block text-[10px] font-medium opacity-70 mt-1 tracking-widest">
-                  Tap to switch to {state.raceMapView === 'track' ? 'Sectors' : 'Track'}
-                </span>
-              </button>
-              <button
                 onClick={quitToPaddock}
                 className="bg-secondary text-secondary-foreground px-6 py-2 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center gap-2 mx-auto"
                 data-testid="button-quit-race"
@@ -3003,10 +2838,10 @@ export default function Game() {
           </div>
         )}
 
-        <div className="landscape-left">
+        <div className="landscape-left flex-1 flex flex-col min-h-0">
         {/* Mode badge and controls — Free Practice skips the green pill to keep HUD lighter */}
         {!isPreSeasonTesting && (
-          <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1">
+          <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1 shrink-0">
             <div className="flex items-center gap-2">
               {isGrandPrix && grandPrixPhase === 'rw_practice' ? (
                 <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
@@ -3023,22 +2858,6 @@ export default function Game() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {/* Quick Race switches views by tapping the map/grid instead of a header chip */}
-              {!isQuickRace && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    toggleRaceMapView();
-                    if (state.soundEnabled) playCarouselClick();
-                  }}
-                  className="px-2.5 py-1 rounded bg-black/5 text-[10px] font-bold uppercase tracking-widest text-black/70 hover:bg-black/10 transition-colors"
-                  style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  data-testid="button-race-view-toggle"
-                  aria-label={`Switch to ${state.raceMapView === 'track' ? 'sectors' : 'track'} view`}
-                >
-                  {state.raceMapView === 'track' ? 'Track' : 'Sectors'}
-                </button>
-              )}
               {!isPracticeMode && (
                 <button
                   onClick={() => setIsPaused(true)}
@@ -3052,40 +2871,28 @@ export default function Game() {
           </div>
         )}
 
-        {/* Main content - compact header zone */}
-        <div className="relative flex flex-col items-center px-4 pt-1">
-          {/* Timer on top with weather indicator for realism random */}
-          <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
-            <Timer className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div className="relative flex-1 flex flex-col items-center justify-center min-h-0 px-4">
+          <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6vh,1.75rem)]">
+            <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
             {formatTime(elapsedTime)}
-            {isRealismRandom && (
-              <div className={cn(
-                "text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded ml-2",
-                currentWeather === 'wet' ? "bg-blue-500/20 text-blue-400" : "bg-yellow-500/20 text-yellow-400"
-              )}>
-                {currentWeather === 'wet' ? 'WET' : 'DRY'}
-              </div>
-            )}
           </div>
           
           {/* Dynamic difficulty indicator for Grand Prix practice (PST shows it above keypad instead) */}
           {(isGrandPrix && grandPrixPhase === 'rw_practice') && (
-            <div className="text-xs uppercase tracking-wider font-bold" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
+            <div className="text-xs uppercase tracking-wider font-bold mt-1" style={{ fontFamily: 'Oxanium, sans-serif', color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>
               {DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting'}
             </div>
           )}
 
           {/* Expression and Answer with Penalty Overlay */}
-          <div className="relative">
-            {/* Expression below timer */}
-            <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mt-2">
+          <div className="relative mt-2 sm:mt-3">
+            <div className="font-bold tracking-tight leading-none text-center px-2 max-w-full text-[clamp(2.75rem,7vh,4.5rem)]">
               {question?.display}
             </div>
 
-            {/* Answer display below expression */}
             <div
               className={cn(
-                "text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold min-w-[80px] text-center mt-2",
+                "font-bold min-w-[80px] text-center leading-none mt-2 sm:mt-3 text-[clamp(2.75rem,7vh,4.5rem)]",
                 feedback === 'idle' && "text-muted-foreground/50",
                 feedback === 'correct' && "text-green-600",
                 feedback === 'incorrect' && "text-red-600"
@@ -3106,7 +2913,7 @@ export default function Game() {
                   className="absolute inset-0 flex items-center justify-center z-10"
                 >
                   <span
-                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600"
+                    className="font-bold text-red-600 text-[clamp(1.75rem,4.5vh,2.75rem)]"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     +5s
@@ -3116,27 +2923,16 @@ export default function Game() {
             </AnimatePresence>
           </div>
 
-          {/* Minimal Feedback */}
-          <div className="h-4 flex items-center justify-center">
+          {/* Reserved slot so TRACK LIMITS / Correct never sit on the numbers */}
+          <div className="h-11 shrink-0 flex items-center justify-center mt-3">
             <AnimatePresence mode="wait">
-              {feedback === 'correct' && (
-                <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-1 text-xs">
-                  <Check className="w-3 h-3" /> Correct
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Sectors view: TRACK LIMITS between answer and grid (unchanged in-flow flash) */}
-          {state.raceMapView === 'sectors' && (
-            <AnimatePresence>
-              {showPenalty && (
+              {showPenalty ? (
                 <motion.div
                   key="track-limits"
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center justify-center gap-2 pointer-events-none mt-1"
+                  className="flex items-center justify-center gap-2 pointer-events-none"
                 >
                   {showBlackWhiteFlag && (
                     <img
@@ -3153,122 +2949,40 @@ export default function Game() {
                     TRACK LIMITS
                   </motion.div>
                 </motion.div>
-              )}
+              ) : feedback === 'correct' ? (
+                <motion.div
+                  key="correct"
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-green-600 font-medium flex items-center gap-1 text-sm"
+                >
+                  <Check className="w-4 h-4" /> Correct
+                </motion.div>
+              ) : null}
             </AnimatePresence>
-          )}
-        </div>
-
-        {/* Progress — track layout only here; sector squares sit above keypad.
-            Quick Race: this slot shows map OR big sector grids, and tapping it switches views.
-            Hungary: nudge up into the top-of-art dip so the ribbon clears Lap/Limits. */}
-        {(state.raceMapView === 'track' || isQuickRace) && (
-          <div
-            className={cn(
-              'relative w-full max-w-md md:max-w-xl lg:max-w-3xl mx-auto px-4 overflow-visible',
-              state.raceMapView === 'track' && selectedCircuit?.id === 'hungary' ? '-translate-y-3 mt-0 mb-4' : 'my-2',
-              isQuickRace && 'cursor-pointer'
-            )}
-            onClick={
-              isQuickRace
-                ? () => {
-                    toggleRaceMapView();
-                    if (state.soundEnabled) playCarouselClick();
-                  }
-                : undefined
-            }
-            role={isQuickRace ? 'button' : undefined}
-            aria-label={
-              isQuickRace
-                ? `Switch to ${state.raceMapView === 'track' ? 'sectors' : 'track'} view`
-                : undefined
-            }
-            data-testid={isQuickRace ? 'button-race-view-toggle' : undefined}
-          >
-            {/* Track Limits Warning — track view: floats over the map, clear of the timer */}
-            {state.raceMapView === 'track' && (
-              <AnimatePresence>
-                {showPenalty && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-2 pointer-events-none"
-                  >
-                    {showBlackWhiteFlag && (
-                      <img
-                        src={trackLimitsFlag}
-                        alt="Black and White Flag"
-                        className="h-8 w-12 object-cover rounded"
-                      />
-                    )}
-                    <motion.div
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ duration: 0.3, repeat: 3 }}
-                      className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
-                    >
-                      TRACK LIMITS
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            )}
-            {state.raceMapView === 'track' ? (
-              <LiveCircuitMap
-                circuit={selectedCircuit}
-                progress={progress}
-                rivalProgress={botProgress}
-                raceLength={raceLength}
-                sectorResults={lapResults}
-                rivalSectorResults={raceMode === 'bot' ? botLapResults : undefined}
-                showRival={raceMode === 'bot' && !isPracticeMode}
-                currentSectorRed={currentSectorRed}
-                overtakeActive={overtakeActive}
-                aeroActive={aeroActive}
-                isWet={currentWeather === 'wet'}
-                rivalLabel="BOT"
-                hideFooter
-              />
-            ) : (
-              <SectorProgressGrid
-                big
-                progress={progress}
-                raceLength={raceLength}
-                sectorResults={lapResults}
-                rivalProgress={botProgress}
-                rivalSectorResults={botLapResults}
-                showRival={raceMode === 'bot'}
-                currentSectorRed={currentSectorRed}
-                layout="dual"
-                labelRight={`Warnings: ${mistakes}`}
-                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
-                rivalLabel="BOT"
-              />
-            )}
           </div>
-        )}
+        </div>
 
         </div>
         {/* Large Keypad with integrated Power-ups row */}
-        <div className="landscape-right flex-1 flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11">
-          {/* Sectors view: grid sits just above power-ups / numpad (Quick Race renders it big in the map slot instead) */}
-          {state.raceMapView === 'sectors' && !isQuickRace && (
-            <SectorProgressGrid
-              className="my-0 mb-1"
-              progress={progress}
-              raceLength={raceLength}
-              sectorResults={lapResults}
-              rivalProgress={botProgress}
-              rivalSectorResults={botLapResults}
-              showRival={raceMode === 'bot' && !isPracticeMode}
-              currentSectorRed={currentSectorRed}
-              layout={
-                effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual'
-              }
-              labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
-              labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
-              rivalLabel="BOT"
-            />
-          )}
+        <div className="landscape-right flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11 shrink-0">
+          <SectorProgressGrid
+            className="my-0 mb-1"
+            progress={progress}
+            raceLength={raceLength}
+            sectorResults={lapResults}
+            rivalProgress={botProgress}
+            rivalSectorResults={botLapResults}
+            showRival={raceMode === 'bot' && !isPracticeMode}
+            currentSectorRed={currentSectorRed}
+            layout={
+              effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual'
+            }
+            labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
+            labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+            rivalLabel="BOT"
+          />
 
           {/* Status Messages - floating above keypad */}
           {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
@@ -3311,55 +3025,21 @@ export default function Game() {
             </div>
           )}
 
-          {/* Question | Level | Limits — same 3-col grid as AERO / energy / OT so each label centers on its button.
-              Free Practice purple lap: center difficulty temporarily becomes ALL PURPLE. */}
-          {state.raceMapView === 'track' ? (
-            <div className="mb-1 grid w-full max-w-md md:max-w-xl lg:max-w-2xl grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 text-xs text-muted-foreground">
-              <span className="min-w-0 truncate text-center">
-                {`${Math.min(progress + 1, raceLength)}/${raceLength}`}
-              </span>
-              <span
-                className="text-center text-xs uppercase tracking-wider font-bold"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  color: (() => {
-                    const showLevel =
-                      isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice');
-                    if (!showLevel) return 'transparent';
-                    if (purpleLapLit && isPreSeasonTesting && !showPenalty) return '#9333ea';
-                    return LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e';
-                  })(),
-                }}
-              >
-                {(() => {
-                  const showLevel =
-                    isPreSeasonTesting || (isGrandPrix && grandPrixPhase === 'rw_practice');
-                  if (!showLevel) return '\u00a0';
-                  if (purpleLapLit && isPreSeasonTesting && !showPenalty) return 'ALL PURPLE';
-                  return DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
-                })()}
-              </span>
-              <span className={cn('text-center', mistakes > 0 && 'text-red-500')}>
-                {(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: {mistakes}
-              </span>
+          {isPreSeasonTesting && (
+            <div
+              className="text-xs uppercase tracking-wider text-center mb-1 font-bold"
+              style={{
+                fontFamily: 'Oxanium, sans-serif',
+                color:
+                  purpleLapLit && !showPenalty
+                    ? '#9333ea'
+                    : (LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e'),
+              }}
+            >
+              {purpleLapLit && !showPenalty
+                ? 'ALL PURPLE'
+                : (DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting')}
             </div>
-          ) : (
-            isPreSeasonTesting && (
-              <div
-                className="text-xs uppercase tracking-wider text-center mb-1 font-bold"
-                style={{
-                  fontFamily: 'Oxanium, sans-serif',
-                  color:
-                    purpleLapLit && !showPenalty
-                      ? '#9333ea'
-                      : (LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e'),
-                }}
-              >
-                {purpleLapLit && !showPenalty
-                  ? 'ALL PURPLE'
-                  : (DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting')}
-              </div>
-            )
           )}
 
           <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 w-full max-w-md md:max-w-xl lg:max-w-2xl">

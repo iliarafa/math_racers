@@ -43,12 +43,6 @@ export interface LapEntry {
   series?: string;  // 'karting' | 'f3' | 'f2' | 'f1' - optional for backwards compatibility
 }
 
-/** Race HUD progress: circuit silhouette vs classic sector squares */
-export type RaceMapView = 'track' | 'sectors';
-
-/** Setup weather choice. 'random' resolves per-circuit at the countdown. */
-export type Weather = 'dry' | 'wet' | 'random';
-
 export interface GameState {
   coins: number;
   unlockedItems: string[];
@@ -64,7 +58,6 @@ export interface GameState {
   soundEnabled: boolean;
   simMode: boolean;
   powerUpsEnabled: boolean;
-  raceMapView: RaceMapView;
   personalBests: { [circuitId: string]: number };
   lapHistory: LapEntry[];
   playerName: string;
@@ -352,45 +345,13 @@ const INITIAL_STATE: GameState = {
   soundEnabled: true,
   simMode: false,
   powerUpsEnabled: true,
-  raceMapView: 'track',
   personalBests: {},
   lapHistory: [],
   playerName: '',
   playerId: '',
 };
 
-function parseRaceMapView(value: unknown): RaceMapView {
-  return value === 'sectors' ? 'sectors' : 'track';
-}
-
-export function parseWeather(value: unknown): Weather | null {
-  if (value === 'dry' || value === 'wet' || value === 'random') return value;
-  return null;
-}
-
-/**
- * Setup weather lives under its own key rather than in the GameState blob.
- *
- * The blob is rewritten wholesale by whichever `useGameState` copy saves last, and
- * `MenuMusic` holds a second copy mounted app-wide — so a value written here would be
- * liable to get clobbered by a stale one. A standalone key sidesteps that.
- */
-const SETUP_WEATHER_KEY = 'setupWeather';
-
-export function loadSetupWeather(): Weather {
-  try {
-    return parseWeather(localStorage.getItem(SETUP_WEATHER_KEY)) ?? 'dry';
-  } catch { /* ignore */ }
-  return 'dry';
-}
-
-export function saveSetupWeather(weather: Weather) {
-  try {
-    localStorage.setItem(SETUP_WEATHER_KEY, weather);
-  } catch { /* ignore */ }
-}
-
-/** Maths type, persisted for the same reason weather is — see above. */
+/** Maths type, persisted under its own key rather than in the GameState blob. */
 const SETUP_OPERATION_KEY = 'setupOperation';
 
 const OPERATIONS = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'];
@@ -458,7 +419,6 @@ export function useGameState() {
           soundEnabled: parsed.soundEnabled ?? true,
           simMode: parsed.simMode ?? false,
           powerUpsEnabled: parsed.powerUpsEnabled ?? true,
-          raceMapView: parseRaceMapView(parsed.raceMapView),
           personalBests: parsed.personalBests ?? {},
           lapHistory: parsed.lapHistory ?? [],
           playerName: parsed.playerName ?? '',
@@ -528,17 +488,6 @@ export function useGameState() {
 
   const togglePowerUps = () => {
     setState(prev => ({ ...prev, powerUpsEnabled: !prev.powerUpsEnabled }));
-  };
-
-  const toggleRaceMapView = () => {
-    setState(prev => ({
-      ...prev,
-      raceMapView: prev.raceMapView === 'track' ? 'sectors' : 'track',
-    }));
-  };
-
-  const setRaceMapView = (raceMapView: RaceMapView) => {
-    setState(prev => ({ ...prev, raceMapView }));
   };
 
   const incrementLaps = () => {
@@ -634,8 +583,6 @@ export function useGameState() {
     toggleSound,
     toggleSimMode,
     togglePowerUps,
-    toggleRaceMapView,
-    setRaceMapView,
     incrementLaps,
     addCareerPoints,
     incrementRacesWon,

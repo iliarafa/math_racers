@@ -65,17 +65,6 @@ const chapters: Chapter[] = [
           { color: "text-red-400", label: "Red", text: "required a retry on that question" },
         ],
       },
-      {
-        id: "weather",
-        title: "Weather",
-        description: "Weather conditions affect question difficulty.",
-        details: [],
-        richDetails: [
-          { color: "text-white/70", label: "Dry", text: "standard difficulty" },
-          { color: "text-white/70", label: "Wet", text: "bumps questions half a difficulty level harder" },
-          { color: "text-white/70", label: "Random", text: "rain probability varies per circuit. In Grand Prix and Free Practice, Random weather can flip between dry and wet 3 to 5 times during the session" },
-        ],
-      },
     ],
   },
   {
@@ -91,7 +80,6 @@ const chapters: Chapter[] = [
           "Activates when behind and within two sectors of your opponent (always available in Grand Prix Practice)",
           "2× progress per correct answer while active",
           "Questions are 1.5× harder (half a difficulty level)",
-          "In wet weather, the difficulty boost stacks — wet + OVERTAKE = full difficulty level up",
           "Energy drains over time once activated (100% energy = 5 seconds)",
           "Tap again to deactivate early and preserve remaining energy",
           "A wrong answer depletes all energy immediately",
@@ -123,7 +111,7 @@ const chapters: Chapter[] = [
         details: [
           "No setup — the race starts immediately at the current Grand Prix circuit",
           "Addition questions with Adaptive difficulty (starts at Karting, adjusts as you go)",
-          "Dry weather, no power-ups — pure racing",
+          "No power-ups — pure racing",
         ],
       },
       {

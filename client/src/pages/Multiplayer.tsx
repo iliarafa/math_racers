@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
-import { LiveCircuitMap } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { SetupRow } from "@/components/setup/SetupRow";
-import { levelRow, operationRow, weatherRow, viewRow } from "@/components/setup/setupRows";
+import { levelRow, operationRow } from "@/components/setup/setupRows";
 import { useGameState, generateQuestion, type Question, CIRCUITS, DRIVERS, type Circuit, type Driver, getRaceLength, calculateEnergyHarvest, getAeroZones, getCurrentAeroZone, getHarderDifficulty, POSITION_POINTS, type Difficulty, type DifficultyMode, loadDifficultyMode, loadLockedDifficulty, parseDifficulty, LOCKED_LEVEL_COLORS } from "@/lib/gameLogic";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -92,20 +91,11 @@ const playBeep = (frequency: number = 800, duration: number = 150) => {
 };
 
 type GameStatus = "lobby" | "waiting" | "track_select" | "countdown" | "racing" | "finished";
-type Weather = 'dry' | 'wet' | 'random';
-
-const CIRCUIT_RAIN_PROBABILITY: { [circuitId: string]: number } = {
-  "spa": 0.60,
-  "silverstone": 0.50,
-  "suzuka": 0.42,
-  "monaco": 0.25,
-  "monza": 0.20,
-};
 
 const KARTING_DRIVER = DRIVERS.find(d => d.id === 'karting') ?? DRIVERS[0];
 
 export default function Multiplayer() {
-  const { state, addCoins, addCareerPoints, setRaceMapView } = useGameState();
+  const { state, addCoins, addCareerPoints } = useGameState();
   const { isPremium, isLoading } = usePurchase();
   const [, setLocation] = useLocation();
   
@@ -128,9 +118,7 @@ export default function Multiplayer() {
   // that is the current GP, so the header/silhouette and the created room match the locked pick.
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(MENU_CIRCUITS[0] ?? CIRCUITS[0]);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(KARTING_DRIVER);
-  const [selectedWeather, setSelectedWeather] = useState<Weather>('dry');
   const [selectedOperation, setSelectedOperation] = useState('Addition');
-  const [isWetRace, setIsWetRace] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -349,9 +337,6 @@ export default function Multiplayer() {
         }
         if (message.driverId) {
           setSelectedDriver(DRIVERS.find(d => d.id === message.driverId) || DRIVERS[0]);
-        }
-        if (message.weather) {
-          setSelectedWeather(message.weather);
         }
         if (message.operation) {
           setSelectedOperation(message.operation);
@@ -597,12 +582,12 @@ export default function Multiplayer() {
     if (overtakeActive && selectedCircuit && selectedDriver) {
       // Generate a harder question for the current position
       const harderDifficulty = getHarderDifficulty(dynamicDifficultyDisplay);
-      const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace, 0, undefined, selectedOperation);
+      const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, false, 0, undefined, selectedOperation);
       setOvertakeQuestion(harderQ);
     } else {
       setOvertakeQuestion(null);
     }
-  }, [overtakeActive, selectedCircuit, selectedDriver, isWetRace, selectedOperation, dynamicDifficultyDisplay]);
+  }, [overtakeActive, selectedCircuit, selectedDriver, selectedOperation, dynamicDifficultyDisplay]);
   
   const createRoom = async () => {
     if (!playerName.trim()) {
@@ -694,21 +679,10 @@ export default function Multiplayer() {
     const driver = KARTING_DRIVER;
     setSelectedDriver(driver);
 
-    // Resolve weather for question generation
-    let wetRace = selectedWeather === 'wet';
-    if (selectedWeather === 'random') {
-      const rainProbability = CIRCUIT_RAIN_PROBABILITY[selectedCircuit.id] || 0.5;
-      wetRace = Math.random() < rainProbability;
-    }
-    setIsWetRace(wetRace);
     setQuestions([]);
     setDynamicDifficultyDisplay(
       difficultyMode === 'locked' ? lockedDifficulty : 'beginner'
     );
-
-    // Send the resolved wet/dry weather (not the literal 'random' selection)
-    // so the server mints the shared question bank with matching difficulty.
-    const resolvedWeather: 'dry' | 'wet' = wetRace ? 'wet' : 'dry';
 
     // Generate AERO zones if power-ups enabled
     const zones = powerUpsEnabled ? getAeroZones(raceLength, state.simMode) : [];
@@ -723,7 +697,7 @@ export default function Multiplayer() {
         body: JSON.stringify({
           circuitId: selectedCircuit.id,
           driverId: driver.id,
-          weather: resolvedWeather,
+          weather: 'dry',
           operation: selectedOperation,
           powerUpsEnabled
         })
@@ -734,7 +708,7 @@ export default function Multiplayer() {
         roomCode,
         circuitId: selectedCircuit.id,
         driverId: driver.id,
-        weather: resolvedWeather,
+        weather: 'dry',
         operation: selectedOperation,
         powerUpsEnabled,
         raceLength,
@@ -974,7 +948,7 @@ export default function Multiplayer() {
           // Generate new harder question if overtake still active
           if (overtakeActive && selectedCircuit && selectedDriver) {
             const harderDifficulty = getHarderDifficulty(dynamicDifficultyDisplay);
-            const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, isWetRace, 0, undefined, selectedOperation);
+            const harderQ = generateQuestion(selectedCircuit.id, harderDifficulty, false, 0, undefined, selectedOperation);
             setOvertakeQuestion(harderQ);
           }
         }, 400);
@@ -1494,8 +1468,6 @@ export default function Multiplayer() {
         },
       },
       operationRow(selectedOperation, setSelectedOperation),
-      weatherRow(selectedWeather, setSelectedWeather),
-      viewRow(state.raceMapView, setRaceMapView),
     ];
 
     return (
@@ -1602,42 +1574,9 @@ export default function Multiplayer() {
             )}
           </div>
 
-          {/* Main content - compact header zone */}
-          <div className="flex flex-col items-center px-4 pt-0">
-            {/* Track Limits Warning — track view keeps reserved slot above timer */}
-            {state.raceMapView === 'track' && (
-              <div className="h-12 flex items-center justify-center">
-                <AnimatePresence>
-                  {showPenalty && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }}
-                      className="flex items-center gap-2"
-                    >
-                      {showBlackWhiteFlag && (
-                        <img
-                          src={trackLimitsFlag}
-                          alt="Black and White Flag"
-                          className="h-8 w-12 object-cover rounded"
-                        />
-                      )}
-                      <motion.div
-                        animate={{ opacity: [1, 0.3, 1] }}
-                        transition={{ duration: 0.3, repeat: 3 }}
-                        className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
-                      >
-                        TRACK LIMITS
-                      </motion.div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
-
-            {/* Timer */}
-            <div className="flex items-center gap-2 text-lg sm:text-xl font-mono font-medium text-primary">
-              <Timer className="w-4 h-4 sm:w-5 sm:h-5" />
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-4">
+            <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6vh,1.75rem)]">
+              <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
               {formatTime(elapsedTime)}
             </div>
 
@@ -1649,15 +1588,14 @@ export default function Multiplayer() {
               {difficultyLabel}
             </div>
 
-            {/* Expression and Answer with Penalty Overlay */}
-            <div className="relative">
-              <div className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mt-2">
+            <div className="relative mt-2 sm:mt-3">
+              <div className="font-bold tracking-tight leading-none text-center px-2 max-w-full text-[clamp(2.75rem,7vh,4.5rem)]">
                 {currentQuestion ? currentQuestion.display : "..."}
               </div>
 
               <div
                 className={cn(
-                  "text-4xl sm:text-5xl md:text-6xl font-bold min-w-[80px] text-center mt-2",
+                  "font-bold min-w-[80px] text-center leading-none mt-2 sm:mt-3 text-[clamp(2.75rem,7vh,4.5rem)]",
                   feedback === "idle" && "text-muted-foreground/50",
                   feedback === "correct" && "text-green-600",
                   feedback === "incorrect" && "text-red-600"
@@ -1666,7 +1604,6 @@ export default function Multiplayer() {
                 {answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
               </div>
 
-              {/* Penalty Flash Overlay */}
               <AnimatePresence>
                 {showPenaltyText && (
                   <motion.div
@@ -1677,7 +1614,7 @@ export default function Multiplayer() {
                     className="absolute inset-0 flex items-center justify-center z-10"
                   >
                     <span
-                      className="text-3xl sm:text-4xl md:text-5xl font-bold text-red-600"
+                      className="font-bold text-red-600 text-[clamp(1.75rem,4.5vh,2.75rem)]"
                       style={{ fontFamily: 'Oxanium, sans-serif' }}
                     >
                       {showPenaltyText}
@@ -1687,26 +1624,15 @@ export default function Multiplayer() {
               </AnimatePresence>
             </div>
 
-            {/* Minimal Feedback - only "Correct" like single player */}
-            <div className="h-4 flex items-center justify-center">
+            <div className="h-11 shrink-0 flex items-center justify-center mt-3">
               <AnimatePresence mode="wait">
-                {feedback === "correct" && (
-                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="text-green-600 font-medium flex items-center gap-1 text-xs">
-                    <Check className="w-3 h-3" /> Correct
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Sectors view: TRACK LIMITS between answer and grid */}
-            {state.raceMapView === 'sectors' && (
-              <AnimatePresence>
-                {showPenalty && (
+                {showPenalty ? (
                   <motion.div
+                    key="track-limits"
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-2 pointer-events-none mt-1"
+                    className="flex items-center justify-center gap-2 pointer-events-none"
                   >
                     {showBlackWhiteFlag && (
                       <img
@@ -1723,59 +1649,39 @@ export default function Multiplayer() {
                       TRACK LIMITS
                     </motion.div>
                   </motion.div>
-                )}
+                ) : feedback === "correct" ? (
+                  <motion.div
+                    key="correct"
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="text-green-600 font-medium flex items-center gap-1 text-sm"
+                  >
+                    <Check className="w-4 h-4" /> Correct
+                  </motion.div>
+                ) : null}
               </AnimatePresence>
-            )}
+            </div>
           </div>
 
-          {/* Progress — track layout only here; sector squares sit above keypad */}
-          {state.raceMapView === 'track' && (
-            <div className="px-4 my-1">
-              <LiveCircuitMap
-                circuit={selectedCircuit}
-                progress={progress}
-                rivalProgress={opponentProgress}
-                raceLength={raceLength}
-                sectorResults={lapResults}
-                rivalSectorResults={opponentSectorColors.map((c) => ({
-                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
-                    ? c
-                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
-                }))}
-                showRival
-                overtakeActive={overtakeActive}
-                aeroActive={aeroActive}
-                isWet={isWetRace}
-                playerLabel={playerName ? playerName.slice(0, 3).toUpperCase() : 'YOU'}
-                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
-                labelRight={`Limits: ${mistakes}`}
-                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
-              />
-            </div>
-          )}
-
-          {/* Keypad with integrated Power-ups row */}
-          <div className="flex-1 flex flex-col justify-end items-center px-4 min-h-0 pb-11">
-            {/* Sectors view: grid sits just above power-ups / numpad */}
-            {state.raceMapView === 'sectors' && (
-              <SectorProgressGrid
-                className="my-0 mb-1"
-                progress={progress}
-                raceLength={raceLength}
-                sectorResults={lapResults}
-                rivalProgress={opponentProgress}
-                rivalSectorResults={opponentSectorColors.map((c) => ({
-                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
-                    ? c
-                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
-                }))}
-                showRival
-                layout="dual"
-                labelRight={`Limits: ${mistakes}`}
-                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
-                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
-              />
-            )}
+          <div className="flex flex-col justify-end items-center px-4 min-h-0 pb-11 shrink-0">
+            <SectorProgressGrid
+              className="my-0 mb-1"
+              progress={progress}
+              raceLength={raceLength}
+              sectorResults={lapResults}
+              rivalProgress={opponentProgress}
+              rivalSectorResults={opponentSectorColors.map((c) => ({
+                sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                  ? c
+                  : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+              }))}
+              showRival
+              layout="dual"
+              labelRight={`Limits: ${mistakes}`}
+              labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+              rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+            />
 
             {/* Status Messages - floating above keypad */}
             {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (
@@ -1998,29 +1904,6 @@ export default function Multiplayer() {
           >
             Difficulty: {difficultyLabel}
           </p>
-
-          {state.raceMapView === 'track' && selectedCircuit && lapResults.length > 0 && (
-            <div className="w-full max-w-sm md:max-w-lg">
-              <LiveCircuitMap
-                circuit={selectedCircuit}
-                progress={progress}
-                rivalProgress={opponentProgress}
-                raceLength={raceLength}
-                sectorResults={lapResults}
-                rivalSectorResults={opponentSectorColors.map((c) => ({
-                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
-                    ? c
-                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
-                }))}
-                showRival
-                isWet={isWetRace}
-                variant="results"
-                playerLabel={playerName ? playerName.slice(0, 3).toUpperCase() : 'YOU'}
-                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
-                labelLeft={`${selectedCircuit.name} · painted lap`}
-              />
-            </div>
-          )}
 
           <div className="bg-secondary rounded-xl p-6 w-full max-w-sm md:max-w-lg">
             <div className="grid grid-cols-3 gap-4 text-center">

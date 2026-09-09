@@ -10,8 +10,7 @@ The **setup card** is the glass "pit wall" panel shown before a race starts. One
 |---|---|
 | `client/src/components/setup/RaceSetupCard.tsx` | The card: header, circuit art, track-path rail, start button, help sheet |
 | `client/src/components/setup/SetupRow.tsx` | One setting row (label left, value right, tap to cycle) + `SetupOption`/`SetupRowSpec` types |
-| `client/src/components/setup/setupRows.ts` | Shared row builders: `operationRow`, `levelRow`, `weatherRow`, `viewRow` |
-| `client/src/components/setup/weatherOptions.ts` | The weather option list (`dry` / `wet` / `random`) |
+| `client/src/components/setup/setupRows.ts` | Shared row builders: `operationRow`, `levelRow` |
 
 ## Card anatomy (top to bottom)
 
@@ -46,7 +45,7 @@ Rows are data (`SetupRowSpec[]`), so modes with different settings share one lay
 - **Thumb options** — an option with `thumb` renders the picture *as* the value (Lane Racer's team cars).
 - **Values are plain white** (near-black on the `light` variant used by Multiplayer's waiting room). Per-option colors were removed deliberately on 2026-08-06 (`SetupOption` has no `color` field) — don't reintroduce them.
 
-Shared builders in `setupRows.ts`: `operationRow` (the five maths types), `levelRow` (Adaptive + one rung per series), `weatherRow`, `viewRow` (Track/Sectors). Mode-specific rows (Lane Racer's TRACK/TEAM/CHASE CAM, Free Practice's LAPS) are defined at the call site.
+Shared builders in `setupRows.ts`: `operationRow` (the five maths types), `levelRow` (Adaptive + one rung per series). Mode-specific rows (Lane Racer's TRACK/TEAM/CHASE CAM, Free Practice's LAPS) are defined at the call site.
 
 ## The four callers
 

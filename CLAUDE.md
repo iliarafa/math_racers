@@ -134,7 +134,6 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 - Charges by answering correctly (faster = more energy)
 - Activates when behind opponent and within 2 sectors (disabled once opponent finishes)
 - While active: **2x progress** per correct answer + **1.5x harder questions** (0.5 boost factor)
-- Stacks with wet weather: dry+OVERTAKE = 1.5x, wet+OVERTAKE = 2x (next difficulty level)
 - Energy drains over time (100% = 5 seconds max)
 - Manual deactivation preserves remaining energy
 - Wrong answer depletes ALL energy immediately
@@ -151,13 +150,6 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 - Operation modifiers: Addition 0.85x (fastest) → Variables 1.25x (slowest)
 - Complexity analysis: carry/borrow counting, digit analysis
 - Randomness: ±25% variation on response time
-- Wet weather: +250ms base + harder numbers
-
-### Weather System
-- Dry: Standard difficulty
-- Wet: +0.5 difficulty factor (harder numbers)
-- Random: Circuit-specific rain probability
-- **Realism + Random**: Weather alternates 3-5 times during race (visual indicator shows current condition)
 
 ### Penalty System (Per-Question Retry)
 - Each question allows up to 4 attempts
