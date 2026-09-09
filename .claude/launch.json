@@ -9,6 +9,13 @@
       "autoPort": false
     },
     {
+      "name": "prod",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "PORT=3000 NODE_ENV=production node dist/index.cjs"],
+      "port": 3000,
+      "autoPort": false
+    },
+    {
       "name": "lane-racer",
       "runtimeExecutable": "sh",
       "runtimeArgs": ["-c", "cd ../lane-racer && npm run dev -- --port 5181 --host"],
