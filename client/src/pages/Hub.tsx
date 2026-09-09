@@ -6,7 +6,7 @@ import { useGameState, RACE_LENGTH } from "@/lib/gameLogic";
 import { usePurchase } from "@/hooks/use-purchase";
 import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
-import { getLicenceStatus } from "@/lib/drivingSchoolLicence";
+import { getLicenceStatus, grandPrixDevBypass } from "@/lib/drivingSchoolLicence";
 import { DrivingSchoolWhatsNew } from "@/components/DrivingSchoolWhatsNew";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import logoWhiteImage from "@assets/logo-white.svg";
@@ -177,7 +177,7 @@ export default function Hub() {
 
   // Licence path: flashcards → reaction → lane racer. Grand Prix waits on complete.
   const licence = getLicenceStatus();
-  const gpOpen = licence.complete || window.location.hostname === 'localhost';
+  const gpOpen = licence.complete || grandPrixDevBypass();
   const licenceSteps = [licence.flashcards, licence.reaction, licence.laneRacer];
   const currentStep = licenceSteps.findIndex((done) => !done);
 

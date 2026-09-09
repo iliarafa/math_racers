@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { DRIVING_SCHOOL_STAGES, loadHighestClearedStage } from '@/lib/drivingSchool';
 
 /**
@@ -69,4 +70,14 @@ export function getLicenceStatus(): LicenceStatus {
 
 export function hasSuperlicence(): boolean {
   return getLicenceStatus().complete;
+}
+
+/**
+ * Dev-only bypass so the Grand Prix screens can be reviewed on the Vite dev server without
+ * grinding Driving School. Never true in a built bundle, so the shipped app (native or web)
+ * keeps the Superlicence lock. Note the Capacitor app also serves from a `localhost` origin,
+ * which is why a hostname check is not used here.
+ */
+export function grandPrixDevBypass(): boolean {
+  return Boolean(import.meta.env.DEV) && !Capacitor.isNativePlatform();
 }

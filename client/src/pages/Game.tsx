@@ -20,7 +20,7 @@ import { toast } from "@/hooks/use-toast";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy, RotateCw } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
-import { hasSuperlicence } from "@/lib/drivingSchoolLicence";
+import { grandPrixDevBypass, hasSuperlicence } from "@/lib/drivingSchoolLicence";
 
 /** Temporary QA: force purple-lap lit (level → ALL PURPLE) as soon as Free Practice starts. */
 const FORCE_PURPLE_LAP_PREVIEW = false;
@@ -1882,26 +1882,25 @@ export default function Game() {
     }
   }, [botFinished, overtakeActive]);
 
-  // Localhost can open the GP HUD without a Superlicence so we can review layout.
-  const gpOpenOnLocalhost =
-    typeof window !== 'undefined' && window.location.hostname === 'localhost';
-  if (isGrandPrix && !hasSuperlicence() && !gpOpenOnLocalhost) {
+  // Grand Prix needs the Superlicence; the dev server alone may skip it to review layout.
+  const gpDevBypass = grandPrixDevBypass();
+  if (isGrandPrix && !hasSuperlicence() && !gpDevBypass) {
     return (
       <GameLayout trackName={CURRENT_GRAND_PRIX.name} lockViewport hideGarageButton>
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <div
-            className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#ffcc00]"
+          <h2
+            className="text-4xl font-bold uppercase tracking-[0.18em] text-[#ffcc00]"
             style={{ fontFamily: "Oxanium, sans-serif" }}
           >
             Superlicence
-          </div>
-          <h2
-            className="mt-2 text-2xl font-bold uppercase tracking-wider text-white"
+          </h2>
+          <div
+            className="mt-3 text-sm font-bold uppercase tracking-[0.3em] text-foreground"
             style={{ fontFamily: "Oxanium, sans-serif" }}
           >
             Locked
-          </h2>
-          <p className="mt-3 max-w-sm text-center text-sm leading-relaxed text-white/75">
+          </div>
+          <p className="mt-3 max-w-sm text-center text-sm leading-relaxed text-muted-foreground">
             Graduate Driving School to race a Grand Prix.
           </p>
           <button
@@ -1940,8 +1939,8 @@ export default function Game() {
   if (gameStatus === 'selecting') {
     const GP_PHASES: { id: 'rw_practice' | 'rw_qualifying' | 'rw_race'; label: string; color: string; unlocked: boolean }[] = [
       { id: 'rw_practice', label: 'Practice', color: '#22c55e', unlocked: true },
-      { id: 'rw_qualifying', label: 'Qualifying', color: '#f59e0b', unlocked: grandPrixPracticeCompleted || gpOpenOnLocalhost },
-      { id: 'rw_race', label: 'Race', color: '#ef4444', unlocked: grandPrixQualifyingCompleted || gpOpenOnLocalhost },
+      { id: 'rw_qualifying', label: 'Qualifying', color: '#f59e0b', unlocked: grandPrixPracticeCompleted || gpDevBypass },
+      { id: 'rw_race', label: 'Race', color: '#ef4444', unlocked: grandPrixQualifyingCompleted || gpDevBypass },
     ];
 
     const rows: SetupRowSpec[] = [
