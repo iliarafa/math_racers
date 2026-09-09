@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "wouter";
 import { Wrench, Flag, ChevronLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,9 +21,10 @@ interface GameLayoutProps {
   backHref?: string;
   /** When set, the back chevron calls this instead of navigating to backHref. */
   onBack?: () => void;
+  shellStyle?: CSSProperties;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, backdropSrc, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref, onBack }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, backdropSrc, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref, onBack, shellStyle }: GameLayoutProps) {
   const backChevron = (className: string) =>
     onBack ? (
       <button onClick={onBack} className={className} data-testid="button-back">
@@ -48,7 +50,8 @@ export function GameLayout({ children, trackName, hideHeader = false, hideLogo =
       paddingTop: 'env(safe-area-inset-top)',
       paddingBottom: 'env(safe-area-inset-bottom)',
       paddingLeft: 'env(safe-area-inset-left)',
-      paddingRight: 'env(safe-area-inset-right)'
+      paddingRight: 'env(safe-area-inset-right)',
+      ...shellStyle,
     }}>
       {backdropSrc && (
         <img

@@ -23,6 +23,13 @@ import { hasSuperlicence } from "@/lib/drivingSchoolLicence";
 /** Temporary QA: force purple-lap lit (level → ALL PURPLE) as soon as Free Practice starts. */
 const FORCE_PURPLE_LAP_PREVIEW = false;
 
+const GP_RACE_FLASH: Record<'purple' | 'green' | 'yellow' | 'red', string> = {
+  purple: '#a855f7',
+  green: '#22c55e',
+  yellow: '#eab308',
+  red: '#ef4444',
+};
+
 // Import assets
 import tireHard from "@assets/IMG_0385_1768772937370.png";
 import tireMedium from "@assets/IMG_0384_1768772937370.png";
@@ -421,6 +428,7 @@ export default function Game() {
   const polePositionUsedRef = useRef(false);
   const [grandPrixPracticeCompleted, setGrandPrixPracticeCompleted] = useState(false);
   const [grandPrixQualifyingCompleted, setGrandPrixQualifyingCompleted] = useState(false);
+  const [gpRaceFlash, setGpRaceFlash] = useState<'purple' | 'green' | 'yellow' | 'red' | null>(null);
   const [dynamicDifficultyDisplay, setDynamicDifficultyDisplay] = useState<Difficulty>('beginner');
   // Free Practice only — GP Practice is always adaptive; Quick Race is always adaptive
   const [difficultyMode, setDifficultyMode] = useState<DifficultyMode>(() =>
@@ -1041,6 +1049,10 @@ export default function Game() {
         setInPurpleMode(newPurpleMode);
       }
 
+      if (isGrandPrix && grandPrixPhase === 'rw_race') {
+        setGpRaceFlash(sectorColor);
+      }
+
       // Standard coins (no more DRS zones)
       addCoins(10);
       incrementStreak();
@@ -1248,7 +1260,7 @@ export default function Game() {
             }).then(handleWriteResult).catch(handleWriteError);
           }
 
-          finishRace(mistakes);
+          setTimeout(() => finishRace(mistakes), 600);
         } else {
           finishRace(mistakes);
         }
@@ -1257,6 +1269,7 @@ export default function Game() {
         const wasOvertakeActive = overtakeActive;
         setTimeout(() => {
           setFeedback('idle');
+          setGpRaceFlash(null);
           setAnswer("");
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
@@ -1268,6 +1281,9 @@ export default function Game() {
       const newMistakes = mistakes + 1;
       setMistakes(newMistakes);
       setFeedback('incorrect');
+      if (isGrandPrix && grandPrixPhase === 'rw_race') {
+        setGpRaceFlash('red');
+      }
       if (soundEnabledRef.current) {
         playIncorrectSound();
       }
@@ -1343,6 +1359,7 @@ export default function Game() {
           setTimeout(() => { setShowPenalty(false); }, 1500);
           setTimeout(() => {
             setFeedback('idle');
+            setGpRaceFlash(null);
             setAnswer('');
           }, 600);
         } else {
@@ -1350,6 +1367,7 @@ export default function Game() {
           setTimeout(() => { setShowPenalty(false); }, 1500);
           setTimeout(() => {
             setFeedback('idle');
+            setGpRaceFlash(null);
             setAnswer('');
           }, 600);
         }
@@ -1364,6 +1382,7 @@ export default function Game() {
         // Clear answer but keep same question
         setTimeout(() => {
           setFeedback('idle');
+          setGpRaceFlash(null);
           setAnswer("");
         }, 600);
       } else {
@@ -1391,6 +1410,7 @@ export default function Game() {
         // Keep same question, clear answer only
         setTimeout(() => {
           setFeedback('idle');
+          setGpRaceFlash(null);
           setAnswer("");
         }, 600);
       }
@@ -1794,7 +1814,10 @@ export default function Game() {
     }
   }, [botFinished, overtakeActive]);
 
-  if (isGrandPrix && !hasSuperlicence()) {
+  // Localhost can open the GP HUD without a Superlicence so we can review layout.
+  const gpOpenOnLocalhost =
+    typeof window !== 'undefined' && window.location.hostname === 'localhost';
+  if (isGrandPrix && !hasSuperlicence() && !gpOpenOnLocalhost) {
     return (
       <GameLayout trackName={CURRENT_GRAND_PRIX.name} lockViewport hideGarageButton>
         <div className="flex-1 flex flex-col items-center justify-center px-6">
@@ -1849,8 +1872,8 @@ export default function Game() {
   if (gameStatus === 'selecting') {
     const GP_PHASES: { id: 'rw_practice' | 'rw_qualifying' | 'rw_race'; label: string; color: string; unlocked: boolean }[] = [
       { id: 'rw_practice', label: 'Practice', color: '#22c55e', unlocked: true },
-      { id: 'rw_qualifying', label: 'Qualifying', color: '#f59e0b', unlocked: grandPrixPracticeCompleted },
-      { id: 'rw_race', label: 'Race', color: '#ef4444', unlocked: grandPrixQualifyingCompleted },
+      { id: 'rw_qualifying', label: 'Qualifying', color: '#f59e0b', unlocked: grandPrixPracticeCompleted || gpOpenOnLocalhost },
+      { id: 'rw_race', label: 'Race', color: '#ef4444', unlocked: grandPrixQualifyingCompleted || gpOpenOnLocalhost },
     ];
 
     const rows: SetupRowSpec[] = [
@@ -2706,9 +2729,14 @@ export default function Game() {
     );
   }
 
+  const isGpRace = isGrandPrix && grandPrixPhase === 'rw_race';
+
   // Racing phase
   return (
-    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideGarageButton headerRight={(isPracticeMode && !isGrandPrix) ? (
+    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideGarageButton hideHeader={isGpRace} shellStyle={isGpRace ? {
+        backgroundColor: gpRaceFlash ? GP_RACE_FLASH[gpRaceFlash] : '#ffffff',
+        transition: 'background-color 80ms linear',
+      } : undefined} headerRight={(isPracticeMode && !isGrandPrix) ? (
         <button
           onClick={() => {
             const lastEnd = pstStintsRef.current.length > 0
@@ -2724,7 +2752,19 @@ export default function Game() {
           BOX
         </button>
       ) : undefined}>
-      <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0">
+      <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0 bg-transparent">
+        {isGpRace && (
+          <button
+            onClick={() => setIsPaused(true)}
+            className={cn(
+              "absolute top-3 right-3 z-20 p-2 rounded-lg transition-colors",
+              gpRaceFlash ? "text-white hover:bg-white/15" : "text-foreground hover:bg-black/5"
+            )}
+            data-testid="button-pause"
+          >
+            <Pause className="w-5 h-5" />
+          </button>
+        )}
 
         {/* Pause Overlay */}
         {isPaused && (
@@ -2840,7 +2880,7 @@ export default function Game() {
 
         <div className="landscape-left flex-1 flex flex-col min-h-0">
         {/* Mode badge and controls — Free Practice skips the green pill to keep HUD lighter */}
-        {!isPreSeasonTesting && (
+        {!isPreSeasonTesting && !isGpRace && (
           <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1 shrink-0">
             <div className="flex items-center gap-2">
               {isGrandPrix && grandPrixPhase === 'rw_practice' ? (
@@ -2871,12 +2911,14 @@ export default function Game() {
           </div>
         )}
 
-        <div className="relative flex-1 flex flex-col items-center min-h-0 px-4">
-          <div className="shrink-0 h-[15%]" aria-hidden />
+        <div className={cn("relative flex-1 flex flex-col items-center min-h-0 px-4", isGpRace && "justify-center")}>
+          {!isGpRace && <div className="shrink-0 h-[15%]" aria-hidden />}
+          {!isGpRace && (
           <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6vh,1.75rem)]">
             <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
             {formatTime(elapsedTime)}
           </div>
+          )}
           
           {/* Dynamic difficulty indicator for Grand Prix practice (PST shows it above keypad instead) */}
           {(isGrandPrix && grandPrixPhase === 'rw_practice') && (
@@ -2886,17 +2928,23 @@ export default function Game() {
           )}
 
           {/* Expression and Answer with Penalty Overlay */}
-          <div className="relative mt-6 sm:mt-8">
-            <div className="font-bold tracking-tight leading-none text-center px-2 max-w-full text-[clamp(2.75rem,7.6vh,4.75rem)]">
+          <div className={cn("relative", isGpRace ? "mt-0" : "mt-6 sm:mt-8")}>
+            <div className={cn(
+              "font-bold tracking-tight leading-none text-center px-2 max-w-full",
+              isGpRace ? "text-[clamp(3rem,8vh,5.5rem)]" : "text-[clamp(2.75rem,7.6vh,4.75rem)]",
+              isGpRace && gpRaceFlash && "text-white"
+            )}>
               {question?.display}
             </div>
 
             <div
               className={cn(
-                "font-bold min-w-[80px] text-center leading-none -mt-2 text-[clamp(2.75rem,7.6vh,4.75rem)]",
-                feedback === 'idle' && "text-muted-foreground/50",
-                feedback === 'correct' && "text-green-600",
-                feedback === 'incorrect' && "text-red-600"
+                "font-bold min-w-[80px] text-center leading-none",
+                isGpRace ? "mt-4 text-[clamp(4.5rem,14vh,8rem)]" : "-mt-2 text-[clamp(2.75rem,7.6vh,4.75rem)]",
+                isGpRace && gpRaceFlash && "text-white",
+                !(isGpRace && gpRaceFlash) && feedback === 'idle' && "text-muted-foreground/50",
+                !(isGpRace && gpRaceFlash) && feedback === 'correct' && "text-green-600",
+                !(isGpRace && gpRaceFlash) && feedback === 'incorrect' && "text-red-600"
               )}
               data-testid="display-answer"
             >
@@ -2925,7 +2973,7 @@ export default function Game() {
           </div>
 
           {/* Reserved slot so TRACK LIMITS / Correct never sit on the numbers */}
-          <div className="h-11 shrink-0 flex items-center justify-center mt-3">
+          <div className={cn("h-11 shrink-0 flex items-center justify-center mt-3", isGpRace && "mt-6")}>
             <AnimatePresence mode="wait">
               {showPenalty ? (
                 <motion.div
@@ -2950,7 +2998,7 @@ export default function Game() {
                     TRACK LIMITS
                   </motion.div>
                 </motion.div>
-              ) : feedback === 'correct' ? (
+              ) : feedback === 'correct' && !isGpRace ? (
                 <motion.div
                   key="correct"
                   initial={{ opacity: 0, y: 5 }}
@@ -2968,8 +3016,10 @@ export default function Game() {
         </div>
         {/* Large Keypad with integrated Power-ups row */}
         <div className="landscape-right flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11 shrink-0">
+          {!isGpRace && (
           <SectorProgressGrid
             className="my-0 mb-1"
+            largeTenCol={isGrandPrix && (grandPrixPhase === 'rw_practice' || grandPrixPhase === 'rw_qualifying')}
             progress={progress}
             raceLength={raceLength}
             sectorResults={lapResults}
@@ -2984,6 +3034,7 @@ export default function Game() {
             labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
             rivalLabel="BOT"
           />
+          )}
 
           {/* Status Messages - floating above keypad */}
           {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (

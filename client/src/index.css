@@ -107,32 +107,21 @@ body {
   100% { opacity: 1; }
 }
 
-/* Two-column layout for iPads in landscape */
-@media (orientation: landscape) and (min-height: 700px) and (max-height: 1100px) {
+/*
+ * Wider than a phone: keep the nailed portrait stack (grid under the numbers)
+ * in a phone-width column. Do not split into landscape-left / landscape-right.
+ * Viewports under 640px are untouched.
+ */
+@media (min-width: 640px) {
   .racing-screen {
-    flex-direction: row !important;
-    justify-content: center;
-    align-items: stretch;
-    gap: 24px;
+    max-width: 438px;
+    width: 100%;
+    margin-inline: auto;
   }
-  .landscape-left {
-    flex: 1;
-    max-width: 500px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0;
+  .racing-screen .landscape-right {
+    justify-content: flex-end !important;
   }
-  .landscape-right {
-    flex: 0 0 608px;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    padding: 16px !important;
-    min-width: 0;
-    min-height: 0;
-    overflow: hidden;
+  .racing-screen .landscape-right .grid.grid-cols-3 > * {
+    height: 56px !important;
   }
 }

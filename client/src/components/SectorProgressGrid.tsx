@@ -18,6 +18,8 @@ interface SectorProgressGridProps {
   layout: 'single' | 'dual';
   /** Quick Race center-slot presentation: 4-across × 5-down grids, side by side vs the rival. */
   big?: boolean;
+  /** GP Practice (3×10) and Qualifying (2×10): large squares with 24px side padding. */
+  largeTenCol?: boolean;
   labelRight: string;
   labelRightClassName?: string;
   rivalLabel?: string;
@@ -56,6 +58,7 @@ export function SectorProgressGrid({
   currentSectorRed = false,
   layout,
   big = false,
+  largeTenCol = false,
   labelRight,
   labelRightClassName,
   rivalLabel = 'BOT',
@@ -119,14 +122,17 @@ export function SectorProgressGrid({
 
   const cols = raceLength >= 40 ? 20 : layout === 'dual' ? 20 : 10;
   const rootClass = cn(
-    'flex flex-col justify-center gap-1 my-3 w-full max-w-md md:max-w-xl lg:max-w-2xl mx-auto',
+    'flex flex-col justify-center gap-1 my-3 w-full',
+    largeTenCol ? 'self-stretch px-2 max-w-none' : 'max-w-md md:max-w-xl lg:max-w-2xl mx-auto',
     className
   );
-  const gridStyle = {
-    gridTemplateColumns: `repeat(${cols}, 18.5px)`,
-    gap: '2px',
-    justifyContent: 'center',
-  } as const;
+  const gridStyle = largeTenCol
+    ? { gridTemplateColumns: 'repeat(10, 1fr)', gap: '2px' }
+    : {
+        gridTemplateColumns: `repeat(${cols}, 18.5px)`,
+        gap: '2px',
+        justifyContent: 'center',
+      };
 
   if (layout === 'single' || !showRival) {
     return (
@@ -135,14 +141,14 @@ export function SectorProgressGrid({
         data-testid="sector-progress-grid"
       >
         <div
-          className="grid -mx-2"
+          className={cn('grid', !largeTenCol && '-mx-2')}
           style={gridStyle}
         >
           {Array.from({ length: raceLength }).map((_, i) => (
             <div
               key={i}
               className={cn(
-                'size-[18.5px] rounded-[2px] transition-colors',
+                largeTenCol ? 'aspect-square w-full rounded-[3px] transition-colors' : 'size-[18.5px] rounded-[2px] transition-colors',
                 cellClass(i < progress, i === progress, sectorResults[i]?.sectorColor, currentSectorRed, false)
               )}
             />

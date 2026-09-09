@@ -177,6 +177,7 @@ export default function Hub() {
 
   // Licence path: flashcards → reaction → lane racer. Grand Prix waits on complete.
   const licence = getLicenceStatus();
+  const gpOpen = licence.complete || window.location.hostname === 'localhost';
   const licenceSteps = [licence.flashcards, licence.reaction, licence.laneRacer];
   const currentStep = licenceSteps.findIndex((done) => !done);
 
@@ -331,14 +332,14 @@ export default function Hub() {
               />
 
               <HubCard
-                href={licence.complete ? "/game/grand-prix" : undefined}
+                href={gpOpen ? "/game/grand-prix" : undefined}
                 title="GRAND PRIX"
                 subtitle={`ROUND ${CURRENT_GRAND_PRIX.round}`}
-                note={licence.complete ? (isPremium ? undefined : 'Full version') : 'Graduate Driving School'}
-                badge={licence.complete ? undefined : { label: 'locked', color: '#ffcc00' }}
+                note={gpOpen ? (isPremium ? undefined : 'Full version') : 'Graduate Driving School'}
+                badge={gpOpen ? undefined : { label: 'locked', color: '#ffcc00' }}
                 testId="link-grand-prix"
                 soundEnabled={state.soundEnabled}
-                onClick={licence.complete ? undefined : () => setView('school')}
+                onClick={gpOpen ? undefined : () => setView('school')}
               />
             </>
           )}
