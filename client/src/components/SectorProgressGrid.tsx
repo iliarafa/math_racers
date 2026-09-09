@@ -129,7 +129,7 @@ export function SectorProgressGrid({
   const gridStyle = largeTenCol
     ? { gridTemplateColumns: 'repeat(10, 1fr)', gap: '2px' }
     : {
-        gridTemplateColumns: `repeat(${cols}, 18.5px)`,
+        gridTemplateColumns: `repeat(${cols}, minmax(0, 18.5px))`,
         gap: '2px',
         justifyContent: 'center',
       };
@@ -141,14 +141,15 @@ export function SectorProgressGrid({
         data-testid="sector-progress-grid"
       >
         <div
-          className={cn('grid', !largeTenCol && '-mx-2')}
+          className="grid w-full"
           style={gridStyle}
         >
           {Array.from({ length: raceLength }).map((_, i) => (
             <div
               key={i}
               className={cn(
-                largeTenCol ? 'aspect-square w-full rounded-[3px] transition-colors' : 'size-[18.5px] rounded-[2px] transition-colors',
+                'aspect-square w-full transition-colors',
+                largeTenCol ? 'rounded-[3px]' : 'rounded-[2px]',
                 cellClass(i < progress, i === progress, sectorResults[i]?.sectorColor, currentSectorRed, false)
               )}
             />
@@ -175,14 +176,14 @@ export function SectorProgressGrid({
             {rivalLabel}
           </span>
           <div
-            className="grid -mx-2 mt-0.5"
-            style={{ gridTemplateColumns: 'repeat(20, 18.5px)', gap: '2px', justifyContent: 'center' }}
+            className="grid w-full mt-0.5"
+            style={{ gridTemplateColumns: 'repeat(20, minmax(0, 18.5px))', gap: '2px', justifyContent: 'center' }}
           >
             {Array.from({ length: raceLength }).map((_, i) => (
               <div
                 key={`rival-${i}`}
                 className={cn(
-                  'size-[18.5px] rounded-[2px] transition-colors',
+                  'aspect-square w-full rounded-[2px] transition-colors',
                   cellClass(
                     i < rivalProgress,
                     false,
@@ -196,14 +197,14 @@ export function SectorProgressGrid({
           </div>
         </div>
         <div
-          className="grid -mx-2"
-          style={{ gridTemplateColumns: 'repeat(20, 18.5px)', gap: '2px', justifyContent: 'center' }}
+          className="grid w-full"
+          style={{ gridTemplateColumns: 'repeat(20, minmax(0, 18.5px))', gap: '2px', justifyContent: 'center' }}
         >
           {Array.from({ length: raceLength }).map((_, i) => (
             <div
               key={`player-${i}`}
               className={cn(
-                'size-[18.5px] rounded-[2px] transition-colors',
+                'aspect-square w-full rounded-[2px] transition-colors',
                 cellClass(i < progress, i === progress, sectorResults[i]?.sectorColor, currentSectorRed, false)
               )}
             />

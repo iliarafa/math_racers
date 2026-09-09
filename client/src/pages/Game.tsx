@@ -3002,7 +3002,7 @@ export default function Game() {
           </div>
         )}
 
-        <div className={cn("relative flex-1 flex flex-col items-center min-h-0 px-4", isGpRace && "justify-center")}>
+        <div className={cn("relative flex-1 flex flex-col items-center min-h-0 px-4", isGpRace && "justify-center pt-12")}>
           {!isGpRace && <div className="shrink-0 h-[15%]" aria-hidden />}
           {!isGpRace && (
           <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6vh,1.75rem)]">
@@ -3022,7 +3022,7 @@ export default function Game() {
           <div className={cn("relative", isGpRace ? "mt-0" : "mt-6 sm:mt-8")}>
             <div className={cn(
               "font-bold tracking-tight leading-none text-center px-2 max-w-full",
-              isGpRace ? "text-[clamp(3.375rem,10.5vh,6rem)] translate-y-3" : "text-[clamp(2.75rem,7.6vh,4.75rem)]",
+              isGpRace ? "text-[clamp(3.375rem,10.5vh,6rem)] translate-y-10" : "text-[clamp(2.75rem,7.6vh,4.75rem)]",
               isGpRace && gpRaceFlash && "text-white"
             )}>
               {question?.display}
