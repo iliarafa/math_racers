@@ -127,7 +127,7 @@ export function SectorProgressGrid({
     className
   );
   const gridStyle = largeTenCol
-    ? { gridTemplateColumns: 'repeat(10, 1fr)', gap: '2px' }
+    ? { gridTemplateColumns: 'repeat(10, minmax(0, 32px))', gap: '2px', justifyContent: 'center' }
     : {
         gridTemplateColumns: `repeat(${cols}, minmax(0, 18.5px))`,
         gap: '2px',

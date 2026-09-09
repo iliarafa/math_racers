@@ -1936,7 +1936,7 @@ export default function Game() {
         : getGrandPrixHistory(CURRENT_GRAND_PRIX.circuitId)?.detailMapImage;
 
     const phaseTabs = isGrandPrix ? (
-      <div className="flex items-center justify-center gap-5 pt-1" data-testid="gp-phase-tabs">
+      <div className="flex items-center justify-center gap-4 pt-1" data-testid="gp-phase-tabs">
         {GP_PHASES.map((p) => {
           const active = selectedTab === p.id;
           return (
@@ -1955,7 +1955,7 @@ export default function Game() {
               className="font-bold uppercase tracking-widest transition-colors outline-none focus:outline-none disabled:cursor-not-allowed"
               style={{
                 fontFamily: 'Oxanium, sans-serif',
-                fontSize: '11px',
+                fontSize: '10px',
                 color: active ? p.color : 'rgba(255,255,255,0.4)',
                 opacity: p.unlocked ? 1 : 0.25,
               }}
@@ -3002,8 +3002,9 @@ export default function Game() {
           </div>
         )}
 
-        <div className={cn("relative flex-1 flex flex-col items-center min-h-0 px-4", isGpRace && "justify-center pt-12")}>
-          {!isGpRace && <div className="shrink-0 h-[15%]" aria-hidden />}
+        {/* Non-race phases size the numbers from this column's own height (cqh) so they never spill onto the grid. */}
+        <div className={cn("relative flex-1 flex flex-col items-center min-h-0 px-4", isGpRace ? "justify-center pt-12" : "[container-type:size]")}>
+          {!isGpRace && <div className="h-[15%] shrink min-h-0" aria-hidden />}
           {!isGpRace && (
           <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6vh,1.75rem)]">
             <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -3022,7 +3023,7 @@ export default function Game() {
           <div className={cn("relative", isGpRace ? "mt-0" : "mt-6 sm:mt-8")}>
             <div className={cn(
               "font-bold tracking-tight leading-none text-center px-2 max-w-full",
-              isGpRace ? "text-[clamp(3.375rem,10.5vh,6rem)] translate-y-10" : "text-[clamp(2.75rem,7.6vh,4.75rem)]",
+              isGpRace ? "text-[clamp(3.375rem,10.5vh,6rem)] translate-y-10" : "text-[clamp(2.75rem,min(7.6vh,22cqh),4.75rem)]",
               isGpRace && gpRaceFlash && "text-white"
             )}>
               {question?.display}
@@ -3031,7 +3032,7 @@ export default function Game() {
             <div
               className={cn(
                 "font-bold min-w-[80px] text-center leading-none",
-                isGpRace ? "mt-4 text-[clamp(4.5rem,14vh,8rem)]" : "-mt-2 text-[clamp(2.75rem,7.6vh,4.75rem)]",
+                isGpRace ? "mt-4 text-[clamp(4.5rem,14vh,8rem)]" : "-mt-2 text-[clamp(2.75rem,min(7.6vh,22cqh),4.75rem)]",
                 isGpRace && gpRaceFlash && "text-white",
                 !(isGpRace && gpRaceFlash) && feedback === 'idle' && "text-muted-foreground/50",
                 !(isGpRace && gpRaceFlash) && feedback === 'correct' && "text-green-600",

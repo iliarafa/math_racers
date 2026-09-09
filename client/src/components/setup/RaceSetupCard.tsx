@@ -156,7 +156,8 @@ export function RaceSetupCard({
           )}
         </div>
 
-        {header.phase && <div className="mt-3">{header.phase}</div>}
+        {/* Indent by rail width + gap so the tabs centre on the pills column, not the whole card. */}
+        {header.phase && <div className="mt-3 mb-4 pl-[34px]">{header.phase}</div>}
 
         {/* Track path: every setting is a numbered station on the rail; the start button is THE GRID. */}
         <div className={cn('relative', mapImageSrc ? 'mt-0' : 'mt-4')}>
