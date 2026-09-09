@@ -2760,27 +2760,16 @@ export default function Game() {
       ) : undefined}>
       <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0 bg-transparent">
         {isGpRace && (
-          <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between">
-            <span
-              className={cn(
-                "text-xs font-bold uppercase tracking-widest",
-                gpRaceFlash ? "text-white" : "text-muted-foreground"
-              )}
-              style={{ fontFamily: 'Oxanium, sans-serif' }}
-            >
-              LAP {Math.min(progress + 1, raceLength)}/{raceLength}
-            </span>
-            <button
-              onClick={() => setIsPaused(true)}
-              className={cn(
-                "p-2 rounded-lg transition-colors",
-                gpRaceFlash ? "text-white hover:bg-white/15" : "text-foreground hover:bg-black/5"
-              )}
-              data-testid="button-pause"
-            >
-              <Pause className="w-5 h-5" />
-            </button>
-          </div>
+          <button
+            onClick={() => setIsPaused(true)}
+            className={cn(
+              "absolute top-3 right-3 z-20 p-2 rounded-lg transition-colors",
+              gpRaceFlash ? "text-white hover:bg-white/15" : "text-foreground hover:bg-black/5"
+            )}
+            data-testid="button-pause"
+          >
+            <Pause className="w-5 h-5" />
+          </button>
         )}
 
         {/* Pause Overlay */}
@@ -2948,7 +2937,7 @@ export default function Game() {
           <div className={cn("relative", isGpRace ? "mt-0" : "mt-6 sm:mt-8")}>
             <div className={cn(
               "font-bold tracking-tight leading-none text-center px-2 max-w-full",
-              isGpRace ? "text-[clamp(3rem,8vh,5.5rem)]" : "text-[clamp(2.75rem,7.6vh,4.75rem)]",
+              isGpRace ? "text-[clamp(3.375rem,10.5vh,6rem)] translate-y-3" : "text-[clamp(2.75rem,7.6vh,4.75rem)]",
               isGpRace && gpRaceFlash && "text-white"
             )}>
               {question?.display}
@@ -3045,6 +3034,18 @@ export default function Game() {
         </div>
         {/* Large Keypad with integrated Power-ups row */}
         <div className="landscape-right flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11 shrink-0">
+          {isGpRace && (
+            <div
+              className={cn(
+                "flex items-center gap-2 font-mono font-medium mb-6",
+                "text-[clamp(1.4rem,3.64vh,2.275rem)]",
+                gpRaceFlash ? "text-white" : "text-primary"
+              )}
+            >
+              <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
+              {formatTime(elapsedTime)}
+            </div>
+          )}
           {!isGpRace && (
           <SectorProgressGrid
             className="my-0 mb-1"
