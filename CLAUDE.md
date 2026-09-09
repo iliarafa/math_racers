@@ -193,6 +193,8 @@ Each mode has its own HUD rules. A layout change in one does not imply the same 
 - **Free Practice / PST** (`isPracticeMode && !isGrandPrix`): BOX button in the header instead of a badge row; single fluid 20-column grid (cells shrink to fit the phone width); series label above the keypad; "Limits" counter.
 - **Career / Quick Race**: badge row with pause; dual 20-column grid (BOT row above player row); "Warnings" counter.
 
+**iPad** (`client/index.html` stamps `data-ipad-scale` on `<html>` for iPads only): the phone layout is viewport-scaled to fill the screen (600px-wide layout, at least 800px tall), so nothing above changes per device. In iPad **landscape** the racing screen splits into two panes (`index.css`, `useIpadLandscape`): timer, question, answer and sector grid on the left, keypad on the right. Race Weekend modes (Free Practice and the Grand Prix weekend) race in landscape on iPad via `@capacitor/screen-orientation` (`lib/orientationLock.ts`): the setup card still follows the device, and pressing Start on a portrait-held iPad shows a "Turn your iPad" prompt that holds the lights until it rotates, then locks landscape; the lock is released back at setup and on unmount. `UIRequiresFullScreen` is set in Info.plist because iPadOS ignores orientation locks for multitasking-capable apps. iPhone stays portrait-only and the web app is untouched.
+
 ### Leaderboard (PST)
 - `POST /api/leaderboard` - Submit entry (playerId, playerName, operation, score, totalTime, mistakes, accuracy, difficultyAchieved)
 - `GET /api/leaderboard?operation=&limit=` - Fetch entries sorted by ranking (default 50, max 100)

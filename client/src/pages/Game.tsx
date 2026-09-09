@@ -6,6 +6,8 @@ import { GameLayout } from "@/components/layout/GameLayout";
 import { getMapLapLength } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
+import { useIpadLandscape } from "@/hooks/use-ipad-landscape";
+import { isIpad, isPortrait, lockLandscapeOnIpad, unlockOrientation } from "@/lib/orientationLock";
 import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import type { DifficultyDrumOption } from "@/lib/gameLogic";
@@ -15,7 +17,7 @@ import { operationRow, levelRow } from "@/components/setup/setupRows";
 import { submitFpLeaderboardEntry, submitGpWeekendEntry, GpWeekendLeaderboardSubmission } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy } from "lucide-react";
+import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy, RotateCw } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 import { hasSuperlicence } from "@/lib/drivingSchoolLicence";
@@ -369,6 +371,8 @@ export default function Game() {
   );
   const [isPracticeMode, setIsPracticeMode] = useState(() => routeMode !== 'quick-race');
   const [isGrandPrix, setIsGrandPrix] = useState(() => routeMode === 'grand-prix');
+  // iPad landscape splits the racing HUD: question/answer/grid left, keypad right.
+  const ipadLandscape = useIpadLandscape();
   const [isPreSeasonTesting, setIsPreSeasonTesting] = useState(
     () => routeMode !== 'grand-prix' && routeMode !== 'quick-race',
   );
@@ -492,6 +496,15 @@ export default function Game() {
   const [gameStatus, setGameStatus] = useState<'selecting' | 'countdown' | 'go' | 'racing' | 'finished' | 'crashed' | 'paywall'>(() =>
     routeMode === 'quick-race' ? 'countdown' : 'selecting',
   );
+  // Race Weekend modes (Free Practice + Grand Prix) race in landscape on iPad. The lock is
+  // taken when the lights are about to start (see handleStartRace) so the setup card still
+  // follows the device; it is released back at setup and on unmount. No-op off iPad.
+  const raceWeekendOnIpad = (isGrandPrix || isPreSeasonTesting) && isIpad();
+  const [awaitingLandscape, setAwaitingLandscape] = useState(false);
+  useEffect(() => {
+    if (gameStatus === 'selecting') void unlockOrientation();
+  }, [gameStatus]);
+  useEffect(() => () => { void unlockOrientation(); }, []);
   /** First-run Quick Race onboarding — holds the start lights until dismissed. */
   const [showQuickRaceIntro, setShowQuickRaceIntro] = useState(() => {
     if (routeMode !== 'quick-race') return false;
@@ -934,7 +947,7 @@ export default function Game() {
     setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(op) : createFreePracticeCircuit(op));
   };
 
-  const handleStartRace = () => {
+  const beginRace = () => {
     if (!selectedCircuit) return;
     if (isPreSeasonTesting && difficultyMode === 'locked') {
       setSelectedDriver(driverForDifficulty(lockedDifficulty));
@@ -964,6 +977,33 @@ export default function Game() {
     setLeaderboardNotice(null);
     setGameStatus('countdown');
   };
+
+  // iPad Race Weekend: if the iPad is held portrait, ask for a flip first and hold the
+  // lights until it happens; otherwise lock landscape and go straight to the countdown.
+  const handleStartRace = () => {
+    if (!selectedCircuit) return;
+    if (raceWeekendOnIpad && isPortrait()) {
+      setAwaitingLandscape(true);
+      return;
+    }
+    if (raceWeekendOnIpad) void lockLandscapeOnIpad();
+    beginRace();
+  };
+
+  useEffect(() => {
+    if (!awaitingLandscape) return;
+    const mql = window.matchMedia('(orientation: landscape)');
+    const onChange = () => {
+      if (!mql.matches) return;
+      setAwaitingLandscape(false);
+      void lockLandscapeOnIpad();
+      beginRace();
+    };
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+    // beginRace closes over current setup state; the effect re-subscribes whenever the prompt opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [awaitingLandscape]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -1973,6 +2013,29 @@ export default function Game() {
 
     return (
       <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+        {awaitingLandscape && (
+          <div
+            className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-6 bg-black text-white px-8 text-center"
+            data-testid="flip-to-landscape"
+          >
+            <RotateCw className="w-16 h-16 text-red-500" />
+            <div className="text-3xl font-bold uppercase tracking-widest" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+              Turn your iPad
+            </div>
+            <div className="text-base text-white/60 max-w-sm">
+              Race Weekend runs in landscape. Rotate the iPad and the lights will start.
+            </div>
+            <button
+              type="button"
+              onClick={() => setAwaitingLandscape(false)}
+              className="mt-4 px-6 py-3 rounded-xl bg-white/10 text-white/80 font-bold uppercase tracking-wider"
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+              data-testid="flip-to-landscape-back"
+            >
+              Back
+            </button>
+          </div>
+        )}
         {/* Background Video */}
         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-30">
           <source src={chooseTrackVideo} type="video/mp4" />
@@ -2764,6 +2827,29 @@ export default function Game() {
     isGrandPrix && (grandPrixPhase === 'rw_practice' || grandPrixPhase === 'rw_qualifying');
   const gridLayout: 'single' | 'dual' =
     effectiveSimMode || (isPracticeMode && !isGrandPrix) ? 'single' : 'dual';
+  const sectorGrid = !isGpRace ? (
+    <SectorProgressGrid
+      /* Career / Quick Race (dual BOT + player grid, not the GP 10-col grid) gets extra
+         room below so the squares sit clear of the keypad. Other HUDs keep mb-1. */
+      className={cn(
+        "my-0",
+        !gridLargeTenCol && gridLayout === 'dual' ? "mb-5" : "mb-1",
+        ipadLandscape && "mt-6",
+      )}
+      largeTenCol={gridLargeTenCol}
+      progress={progress}
+      raceLength={raceLength}
+      sectorResults={lapResults}
+      rivalProgress={botProgress}
+      rivalSectorResults={botLapResults}
+      showRival={raceMode === 'bot' && !isPracticeMode}
+      currentSectorRed={currentSectorRed}
+      layout={gridLayout}
+      labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
+      labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+      rivalLabel="BOT"
+    />
+  ) : null;
 
   return (
     <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideGarageButton hideHeader={isGpRace} shellStyle={isGpRace ? {
@@ -3123,6 +3209,7 @@ export default function Game() {
               ) : null}
             </AnimatePresence>
           </div>
+          {ipadLandscape && sectorGrid}
         </div>
 
         </div>
@@ -3140,28 +3227,8 @@ export default function Game() {
               {formatTime(elapsedTime)}
             </div>
           )}
-          {!isGpRace && (
-          <SectorProgressGrid
-            /* Career / Quick Race (dual BOT + player grid, not the GP 10-col grid) gets extra
-               room below so the squares sit clear of the keypad. Other HUDs keep mb-1. */
-            className={cn(
-              "my-0",
-              !gridLargeTenCol && gridLayout === 'dual' ? "mb-5" : "mb-1",
-            )}
-            largeTenCol={gridLargeTenCol}
-            progress={progress}
-            raceLength={raceLength}
-            sectorResults={lapResults}
-            rivalProgress={botProgress}
-            rivalSectorResults={botLapResults}
-            showRival={raceMode === 'bot' && !isPracticeMode}
-            currentSectorRed={currentSectorRed}
-            layout={gridLayout}
-            labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
-            labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
-            rivalLabel="BOT"
-          />
-          )}
+          {/* Portrait / phone: grid sits directly above the keypad. iPad landscape moves it to the left pane. */}
+          {!ipadLandscape && sectorGrid}
 
           {/* Status Messages - floating above keypad */}
           {powerUpsEnabled && (showBoostMessage || showAeroMessage) && (

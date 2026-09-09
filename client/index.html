@@ -3,6 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+    <script>
+      // iPad layout: the UI is phone-first (fixed max-w columns, vh-sized HUDs), so on a
+      // 13" iPad it rendered as a narrow strip with empty space around it. Instead of a
+      // second set of layouts, lay the page out on a tablet-sized CSS viewport (600px wide,
+      // at least 800px tall) and let WebKit scale that to fill the screen. Everything keeps
+      // its phone proportions and simply gets bigger. iPhones and desktop are untouched.
+      (function () {
+        var ua = navigator.userAgent;
+        var isIPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+        if (!isIPad) return;
+        var meta = document.querySelector('meta[name="viewport"]');
+        if (!meta) return;
+        var LAYOUT_W = 600, MIN_LAYOUT_H = 800;
+        function apply() {
+          var vv = window.visualViewport;
+          // Device size in points, independent of whatever viewport is currently applied.
+          var w = vv ? vv.width * vv.scale : window.innerWidth;
+          var h = vv ? vv.height * vv.scale : window.innerHeight;
+          var scale = Math.min(w / LAYOUT_W, h / MIN_LAYOUT_H);
+          scale = Math.max(1, Math.min(scale, 2.5));
+          var s = scale.toFixed(4);
+          meta.setAttribute('content',
+            'width=' + Math.round(w / scale) + ', initial-scale=' + s + ', minimum-scale=' + s +
+            ', maximum-scale=' + s + ', user-scalable=no, viewport-fit=cover');
+          document.documentElement.setAttribute('data-ipad-scale', scale.toFixed(2));
+        }
+        apply();
+        window.addEventListener('orientationchange', function () { setTimeout(apply, 60); });
+      })();
+    </script>
 
     <meta property="og:title" content="F1 Math Racer: Grand Prix" />
     <meta property="og:description" content="Race to the finish line by solving math problems! An interactive math game for kids." />

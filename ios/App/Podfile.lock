@@ -2,6 +2,8 @@ PODS:
   - Capacitor (8.5.0):
     - CapacitorCordova
   - CapacitorCordova (8.5.0)
+  - CapacitorScreenOrientation (8.0.1):
+    - Capacitor
   - PurchasesHybridCommon (18.29.0):
     - RevenueCat (= 5.83.0)
   - RevenueCat (5.83.0)
@@ -12,6 +14,7 @@ PODS:
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorScreenOrientation (from `../../node_modules/@capacitor/screen-orientation`)"
   - "RevenuecatPurchasesCapacitor (from `../../node_modules/@revenuecat/purchases-capacitor`)"
 
 SPEC REPOS:
@@ -24,16 +27,19 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorScreenOrientation:
+    :path: "../../node_modules/@capacitor/screen-orientation"
   RevenuecatPurchasesCapacitor:
     :path: "../../node_modules/@revenuecat/purchases-capacitor"
 
 SPEC CHECKSUMS:
   Capacitor: 00b87168591cc006ea6f5c0de681ec5c39a2c8eb
   CapacitorCordova: 9d3acbb574048e7167d2af127a0af2123e619f2f
+  CapacitorScreenOrientation: 6c3c84223ea1dd44aaa7184e2b416dd1192270d0
   PurchasesHybridCommon: 94a0fde86cfecdc487fb64667b68f527af930265
   RevenueCat: a83de0391a1061302699cb55eb1ff0662f5768b5
   RevenuecatPurchasesCapacitor: 9205ff494ad81e19bccef77a88a34599c11ed319
 
-PODFILE CHECKSUM: 3f788a9205fbf432afeebc4b4e1896e8ee0c6fde
+PODFILE CHECKSUM: da79e3d8ac25a5c89f777e9572b1e50eecde220c
 
 COCOAPODS: 1.16.2

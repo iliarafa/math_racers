@@ -125,3 +125,29 @@ body {
     height: 56px !important;
   }
 }
+
+/*
+ * iPad landscape only (index.html stamps data-ipad-scale on iPad): split the racing
+ * screen into two panes — timer, question, answer and grid on the left, keypad on the
+ * right — so the HUD uses the width instead of sitting in a phone column. Phones, the
+ * web app and iPad portrait keep the stacked layout above.
+ */
+@media (orientation: landscape) {
+  html[data-ipad-scale] .racing-screen {
+    max-width: none;
+    flex-direction: row;
+    align-items: stretch;
+  }
+  html[data-ipad-scale] .racing-screen .landscape-left {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+  html[data-ipad-scale] .racing-screen .landscape-right {
+    flex: 0 0 46%;
+    justify-content: center !important;
+    padding-bottom: 0;
+  }
+  html[data-ipad-scale] .racing-screen .landscape-right .grid.grid-cols-3 > * {
+    height: 76px !important;
+  }
+}

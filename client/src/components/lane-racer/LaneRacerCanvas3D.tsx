@@ -218,7 +218,14 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
         <Canvas
           className="w-full h-full block"
           gl={{ antialias: true, alpha: false }}
-          dpr={[1, Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2)]}
+          /* On iPad the page is viewport-scaled (see client/index.html), so the canvas needs
+             devicePixelRatio × that scale to stay crisp; capped so phones keep their 2× budget. */
+          dpr={[1, Math.min(
+            typeof window !== 'undefined'
+              ? window.devicePixelRatio * (window.visualViewport?.scale || 1)
+              : 1,
+            typeof window !== 'undefined' && window.visualViewport && window.visualViewport.scale > 1 ? 3.5 : 2,
+          )]}
           camera={{ position: [0, 3.6, 8.2], fov: 48, near: 0.1, far: 600 }}
           onCreated={({ gl, camera }) => {
             gl.setClearColor(FOG_COLOR);
