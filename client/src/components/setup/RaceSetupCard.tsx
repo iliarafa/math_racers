@@ -207,7 +207,7 @@ export function RaceSetupCard({
                 </div>
               </div>
               <div
-                className="flex-1 min-w-0 rounded-xl px-3"
+                className="flex-1 min-w-0 rounded-xl px-3 web-hover-glass-within"
                 style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}
               >
                 <SetupRow

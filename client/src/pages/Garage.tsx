@@ -74,7 +74,7 @@ export default function Garage() {
             <div className="grid grid-cols-3 gap-2">
               <div
                 onClick={toggleSound}
-                className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass"
                 data-testid="button-sound"
               >
                 {state.soundEnabled ? (
@@ -85,32 +85,32 @@ export default function Garage() {
                 <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Sound</span>
               </div>
               <Link href="/racer-log">
-                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-racer-log">
+                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass" data-testid="button-racer-log">
                   <ClipboardList className="w-10 h-10 text-white" />
                   <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Racer Log</span>
                 </div>
               </Link>
               <Link href="/leaderboard">
-                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-leaderboard">
+                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass" data-testid="button-leaderboard">
                   <Trophy className="w-10 h-10 text-white" />
                   <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Leaderboard</span>
                 </div>
               </Link>
               <Link href="/regulations">
-                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-regulations">
+                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass" data-testid="button-regulations">
                   <Flag className="w-10 h-10 text-white" />
                   <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Regulations</span>
                 </div>
               </Link>
               <Link href="/strategy">
-                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all" data-testid="button-strategy-guide">
+                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass" data-testid="button-strategy-guide">
                   <TrendingUp className="w-10 h-10 text-white" />
                   <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Strategy</span>
                 </div>
               </Link>
               <div
                 onClick={handleRetireCar}
-                className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all"
+                className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass"
                 data-testid="button-retire"
               >
                 <RotateCcw className="w-10 h-10 text-white" />

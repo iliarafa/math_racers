@@ -226,7 +226,7 @@ export default function DrivingSchool() {
                   const next = DRIVING_SCHOOL_STAGES.find((s) => s.id === stage.id + 1);
                   if (next) startStage(next);
                 }}
-                className="w-full h-12 rounded-lg bg-purple-600 text-white font-bold uppercase tracking-wider"
+                className="w-full h-12 rounded-lg bg-purple-600 text-white font-bold uppercase tracking-wider web-hover-brighten"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
                 data-testid="button-next-stage"
               >
@@ -239,7 +239,7 @@ export default function DrivingSchool() {
                 setScreen('stages');
                 setStage(null);
               }}
-              className="w-full h-12 rounded-lg bg-secondary text-secondary-foreground font-medium"
+              className="w-full h-12 rounded-lg bg-secondary text-secondary-foreground font-medium web-hover-darken"
               data-testid="button-back-stages"
             >
               Back to stages
@@ -334,7 +334,7 @@ export default function DrivingSchool() {
                   e.preventDefault();
                   if (feedback === 'idle') setAnswer((a) => a + String(num));
                 }}
-                className="h-14 sm:h-16 rounded-xl bg-secondary text-2xl font-bold active:scale-95 disabled:opacity-50"
+                className="h-14 sm:h-16 rounded-xl bg-secondary text-2xl font-bold active:scale-95 disabled:opacity-50 web-hover-darken"
                 data-testid={`ds-keypad-${num}`}
               >
                 {num}
@@ -347,7 +347,7 @@ export default function DrivingSchool() {
                 e.preventDefault();
                 if (feedback === 'idle') setAnswer((a) => a.slice(0, -1));
               }}
-              className="h-14 sm:h-16 rounded-xl bg-muted flex items-center justify-center active:scale-95 disabled:opacity-50"
+              className="h-14 sm:h-16 rounded-xl bg-muted flex items-center justify-center active:scale-95 disabled:opacity-50 web-hover-darken"
               data-testid="ds-keypad-delete"
             >
               <Delete className="w-6 h-6" />
@@ -359,7 +359,7 @@ export default function DrivingSchool() {
                 e.preventDefault();
                 if (feedback === 'idle') setAnswer((a) => a + '0');
               }}
-              className="h-14 sm:h-16 rounded-xl bg-secondary text-2xl font-bold active:scale-95 disabled:opacity-50"
+              className="h-14 sm:h-16 rounded-xl bg-secondary text-2xl font-bold active:scale-95 disabled:opacity-50 web-hover-darken"
               data-testid="ds-keypad-0"
             >
               0
@@ -371,7 +371,7 @@ export default function DrivingSchool() {
                 e.preventDefault();
                 submitAnswer();
               }}
-              className="h-14 sm:h-16 rounded-xl bg-primary text-primary-foreground flex items-center justify-center active:scale-95 disabled:opacity-50"
+              className="h-14 sm:h-16 rounded-xl bg-primary text-primary-foreground flex items-center justify-center active:scale-95 disabled:opacity-50 web-hover-fade"
               data-testid="ds-keypad-submit"
             >
               <Check className="w-7 h-7" />
@@ -420,7 +420,7 @@ export default function DrivingSchool() {
                 disabled={!unlocked}
                 onClick={() => startStage(s)}
                 className={cn(
-                  'w-full text-left rounded-xl px-4 py-3 transition-all',
+                  'w-full text-left rounded-xl px-4 py-3 transition-all web-hover-glass',
                   unlocked ? 'active:scale-[0.99]' : 'opacity-45 cursor-not-allowed',
                 )}
                 style={{

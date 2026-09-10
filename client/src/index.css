@@ -151,3 +151,69 @@ body {
     height: 76px !important;
   }
 }
+
+/*
+ * Web + mouse hover (browser builds only). html[data-web] is set by markWebDocument()
+ * only when !Capacitor.isNativePlatform(), so nothing here can match in the iOS app, even
+ * on an iPad with a trackpad. The media query keeps touch browsers out.
+ * Never declare transition, position or layout here. filter/opacity targets have no
+ * absolutely- or fixed-positioned children.
+ */
+@media (hover: hover) and (pointer: fine) {
+  @layer base {
+    /* Base layer, so explicit cursor-* utilities (cursor-not-allowed) still win. */
+    html[data-web] :is(button, [role="button"]):not(:disabled) {
+      cursor: pointer;
+    }
+  }
+
+  /* Glass: a white wash painted as a full-size inset shadow over the tile's own fill
+     (inline or class). It rides last in Tailwind's shadow/ring stack, so a tile keeps its
+     own shadow-* and ring-*. The resting wash is transparent and only its colour changes,
+     so it fades wherever the tile already transitions `all` (HubCard, Garage tiles,
+     flashcard stage buttons).
+     No @property and no :has(... :hover) in this block, even though neither would match
+     in the app: Tailwind copies registered properties into its old-Safari fallback, which
+     also runs inside the app, and a :has() that depends on :hover made WebKit rasterise
+     scaled images differently in the iPad app although it matched nothing. */
+  html[data-web] .web-hover-glass {
+    box-shadow:
+      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+      var(--tw-shadow, 0 0 #0000), inset 0 0 0 100vmax transparent;
+  }
+  html[data-web] .web-hover-glass:not(:disabled):hover {
+    box-shadow:
+      var(--tw-inset-shadow, 0 0 #0000), var(--tw-inset-ring-shadow, 0 0 #0000),
+      var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+      var(--tw-shadow, 0 0 #0000), inset 0 0 0 100vmax rgb(255 255 255 / 0.06);
+  }
+  /* Setup stations: the SetupRow button sits one px-3 (12px) inside its rounded-xl tile.
+     Hovering it washes its own box (inset) plus the tile's side padding (two side-offset
+     copies of its outline, which paint only outside the button), so the whole tile
+     lights up without :has(). */
+  html[data-web] .web-hover-glass-within button:not(:disabled):hover {
+    border-radius: 1rem;
+    box-shadow:
+      -12px 0 0 0 rgb(255 255 255 / 0.06), 12px 0 0 0 rgb(255 255 255 / 0.06),
+      inset 0 0 0 100vmax rgb(255 255 255 / 0.06);
+  }
+
+  html[data-web] .web-hover-brighten:not(:disabled):hover {
+    filter: brightness(1.08);
+  }
+  html[data-web] .web-hover-darken:not(:disabled):hover {
+    filter: brightness(0.95);
+  }
+  /* :not(:active) lets press feedback (active:opacity-*) win while the mouse is down. */
+  html[data-web] .web-hover-fade:not(:disabled):not(:active):hover {
+    opacity: 0.85;
+  }
+  /* !important: one target (the Grand Prix phase tabs) sets its colour inline. */
+  html[data-web] .web-hover-text:not(:disabled):hover {
+    color: #fff !important;
+  }
+  html[data-web] .web-hover-wash:not(:disabled):hover {
+    background-color: rgb(0 0 0 / 0.05);
+  }
+}

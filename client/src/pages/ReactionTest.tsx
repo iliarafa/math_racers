@@ -213,7 +213,7 @@ export default function ReactionTest() {
               gameState === 'go' && "bg-green-600 text-white hover:bg-green-500 animate-pulse",
               gameState === 'idle' && "bg-green-600 text-white hover:bg-green-500",
               (gameState === 'sequence' || gameState === 'waiting') && "bg-yellow-600 text-white hover:bg-yellow-500",
-              (gameState === 'jumpstart' || gameState === 'result') && "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              (gameState === 'jumpstart' || gameState === 'result') && "bg-secondary text-secondary-foreground hover:bg-secondary/80 web-hover-darken"
             )}
             data-testid="button-launch"
           >

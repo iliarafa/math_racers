@@ -394,7 +394,7 @@ export default function Regulations() {
               <button
                 key={chapter.id}
                 onClick={() => scrollToChapter(chapter.id)}
-                className="block w-full text-left text-xs tracking-wider uppercase text-white/60 active:text-white transition-colors py-1"
+                className="block w-full text-left text-xs tracking-wider uppercase text-white/60 active:text-white transition-colors py-1 web-hover-text"
                 style={{ fontFamily: "Oxanium, sans-serif" }}
               >
                 {chapter.numeral}. {chapter.title}
@@ -432,7 +432,7 @@ export default function Regulations() {
                     <div key={article.id} className="py-4">
                       <div
                         onClick={() => setExpandedId(isOpen ? null : article.id)}
-                        className="cursor-pointer active:opacity-60 transition-opacity"
+                        className="cursor-pointer active:opacity-60 transition-opacity web-hover-fade"
                       >
                         <span
                           className="text-xs md:text-sm tracking-wider uppercase"

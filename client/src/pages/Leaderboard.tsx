@@ -158,7 +158,7 @@ export default function Leaderboard() {
           <div className="flex items-center gap-3 mb-5">
             <Select value={selectedOp} onValueChange={setSelectedOp}>
               <SelectTrigger
-                className="w-48 bg-white/10 border-white/20 text-white text-xs font-medium uppercase tracking-wider"
+                className="w-48 bg-white/10 border-white/20 text-white text-xs font-medium uppercase tracking-wider web-hover-glass"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
                 <SelectValue />
@@ -179,7 +179,7 @@ export default function Leaderboard() {
 
             <Select value={selectedCircuit} onValueChange={setSelectedCircuit}>
               <SelectTrigger
-                className="w-48 bg-white/10 border-white/20 text-white text-xs font-medium uppercase tracking-wider"
+                className="w-48 bg-white/10 border-white/20 text-white text-xs font-medium uppercase tracking-wider web-hover-glass"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
               >
                 <SelectValue />

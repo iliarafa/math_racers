@@ -99,6 +99,7 @@ The same bundle ships to the web and the iOS app. These pieces exist for browser
 - `client/src/pages/not-found.tsx`: branded 404, reachable only from a typed or stale URL.
 - Full-height screens use `h-dvh` / `min-h-dvh` (and `dvh` inside HUD `clamp()` sizes), never `h-screen` / `vh`: phone browsers hide the bottom of a `100vh` box behind the address bar, while inside WKWebView `dvh` equals `vh`.
 - The Figma html-to-design capture script is injected from `main.tsx` only when `import.meta.env.DEV`.
+- Mouse hover: `markWebDocument()` (`webMeta.ts`, called first thing in `main.tsx`) stamps `data-web` on `<html>` only when not native. The `web-hover-*` classes at the end of `index.css` match only under `html[data-web]` inside `@media (hover: hover) and (pointer: fine)`, so the app (even an iPad with a trackpad) and touch browsers never get them. To give a web control a hover, append one of `web-hover-glass`, `-glass-within`, `-brighten`, `-darken`, `-fade`, `-text` or `-wash`. A plain Tailwind `hover:` also fires inside the app on an iPad with a trackpad. Keep `@property` and any `:has()` that depends on `:hover` out of that block: each one changes the iPad app even though nothing matches there (that `:has()` alters how WebKit rasterises scaled images).
 
 ### Progression System (Championship)
 - Win a race (beat the bot) to "champion" that circuit at the current series

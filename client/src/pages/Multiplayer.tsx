@@ -1332,7 +1332,7 @@ export default function Multiplayer() {
                 <button
                   onClick={togglePowerUps}
                   className={cn(
-                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors web-hover-darken",
                     powerUpsEnabled ? "bg-yellow-500" : "bg-muted"
                   )}
                   data-testid="toggle-power-ups"
@@ -1825,7 +1825,7 @@ export default function Multiplayer() {
                       setAnswer(prev => prev + num.toString());
                     }
                   }}
-                  className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80 touch-manipulation select-none"
+                  className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80 touch-manipulation select-none web-hover-darken"
                 >
                   {num}
                 </button>
@@ -1839,7 +1839,7 @@ export default function Multiplayer() {
                     setAnswer(prev => prev.slice(0, -1));
                   }
                 }}
-                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none"
+                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none web-hover-darken"
               >
                 <Delete className="w-6 h-6 sm:w-8 sm:h-8" />
               </button>
@@ -1852,7 +1852,7 @@ export default function Multiplayer() {
                     setAnswer(prev => prev + "0");
                   }
                 }}
-                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80 touch-manipulation select-none"
+                className="h-[56px] sm:h-[72px] md:h-[84px] rounded-xl text-2xl sm:text-3xl md:text-4xl font-bold transition-colors active:scale-95 bg-secondary text-secondary-foreground hover:bg-secondary/80 touch-manipulation select-none web-hover-darken"
               >
                 0
               </button>

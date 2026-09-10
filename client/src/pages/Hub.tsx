@@ -72,6 +72,7 @@ function HubCard({ href, title, subtitle, note, badge, testId, soundEnabled, onC
     <motion.button
       onClick={handleClick}
       whileTap={{ scale: 0.98 }}
+      className="web-hover-glass"
       style={{ ...hubCardStyle, ...style }}
       data-testid={testId}
       type="button"
@@ -256,6 +257,7 @@ export default function Hub() {
                 href="/grand-prix"
                 onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
                 data-testid="link-weekend-briefing"
+                className="web-hover-brighten"
                 style={{
                   background: CURRENT_GRAND_PRIX.gradient,
                   borderRadius: '14px',

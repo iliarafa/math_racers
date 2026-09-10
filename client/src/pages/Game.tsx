@@ -1994,7 +1994,7 @@ export default function Game() {
                 setRaceMode(p.id === 'rw_practice' ? 'solo' : 'bot');
                 if (state.soundEnabled) playCarouselClick();
               }}
-              className="font-bold uppercase tracking-widest transition-colors outline-none focus:outline-none disabled:cursor-not-allowed"
+              className={cn("font-bold uppercase tracking-widest transition-colors outline-none focus:outline-none disabled:cursor-not-allowed", p.unlocked && !active && "web-hover-text")}
               style={{
                 fontFamily: 'Oxanium, sans-serif',
                 fontSize: '10px',
@@ -2027,7 +2027,7 @@ export default function Game() {
             <button
               type="button"
               onClick={() => setAwaitingLandscape(false)}
-              className="mt-4 px-6 py-3 rounded-xl bg-white/10 text-white/80 font-bold uppercase tracking-wider"
+              className="mt-4 px-6 py-3 rounded-xl bg-white/10 text-white/80 font-bold uppercase tracking-wider web-hover-glass"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
               data-testid="flip-to-landscape-back"
             >
@@ -2281,7 +2281,7 @@ export default function Game() {
               </Link>
             )}
             {isQuickRace && (
-              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-crash-race-again">
+              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken" data-testid="button-crash-race-again">
                 <RotateCcw className="w-4 h-4" /> Race Again
               </button>
             )}
@@ -2338,7 +2338,7 @@ export default function Game() {
               {leaderboardNotice && (
                 <p className="text-xs text-white/50 text-center">{leaderboardNotice}</p>
               )}
-              <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
+              <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken">
                 <Home className="w-4 h-4" /> Back to Paddock
               </button>
             </div>
@@ -2463,7 +2463,7 @@ export default function Game() {
                   setIsPracticeMode(false);
                   setRaceMode('bot');
                 }}
-                className="w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+                className="w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white web-hover-brighten"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
                   backgroundColor: '#f59e0b',
@@ -2472,7 +2472,7 @@ export default function Game() {
               >
                 Continue to Qualifying
               </button>
-              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
+              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken">
                 <RotateCcw className="w-4 h-4" /> Start Over
               </button>
             </div>
@@ -2521,7 +2521,7 @@ export default function Game() {
                   setIsPracticeMode(false);
                   setRaceMode('bot');
                 }}
-                className="w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white"
+                className="w-full py-4 rounded-xl font-bold text-lg uppercase tracking-wider text-white web-hover-brighten"
                 style={{
                   fontFamily: 'Oxanium, sans-serif',
                   backgroundColor: '#dc2626',
@@ -2530,7 +2530,7 @@ export default function Game() {
               >
                 Continue to Race
               </button>
-              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2">
+              <button onClick={restartRace} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken">
                 <RotateCcw className="w-4 h-4" /> Start Over
               </button>
             </div>
@@ -2618,12 +2618,12 @@ export default function Game() {
                 <RotateCcw className="w-4 h-4" /> Race Again
               </button>
               {isQuickRace ? (
-                <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-main-menu">
+                <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken" data-testid="button-main-menu">
                   <Home className="w-4 h-4" /> Back to Paddock
                 </button>
               ) : (
                 <Link href="/">
-                  <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2" data-testid="button-main-menu">
+                  <button className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken" data-testid="button-main-menu">
                     <Home className="w-4 h-4" /> Main Menu
                   </button>
                 </Link>
@@ -2685,7 +2685,7 @@ export default function Game() {
                         key={index}
                         className={cn(
                           "flex items-center gap-3 bg-white/5 rounded-lg p-3",
-                          hasWrong && "cursor-pointer"
+                          hasWrong && "cursor-pointer web-hover-glass"
                         )}
                         onClick={hasWrong ? () => setRevealedAttempts(prev => {
                           const next = new Set(prev);
@@ -2887,7 +2887,7 @@ export default function Game() {
                 setIsPaused(true);
                 setShowRetireConfirm(true);
               }}
-              className="absolute top-3 right-3 z-20 h-9 flex items-center p-2 text-xs font-bold uppercase tracking-widest text-red-600"
+              className="absolute top-3 right-3 z-20 h-9 flex items-center p-2 text-xs font-bold uppercase tracking-widest text-red-600 web-hover-fade"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
               data-testid="button-retire"
             >
@@ -2908,7 +2908,7 @@ export default function Game() {
                     setShowRetireConfirm(false);
                     setIsPaused(false);
                   }}
-                  className="flex-1 h-12 rounded-lg font-bold uppercase tracking-widest text-muted-foreground bg-secondary"
+                  className="flex-1 h-12 rounded-lg font-bold uppercase tracking-widest text-muted-foreground bg-secondary web-hover-darken"
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
                   data-testid="button-retire-no"
                 >
@@ -2919,7 +2919,7 @@ export default function Game() {
                     setShowRetireConfirm(false);
                     setShowRetireDnf(true);
                   }}
-                  className="flex-1 h-12 rounded-lg font-bold uppercase tracking-widest text-red-600"
+                  className="flex-1 h-12 rounded-lg font-bold uppercase tracking-widest text-red-600 web-hover-wash"
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
                   data-testid="button-retire-yes"
                 >
@@ -3373,7 +3373,7 @@ export default function Game() {
                   }
                 }}
                 disabled={isPaused}
-                className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none"
+                className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none web-hover-darken"
                 data-testid={`keypad-${num}`}
               >
                 {num}
@@ -3389,7 +3389,7 @@ export default function Game() {
                 }
               }}
               disabled={isPaused}
-              className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50 touch-manipulation select-none"
+              className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50 touch-manipulation select-none web-hover-darken"
               data-testid="keypad-delete"
             >
               <Delete className="w-6 h-6 sm:w-8 sm:h-8" />
@@ -3404,7 +3404,7 @@ export default function Game() {
                 }
               }}
               disabled={isPaused}
-              className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none"
+              className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none web-hover-darken"
               data-testid="keypad-0"
             >
               0

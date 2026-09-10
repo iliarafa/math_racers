@@ -1,11 +1,11 @@
 import { Capacitor } from '@capacitor/core';
 
 /**
- * Browser-only page chrome: the tab title and the toolbar tint (`theme-color`).
+ * Browser-only page chrome: the tab title, the toolbar tint (`theme-color`) and the
+ * `data-web` marker that gates the mouse hover layer in `index.css`.
  *
- * The iPhone/iPad app shows neither — WKWebView has no tab bar and ignores
- * theme-color — so `applyPageMeta` returns early on native and nothing here can
- * change how the app looks.
+ * None of it may reach the iPhone/iPad app, so `applyPageMeta` and `markWebDocument`
+ * return early on native. WKWebView has no tab bar and ignores theme-color anyway.
  */
 
 export const APP_NAME = 'Math Racer';
@@ -65,4 +65,19 @@ export function applyPageMeta(location: string): void {
   const { title, themeColor } = pageMetaFor(location);
   document.title = title;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
+}
+
+/**
+ * Stamp `data-web` on <html> in browser builds. It gates the web-only mouse hover layer
+ * at the end of `index.css`, so it must never be set inside the native app, where it
+ * would switch hover on for an iPad with a trackpad. Returns whether it stamped.
+ * `root` and `native` are injectable for tests.
+ */
+export function markWebDocument(
+  root: Pick<Element, 'setAttribute'> | undefined = globalThis.document?.documentElement,
+  native: boolean = Capacitor.isNativePlatform(),
+): boolean {
+  if (native || !root) return false;
+  root.setAttribute('data-web', '');
+  return true;
 }

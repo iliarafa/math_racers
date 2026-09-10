@@ -72,7 +72,7 @@ class ErrorBoundary extends Component<Props, State> {
               <Link href="/">
                 <button
                   onClick={this.handleReset}
-                  className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2"
+                  className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken"
                 >
                   <Home className="w-4 h-4" />
                   Go Home
