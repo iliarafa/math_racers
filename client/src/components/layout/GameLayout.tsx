@@ -43,7 +43,7 @@ export function GameLayout({ children, trackName, hideHeader = false, hideLogo =
   return (
     <div className={cn(
       "text-foreground flex flex-col",
-      lockViewport ? "h-screen overflow-hidden" : "min-h-screen",
+      lockViewport ? "h-dvh overflow-hidden" : "min-h-dvh",
       overlayChrome ? "relative bg-black" : darkBackground ? "bg-neutral-800" : "bg-background"
     )} style={{ 
       fontFamily: 'Oxanium, sans-serif',

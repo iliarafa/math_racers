@@ -9,6 +9,7 @@ import { PurchaseProvider } from "@/contexts/PurchaseContext";
 import { useGameState } from "@/lib/gameLogic";
 import { Volume2, VolumeX } from "lucide-react";
 import { initSuperlicenceCelebration } from "@/lib/drivingSchoolLicence";
+import { applyPageMeta } from "@/lib/webMeta";
 
 // Decide once, before any page renders, whether the Superlicence splash is still owed.
 initSuperlicenceCelebration();
@@ -166,12 +167,22 @@ function MenuMusic() {
   );
 }
 
+/** Browser tab title and toolbar tint per route; a no-op inside the native app. */
+function WebMeta() {
+  const [location] = useLocation();
+  useEffect(() => {
+    applyPageMeta(location);
+  }, [location]);
+  return null;
+}
+
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <PurchaseProvider>
           <TooltipProvider>
+            <WebMeta />
             <Toaster />
             <MenuMusic />
             <PersistentVideo />

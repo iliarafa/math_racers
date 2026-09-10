@@ -187,7 +187,7 @@ export default function Hub() {
   const currentStep = licenceSteps.findIndex((done) => !done);
 
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden">
+    <div className="h-dvh flex flex-col relative overflow-hidden">
       {showSplash && <SuperlicenceSplash onClose={() => setShowSplash(false)} />}
 
       {/* Driving School backdrop: hand-drawn kerb art over black (video is hidden on this view) */}

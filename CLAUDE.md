@@ -92,6 +92,14 @@ script/build.ts          # Custom build script
 - **Server state:** React Query (available but minimally used)
 - **Multiplayer:** PostgreSQL for room persistence, WebSocket for real-time sync
 
+### Web-only chrome (browser builds)
+The same bundle ships to the web and the iOS app. These pieces exist for browsers and are inert (or unreachable) inside the app:
+- `client/src/lib/webMeta.ts` + `WebMeta` in `App.tsx`: per-route tab title and `theme-color`; returns early on `Capacitor.isNativePlatform()`.
+- `client/index.html`: `<title>`, description, absolute `og:image`/`og:url` (canonical `https://mathracer2026.io`), `<link rel="manifest">`. Backed by `client/public/manifest.webmanifest`, `icon-192.png` + `icon-512.png` (resized from the iOS app icon) and `opengraph.jpg` (1200×630 share card).
+- `client/src/pages/not-found.tsx`: branded 404, reachable only from a typed or stale URL.
+- Full-height screens use `h-dvh` / `min-h-dvh` (and `dvh` inside HUD `clamp()` sizes), never `h-screen` / `vh`: phone browsers hide the bottom of a `100vh` box behind the address bar, while inside WKWebView `dvh` equals `vh`.
+- The Figma html-to-design capture script is injected from `main.tsx` only when `import.meta.env.DEV`.
+
 ### Progression System (Championship)
 - Win a race (beat the bot) to "champion" that circuit at the current series
 - Championing a circuit at a series unlocks that circuit at the next series

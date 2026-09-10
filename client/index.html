@@ -3,6 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+    <title>Math Racer</title>
+    <meta name="description" content="Race to the finish line by solving math problems! An interactive math game for kids." />
+    <meta name="theme-color" content="#ffffff" />
     <script>
       // iPad layout: the UI is phone-first (fixed max-w columns, vh-sized HUDs), so on a
       // 13" iPad it rendered as a narrow strip with empty space around it. Instead of a
@@ -37,15 +40,22 @@
     <meta property="og:title" content="F1 Math Racer: Grand Prix" />
     <meta property="og:description" content="Race to the finish line by solving math problems! An interactive math game for kids." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://mathracer2026.io/" />
+    <meta property="og:site_name" content="Math Racer" />
+    <meta property="og:image" content="https://mathracer2026.io/opengraph.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="F1 Math Racer: Grand Prix" />
     <meta name="twitter:description" content="Race to the finish line by solving math problems! An interactive math game for kids." />
+    <meta name="twitter:image" content="https://mathracer2026.io/opengraph.jpg" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Math Racer" />
 
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Racing Fonts: Russo One for headers, Chakra Petch for dashboard data -->
@@ -54,6 +64,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
   </body>
 </html>

@@ -1126,7 +1126,7 @@ export default function Multiplayer() {
   // Lobby menu - Access Pass Card Design
   if (gameStatus === "lobby") {
     return (
-      <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="h-dvh flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* App Logo */}
         <div className="pt-4 pb-2 flex justify-center shrink-0">
           <Link href="/" data-testid="link-home-logo">
@@ -1482,7 +1482,7 @@ export default function Multiplayer() {
     ];
 
     return (
-      <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="h-dvh flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* Header */}
         <div className="pt-4 pb-2 flex justify-center shrink-0">
           <span
@@ -1588,7 +1588,7 @@ export default function Multiplayer() {
 
           <div className="flex-1 flex flex-col items-center min-h-0 px-4">
             <div className="shrink-0 h-[15%]" aria-hidden />
-            <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6vh,1.75rem)]">
+            <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6dvh,1.75rem)]">
               <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
               {formatTime(elapsedTime)}
             </div>
@@ -1602,13 +1602,13 @@ export default function Multiplayer() {
             </div>
 
             <div className="relative mt-6 sm:mt-8">
-              <div className="font-bold tracking-tight leading-none text-center px-2 max-w-full text-[clamp(2.75rem,7.6vh,4.75rem)]">
+              <div className="font-bold tracking-tight leading-none text-center px-2 max-w-full text-[clamp(2.75rem,7.6dvh,4.75rem)]">
                 {currentQuestion ? currentQuestion.display : "..."}
               </div>
 
               <div
                 className={cn(
-                  "font-bold min-w-[80px] text-center leading-none -mt-2 text-[clamp(2.75rem,7.6vh,4.75rem)]",
+                  "font-bold min-w-[80px] text-center leading-none -mt-2 text-[clamp(2.75rem,7.6dvh,4.75rem)]",
                   feedback === "idle" && "text-muted-foreground/50",
                   feedback === "correct" && "text-green-600",
                   feedback === "incorrect" && "text-red-600"
@@ -1627,7 +1627,7 @@ export default function Multiplayer() {
                     className="absolute inset-0 flex items-center justify-center z-10"
                   >
                     <span
-                      className="font-bold text-red-600 text-[clamp(1.75rem,4.5vh,2.75rem)]"
+                      className="font-bold text-red-600 text-[clamp(1.75rem,4.5dvh,2.75rem)]"
                       style={{ fontFamily: 'Oxanium, sans-serif' }}
                     >
                       {showPenaltyText}

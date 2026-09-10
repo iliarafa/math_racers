@@ -2011,7 +2011,7 @@ export default function Game() {
     ) : undefined;
 
     return (
-      <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+      <div className="min-h-dvh flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
         {awaitingLandscape && (
           <div
             className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-6 bg-black text-white px-8 text-center"
@@ -2215,7 +2215,7 @@ export default function Game() {
       return (
         <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
           <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
-            <div className="bg-black p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="bg-black p-6 w-full max-w-2xl max-h-[80dvh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>Debrief</h2>
                 <button
@@ -2635,7 +2635,7 @@ export default function Game() {
           {/* Debrief Modal */}
           {showAnalytics && (
             <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
-              <div className="bg-black p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+              <div className="bg-black p-6 w-full max-w-2xl max-h-[80dvh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>Debrief</h2>
                   <button
@@ -2942,7 +2942,7 @@ export default function Game() {
                   quitToPaddock();
                 }, 1200);
               }}
-              className="font-bold leading-none text-white text-[clamp(5rem,18vh,8rem)]"
+              className="font-bold leading-none text-white text-[clamp(5rem,18dvh,8rem)]"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
             >
               DNF
@@ -3099,7 +3099,7 @@ export default function Game() {
         <div className={cn("relative flex-1 flex flex-col items-center min-h-0 px-4", isGpRace ? "justify-center pt-12" : "[container-type:size]")}>
           {!isGpRace && <div className="h-[15%] shrink min-h-0" aria-hidden />}
           {!isGpRace && (
-          <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6vh,1.75rem)]">
+          <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6dvh,1.75rem)]">
             <Timer className="w-5 h-5 sm:w-6 sm:h-6" />
             {formatTime(elapsedTime)}
           </div>
@@ -3116,7 +3116,7 @@ export default function Game() {
           <div className={cn("relative", isGpRace ? "mt-0" : "mt-6 sm:mt-8")}>
             <div className={cn(
               "font-bold tracking-tight leading-none text-center px-2 max-w-full",
-              isGpRace ? "text-[clamp(3.375rem,10.5vh,6rem)] translate-y-10" : "text-[clamp(2.75rem,min(7.6vh,22cqh),4.75rem)]",
+              isGpRace ? "text-[clamp(3.375rem,10.5dvh,6rem)] translate-y-10" : "text-[clamp(2.75rem,min(7.6dvh,22cqh),4.75rem)]",
               isGpRace && gpRaceFlash && "text-white"
             )}>
               {question?.display}
@@ -3125,7 +3125,7 @@ export default function Game() {
             <div
               className={cn(
                 "font-bold min-w-[80px] text-center leading-none",
-                isGpRace ? "mt-4 text-[clamp(4.5rem,14vh,8rem)]" : "-mt-2 text-[clamp(2.75rem,min(7.6vh,22cqh),4.75rem)]",
+                isGpRace ? "mt-4 text-[clamp(4.5rem,14dvh,8rem)]" : "-mt-2 text-[clamp(2.75rem,min(7.6dvh,22cqh),4.75rem)]",
                 isGpRace && gpRaceFlash && "text-white",
                 !(isGpRace && gpRaceFlash) && feedback === 'idle' && "text-muted-foreground/50",
                 !(isGpRace && gpRaceFlash) && feedback === 'correct' && "text-green-600",
@@ -3147,7 +3147,7 @@ export default function Game() {
                   className="absolute inset-0 flex items-center justify-center z-10"
                 >
                   <span
-                    className="font-bold text-red-600 text-[clamp(1.75rem,4.5vh,2.75rem)]"
+                    className="font-bold text-red-600 text-[clamp(1.75rem,4.5dvh,2.75rem)]"
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     +5s
@@ -3218,7 +3218,7 @@ export default function Game() {
             <div
               className={cn(
                 "flex items-center gap-2 font-mono font-medium mb-6",
-                "text-[clamp(1.4rem,3.64vh,2.275rem)]",
+                "text-[clamp(1.4rem,3.64dvh,2.275rem)]",
                 gpRaceFlash ? "text-white" : "text-primary"
               )}
             >

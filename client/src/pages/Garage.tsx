@@ -41,7 +41,7 @@ export default function Garage() {
   };
 
   return (
-    <div className="h-screen flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000', fontFamily: 'Oxanium, sans-serif' }}>
+    <div className="h-dvh flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000', fontFamily: 'Oxanium, sans-serif' }}>
       {/* Background Video */}
       <video
         autoPlay

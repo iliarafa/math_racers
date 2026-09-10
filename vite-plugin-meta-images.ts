@@ -3,8 +3,9 @@ import fs from 'fs';
 import path from 'path';
 
 /**
- * Vite plugin that updates og:image and twitter:image meta tags
- * to point to the app's opengraph image with the correct Replit domain.
+ * Vite plugin that points the og:image and twitter:image meta tags at a Replit
+ * deployment domain. `client/index.html` carries the canonical production URLs,
+ * so on every other host (Vercel, local builds) the tags are left as written.
  */
 export function metaImagesPlugin(): Plugin {
   return {
@@ -12,7 +13,7 @@ export function metaImagesPlugin(): Plugin {
     transformIndexHtml(html) {
       const baseUrl = getDeploymentUrl();
       if (!baseUrl) {
-        log('[meta-images] no Replit deployment domain found, skipping meta tag updates');
+        log('[meta-images] no Replit deployment domain found, keeping the canonical meta image URLs');
         return html;
       }
 
