@@ -159,6 +159,26 @@ body {
  * Never declare transition, position or layout here. filter/opacity targets have no
  * absolutely- or fixed-positioned children.
  */
+/*
+ * Desktop race key strip: a physical key press flashes the matching on-screen key white with a
+ * glow, then fades it back. Only the desktop-only components under components/desktop use it.
+ */
+@keyframes key-flash {
+  0%, 40% {
+    filter: brightness(1.8);
+    box-shadow: 0 0 18px rgba(255, 255, 255, 1), 0 0 0 2px rgba(0, 0, 0, 0.06);
+    scale: 0.95;
+  }
+  100% {
+    filter: none;
+    box-shadow: none;
+    scale: 1;
+  }
+}
+.key-flash {
+  animation: key-flash 260ms ease-out both;
+}
+
 @media (hover: hover) and (pointer: fine) {
   @layer base {
     /* Base layer, so explicit cursor-* utilities (cursor-not-allowed) still win. */

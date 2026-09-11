@@ -22,9 +22,11 @@ interface GameLayoutProps {
   /** When set, the back chevron calls this instead of navigating to backHref. */
   onBack?: () => void;
   shellStyle?: CSSProperties;
+  /** Desktop race panes: let the content run to 1600px instead of the 1152px page column. */
+  wideContent?: boolean;
 }
 
-export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, backdropSrc, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref, onBack, shellStyle }: GameLayoutProps) {
+export function GameLayout({ children, trackName, hideHeader = false, hideLogo = false, lockViewport = false, darkBackground = false, backdropSrc, hideGarageButton = false, centerHeader = false, headerRight, headerAfterLogo, backHref, onBack, shellStyle, wideContent = false }: GameLayoutProps) {
   const backChevron = (className: string) =>
     onBack ? (
       <button onClick={onBack} className={className} data-testid="button-back">
@@ -100,7 +102,8 @@ export function GameLayout({ children, trackName, hideHeader = false, hideLogo =
       )}
       {/* Main Content Area */}
       <main className={cn(
-        "flex-1 flex flex-col max-w-5xl md:max-w-6xl mx-auto w-full min-h-0",
+        "flex-1 flex flex-col mx-auto w-full min-h-0",
+        wideContent ? "max-w-[1600px]" : "max-w-5xl md:max-w-6xl",
         overlayChrome && "relative z-10",
         lockViewport ? "p-0" : "p-6 md:p-10",
         darkBackground && !overlayChrome && "bg-neutral-800"

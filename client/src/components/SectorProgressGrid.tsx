@@ -24,6 +24,8 @@ interface SectorProgressGridProps {
   labelRightClassName?: string;
   rivalLabel?: string;
   className?: string;
+  /** Max square size in px for the standard grids. Phones keep 18.5; the desktop HUD passes more. */
+  cellMax?: number;
 }
 
 function cellClass(
@@ -63,6 +65,7 @@ export function SectorProgressGrid({
   labelRightClassName,
   rivalLabel = 'BOT',
   className,
+  cellMax = 18.5,
 }: SectorProgressGridProps) {
   if (big) {
     const bigGrid = (keyPrefix: string, gridProgress: number, results: SectorCell[], isPlayer: boolean) => (
@@ -129,7 +132,7 @@ export function SectorProgressGrid({
   const gridStyle = largeTenCol
     ? { gridTemplateColumns: 'repeat(10, minmax(0, 32px))', gap: '2px', justifyContent: 'center' }
     : {
-        gridTemplateColumns: `repeat(${cols}, minmax(0, 18.5px))`,
+        gridTemplateColumns: `repeat(${cols}, minmax(0, ${cellMax}px))`,
         gap: '2px',
         justifyContent: 'center',
       };
@@ -177,7 +180,7 @@ export function SectorProgressGrid({
           </span>
           <div
             className="grid w-full mt-0.5"
-            style={{ gridTemplateColumns: 'repeat(20, minmax(0, 18.5px))', gap: '2px', justifyContent: 'center' }}
+            style={{ gridTemplateColumns: `repeat(20, minmax(0, ${cellMax}px))`, gap: '2px', justifyContent: 'center' }}
           >
             {Array.from({ length: raceLength }).map((_, i) => (
               <div
@@ -198,7 +201,7 @@ export function SectorProgressGrid({
         </div>
         <div
           className="grid w-full"
-          style={{ gridTemplateColumns: 'repeat(20, minmax(0, 18.5px))', gap: '2px', justifyContent: 'center' }}
+          style={{ gridTemplateColumns: `repeat(20, minmax(0, ${cellMax}px))`, gap: '2px', justifyContent: 'center' }}
         >
           {Array.from({ length: raceLength }).map((_, i) => (
             <div

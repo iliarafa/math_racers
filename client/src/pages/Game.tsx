@@ -7,6 +7,14 @@ import { getMapLapLength } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
 import { getCircuitPathsForId } from "@/lib/circuitPaths";
 import { useIpadLandscape } from "@/hooks/use-ipad-landscape";
+import { useLayoutMode } from "@/hooks/use-layout-mode";
+import { useKeyEcho } from "@/hooks/use-key-echo";
+import type { KeyStripKey } from "@/lib/keyStrip";
+import { DesktopRaceScreen } from "@/components/desktop/DesktopRaceScreen";
+import { HudClock, HudMessages, HudPauseButton } from "@/components/desktop/RaceHud";
+import { KeyStrip } from "@/components/desktop/KeyStrip";
+import { PowerUpControls } from "@/components/desktop/PowerUpControls";
+import { QuestionPane } from "@/components/desktop/QuestionPane";
 import { isIpad, isPortrait, lockLandscapeOnIpad, unlockOrientation } from "@/lib/orientationLock";
 import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
@@ -373,6 +381,8 @@ export default function Game() {
   const [isGrandPrix, setIsGrandPrix] = useState(() => routeMode === 'grand-prix');
   // iPad landscape splits the racing HUD: question/answer/grid left, keypad right.
   const ipadLandscape = useIpadLandscape();
+  // Desktop and laptop browsers render the two-pane race instead of the phone stack.
+  const isDesktop = useLayoutMode() === 'desktop';
   const [isPreSeasonTesting, setIsPreSeasonTesting] = useState(
     () => routeMode !== 'grand-prix' && routeMode !== 'quick-race',
   );
@@ -543,6 +553,8 @@ export default function Game() {
   const [aeroActive, setAeroActive] = useState(false);                // Activated in this zone?
   const [aeroUsedZones, setAeroUsedZones] = useState<Set<number>>(new Set()); // Track used zones
   const [showAeroMessage, setShowAeroMessage] = useState<string | null>(null);
+  // Desktop key strip echo: which physical key was just pressed. Display only.
+  const keyEcho = useKeyEcho(isDesktop && (gameStatus === 'racing' || gameStatus === 'go'));
   const penaltyTimeRef = useRef(0);
   const raceStartTimeRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(state.soundEnabled);
@@ -2850,27 +2862,9 @@ export default function Game() {
     />
   ) : null;
 
-  return (
-    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideGarageButton hideHeader={isGpRace} shellStyle={isGpRace ? {
-        backgroundColor: gpRaceFlash ? GP_RACE_FLASH[gpRaceFlash] : '#ffffff',
-        transition: 'background-color 80ms linear',
-      } : undefined} headerRight={(isPracticeMode && !isGrandPrix) ? (
-        <button
-          onClick={() => {
-            const lastEnd = pstStintsRef.current.length > 0
-              ? pstStintsRef.current[pstStintsRef.current.length - 1].endIndex
-              : 0;
-            pstStintsRef.current.push({ startIndex: lastEnd, endIndex: lapResults.length, time: elapsedTime });
-            setPstSessionLog(true);
-          }}
-          className="px-5 py-1.5 bg-black text-white text-sm font-bold rounded-lg border-2 border-white hover:bg-gray-800 transition-colors uppercase tracking-wider"
-          style={{ fontFamily: 'Oxanium, sans-serif' }}
-          data-testid="button-box-header"
-        >
-          BOX
-        </button>
-      ) : undefined}>
-      <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0 bg-transparent">
+  // Overlays shared by the phone stack and the desktop panes (positioned against their root).
+  const raceOverlays = (
+    <>
         {isGpRace && (
           <>
             <span
@@ -3061,6 +3055,142 @@ export default function Game() {
             </div>
           </div>
         )}
+    </>
+  );
+
+  // Desktop and laptop browsers: two-pane HUD fed the same state as the phone stack below.
+  const desktopSectorGrid = !isGpRace ? (
+    <SectorProgressGrid
+      className="my-0 max-w-none"
+      cellMax={22}
+      largeTenCol={gridLargeTenCol}
+      progress={progress}
+      raceLength={raceLength}
+      sectorResults={lapResults}
+      rivalProgress={botProgress}
+      rivalSectorResults={botLapResults}
+      showRival={raceMode === 'bot' && !isPracticeMode}
+      currentSectorRed={currentSectorRed}
+      layout={gridLayout}
+      labelRight={`${(effectiveSimMode || (isPracticeMode && !isGrandPrix)) ? 'Limits' : 'Warnings'}: ${mistakes}`}
+      labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+      rivalLabel="BOT"
+    />
+  ) : null;
+  const desktopBadge = (isPreSeasonTesting || isGpRace) ? null
+    : isGrandPrix && grandPrixPhase === 'rw_practice' ? <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
+    : isGrandPrix && grandPrixPhase === 'rw_qualifying' ? <span className="text-xs text-white px-2 py-0.5 rounded" style={{ backgroundColor: '#f59e0b' }}>QUALIFYING</span>
+    : isQuickRace ? <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">QUICK RACE</span>
+    : isPracticeMode ? <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">PRACTICE</span>
+    : <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded">RACE</span>;
+  const desktopLevelLabel = DRIVERS.find(d => d.difficulty === dynamicDifficultyDisplay)?.label || 'Karting';
+  const desktopSubline = isPreSeasonTesting ? (
+    <span style={{ color: purpleLapLit && !showPenalty ? '#9333ea' : (LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e') }}>
+      {purpleLapLit && !showPenalty ? 'ALL PURPLE' : desktopLevelLabel}
+    </span>
+  ) : (isGrandPrix && grandPrixPhase === 'rw_practice') ? (
+    <span style={{ color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>{desktopLevelLabel}</span>
+  ) : undefined;
+  const handleStripKey = (key: KeyStripKey) => {
+    if (isPaused || feedback !== 'idle') return;
+    if (key === 'Enter') {
+      if (answer) handleSubmit();
+      return;
+    }
+    playKeypadClick();
+    setAnswer(prev => (key === 'Backspace' ? prev.slice(0, -1) : prev + key));
+  };
+
+
+  return (
+    <GameLayout trackName={selectedCircuit?.name || ""} lockViewport hideGarageButton wideContent={isDesktop} hideHeader={isGpRace} shellStyle={isGpRace ? {
+        backgroundColor: gpRaceFlash ? GP_RACE_FLASH[gpRaceFlash] : '#ffffff',
+        transition: 'background-color 80ms linear',
+      } : undefined} headerRight={(isPracticeMode && !isGrandPrix) ? (
+        <button
+          onClick={() => {
+            const lastEnd = pstStintsRef.current.length > 0
+              ? pstStintsRef.current[pstStintsRef.current.length - 1].endIndex
+              : 0;
+            pstStintsRef.current.push({ startIndex: lastEnd, endIndex: lapResults.length, time: elapsedTime });
+            setPstSessionLog(true);
+          }}
+          className="px-5 py-1.5 bg-black text-white text-sm font-bold rounded-lg border-2 border-white hover:bg-gray-800 transition-colors uppercase tracking-wider"
+          style={{ fontFamily: 'Oxanium, sans-serif' }}
+          data-testid="button-box-header"
+        >
+          BOX
+        </button>
+      ) : undefined}>
+      {isDesktop ? (
+        <DesktopRaceScreen
+          flashWhite={isGpRace && !!gpRaceFlash}
+          topInset={isGpRace}
+          topLeft={desktopBadge ? <div className="flex items-center gap-2 text-sm font-medium">{desktopBadge}</div> : null}
+          topRight={
+            <div className="flex items-center gap-4">
+              <HudClock
+                clock={formatTime(elapsedTime)}
+                clockClassName={cn(isGpRace && gpRaceFlash && "text-white")}
+                subline={desktopSubline}
+                align="end"
+              />
+              {!isPracticeMode && !isGpRace && <HudPauseButton onPause={() => setIsPaused(true)} />}
+            </div>
+          }
+          center={
+            <QuestionPane
+              questionDisplay={question?.display ?? ''}
+              answerDisplay={answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
+              feedback={feedback}
+              penaltyFlash={showFiveSecPenalty ? '+5s' : null}
+              flashWhite={isGpRace && !!gpRaceFlash}
+              between={desktopSectorGrid}
+              status={{
+                showPenalty,
+                showBlackWhiteFlag,
+                showFinalLap,
+                onFinalLapDone: () => setShowFinalLap(false),
+                showCorrect: feedback === 'correct' && !isGpRace,
+              }}
+            />
+          }
+          bottomCenter={
+            <KeyStrip
+              onKey={handleStripKey}
+              pressedKey={keyEcho.key} pressSeq={keyEcho.seq}
+              disabled={isPaused || feedback !== 'idle'}
+              submitDisabled={!answer}
+            />
+          }
+          bottomRight={powerUpsEnabled ? (
+            <div className="flex flex-col items-end gap-2 w-[clamp(240px,22vw,360px)]">
+              <HudMessages boost={showBoostMessage} aero={showAeroMessage} botFrozen={botFrozen} />
+              <PowerUpControls
+                enabled
+                pressedKey={keyEcho.key} pressSeq={keyEcho.seq}
+                aero={{
+                  available: aeroAvailable,
+                  active: aeroActive,
+                  disabled: !aeroAvailable || aeroActive || isPaused,
+                  onActivate: handleAero,
+                }}
+                overtake={{
+                  available: overtakeAvailable,
+                  active: overtakeActive,
+                  energy: overtakeEnergy,
+                  disabled: (overtakeEnergy <= 0 && !overtakeActive) || isPaused || (!isPracticeMode && botFinished),
+                  onActivate: handleOvertake,
+                }}
+              />
+            </div>
+          ) : null}
+        >
+          {raceOverlays}
+        </DesktopRaceScreen>
+      ) : (
+      <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0 bg-transparent">
+        {raceOverlays}
 
         <div className="landscape-left flex-1 flex flex-col min-h-0">
         {/* Mode badge and controls — Free Practice skips the green pill to keep HUD lighter */}
@@ -3427,6 +3557,7 @@ export default function Game() {
         </div>
 
       </div>
+      )}
 
       {/* Name Prompt Overlay */}
       {showNamePrompt && (

@@ -2,6 +2,14 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
+import { useLayoutMode } from "@/hooks/use-layout-mode";
+import { useKeyEcho } from "@/hooks/use-key-echo";
+import type { KeyStripKey } from "@/lib/keyStrip";
+import { DesktopRaceScreen } from "@/components/desktop/DesktopRaceScreen";
+import { HudClock, HudMessages } from "@/components/desktop/RaceHud";
+import { KeyStrip } from "@/components/desktop/KeyStrip";
+import { PowerUpControls } from "@/components/desktop/PowerUpControls";
+import { QuestionPane } from "@/components/desktop/QuestionPane";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { SetupRow } from "@/components/setup/SetupRow";
 import { levelRow, operationRow } from "@/components/setup/setupRows";
@@ -114,6 +122,9 @@ export default function Multiplayer() {
   
   // Game state
   const [gameStatus, setGameStatus] = useState<GameStatus>("lobby");
+  // Desktop and laptop browsers render the two-pane race instead of the phone stack.
+  const isDesktop = useLayoutMode() === 'desktop';
+  const keyEcho = useKeyEcho(isDesktop && gameStatus === 'racing');
   // Default to the first menu circuit — while the picker is locked (LOCK_MENU_TO_CURRENT_GP)
   // that is the current GP, so the header/silhouette and the created room match the locked pick.
   const [selectedCircuit, setSelectedCircuit] = useState<Circuit | null>(MENU_CIRCUITS[0] ?? CIRCUITS[0]);
@@ -1091,6 +1102,30 @@ export default function Multiplayer() {
     }
   };
 
+  // Physical keyboard, mirroring Game.tsx: digits, Backspace, Enter, `-` aero, `+` / `=` / `\\` overtake.
+  // Re-subscribed each render so the handler always sees current state. No effect on rendering.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameStatus !== 'racing' || feedback !== 'idle') return;
+      if (e.key.length === 1 && e.key >= '0' && e.key <= '9') {
+        setAnswer(prev => prev + e.key);
+      } else if (e.key === 'Backspace') {
+        setAnswer(prev => prev.slice(0, -1));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (answer) handleSubmit();
+      } else if (e.key === 'Clear' || e.key === '-') {
+        e.preventDefault();
+        if (isAeroAvailable && !aeroActive) activateAero();
+      } else if (e.key === '\\' || e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        if (overtakeActive || canActivateOvertake) activateOvertake();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  });
+
   const formatTime = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
@@ -1571,7 +1606,108 @@ export default function Multiplayer() {
     const currentQuestion = overtakeActive && overtakeQuestion
       ? overtakeQuestion
       : questions[currentQuestionIndex];
-    
+
+    if (isDesktop) {
+      const handleStripKey = (key: KeyStripKey) => {
+        if (feedback !== 'idle') return;
+        if (key === 'Enter') {
+          if (answer && currentQuestion) handleSubmit();
+          return;
+        }
+        playKeypadClick();
+        setAnswer(prev => (key === 'Backspace' ? prev.slice(0, -1) : prev + key));
+      };
+      return (
+        <GameLayout trackName={selectedCircuit?.name || ""} lockViewport wideContent>
+          <DesktopRaceScreen
+            topLeft={
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">MULTIPLAYER</span>
+                {connectionLost && (
+                  <span className="text-xs bg-red-600 text-white px-2 py-0.5 rounded animate-pulse">DISCONNECTED</span>
+                )}
+                {opponentDisconnected && !connectionLost && (
+                  <span className="text-xs bg-orange-500 text-white px-2 py-0.5 rounded">OPP LEFT</span>
+                )}
+              </div>
+            }
+            topRight={
+              <HudClock
+                clock={formatTime(elapsedTime)}
+                subline={<span style={{ color: difficultyColor }}>{difficultyLabel}</span>}
+                align="end"
+              />
+            }
+            center={
+              <QuestionPane
+                questionDisplay={currentQuestion ? currentQuestion.display : "..."}
+                answerDisplay={answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
+                feedback={feedback}
+                penaltyFlash={showPenaltyText}
+                between={
+              <SectorProgressGrid
+                className="my-0 max-w-none"
+                cellMax={22}
+                progress={progress}
+                raceLength={raceLength}
+                sectorResults={lapResults}
+                rivalProgress={opponentProgress}
+                rivalSectorResults={opponentSectorColors.map((c) => ({
+                  sectorColor: (['purple', 'green', 'yellow', 'red'].includes(c)
+                    ? c
+                    : 'yellow') as 'purple' | 'green' | 'yellow' | 'red',
+                }))}
+                showRival
+                layout="dual"
+                labelRight={`Limits: ${mistakes}`}
+                labelRightClassName={cn(mistakes > 0 && 'text-red-500')}
+                rivalLabel={opponentName ? opponentName.slice(0, 3).toUpperCase() : 'OPP'}
+              />
+                }
+                status={{
+                  showPenalty,
+                  showBlackWhiteFlag,
+                  showFinalLap,
+                  onFinalLapDone: () => setShowFinalLap(false),
+                  showCorrect: feedback === "correct",
+                }}
+              />
+            }
+            bottomCenter={
+              <KeyStrip
+                onKey={handleStripKey}
+                pressedKey={keyEcho.key} pressSeq={keyEcho.seq}
+                disabled={feedback !== 'idle'}
+                submitDisabled={!answer || !currentQuestion}
+              />
+            }
+            bottomRight={
+              <div className="flex flex-col items-end gap-2 w-[clamp(240px,22vw,360px)]">
+                <HudMessages boost={powerUpsEnabled ? showBoostMessage : null} aero={powerUpsEnabled ? showAeroMessage : null} />
+                <PowerUpControls
+                  enabled
+                  pressedKey={keyEcho.key} pressSeq={keyEcho.seq}
+                  aero={{
+                    available: isAeroAvailable,
+                    active: aeroActive,
+                    disabled: !powerUpsEnabled || !isAeroAvailable || aeroActive,
+                    onActivate: activateAero,
+                  }}
+                  overtake={{
+                    available: canActivateOvertake,
+                    active: overtakeActive,
+                    energy: overtakeEnergy,
+                    disabled: !powerUpsEnabled || (!overtakeActive && !canActivateOvertake),
+                    onActivate: activateOvertake,
+                  }}
+                />
+              </div>
+            }
+          />
+        </GameLayout>
+      );
+    }
+
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
         <div className="flex-1 flex flex-col w-full overflow-hidden relative min-h-0">

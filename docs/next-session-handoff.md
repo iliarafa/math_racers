@@ -1,216 +1,124 @@
-# Next Session Handoff
+# Next session — ship by 3pm
 
-**Branch:** `main`  
-**App version:** `1.3.11` — **single source of truth.** Build `1` is correct (nothing archived for 1.3.11 yet).  
-**App Store live:** `1.3.10` (shipped as build 2 — build numbers reset per marketing version, so 1.3.11 build 1 is valid)  
-**Current GP:** Round 11 / Hungary — `client/src/lib/currentGrandPrix.ts`  
-**Last updated:** 2026-07-23  
-**Status:** Free Practice / Grand Prix setup cards rebuilt as **LEVEL / VIEW / WEATHER drums**. Shipped and verified on the iPhone 17 Pro sim.
-
----
-
-## Resume here (start here)
+**When:** continue Wednesday 9 Sep 2026. **Must ship by 15:00.**  
+**Branch:** `main` @ `5b0b093` (pushed). Working tree was clean after that commit.  
+**Weekend:** Round 14 / Madrid (Madring / Circuito IFEMA Madrid). **Do not invent 2025 Barcelona Spanish GP results.**  
+**App version in repo:** `1.3.14` (`package.json`). Confirm ASC / iOS build numbers before upload.  
+**Last play session:** Tuesday 8 Sep 2026 — Race Day HUD + retire flow.
 
 ```bash
 git checkout main
 git pull
-npm run dev -- --port 8081
+npm run dev          # backend + client, port 8081
 ```
 
-Open **`http://127.0.0.1:8081`** (prefer over `localhost` — server listens IPv4 only).
-
-**iOS:**  
-`npm run build && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios`  
-`LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap run ios --target=A1301ED4-C124-4695-9A60-D05ACF4B4604`  
-(iPhone 17 sim — confirm with `xcrun simctl list devices booted`)
-
-**Agent map for Spa-quality circuit work (if needed):** [`docs/spa-quality-circuit-map-guide.md`](spa-quality-circuit-map-guide.md)
+Open **`http://localhost:8081/game/grand-prix`** — localhost skips Superlicence (`gpOpenOnLocalhost` in `Game.tsx`, `gpOpen` on the Hub card). Phone column is **438px** at `min-width: 640px` (`client/src/index.css`). Prefer a ~438×854 viewport.
 
 ---
 
-## Setup drums — how the cards work now
-
-Free Practice and Grand Prix share **one** component. Both used to be ~110 lines of
-byte-identical JSX; that duplication is gone.
-
-| Piece | Location |
-|-------|----------|
-| Shared card | [`client/src/components/setup/RaceSetupCard.tsx`](../client/src/components/setup/RaceSetupCard.tsx) |
-| Drum mechanism | [`client/src/components/setup/SetupDrum.tsx`](../client/src/components/setup/SetupDrum.tsx) (extracted from Lane Racer) |
-| Titled drum | [`client/src/components/setup/SetupDrumRow.tsx`](../client/src/components/setup/SetupDrumRow.tsx) |
-| Weather options | [`client/src/components/setup/weatherOptions.ts`](../client/src/components/setup/weatherOptions.ts) |
-| Level options | `DIFFICULTY_DRUM_OPTIONS` in [`gameLogic.ts`](../client/src/lib/gameLogic.ts) — **derived from `DRIVERS`**, do not hand-edit |
-| Setup click sound | [`client/src/lib/uiSound.ts`](../client/src/lib/uiSound.ts) (owns the shared `AudioContext`) |
-
-**Three drums: LEVEL / VIEW / WEATHER.** All words, all the same type size — one language.
-
-- **LEVEL** — `Adaptive, Karting, F3, F2, F1, Pro`. Free Practice only; Grand Prix has no
-  LEVEL drum (always adaptive in Practice, then locks). Presence of the optional `level`
-  prop is what distinguishes the two cards.
-- **VIEW** — Track | Sectors → `state.raceMapView`.
-- **WEATHER** — Dry | Wet | Random. **Words only, no icon** — a deliberate call: `Random`
-  has no honest icon, and the drum shows one item at a time with nothing to disambiguate it.
-
-**The Adaptive/Locked toggle is gone from the UI.** Underneath, `difficultyMode` +
-`lockedDifficulty` are unchanged — the drum maps to/from a drum index, exactly as Lane
-Racer already did. **No server, wire-protocol, or localStorage migration was involved**;
-do not "finish the job" by collapsing that state without deciding to deploy both ends.
-
-**Per-circuit silhouette art is now config,** not JSX: `mapStageClass` in
-[`currentGrandPrix.ts`](../client/src/lib/currentGrandPrix.ts) (falls back to
-`DEFAULT_MAP_STAGE_CLASS`). Hungary uses `h-40 md:h-60` because its line art is thin.
-**Weekly rotation: set or clear this one field** instead of editing a ternary in two cards.
-
-**Weather now persists** under its own `setupWeather` key — deliberately *not* in the
-`f1-math-racer-state` blob, which `MenuMusic` can clobber (see Known issues). If you ever
-reintroduce a `setSelectedWeather('dry')` reset in `restartRace` /
-`restartToSelectingScreen`, you will silently break persistence after the first race.
-
-### Trap worth knowing
-
-`updateDynamicDifficulty` ([`shared/mathEngine.ts`](../shared/mathEngine.ts)) used to
-default `maxDifficulty` to `'pro'` — i.e. **uncapped** — while five call sites passed
-`'hard'` as the only thing keeping Pro out of the adaptive ladder. It is now a **required
-parameter**, so omitting it is a compile error. Keep it that way. Gate:
-
-```bash
-grep -rn -A8 "updateDynamicDifficulty" client/src/pages/Game.tsx client/src/pages/LaneRacer.tsx server/websocket.ts | grep -c "'hard'"
-```
-
-Must print `5`.
-
----
-
-## Shipped this stretch (on `origin/main`)
+## What we shipped today (on `origin/main`)
 
 | Commit | What |
 |--------|------|
-| _this stretch_ | Setup drums: LEVEL / VIEW / WEATHER on FP + GP, shared `RaceSetupCard`, weather persistence, `mapStageClass` config, F3 colour fix, ~250 lines of dead carousel removed |
-| `1f5034a` | Regulations: Everything Is Purple + Hungaroring; Lane Racer defaults to GP circuit; iPhone setup card tighten |
-| `16e1293` | Free Practice all-purple lap → ALL PURPLE label + persistent Racer Log badge |
-| `88bd6cf`…`c70ad84` | Hungary Live Circuit Map + Round 11 weekend rotation |
+| `d707166` | Weather + live-map HUD gone. Sector squares locked at **18.5px**. Always dry. |
+| `fba5157` | Question nudged down; timer locked in place (FP / Practice / Quali). |
+| `7c6d19f` | Web stays a centered phone stack (no landscape two-column). GP Practice **3×10** large squares, Quali **2×10**, both **24px** L/R (`largeTenCol`). Race Day = numbers + keypad + color flash. Localhost GP unlock. |
+| `cb85a05` | **FINAL LAP** red sign in the reserved `h-11` slot (3 blinks, then gone). Fires when `!isPracticeMode && newProgress === raceLength - 1`. Also in multiplayer. |
+| `00141ba` | Race Day clock **24px above the keypad**, 70% of the first big-stack size. Operation = **75% of result**. Operation nudged **12px** down (`translate-y-3`); result locked. Standing `LAP X/Y` removed from this commit (added back later). |
+| `32ccba0` | `LAP X/Y` pinned across from the top-right control, **out of flow**, same `top-3` + `p-2` inset as the right control. |
+| `5b0b093` | Top-right is **RETIRE** (red letters, no fill). Confirm card → Yes = full-screen red + blinking then held white **DNF** → Paddock (`/hub`). No = back to the race (timer was frozen). |
 
-**Purple badge (verified)**
-
-- Id: `BADGE_EVERYTHING_IS_PURPLE` (`everything-is-purple`) in `gameLogic.ts`  
-- Earn: Free Practice only — full circuit tour all purple → toast + Racer Log badge  
-- HUD: level label temporarily **ALL PURPLE** while lit  
-- Regulations Free Practice + Garage Racer Log lines updated  
+Race Day is **57 questions** (`SIM_LAP_COUNTS.madrid` / `simLapCount`). A 10-wide sector grid will not fit — do not put one back.
 
 ---
 
-## Version — 1.3.11
+## Race Day HUD (current, do not casually restack)
 
-**`1.3.11` is the single source of truth.** Verified consistent across the working tree:
+All of this lives in `client/src/pages/Game.tsx` behind `isGpRace` (`isGrandPrix && grandPrixPhase === 'rw_race'`).
 
-| File | Value |
-|------|-------|
-| `package.json` / `package-lock.json` | `1.3.11` |
-| `capacitor.config.ts` | `1.3.11` |
-| `ios/App/App/capacitor.config.json` (generated by `cap sync`) | `1.3.11` |
-| `ios/App/App.xcodeproj/project.pbxproj` | `MARKETING_VERSION` 1.3.11 (both configs) |
-| `ios/App/App.xcodeproj/project.pbxproj` | `CURRENT_PROJECT_VERSION` 1 |
+```
+LAP 1/57                         RETIRE          ← absolute top-3, out of flow
+              10 + 4                             ← operation 75% of result, +12px translate
+                0                                ← result LOCKED in place
+              ⏱ 00:12.345                         ← 24px above keypad (mb-6)
+         [AERO] [0%] [OT]
+              keypad
+```
 
-No version string is rendered anywhere in the app UI — these files are the only places it lives.
+| Piece | Spec |
+|-------|------|
+| Result | `clamp(4.5rem, 14vh, 8rem)` — **do not move or resize** |
+| Operation | `clamp(3.375rem, 10.5vh, 6rem)` (75% of result) + `translate-y-3` |
+| Timer | `clamp(1.4rem, 3.64vh, 2.275rem)`, in `landscape-right`, `mb-6` (24px) above keypad |
+| LAP | `absolute top-3 left-3 h-9 p-2`, `pointer-events-none`, Oxanium, muted (white on flash) |
+| RETIRE | `absolute top-3 right-3 h-9 p-2`, red letters only (`text-red-600`), `quit` path via confirm |
+| Flash | Full-shell purple / green / yellow / red (`GP_RACE_FLASH`). Digits go white ~600ms |
+| FINAL LAP | Reserved `h-11` under the answer. Penalty (TRACK LIMITS) wins that slot |
+| Header | Hidden. No pause overlay on Race Day (`isPaused && !isGpRace`) |
 
-**Build number `1` is correct.** 1.3.10 shipped as build 2, but App Store Connect scopes
-the build counter to the marketing version, so 1.3.11 starts at 1. It only needs raising
-if a *second* upload of 1.3.11 goes to ASC.
-
-**History, so nobody "fixes" it backwards:** `6afe18c` ("Add Hungary live circuit map")
-bumped to `1.3.12` by mistake — `c70ad84` had already set 1.3.11 for the Hungary round.
-That stray bump has been **reverted down** to 1.3.11 and committed. 1.3.12 was never
-released; do not treat it as a version to return to.
-
----
-
-## Hungary / Live Circuit Map (current facts)
-
-| Item | Verified |
-|------|----------|
-| Thick Live Map art | `client/src/assets/circuit_hungary.png` |
-| Thin line art | `client/src/assets/circuit_hungary_black.png` (Lane Racer + FP setup black map) |
-| Path JSON | `w: 698`, `h: 667`, `points: 2476`, `ribbon: 19` |
-| Lane Racer maps | `hungary: circuitHungaryBlack` |
-| Regenerated via | `npx tsx script/extractCircuitCenterline.ts hungary` |
-
-Optional later: further Lane Racer Hungary stroke/framing polish — **do not** enlarge the shared Lane Racer stage (`itemHeight={140}`, `h-24` / `maxWidth: 140`).
+**Retire path:** RETIRE → `setIsPaused(true)` + confirm **"Retire from Race?"** → No unpauses → Yes shows `fixed inset-0` red, DNF blinks 3× (`1.35s`) then stays **1.2s**, then `quitToPaddock()` → `/hub`.
 
 ---
 
-## Locked product decisions (still in force)
+## Locked — do not change unless asked
 
-| Topic | Decision |
-|-------|----------|
-| Adaptive default | Factory default on FP / Lane Racer / MP |
-| Locked | Fixed Karting…F1/Pro for the race; no promotion/demotion. **No longer a visible mode** — picking a level on the LEVEL drum *is* locking |
-| Grand Prix | Always adaptive Practice; Quali/Race lock after Practice — no LEVEL drum on GP setup |
-| Setup drums | One language: LEVEL / VIEW / WEATHER, words only, same type size. No icons mixed with words |
-| Soft-follow 3D cam | Capacitor native only (`isNativePlatform()`), including iPad — never in browser |
-| Selection chrome | Text color / opacity only — no gray selection pills, no filled selection tiles |
-| Kid difficulty ladder | Karting→F1 compressed; Adaptive soft-caps at F1; Pro Locked-only |
-| Live Circuit Map iPad size | Native iPad only (`isNativeIPad()`), not browser / not iPhone |
-| Lane Racer track stage | Keep Spa-era clamps; no global enlarge to fix one circuit |
+- **Phone HUD is nailed** for FP / Practice / Quali.
+- FP / Practice / Quali **timer:** `clamp(1.25rem, 2.6vh, 1.75rem)`.
+- FP / Practice / Quali **question + answer:** `clamp(2.75rem, 7.6vh, 4.75rem)` with the 15% spacer and operation wrapper `mt-6 sm:mt-8`.
+- FP **squares:** **18.5px**, 20×5, ~8px inset.
+- **Web:** do not split into landscape two-column. Center the 438px phone column.
+- GP Practice / Quali keep the large **10-wide** grids + 24px padding.
+- Weather is gone (always dry). Live map is gone in play.
+- Do not `git push` unless asked. Do not invent calendar results.
 
 ---
 
-## Backlog (confirm with user)
+## Rejected this session (do not revive)
 
-0. **1.3.12: unlock the track picker + ship consistent PNGs for all circuits.** In **1.3.11** the
-   TRACK picker in Lane Racer **and** Multiplayer is **locked to the current GP circuit** — the six
-   remaining silhouettes are still inconsistent in stroke/size (raster problem CSS can't fix), so
-   rather than ship that, only the weekend's circuit is shown, as a non-interactive TRACK row. The
-   lock is one flag: **`LOCK_MENU_TO_CURRENT_GP` in `client/src/lib/circuitMenuArt.ts`** — while
-   `true`, `MENU_CIRCUITS` collapses to `[current GP]`; a single-option row auto-renders static (see
-   `SetupRow`'s `interactive` branch). Multiplayer's `selectedCircuit` init was pointed at
-   `MENU_CIRCUITS[0]` so the created room's `circuitId` follows the lock.
-
-   For **1.3.12**: (a) set `LOCK_MENU_TO_CURRENT_GP = false`, and (b) add fresh, **consistent**
-   thin-line `_black` PNGs (~360px canvas, matching Spa's stroke/tone) for **all** circuits — the six
-   already in `CIRCUIT_MENU_ART` need re-exports to actually match, and Miami / Canada / Barcelona /
-   Austria need adding back (they were removed earlier for heavy raster art; still inert in `CIRCUITS`
-   / `SIM_LAP_COUNTS`). Adding a circuit = one entry in `CIRCUIT_MENU_ART` (`image` + `flag`); nothing
-   else changes. (An abandoned alternative — rendering silhouettes from vector centerlines for uniform
-   stroke — is written up under "Follow-up: uniform VECTOR silhouettes" in the session plan; the user
-   chose fresh PNGs instead.)
-
-1. **Multiplayer setup card — done.** The waiting-room LEVEL picker now uses the shared
-   `SetupRow` via `levelRow` (host taps to cycle; guest sees a locked read-only readout),
-   matching Free Practice / Grand Prix / Lane Racer. `SetupRow` gained a `variant="light"`
-   for MP's light waiting card; `track_select` already used SetupRow rows + a Level readout.
-2. Align Multiplayer race status chrome with Game  
-3. Remove or gate `/dev/circuit-maps` in production  
-4. Play-test kid ladder + Lane Racer pace  
-
-### Known issues (found, not fixed)
-
-- **`useGameState` blob clobber.** `useGameState` is a plain hook, not a context, and
-  `MenuMusic` (`App.tsx`) holds a second independent copy while rendering the sound
-  toggle. The persistence effect rewrites the *entire* `f1-math-racer-state` blob on any
-  change, so toggling music can write `MenuMusic`'s mount-time-stale `raceMapView` over a
-  newer value. Real, pre-existing, and the reason setup weather uses its own key.
-- **Multiplayer LEVEL `SetupRow` — iOS unchecked.** The waiting-room LEVEL row (host cycle,
-  guest read-only, live-synced) and `track_select` were verified in the browser via a hosted
-  room; `tsc` clean. Not yet built to the iPhone sim.
-
-### Local untracked (not committed)
-
-- `docs/hungary-90cw-centerline-check.png`  
-- `docs/mockup-map-toggle-real-sectors.png`  
-- `docs/mockup-map-toggle-real-track.png`  
-- `docs/setup-card-target.png`  
-
-### Out of scope unless asked
-
-- Soft-follow in browser  
-- Championship unlock redesign  
-- Deploy/Harvest re-enable  
-- Retracing Canada / Miami / Barcelona / Austria  
+- Lap counter **under** the numbers.
+- Timer as a **tiny chip in the top bar** next to LAP.
+- Putting the Race Day timer back into the question stack (it belongs above the keypad).
+- Red **filled** RETIRE button — letters only.
+- Cosmetic pause on Race Day — it is RETIRE now.
 
 ---
 
-## Note for the next agent
+## Not verified yet (do these tomorrow morning)
 
-You are on **`main`**, synced with origin for code through `1f5034a`. GP is **Hungary (Round 11)**. App version is **1.3.11**, build **1** — uncommitted, and it is a *revert down* from the stray `1.3.12` on `HEAD`, not a bump.  
+1. **FINAL LAP** at question 56 of 57 — coded, never watched live (too many laps).
+2. Race Day **color flash** on correct (purple/green/yellow) and wrong (red), including LAP/timer turning white.
+3. **Retire → No** keeps the same question and a frozen-then-resumed clock.
+4. **Retire → Yes** DNF on a real phone (full-screen red, blink, hold, Paddock).
+5. Practice + Qualifying still have their large grids, locked timer, and **pause** (not RETIRE).
+6. Free Practice 18.5px grid + locked number sizes.
+7. Multiplayer FINAL LAP.
+8. iOS / Capacitor build + device pass before 3pm.
 
-**Start with Free Practice setup** in `Game.tsx` (`hero-card-pst-hungary` / `isPreSeasonTesting` card). Prefer `http://127.0.0.1:8081`. iOS: build + `cap sync` + `cap run` to the iPhone 17 sim. Do not reopen locked difficulty / map-stage decisions without asking.
+Localhost GP unlock is **dev only**. Production still needs Driving School Superlicence.
+
+---
+
+## Ship checklist (Wed, before 15:00)
+
+- [ ] Play Race Day on phone-width in the browser (flash, timer, LAP, retire No/Yes).
+- [ ] Spot-check Practice, Qualifying, Free Practice, Hub.
+- [ ] `npm run check`
+- [ ] Decide version bump (repo is `1.3.14`) and iOS `CURRENT_PROJECT_VERSION`.
+- [ ] `npm run build` + `npx cap sync ios` + device/sim run.
+- [ ] Upload / TestFlight / store as you usually do for the weekend build.
+
+---
+
+## Key files
+
+| File | Why |
+|------|-----|
+| `client/src/pages/Game.tsx` | All Race Day HUD, flash, FINAL LAP, retire/DNF |
+| `client/src/pages/Multiplayer.tsx` | FINAL LAP in the same reserved slot |
+| `client/src/pages/Hub.tsx` | Localhost GP unlock |
+| `client/src/components/SectorProgressGrid.tsx` | `largeTenCol` for Practice/Quali |
+| `client/src/components/layout/GameLayout.tsx` | `shellStyle` for race flash; `hideHeader` on Race Day |
+| `client/src/index.css` | Desktop 438px phone column |
+| `client/src/lib/currentGrandPrix.ts` | Round 14 / Madrid / 57 laps |
+
+`SESSION_NOTES.md` is stale. `docs/next-session-handoff.md` **is this file** — ignore the old Hungary / VIEW / WEATHER drum writeup; weather and live-map were removed in `d707166`.

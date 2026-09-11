@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Delete, Lock, RotateCcw } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
+import { DesktopRaceScreen } from "@/components/desktop/DesktopRaceScreen";
+import { KeyStrip } from "@/components/desktop/KeyStrip";
+import { useLayoutMode } from "@/hooks/use-layout-mode";
+import { useKeyEcho } from "@/hooks/use-key-echo";
+import type { KeyStripKey } from "@/lib/keyStrip";
 import { cn } from "@/lib/utils";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import { useGameState } from "@/lib/gameLogic";
@@ -97,6 +102,9 @@ export default function DrivingSchool() {
   const { state } = useGameState();
   const [highestCleared, setHighestCleared] = useState(() => loadHighestClearedStage());
   const [screen, setScreen] = useState<Screen>('stages');
+  // Desktop and laptop browsers render the flashcard beside a stats pane, with a key strip.
+  const isDesktop = useLayoutMode() === 'desktop';
+  const keyEcho = useKeyEcho(isDesktop && screen === 'session');
   const [stage, setStage] = useState<DrivingSchoolStage | null>(null);
   const [deck, setDeck] = useState<FlashcardItem[]>([]);
   const [queue, setQueue] = useState<number[]>([]);
@@ -251,22 +259,8 @@ export default function DrivingSchool() {
   }
 
   if (screen === 'session' && stage && current) {
-    return (
-      <GameLayout
-        trackName={stage.title}
-        lockViewport
-        hideGarageButton
-        centerHeader
-        onBack={() => {
-          setScreen('stages');
-          setStage(null);
-        }}
-      >
-        <div className="flex-1 flex flex-col min-h-0 w-full max-w-md md:max-w-xl mx-auto px-4">
-          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-            {/* The flashcard: fixed-size framed card; the whole face lights up with the grade */}
-            <div className="w-full h-full min-h-0 flex flex-col items-center justify-center">
-              {/* Lap-style counter hugging the card; static — only the card animates */}
+    // Shared by the phone stack and the desktop panes.
+    const flashcardCounter = (
               <div
                 className="w-full grid grid-cols-3 items-center text-xs uppercase tracking-wider text-muted-foreground mb-2"
                 style={{ fontFamily: 'Oxanium, sans-serif' }}
@@ -277,6 +271,8 @@ export default function DrivingSchool() {
                   {purpleCount}/{CARDS_PER_STAGE} purple
                 </span>
               </div>
+    );
+    const flashcard = (
               <AnimatePresence mode="wait">
                 {(() => {
                   const lit = feedback !== 'idle' && current.color !== 'pending';
@@ -320,6 +316,88 @@ export default function DrivingSchool() {
                   );
                 })()}
               </AnimatePresence>
+    );
+    const handleStripKey = (key: KeyStripKey) => {
+      if (feedback !== 'idle') return;
+      if (key === 'Enter') {
+        if (answer) submitAnswer();
+        return;
+      }
+      setAnswer((a) => (key === 'Backspace' ? a.slice(0, -1) : a + key));
+    };
+
+    if (isDesktop) {
+      return (
+        <GameLayout
+          trackName={stage.title}
+          lockViewport
+          hideGarageButton
+          centerHeader
+          wideContent
+          onBack={() => {
+            setScreen('stages');
+            setStage(null);
+          }}
+        >
+          <DesktopRaceScreen
+            topLeft={
+              <div className="flex flex-col items-start gap-2" data-testid="driving-school-pane">
+                <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">DRIVING SCHOOL</span>
+                <div className="flex items-baseline gap-5 text-xs uppercase tracking-wider text-muted-foreground">
+                  <span><span className="text-3xl font-bold text-foreground" data-testid="flashcard-counter">{queuePos + 1}</span>/{queue.length} card</span>
+                  <span><span className="text-3xl font-bold text-foreground" data-testid="flashcard-lap">{lap}</span> lap</span>
+                </div>
+              </div>
+            }
+            topRight={
+              <div className="text-xs uppercase tracking-wider text-muted-foreground text-right">
+                <span className="text-3xl font-bold text-purple-500" data-testid="flashcard-purple-count">{purpleCount}</span>/{CARDS_PER_STAGE} purple
+              </div>
+            }
+            center={
+              <div className="w-[min(70vw,1000px)] h-full min-h-0 flex flex-col items-center justify-center py-2">
+                {flashcard}
+              </div>
+            }
+            bottomLeft={
+              <div className="flex flex-col gap-2 text-sm">
+                <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-purple-500 shrink-0" />Purple: right, and faster than the bot</div>
+                <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-green-500 shrink-0" />Green: right</div>
+                <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-red-500 shrink-0" />Red: wrong, back into the deck</div>
+              </div>
+            }
+            bottomCenter={
+              <KeyStrip
+                onKey={handleStripKey}
+                pressedKey={keyEcho.key} pressSeq={keyEcho.seq}
+                disabled={feedback !== 'idle'}
+                submitDisabled={!answer}
+              />
+            }
+          />
+        </GameLayout>
+      );
+    }
+
+
+    return (
+      <GameLayout
+        trackName={stage.title}
+        lockViewport
+        hideGarageButton
+        centerHeader
+        onBack={() => {
+          setScreen('stages');
+          setStage(null);
+        }}
+      >
+        <div className="flex-1 flex flex-col min-h-0 w-full max-w-md md:max-w-xl mx-auto px-4">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+            {/* The flashcard: fixed-size framed card; the whole face lights up with the grade */}
+            <div className="w-full h-full min-h-0 flex flex-col items-center justify-center">
+              {/* Lap-style counter hugging the card; static — only the card animates */}
+              {flashcardCounter}
+              {flashcard}
             </div>
           </div>
 

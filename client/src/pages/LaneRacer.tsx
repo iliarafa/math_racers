@@ -23,6 +23,9 @@ import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCa
 import { operationRow, levelRow } from "@/components/setup/setupRows";
 import { hasLaneRacerWin, saveLaneRacerWin, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
 import { SuperlicenceSplash } from "@/components/SuperlicenceSplash";
+import { LaneKeyHints } from "@/components/desktop/LaneKeyHints";
+import { useLayoutMode } from "@/hooks/use-layout-mode";
+import { useKeyEcho } from "@/hooks/use-key-echo";
 import { LaneRacerEngine } from "@/lib/laneRacerEngine";
 import type { LaneRacerEngineRef } from "@/lib/laneRacerController3d";
 import { paceDifficultyForSpeed } from "@/lib/laneRacerHud";
@@ -104,6 +107,9 @@ export default function LaneRacer() {
   const { state } = useGameState();
   const [, navigate] = useLocation();
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
+  // Desktop and laptop browsers: steering key legend over the canvas.
+  const isDesktop = useLayoutMode() === 'desktop';
+  const keyEcho = useKeyEcho(isDesktop && gameStatus === 'racing');
   const [selectedCircuit, setSelectedCircuit] = useState(CIRCUIT_OPTIONS[DEFAULT_CIRCUIT_INDEX]);
   const [currentCircuitIndex, setCurrentCircuitIndex] = useState(DEFAULT_CIRCUIT_INDEX);
   const dynamicDifficultyRef = useRef<DynamicDifficultyState | null>(null);
@@ -691,6 +697,7 @@ export default function LaneRacer() {
               />
             ) : null
           )}
+          {isDesktop && isRacing && <LaneKeyHints pressedKey={keyEcho.key} pressSeq={keyEcho.seq} />}
         </div>
 
         {gameStatus === 'countdown' && (
