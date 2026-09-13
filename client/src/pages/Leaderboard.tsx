@@ -5,12 +5,14 @@ import { GP_HISTORY } from "@/lib/grandPrixHistory";
 import { CIRCUITS, loadSetupOperation, useGameState } from "@/lib/gameLogic";
 import {
   LEADERBOARD_OPERATIONS,
+  QUICK_RACE_OPERATION,
   circuitPickerIds,
   leaderboardEmptyMessage,
   resolveLeaderboardView,
   type LeaderboardTab,
 } from "@/lib/leaderboardRules";
-import { getFpLeaderboard, getGpWeekendLeaderboard } from "@/lib/supabase";
+import { getFpLeaderboard, getGpWeekendLeaderboard, getQuickRaceLeaderboard } from "@/lib/supabase";
+import { globalHint, selectLocalBests, sessionLabel, type LocalBoard } from "@/lib/localBests";
 import { cn } from "@/lib/utils";
 import { Trophy, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,6 +30,7 @@ interface LeaderboardEntry {
   createdAt: string;
   circuitName?: string;
   polePosition?: boolean;
+  beatBot?: boolean;
 }
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -78,7 +81,9 @@ export default function Leaderboard() {
     const circuitId = selectedCircuit === 'all' ? undefined : selectedCircuit;
     const fetchRows = activeTab === 'free-practice'
       ? getFpLeaderboard({ operation: selectedOp, circuitId, limit: 50 })
-      : getGpWeekendLeaderboard({ operation: selectedOp, circuitId, limit: 50 });
+      : activeTab === 'grand-prix'
+        ? getGpWeekendLeaderboard({ operation: selectedOp, circuitId, limit: 50 })
+        : getQuickRaceLeaderboard({ circuitId, limit: 50 });
     fetchRows
       .then((data) => {
         setEntries(data.map((e: any) => ({
@@ -94,6 +99,7 @@ export default function Leaderboard() {
           createdAt: e.created_at,
           circuitName: e.circuit_name,
           polePosition: e.pole_position,
+          beatBot: e.beat_bot,
         })));
         setLoading(false);
       })
@@ -111,6 +117,17 @@ export default function Leaderboard() {
   const visibleEntries = showAll || searchQuery ? filteredEntries : filteredEntries.slice(0, INITIAL_COUNT);
   const hasMore = !searchQuery && filteredEntries.length > INITIAL_COUNT;
 
+  // Local tier: personal bests saved on this device for the selected operation / circuit.
+  const board: LocalBoard = activeTab === 'free-practice' ? 'fp' : activeTab === 'grand-prix' ? 'gp' : 'qr';
+  const isQuickRaceTab = activeTab === 'quick-race';
+  const yourBests = selectLocalBests(state.localBests, {
+    board,
+    operation: isQuickRaceTab ? QUICK_RACE_OPERATION : selectedOp,
+    circuitId: selectedCircuit,
+  });
+  const hasGlobalRow = entries.some(e => e.playerId === state.playerId);
+  const showGlobalHint = !loading && !error && !hasGlobalRow;
+
   return (
     <GameLayout hideGarageButton lockViewport backHref="/garage" darkBackground>
       <div className="fixed inset-0 overflow-y-auto p-4 md:p-8 pb-20" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
@@ -122,7 +139,11 @@ export default function Leaderboard() {
               <h1 className="text-lg md:text-xl font-bold tracking-widest uppercase text-white">Leaderboard</h1>
             </div>
             <p className="text-xs text-white/70 mt-1 ml-9">
-              {activeTab === 'free-practice' ? 'Record 100 laps in Free Practice to enter.' : 'Finish a Grand Prix Race Day to enter.'}
+              {activeTab === 'free-practice'
+                ? 'Local bests save after any session · 100 laps posts globally'
+                : activeTab === 'grand-prix'
+                  ? 'Local bests save after any session · Race Day posts globally'
+                  : 'Every finished Quick Race posts · Addition · one best per circuit'}
             </p>
           </div>
 
@@ -152,10 +173,24 @@ export default function Leaderboard() {
             >
               Grand Prix
             </button>
+            <button
+              onClick={() => setActiveTab('quick-race')}
+              className={cn(
+                "px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors",
+                activeTab === 'quick-race'
+                  ? "bg-yellow-400 text-black"
+                  : "bg-white/10 text-white/50 hover:text-white"
+              )}
+              style={{ fontFamily: 'Oxanium, sans-serif' }}
+              data-testid="tab-quick-race"
+            >
+              Quick Race
+            </button>
           </div>
 
           {/* Filters row */}
           <div className="flex items-center gap-3 mb-5">
+            {!isQuickRaceTab && (
             <Select value={selectedOp} onValueChange={setSelectedOp}>
               <SelectTrigger
                 className="w-48 bg-white/10 border-white/20 text-white text-xs font-medium uppercase tracking-wider web-hover-glass"
@@ -176,6 +211,7 @@ export default function Leaderboard() {
                 ))}
               </SelectContent>
             </Select>
+            )}
 
             <Select value={selectedCircuit} onValueChange={setSelectedCircuit}>
               <SelectTrigger
@@ -218,6 +254,56 @@ export default function Leaderboard() {
               />
             </div>
           </div>
+
+          {/* Your best (local tier) */}
+          {(yourBests.length > 0 || showGlobalHint) && (
+            <div className="mb-5 rounded-xl bg-white/5 p-3" data-testid="your-best-card">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-yellow-400 mb-2" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                Your Best
+              </div>
+              {yourBests.length === 0 ? (
+                <p className="text-xs text-white/50">
+                  {isQuickRaceTab ? 'Finish a Quick Race to set your first best.' : `Finish a session to set your first ${selectedOp} best.`}
+                </p>
+              ) : (
+                <div className="space-y-1.5">
+                  {yourBests.map(({ session, circuitId, entry }) => (
+                    <div key={session} className="flex items-center gap-3" data-testid={`your-best-${session}`}>
+                      <span className="w-20 flex-shrink-0 text-[10px] font-bold uppercase tracking-wider text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+                        {sessionLabel(board, session)}
+                      </span>
+                      <div className="flex-1 min-w-0 flex items-center gap-2 text-[10px] text-white/70">
+                        {selectedCircuit === 'all' && (
+                          <>
+                            <span className="uppercase tracking-wider">{circuitLabel(circuitId)}</span>
+                            <span className="text-white/50">•</span>
+                          </>
+                        )}
+                        <span>{DIFFICULTY_LABELS[entry.difficultyAchieved] || entry.difficultyAchieved}</span>
+                        <span className="text-white/50">•</span>
+                        <span className="font-mono">{formatTime(entry.totalTime)}</span>
+                        <span className="text-white/50">•</span>
+                        <span>{entry.accuracy}%</span>
+                        {board === 'gp' && entry.polePosition && (
+                          <span className="text-[10px] font-bold text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">POLE</span>
+                        )}
+                        {board === 'qr' && entry.beatBot && (
+                          <span className="text-[10px] font-bold text-green-300 bg-green-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">P1</span>
+                        )}
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <div className="text-sm font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>{entry.score.toLocaleString()}</div>
+                        <div className="text-[10px] text-white/50 uppercase tracking-wider">pts</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showGlobalHint && (
+                <p className="text-[10px] text-white/50 mt-2" data-testid="your-best-hint">{globalHint(board)}</p>
+              )}
+            </div>
+          )}
 
           {/* Content */}
           {loading ? (
@@ -288,6 +374,9 @@ export default function Leaderboard() {
                           )}
                           {activeTab === 'grand-prix' && entry.polePosition && (
                             <span className="text-[10px] font-bold text-purple-300 bg-purple-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">POLE</span>
+                          )}
+                          {activeTab === 'quick-race' && entry.beatBot && (
+                            <span className="text-[10px] font-bold text-green-300 bg-green-500/20 px-1.5 py-0.5 rounded uppercase tracking-wider">P1</span>
                           )}
                         </div>
                         <div className="flex items-center gap-3 mt-0.5">

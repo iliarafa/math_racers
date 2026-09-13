@@ -46,6 +46,14 @@ test('maps old mode query values', () => {
   );
   assert.equal(
     resolveLeaderboardView({
+      search: '?mode=quick-race&circuit=madrid',
+      currentCircuitId: 'zandvoort',
+      persistedOperation: 'Addition',
+    }).tab,
+    'quick-race',
+  );
+  assert.equal(
+    resolveLeaderboardView({
       search: '?mode=grand-prix&circuit=hungary&operation=Multiplication',
       currentCircuitId: 'zandvoort',
       persistedOperation: 'Addition',
@@ -100,6 +108,10 @@ test('empty copy names the session and circuit', () => {
   assert.equal(
     leaderboardEmptyMessage('grand-prix', 'Division', 'all'),
     'No Race Day Division times yet',
+  );
+  assert.equal(
+    leaderboardEmptyMessage('quick-race', 'Addition', 'Madring'),
+    'No Quick Race times at Madring yet',
   );
 });
 

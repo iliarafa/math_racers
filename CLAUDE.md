@@ -47,7 +47,7 @@ client/src/
 │   ├── StrategyGuide.tsx # Math reference guide
 │   ├── ReactionTest.tsx # Reaction time mini-game (F1 lights)
 │   ├── Regulations.tsx  # Game rules
-│   ├── Leaderboard.tsx  # PST leaderboard standings
+│   ├── Leaderboard.tsx  # FP + GP + Quick Race boards (Supabase) with a local "Your Best" tier
 │   ├── RacerLog.tsx     # Standalone race history log
 │   └── not-found.tsx    # 404 error page
 ├── components/
@@ -187,8 +187,8 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 
 **Pre-Season Testing (PST)**
 - Uses Bahrain circuit with player-selected operation
-- Session length selectable at setup: 25, 50, or 100 laps (persisted as `freePracticeLaps`); completing the session finishes the race, but only full 100-lap sessions submit a score to the leaderboard
-- "End Session" before 100 questions navigates home with no leaderboard entry
+- Session length selectable at setup: 25, 50, or 100 laps (persisted as `freePracticeLaps`); every finished session records a local personal best (`state.localBests`), but only full 100-lap sessions submit a score to the global leaderboard
+- "End Session" before the session ends navigates home with no local or global entry
 - Dynamic difficulty adjusts per-answer based on response time and accuracy
 - Score formula: `(laps / time) * accuracy * difficultyMultiplier * 1000` (max 100,000)
 - Difficulty multipliers: beginner=1.0, easy=1.5, medium=2.0, hard=3.0
@@ -210,9 +210,9 @@ Each mode has its own HUD rules. A layout change in one does not imply the same 
 
 **Desktop and laptop browsers** (`lib/layoutMode.ts`, `hooks/use-layout-mode.ts`): `detectLayoutMode()` returns `desktop` only when the build is not native, `data-ipad-scale` is absent, the pointer is fine with hover, and the viewport is at least `DESKTOP_MIN_WIDTH` (900px); `main.tsx` stamps `data-desktop` on `<html>` and the hook keeps it in step on resize. In that mode Game, Multiplayer and Driving School return the cinematic tree from `components/desktop/` inside `GameLayout wideContent`: `DesktopRaceScreen` takes corner slots. The question and answer (`QuestionPane`) fill the middle at room-reading size with the sector grid between them (`between` slot, `cellMax={22}`); the mode badge sits top-left; `HudClock` (clock, difficulty) and `HudPauseButton` sit together top-right (Race Day keeps its absolute LAP / RETIRE labels and pushes the row down with `topInset`); `HudMessages` plus `PowerUpControls` with the `−`/`+` shortcut chips bottom-right; and the one-row `KeyStrip` centred along the bottom. The phone JSX is left byte-identical and renders for every other mode, so the iOS app cannot change. Input is keyboard-first: the strip keys are clickable for mouse-only children and flash white on each physical press via `useKeyEcho` + the `key-flash` keyframes in `index.css` (display only, never submits). Multiplayer got the same physical-keyboard handler as Game. Lane Racer keeps its full-screen canvas and only adds `LaneKeyHints` (arrows / A D). Menu pages are not part of this layout yet.
 
-### Leaderboard (PST)
-- `POST /api/leaderboard` - Submit entry (playerId, playerName, operation, score, totalTime, mistakes, accuracy, difficultyAchieved)
-- `GET /api/leaderboard?operation=&limit=` - Fetch entries sorted by ranking (default 50, max 100)
+### Leaderboard
+- **Global tier (Supabase):** the client writes directly to `fp_leaderboard` (100-lap Free Practice), `gp_weekend_leaderboard` (GP Race Day) and `quick_race_leaderboard` (every finished Quick Race; always Addition, one row per player × circuit, `beat_bot` flag shown as a P1 badge, no score bonus) via `client/src/lib/supabase.ts` (`upsertByBest`: one row per key, replaced only by a strictly higher score). DDL lives in `docs/superpowers/plans/2026-08-17-leaderboards-supabase.sql` and is hand-run on the Supabase project. The Express `/api/leaderboard` routes are legacy and unused by the client.
+- **Local tier (on-device):** `GameState.localBests` keyed `board:circuitId:operation:session` (`fp` 25/50/100, `gp` practice/qualifying/race, `qr` race) via `client/src/lib/localBests.ts`. Every finished FP or GP session records one; finish screens show Score / Personal Best / "NEW PERSONAL BEST", and `Leaderboard.tsx` shows a "Your Best" card above the global list with a hint until the player has a global row. Lane Racer has no board.
 - Validation: score 0-100k, time 1s-1hr, mistakes 0-200, accuracy 0-100%
 
 ## Database Schema
@@ -237,8 +237,7 @@ Each mode has its own HUD rules. A layout change in one does not imply the same 
 - `POST /api/rooms/:code/join` - Join room
 - `GET /api/rooms/:code` - Get room details
 - `PUT /api/rooms/:code/update` - Update settings before race
-- `POST /api/leaderboard` - Submit PST score
-- `GET /api/leaderboard` - Fetch leaderboard (query: `operation`, `limit`)
+- `POST /api/leaderboard` / `GET /api/leaderboard` - Legacy PST leaderboard (unused; the client talks to Supabase directly)
 
 ### WebSocket Events
 **Client → Server:** `join_room`, `start_countdown`, `progress_update`, `race_finished`, `mistake_update`, `toggle_power_ups`, `energy_update`, `activate_overtake`, `deactivate_overtake`, `activate_aero`

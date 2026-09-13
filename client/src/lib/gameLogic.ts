@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { Difficulty, Question } from '@shared/mathEngine';
+import { compareLocalBest, sanitizeLocalBests, type LocalBestEntry, type LocalBests } from './localBests';
 
 export type { Difficulty, Question, DynamicDifficultyState } from '@shared/mathEngine';
 export {
@@ -62,6 +63,8 @@ export interface GameState {
   lapHistory: LapEntry[];
   playerName: string;
   playerId: string;
+  /** Local leaderboard tier, keyed by localBestKey(). Higher score wins. */
+  localBests: LocalBests;
 }
 
 /** Free Practice: complete a full circuit tour with every sector purple. */
@@ -349,6 +352,7 @@ const INITIAL_STATE: GameState = {
   lapHistory: [],
   playerName: '',
   playerId: '',
+  localBests: {},
 };
 
 /** Maths type, persisted under its own key rather than in the GameState blob. */
@@ -423,6 +427,7 @@ export function useGameState() {
           lapHistory: parsed.lapHistory ?? [],
           playerName: parsed.playerName ?? '',
           playerId: parsed.playerId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36)),
+          localBests: sanitizeLocalBests(parsed.localBests),
         };
       }
     } catch (error) {
@@ -527,6 +532,23 @@ export function useGameState() {
     });
   };
 
+  /**
+   * Local leaderboard tier. Returns the best on file before this call and
+   * whether the new entry replaced it. `previous` is read from the rendered
+   * state on purpose: earlier setState calls in the same handler stop React
+   * from running the updater eagerly, so an in-updater flag would be stale.
+   */
+  const recordLocalBest = (key: string, entry: LocalBestEntry): { previous: LocalBestEntry | null; isNew: boolean } => {
+    const previous = state.localBests[key] ?? null;
+    const isNew = compareLocalBest(previous ?? undefined, entry);
+    if (isNew) {
+      setState(prev => compareLocalBest(prev.localBests[key], entry)
+        ? { ...prev, localBests: { ...prev.localBests, [key]: entry } }
+        : prev);
+    }
+    return { previous, isNew };
+  };
+
   const resetAllData = () => {
     try {
       localStorage.removeItem('f1-math-racer-state');
@@ -588,6 +610,7 @@ export function useGameState() {
     incrementRacesWon,
     earnBadge,
     updatePersonalBest,
+    recordLocalBest,
     resetAllData,
     recordLapTime,
     getTopLapTimes,

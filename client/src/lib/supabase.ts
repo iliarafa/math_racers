@@ -23,20 +23,25 @@ export interface GpWeekendLeaderboardSubmission extends FpLeaderboardSubmission 
   polePosition: boolean;
 }
 
+/** Quick Race is always Addition; one row per player per circuit. */
+export interface QuickRaceLeaderboardSubmission extends FpLeaderboardSubmission {
+  beatBot: boolean;
+}
+
 export type LeaderboardWriteResult = 'inserted' | 'updated' | 'kept';
 
 async function upsertByBest(
-  table: 'fp_leaderboard' | 'gp_weekend_leaderboard',
-  match: { player_id: string; circuit_id: string; operation: string },
+  table: 'fp_leaderboard' | 'gp_weekend_leaderboard' | 'quick_race_leaderboard',
+  match: { player_id: string; circuit_id: string; operation?: string },
   row: Record<string, unknown>,
 ): Promise<LeaderboardWriteResult> {
-  const { data: existing, error: readError } = await supabase
+  let lookup = supabase
     .from(table)
     .select('id, score')
     .eq('player_id', match.player_id)
-    .eq('circuit_id', match.circuit_id)
-    .eq('operation', match.operation)
-    .maybeSingle();
+    .eq('circuit_id', match.circuit_id);
+  if (match.operation) lookup = lookup.eq('operation', match.operation);
+  const { data: existing, error: readError } = await lookup.maybeSingle();
   if (readError) throw readError;
 
   if (!existing) {
@@ -89,6 +94,26 @@ export async function submitGpWeekendEntry(entry: GpWeekendLeaderboardSubmission
   );
 }
 
+export async function submitQuickRaceEntry(entry: QuickRaceLeaderboardSubmission): Promise<LeaderboardWriteResult> {
+  return upsertByBest(
+    'quick_race_leaderboard',
+    { player_id: entry.playerId, circuit_id: entry.circuitId },
+    {
+      player_id: entry.playerId,
+      player_name: entry.playerName,
+      circuit_id: entry.circuitId,
+      circuit_name: entry.circuitName,
+      operation: entry.operation,
+      score: Math.round(entry.score),
+      total_time: entry.totalTime,
+      mistakes: entry.mistakes,
+      accuracy: entry.accuracy,
+      difficulty_achieved: entry.difficultyAchieved,
+      beat_bot: entry.beatBot,
+    },
+  );
+}
+
 export async function getFpLeaderboard(opts: { operation: string; circuitId?: string; limit?: number }) {
   let query = supabase
     .from('fp_leaderboard')
@@ -108,6 +133,19 @@ export async function getGpWeekendLeaderboard(opts: { operation: string; circuit
     .from('gp_weekend_leaderboard')
     .select('*')
     .eq('operation', opts.operation)
+    .order('score', { ascending: false })
+    .order('total_time', { ascending: true })
+    .limit(Math.min(opts.limit ?? 50, 100));
+  if (opts.circuitId) query = query.eq('circuit_id', opts.circuitId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getQuickRaceLeaderboard(opts: { circuitId?: string; limit?: number }) {
+  let query = supabase
+    .from('quick_race_leaderboard')
+    .select('*')
     .order('score', { ascending: false })
     .order('total_time', { ascending: true })
     .limit(Math.min(opts.limit ?? 50, 100));

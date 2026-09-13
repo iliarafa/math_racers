@@ -6,7 +6,10 @@ export const LEADERBOARD_OPERATIONS = [
   'Variables',
 ] as const;
 
-export type LeaderboardTab = 'free-practice' | 'grand-prix';
+export type LeaderboardTab = 'free-practice' | 'grand-prix' | 'quick-race';
+
+/** Quick Race is always Addition, so its board has no operation picker. */
+export const QUICK_RACE_OPERATION = 'Addition';
 
 export function shouldReplaceBest(existingScore: number | null, incomingScore: number): boolean {
   return existingScore === null || incomingScore > existingScore;
@@ -20,6 +23,7 @@ function parseOperation(raw: string | null, persistedOperation: string): string 
 
 function parseTab(mode: string | null): LeaderboardTab {
   if (mode === 'grand-prix') return 'grand-prix';
+  if (mode === 'quick-race') return 'quick-race';
   return 'free-practice';
 }
 
@@ -42,7 +46,10 @@ export function leaderboardEmptyMessage(
   operation: string,
   circuitLabel: string | 'all',
 ): string {
-  const session = tab === 'free-practice' ? `100-lap ${operation}` : `Race Day ${operation}`;
+  const session =
+    tab === 'free-practice' ? `100-lap ${operation}`
+    : tab === 'grand-prix' ? `Race Day ${operation}`
+    : 'Quick Race';
   if (circuitLabel === 'all') return `No ${session} times yet`;
   return `No ${session} times at ${circuitLabel} yet`;
 }

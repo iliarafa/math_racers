@@ -60,6 +60,8 @@ An in-scene Lane Racer rival car was tried and reverted (see licence-path notes)
 ### Free Practice session length (`client/src/pages/Game.tsx`, `47457ff`)
 - LAPS is a real station: 25/50/100 (`FP_LAP_OPTIONS`), persisted as `freePracticeLaps`, default 100; `raceLength` reads it for FP.
 - **Only 100-lap sessions submit to the PST leaderboard** (gate in the finish branch) — shorter sprints skew the rate-based score. Help text says so. GP laps stay a readout.
+  - **Local tier (2026-09-13):** every finished FP (25/50/100) and GP (Practice/Qualifying/Race Day) session records a personal best in `state.localBests` (`lib/localBests.ts`). Finish screens show Score + Personal Best + flash + a "Record 100 laps / Finish Race Day to post globally" note; `/leaderboard` shows a "Your Best" card above the global list. Global gates unchanged.
+  - **Quick Race board (2026-09-13):** third tab. Every finished Quick Race posts to `quick_race_leaderboard` (Addition only, one row per player per circuit, P1 badge when the bot is beaten, same score formula). **Run the `quick_race_leaderboard` block at the end of `docs/superpowers/plans/2026-08-17-leaderboards-supabase.sql` in the Supabase SQL editor** — until then Quick Race submits show "Couldn't reach the leaderboard.
 
 ---
 

@@ -22,7 +22,8 @@ import type { DifficultyDrumOption } from "@/lib/gameLogic";
 import { loadSetupOperation, saveSetupOperation } from "@/lib/gameLogic";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { operationRow, levelRow } from "@/components/setup/setupRows";
-import { submitFpLeaderboardEntry, submitGpWeekendEntry, GpWeekendLeaderboardSubmission } from "@/lib/supabase";
+import { submitFpLeaderboardEntry, submitGpWeekendEntry, submitQuickRaceEntry, GpWeekendLeaderboardSubmission, QuickRaceLeaderboardSubmission } from "@/lib/supabase";
+import { localBestKey, fpSessionForLaps, sessionLabel, localTierNote, type LocalBestEntry, type LocalBoard, type LocalSession } from "@/lib/localBests";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy, RotateCw } from "lucide-react";
@@ -356,7 +357,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLapTime, setPlayerName } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLocalBest, recordLapTime, setPlayerName } = useGameState();
   const { isPremium, isLoading: isPurchaseLoading } = usePurchase();
   const [, setLocation] = useLocation();
   /** `/game/free-practice` | `/game/grand-prix` | `/game/quick-race` — replaces the old mode_select screen. */
@@ -421,16 +422,50 @@ export default function Game() {
     difficultyAchieved: string;
   } | null>(null);
   const [pendingGPSubmission, setPendingGPSubmission] = useState<Omit<GpWeekendLeaderboardSubmission, 'playerName'> | null>(null);
+  const [pendingQuickRaceSubmission, setPendingQuickRaceSubmission] = useState<Omit<QuickRaceLeaderboardSubmission, 'playerName'> | null>(null);
   const [leaderboardNotice, setLeaderboardNotice] = useState<string | null>(null);
 
   const handleWriteResult = (result: 'inserted' | 'updated' | 'kept') => {
     if (result === 'inserted' || result === 'updated') {
       setLeaderboardNotice('Personal best posted');
+    } else {
+      setLeaderboardNotice('Below your global best');
     }
   };
 
   const handleWriteError = () => {
     setLeaderboardNotice('Couldn’t reach the leaderboard.');
+  };
+
+  /** Name prompt confirmed: post whatever submission was waiting on a name, then clear it. */
+  const flushPendingSubmissions = (playerName: string) => {
+    if (pendingScoreSubmission) {
+      submitFpLeaderboardEntry({ ...pendingScoreSubmission, playerName }).then(handleWriteResult).catch(handleWriteError);
+    }
+    if (pendingGPSubmission) {
+      submitGpWeekendEntry({ ...pendingGPSubmission, playerName }).then(handleWriteResult).catch(handleWriteError);
+    }
+    if (pendingQuickRaceSubmission) {
+      submitQuickRaceEntry({ ...pendingQuickRaceSubmission, playerName }).then(handleWriteResult).catch(handleWriteError);
+    }
+    setPendingScoreSubmission(null);
+    setPendingGPSubmission(null);
+    setPendingQuickRaceSubmission(null);
+  };
+
+  /** Local leaderboard tier result for the session just finished (drives the finish-screen rows). */
+  const [localBestOutcome, setLocalBestOutcome] = useState<{
+    board: LocalBoard;
+    session: LocalSession;
+    entry: LocalBestEntry;
+    previous: LocalBestEntry | null;
+    isNew: boolean;
+  } | null>(null);
+
+  const commitLocalBest = (board: LocalBoard, session: LocalSession, entry: LocalBestEntry) => {
+    const key = localBestKey(board, CURRENT_GRAND_PRIX.circuitId, selectedOperation, session);
+    const { previous, isNew } = recordLocalBest(key, entry);
+    setLocalBestOutcome({ board, session, entry, previous, isNew });
   };
   const [pstCycleCount, setPstCycleCount] = useState(0);
   const [nameInput, setNameInput] = useState('');
@@ -468,7 +503,9 @@ export default function Game() {
 
   const leaderboardHref = isGrandPrix
     ? `/leaderboard?mode=grand-prix&circuit=${CURRENT_GRAND_PRIX.circuitId}&operation=${encodeURIComponent(selectedOperation)}`
-    : `/leaderboard?mode=free-practice&circuit=${CURRENT_GRAND_PRIX.circuitId}&operation=${encodeURIComponent(selectedOperation)}`;
+    : isQuickRace
+      ? `/leaderboard?mode=quick-race&circuit=${CURRENT_GRAND_PRIX.circuitId}`
+      : `/leaderboard?mode=free-practice&circuit=${CURRENT_GRAND_PRIX.circuitId}&operation=${encodeURIComponent(selectedOperation)}`;
 
   const raceLength = (() => {
     if (isQuickRace) return RACE_LENGTH;
@@ -987,6 +1024,7 @@ export default function Game() {
       setRaceMode('solo');
     }
     setLeaderboardNotice(null);
+    setLocalBestOutcome(null);
     setGameStatus('countdown');
   };
 
@@ -1255,16 +1293,30 @@ export default function Game() {
 
       if (newProgress >= raceLength) {
         if (isPreSeasonTesting) {
-          // Free Practice session done. Only full 100-lap sessions post to the
+          // Free Practice session done. Every finished session saves a local
+          // personal best; only full 100-lap sessions post to the global
           // leaderboard — shorter sprints skew the rate-based score.
-          if (raceLength >= 100) {
-            const achievedDiff =
-              difficultyMode === 'locked'
-                ? lockedDifficulty
-                : (dynamicDifficultyRef.current?.currentDifficulty || currentDifficultyRef.current || 'beginner');
-            const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
-            const score = calculatePSTScore(elapsedTime, mistakes, achievedDiff, raceLength);
+          const achievedDiff =
+            difficultyMode === 'locked'
+              ? lockedDifficulty
+              : (dynamicDifficultyRef.current?.currentDifficulty || currentDifficultyRef.current || 'beginner');
+          const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
+          const score = calculatePSTScore(elapsedTime, mistakes, achievedDiff, raceLength);
 
+          const fpSession = fpSessionForLaps(raceLength);
+          if (fpSession) {
+            commitLocalBest('fp', fpSession, {
+              score,
+              totalTime: elapsedTime,
+              mistakes,
+              accuracy,
+              difficultyAchieved: achievedDiff,
+              laps: raceLength,
+              at: Date.now(),
+            });
+          }
+
+          if (raceLength >= 100) {
             const submission = {
               playerId: state.playerId,
               circuitId: CURRENT_GRAND_PRIX.circuitId,
@@ -1295,6 +1347,32 @@ export default function Game() {
           const achievedDifficulty = dynamicDifficultyRef.current?.currentDifficulty || selectedDriver!.difficulty;
           setGrandPrixLockedDifficulty(achievedDifficulty);
           setGrandPrixPracticeCompleted(true);
+          {
+            const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
+            commitLocalBest('gp', 'practice', {
+              score: calculatePSTScore(elapsedTime, mistakes, achievedDifficulty, raceLength),
+              totalTime: elapsedTime,
+              mistakes,
+              accuracy,
+              difficultyAchieved: achievedDifficulty,
+              laps: raceLength,
+              at: Date.now(),
+            });
+          }
+          finishRace(mistakes);
+        } else if (isGrandPrix && grandPrixPhase === 'rw_qualifying') {
+          // Grand Prix qualifying: local best only (pole is decided in finishRace)
+          const qualiDifficulty = grandPrixLockedDifficulty || 'beginner';
+          const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
+          commitLocalBest('gp', 'qualifying', {
+            score: calculatePSTScore(elapsedTime, mistakes, qualiDifficulty, raceLength),
+            totalTime: elapsedTime,
+            mistakes,
+            accuracy,
+            difficultyAchieved: qualiDifficulty,
+            laps: raceLength,
+            at: Date.now(),
+          });
           finishRace(mistakes);
         } else if (isGrandPrix && grandPrixPhase === 'rw_race') {
           // Grand Prix race: submit to GP leaderboard and finish
@@ -1312,6 +1390,17 @@ export default function Game() {
             score: calculateGPScore(elapsedTime, mistakes, grandPrixLockedDifficulty || 'beginner', raceLength, grandPrixPolePosition),
           };
 
+          commitLocalBest('gp', 'race', {
+            score: gpSubmission.score,
+            totalTime: elapsedTime,
+            mistakes,
+            accuracy,
+            difficultyAchieved: grandPrixLockedDifficulty || 'beginner',
+            laps: raceLength,
+            polePosition: grandPrixPolePosition,
+            at: Date.now(),
+          });
+
           if (!state.playerName?.trim()) {
             setPendingGPSubmission(gpSubmission);
             setShowNamePrompt(true);
@@ -1324,6 +1413,43 @@ export default function Game() {
           }
 
           setTimeout(() => finishRace(mistakes), 600);
+        } else if (isQuickRace) {
+          // Quick Race: every finish posts to the Quick Race board (always Addition,
+          // one row per player per circuit). Beating the bot is a badge, not a bonus.
+          const qrDifficulty = dynamicDifficultyRef.current?.currentDifficulty || currentDifficultyRef.current || 'beginner';
+          const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
+          const beatBot = botProgress < raceLength;
+          const qrSubmission = {
+            playerId: state.playerId,
+            circuitId: CURRENT_GRAND_PRIX.circuitId,
+            circuitName: CURRENT_GRAND_PRIX.circuitName,
+            operation: selectedOperation,
+            score: calculatePSTScore(elapsedTime, mistakes, qrDifficulty, raceLength),
+            totalTime: elapsedTime,
+            mistakes,
+            accuracy,
+            difficultyAchieved: qrDifficulty,
+            beatBot,
+          };
+          commitLocalBest('qr', 'race', {
+            score: qrSubmission.score,
+            totalTime: elapsedTime,
+            mistakes,
+            accuracy,
+            difficultyAchieved: qrDifficulty,
+            laps: raceLength,
+            beatBot,
+            at: Date.now(),
+          });
+          if (!state.playerName?.trim()) {
+            setPendingQuickRaceSubmission(qrSubmission);
+            setShowNamePrompt(true);
+            setNameInput('');
+          } else {
+            submitQuickRaceEntry({ ...qrSubmission, playerName: state.playerName.trim() })
+              .then(handleWriteResult).catch(handleWriteError);
+          }
+          finishRace(mistakes);
         } else {
           finishRace(mistakes);
         }
@@ -1600,6 +1726,7 @@ export default function Game() {
     setPendingScoreSubmission(null);
     setNameInput('');
     setLeaderboardNotice(null);
+    setLocalBestOutcome(null);
 
     if (isQuickRace) {
       // Same fixed defaults, skip setup — straight back to lights.
@@ -1680,6 +1807,7 @@ export default function Game() {
     setAeroUsedZones(new Set());
     setShowAeroMessage(null);
     setShowAnalytics(false);
+    setLocalBestOutcome(null);
     setGameStatus('selecting');
   };
 
@@ -1982,7 +2110,7 @@ export default function Game() {
 
     const helpText = isGrandPrix
       ? `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`
-      : 'Choose 25, 50 or 100 laps with Adaptive difficulty (or locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Only full 100-lap sessions post to the Leaderboard.';
+      : 'Choose 25, 50 or 100 laps with Adaptive difficulty (or locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Every finished session saves a personal best on this device; only full 100-lap sessions post to the global Leaderboard.';
 
     const setupDetailMap =
       CURRENT_GRAND_PRIX.circuitId === 'madrid'
@@ -2088,7 +2216,7 @@ export default function Game() {
             soundEnabled={state.soundEnabled}
           />
 
-          {isGrandPrix && (
+          {(isGrandPrix || isPreSeasonTesting) && (
             <Link href={leaderboardHref}>
               <button
                 className="mt-4 flex items-center gap-2 transition-colors text-xs uppercase tracking-wider text-white/45 hover:text-white"
@@ -2306,6 +2434,33 @@ export default function Game() {
     );
   }
 
+  // Local leaderboard tier rows shared by the Free Practice and Grand Prix finish screens.
+  const localBestNote = localBestOutcome ? localTierNote(localBestOutcome.board, localBestOutcome.session) : null;
+  const localBestFlash = localBestOutcome?.isNew ? (
+    <div className="text-sm font-bold text-green-500 animate-pulse" data-testid="local-best-flash">
+      🏆 NEW PERSONAL BEST!
+    </div>
+  ) : null;
+  const localBestRows = localBestOutcome ? (
+    <>
+      <div className="flex justify-between items-center">
+        <span className="text-muted-foreground">Score</span>
+        <span className="font-bold" style={{ fontFamily: 'Oxanium, sans-serif' }} data-testid="local-best-score">
+          {localBestOutcome.entry.score.toLocaleString()} pts
+        </span>
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="text-muted-foreground">Personal Best · {sessionLabel(localBestOutcome.board, localBestOutcome.session)}</span>
+        <span className={cn("font-bold", localBestOutcome.isNew && "text-green-500")} style={{ fontFamily: 'Oxanium, sans-serif' }} data-testid="local-best-pb">
+          {(localBestOutcome.isNew ? localBestOutcome.entry : localBestOutcome.previous!).score.toLocaleString()} pts
+        </span>
+      </div>
+    </>
+  ) : null;
+  const localBestNoteEl = localBestNote ? (
+    <p className="text-xs text-white/50 text-center" data-testid="local-best-note">{localBestNote}</p>
+  ) : null;
+
   // Pre-Season Testing Finish Screen
   if (gameStatus === 'finished' && isPreSeasonTesting) {
     const achievedLabel = DRIVERS.find(d => d.difficulty === (dynamicDifficultyRef.current?.currentDifficulty || dynamicDifficultyDisplay))?.label || 'Karting';
@@ -2316,6 +2471,7 @@ export default function Game() {
             <div className="space-y-2">
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Pre-Season Testing</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Testing Complete</div>
+              {localBestFlash}
             </div>
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -2334,6 +2490,7 @@ export default function Game() {
                 <span className="text-muted-foreground">Mistakes</span>
                 <span className={cn("font-bold", finalMistakes === 0 ? "text-green-600" : "text-red-600")}>{finalMistakes}</span>
               </div>
+              {localBestRows}
               {pstCycleCount > 0 && (
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Cycles Completed</span>
@@ -2350,6 +2507,7 @@ export default function Game() {
               {leaderboardNotice && (
                 <p className="text-xs text-white/50 text-center">{leaderboardNotice}</p>
               )}
+              {localBestNoteEl}
               <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken">
                 <Home className="w-4 h-4" /> Back to Paddock
               </button>
@@ -2371,20 +2529,7 @@ export default function Game() {
                   if (e.key === 'Enter' && nameInput.trim()) {
                     const trimmed = nameInput.trim();
                     setPlayerName(trimmed);
-                    if (pendingScoreSubmission) {
-                      submitFpLeaderboardEntry({
-                        ...pendingScoreSubmission,
-                        playerName: trimmed,
-                      }).then(handleWriteResult).catch(handleWriteError);
-                    }
-                    if (pendingGPSubmission) {
-                      submitGpWeekendEntry({
-                        ...pendingGPSubmission,
-                        playerName: trimmed,
-                      }).then(handleWriteResult).catch(handleWriteError);
-                    }
-                    setPendingScoreSubmission(null);
-                    setPendingGPSubmission(null);
+                    flushPendingSubmissions(trimmed);
                     setShowNamePrompt(false);
                   }
                 }}
@@ -2399,6 +2544,7 @@ export default function Game() {
                   onClick={() => {
                     setPendingScoreSubmission(null);
                     setPendingGPSubmission(null);
+                    setPendingQuickRaceSubmission(null);
                     setShowNamePrompt(false);
                   }}
                   className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 bg-white/5 hover:bg-white/10 transition-colors"
@@ -2410,20 +2556,7 @@ export default function Game() {
                     if (nameInput.trim()) {
                       const trimmed = nameInput.trim();
                       setPlayerName(trimmed);
-                      if (pendingScoreSubmission) {
-                        submitFpLeaderboardEntry({
-                          ...pendingScoreSubmission,
-                          playerName: trimmed,
-                        }).then(handleWriteResult).catch(handleWriteError);
-                      }
-                      if (pendingGPSubmission) {
-                        submitGpWeekendEntry({
-                          ...pendingGPSubmission,
-                          playerName: trimmed,
-                        }).then(handleWriteResult).catch(handleWriteError);
-                      }
-                      setPendingScoreSubmission(null);
-                      setPendingGPSubmission(null);
+                      flushPendingSubmissions(trimmed);
                       setShowNamePrompt(false);
                     }
                   }}
@@ -2451,6 +2584,7 @@ export default function Game() {
             <div className="space-y-2">
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Grand Prix</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Practice Complete</div>
+              {localBestFlash}
             </div>
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -2465,8 +2599,10 @@ export default function Game() {
                 <span className="text-muted-foreground">Mistakes</span>
                 <span className={cn("font-bold", finalMistakes === 0 ? "text-green-600" : "text-red-600")}>{finalMistakes}</span>
               </div>
+              {localBestRows}
             </div>
             <div className="grid gap-3">
+              {localBestNoteEl}
               <button
                 onClick={() => {
                   restartToSelectingScreen();
@@ -2513,6 +2649,7 @@ export default function Game() {
               <div className="text-xl font-medium" style={{ fontFamily: 'Oxanium, sans-serif' }}>
                 {gotPole ? 'POLE POSITION' : 'Front Row'}
               </div>
+              {localBestFlash}
             </div>
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -2523,8 +2660,10 @@ export default function Game() {
                 <span className="text-muted-foreground">Mistakes</span>
                 <span className={cn("font-bold", finalMistakes === 0 ? "text-green-600" : "text-red-600")}>{finalMistakes}</span>
               </div>
+              {localBestRows}
             </div>
             <div className="grid gap-3">
+              {localBestNoteEl}
               <button
                 onClick={() => {
                   restartToSelectingScreen();
@@ -2574,11 +2713,12 @@ export default function Game() {
                <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Race Result</div>
                <div className="text-8xl font-bold tracking-tighter">P{position}</div>
                <div className="text-xl font-medium">{isWinner ? "World Champion" : "Finish Position"}</div>
-               {isNewBest && !isPracticeMode && (
+               {isNewBest && !isPracticeMode && !isGrandPrix && !isQuickRace && (
                  <div className="text-sm font-bold text-green-500 animate-pulse">
                    🏆 NEW PERSONAL BEST!
                  </div>
                )}
+               {(isGrandPrix || isQuickRace) && localBestFlash}
             </div>
 
             <div className="py-6 space-y-4">
@@ -2590,7 +2730,7 @@ export default function Game() {
                 <span className="text-muted-foreground">Total Time</span>
                 <span className="font-bold font-mono">{formatTime(elapsedTime)}</span>
               </div>
-              {previousBest && !isNewBest && (
+              {previousBest && !isNewBest && !isGrandPrix && !isQuickRace && (
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Personal Best</span>
                   <span className="font-bold font-mono text-green-500">{formatTime(previousBest)}</span>
@@ -2604,10 +2744,11 @@ export default function Game() {
                 <span className="text-muted-foreground">Accuracy</span>
                 <span className="font-bold">{Math.max(0, Math.round(((raceLength - finalMistakes) / raceLength) * 100))}%</span>
               </div>
+              {(isGrandPrix || isQuickRace) && localBestRows}
             </div>
 
             <div className="grid gap-3">
-              {isGrandPrix && (
+              {(isGrandPrix || isQuickRace) && (
                 <>
                   <Link href={leaderboardHref}>
                     <button className="w-full bg-yellow-400 text-black h-12 rounded-lg font-bold hover:bg-yellow-300 transition-all flex items-center justify-center gap-2 uppercase tracking-wider" style={{ fontFamily: 'Oxanium, sans-serif' }}>
@@ -2766,7 +2907,7 @@ export default function Game() {
             <div className="bg-[#111] rounded-2xl p-6 w-full max-w-sm mx-4 space-y-4">
               <div className="text-center space-y-1">
                 <h2 className="text-xl font-bold text-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>Enter Your Name</h2>
-                <p className="text-sm text-white/50">This will appear on the Grand Prix leaderboard</p>
+                <p className="text-sm text-white/50">This will appear on the {isQuickRace ? 'Quick Race' : 'Grand Prix'} leaderboard</p>
               </div>
               <input
                 type="text"
@@ -2776,13 +2917,7 @@ export default function Game() {
                   if (e.key === 'Enter' && nameInput.trim()) {
                     const trimmed = nameInput.trim();
                     setPlayerName(trimmed);
-                    if (pendingGPSubmission) {
-                      submitGpWeekendEntry({
-                        ...pendingGPSubmission,
-                        playerName: trimmed,
-                      }).then(handleWriteResult).catch(handleWriteError);
-                    }
-                    setPendingGPSubmission(null);
+                    flushPendingSubmissions(trimmed);
                     setShowNamePrompt(false);
                   }
                 }}
@@ -2796,6 +2931,7 @@ export default function Game() {
                 <button
                   onClick={() => {
                     setPendingGPSubmission(null);
+                    setPendingQuickRaceSubmission(null);
                     setShowNamePrompt(false);
                   }}
                   className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 bg-white/5 hover:bg-white/10 transition-colors"
@@ -2807,13 +2943,7 @@ export default function Game() {
                     if (nameInput.trim()) {
                       const trimmed = nameInput.trim();
                       setPlayerName(trimmed);
-                      if (pendingGPSubmission) {
-                        submitGpWeekendEntry({
-                          ...pendingGPSubmission,
-                          playerName: trimmed,
-                        }).then(handleWriteResult).catch(handleWriteError);
-                      }
-                      setPendingGPSubmission(null);
+                      flushPendingSubmissions(trimmed);
                       setShowNamePrompt(false);
                     }
                   }}
@@ -3575,20 +3705,7 @@ export default function Game() {
                 if (e.key === 'Enter' && nameInput.trim()) {
                   const trimmed = nameInput.trim();
                   setPlayerName(trimmed);
-                  if (pendingScoreSubmission) {
-                    submitFpLeaderboardEntry({
-                      ...pendingScoreSubmission,
-                      playerName: trimmed,
-                    }).then(handleWriteResult).catch(handleWriteError);
-                  }
-                  if (pendingGPSubmission) {
-                    submitGpWeekendEntry({
-                      ...pendingGPSubmission,
-                      playerName: trimmed,
-                    }).then(handleWriteResult).catch(handleWriteError);
-                  }
-                  setPendingScoreSubmission(null);
-                  setPendingGPSubmission(null);
+                  flushPendingSubmissions(trimmed);
                   setShowNamePrompt(false);
                 }
               }}
@@ -3603,6 +3720,7 @@ export default function Game() {
                 onClick={() => {
                   setPendingScoreSubmission(null);
                   setPendingGPSubmission(null);
+                  setPendingQuickRaceSubmission(null);
                   setShowNamePrompt(false);
                 }}
                 className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 bg-white/5 hover:bg-white/10 transition-colors"
@@ -3614,20 +3732,7 @@ export default function Game() {
                   if (nameInput.trim()) {
                     const trimmed = nameInput.trim();
                     setPlayerName(trimmed);
-                    if (pendingScoreSubmission) {
-                      submitFpLeaderboardEntry({
-                        ...pendingScoreSubmission,
-                        playerName: trimmed,
-                      }).then(handleWriteResult).catch(handleWriteError);
-                    }
-                    if (pendingGPSubmission) {
-                      submitGpWeekendEntry({
-                        ...pendingGPSubmission,
-                        playerName: trimmed,
-                      }).then(handleWriteResult).catch(handleWriteError);
-                    }
-                    setPendingScoreSubmission(null);
-                    setPendingGPSubmission(null);
+                    flushPendingSubmissions(trimmed);
                     setShowNamePrompt(false);
                   }
                 }}

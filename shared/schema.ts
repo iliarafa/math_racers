@@ -212,3 +212,24 @@ export const insertGpWeekendLeaderboardSchema = createInsertSchema(gpWeekendLead
 
 export type InsertGpWeekendLeaderboardEntry = z.infer<typeof insertGpWeekendLeaderboardSchema>;
 export type GpWeekendLeaderboardEntry = typeof gpWeekendLeaderboard.$inferSelect;
+
+/** Quick Race board: always Addition, one row per player per circuit. */
+export const quickRaceLeaderboard = pgTable("quick_race_leaderboard", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  playerId: varchar("player_id").notNull(),
+  playerName: text("player_name").notNull(),
+  circuitId: varchar("circuit_id", { length: 20 }).notNull(),
+  circuitName: varchar("circuit_name", { length: 50 }).notNull(),
+  operation: varchar("operation", { length: 20 }).notNull(),
+  score: integer("score").notNull(),
+  totalTime: integer("total_time").notNull(),
+  mistakes: integer("mistakes").notNull(),
+  accuracy: integer("accuracy").notNull(),
+  difficultyAchieved: varchar("difficulty_achieved", { length: 20 }).notNull(),
+  beatBot: boolean("beat_bot").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("quick_race_player_circuit").on(table.playerId, table.circuitId),
+]);
+
+export type QuickRaceLeaderboardEntry = typeof quickRaceLeaderboard.$inferSelect;
