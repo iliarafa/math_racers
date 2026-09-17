@@ -1,23 +1,30 @@
-import circuitMadrid from "@/assets/circuit_madrid.png";
-import flagSpain from "@/assets/flag_spain.png";
+import circuitBaku from "@/assets/circuit_baku.png";
+import bakuSetupTrack from "@/assets/baku_setup_track.png";
+import flagAzerbaijan from "@/assets/flag_azerbaijan.png";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
 // Also add the new track/flag asset imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 export const CURRENT_GRAND_PRIX = {
-  round: 14,
-  circuitId: 'madrid',
-  name: 'MADRID',
+  round: 15,
+  circuitId: 'baku',
+  name: 'BAKU',
   /** Proper circuit name (e.g. 'Hungaroring', 'Spa-Francorchamps') — shown on the GP card. */
-  circuitName: 'Madring',
-  country: 'SPAIN',
-  trackImage: circuitMadrid,
-  flagImage: flagSpain,
-  rainProbability: 0.10,
-  simLapCount: 57,
-  gradient: 'linear-gradient(90deg, #AA151B 0%, #F1BF00 50%, #AA151B 100%)',
-  welcomeBlurb: 'This week we head to Madrid — a brand-new street circuit around the IFEMA exhibition centre — for the Spanish Grand Prix.',
+  circuitName: 'Baku City Circuit',
+  country: 'AZERBAIJAN',
+  trackImage: circuitBaku,
+  /**
+   * Optional full-colour setup-card map (sector ribbon, start line, no corner labels).
+   * Rendered WITHOUT invert on the Free Practice / Grand Prix setup card. When omitted the
+   * card falls back to the briefing's `detailMapImage`, then to the dark silhouette.
+   */
+  setupTrackImage: bakuSetupTrack as string | undefined,
+  flagImage: flagAzerbaijan,
+  rainProbability: 0.15,
+  simLapCount: 51,
+  gradient: 'linear-gradient(90deg, #00B9E4 0%, #EF3340 50%, #509E2F 100%)',
+  welcomeBlurb: 'This week we head to Baku — a street circuit that squeezes through the old castle walls before a two-kilometre blast along the Caspian seafront — for the Azerbaijan Grand Prix.',
   /**
    * Optional per-circuit override for the setup-card silhouette stage's HEIGHT classes
    * (replaces RaceSetupCard's `h-36 md:h-52` default; see setup_cards.md).

@@ -70,7 +70,6 @@ import circuitHungaryBlack from "@/assets/circuit_hungary_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { getGrandPrixHistory } from "@/lib/grandPrixHistory";
-import madridSetupTrack from "@/assets/madrid_setup_track.png";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import chooseTrackVideo from "@assets/choose_TRACK.mp4";
@@ -2112,10 +2111,10 @@ export default function Game() {
       ? `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`
       : 'Choose 25, 50 or 100 laps with Adaptive difficulty (or locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Every finished session saves a personal best on this device; only full 100-lap sessions post to the global Leaderboard.';
 
+    // Prefer the rotation's own stripped setup art; fall back to the briefing detail map.
     const setupDetailMap =
-      CURRENT_GRAND_PRIX.circuitId === 'madrid'
-        ? madridSetupTrack
-        : getGrandPrixHistory(CURRENT_GRAND_PRIX.circuitId)?.detailMapImage;
+      CURRENT_GRAND_PRIX.setupTrackImage ??
+      getGrandPrixHistory(CURRENT_GRAND_PRIX.circuitId)?.detailMapImage;
 
     const phaseTabs = isGrandPrix ? (
       <div className="flex items-center justify-center gap-4 pt-1" data-testid="gp-phase-tabs">

@@ -22,7 +22,8 @@
       "Skill(update-config)",
       "Skill(update-config:*)",
       "WebSearch",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "WebFetch(domain:en.wikipedia.org)"
     ]
   },
   "hooks": {

@@ -6,6 +6,7 @@ import hungaryDetail from "@/assets/hungary_detail_track.png";
 import zandvoortDetail from "@/assets/zandvoort_detail_track.png";
 import monzaDetail from "@/assets/monza_detail_track.png";
 import madridDetail from "@/assets/madrid_detail_track.png";
+import bakuDetail from "@/assets/baku_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -442,6 +443,64 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
     summary:
       'The Spanish Grand Prix has a new home in 2026: Circuito IFEMA Madrid, nicknamed the Madring. It is a brand-new hybrid street circuit around the IFEMA exhibition centre — 5.416 km, 22 corners, and the first world-championship race in Madrid since Jarama in 1981. The headline corner is La Monumental, a long banked right-hander built for tens of thousands of fans. Because this is the circuit’s first Formula 1 weekend, there is no race lap record yet and no previous-year results to show.',
     detailMapImage: madridDetail,
+  },
+  baku: {
+    officialName: 'FORMULA 1 AZERBAIJAN GRAND PRIX 2026',
+    firstHeld: 2017,
+    trackLength: '6.003 km',
+    laps: 51,
+    lapRecord: { driver: 'Charles Leclerc', time: '1:43.009', year: 2019 },
+    mostWins: { driver: 'Sergio Pérez', count: 2 },
+    summary:
+      'The Baku City Circuit runs right through the heart of Azerbaijan’s capital, mixing two completely different worlds into one lap. The middle sector threads uphill through the walls of the medieval Old City, where the track narrows to barely eight metres at Turn 8 — the tightest squeeze in Formula 1. Then it opens out onto a two-kilometre seafront straight along the Caspian Sea, where cars hit over 350 km/h and overtakes come thick and fast. The circuit first hosted a race in 2016 as the European Grand Prix and became the Azerbaijan Grand Prix in 2017, and it has produced chaos, safety cars and surprise winners almost every year since.',
+    detailMapImage: bakuDetail,
+    lastYear: {
+      season: 2025,
+      race: [
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:33:26.408' },
+        { name: 'George Russell', team: 'Mercedes', time: '+14.609' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+19.199' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+21.760' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+33.290' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+33.808' },
+        { name: 'Lando Norris', team: 'McLaren', time: '+34.227' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+36.310' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+36.774' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+38.982' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+1:07.606' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+1:08.262' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+1:12.870' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1:17.580' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+1:18.707' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '+1:20.237' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+1:36.392' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1 lap' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1 lap' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: 'DNF' },
+      ],
+      quali: [
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:41.117' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:41.595' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:41.707' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:41.717' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:42.070' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:42.143' },
+        { name: 'Lando Norris', team: 'McLaren', time: '1:42.239' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:42.372' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: 'No time' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: 'No time' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:41.857' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:42.183' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:42.277' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:43.061' },
+        { name: 'Oliver Bearman', team: 'Haas', time: 'No time' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:42.779' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:42.916' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:43.139' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:43.778' },
+        { name: 'Esteban Ocon', team: 'Haas', time: 'DSQ' },
+      ],
+    },
   },
 };
 
