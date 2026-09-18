@@ -1,17 +1,27 @@
 # Session Notes — 2026-09-18
 
-Handoff summary plus the standing context future sessions need. Everything below was checked against the code at commit `2aa006b` (working tree clean, pushed to `main`, installed on the iPhone 17 simulator), except where marked as an idea or open question.
+Handoff summary plus the standing context future sessions need. `main` is at `f213d48` (v1.3.15, Baku). The **v1.4 work lives on branch `feature/v1.4-rewards`** in the worktree `.claude/worktrees/v1.4-rewards` (not pushed); weekly `/weekend` rotations (1.3.16, 1.3.17) keep shipping from `main` until v1.4 ships with **Round 19 / Austin on 23 Oct 2026**. The plan is `~/.claude/plans/we-have-already-finished-buzzing-nebula.md`.
 
-## Open tasks (next session)
+## v1.4 branch — done so far (all committed, 96 tests, `tsc` clean)
 
-1. **Flashcards polish**: look for more polish in the flashcards mode.
-2. **Leaderboards scope (debate)**: consider limiting leaderboards to the RACE WEEKEND modes. Note that a Quick Race board now also exists (see Leaderboard below), which widens the scope rather than narrowing it.
-3. **Quick Race UI**: push the sector grid down closer to the numpad and make the operation a bit bigger. An earlier bigger-operation/smaller-grid attempt was reverted; the ask is to reposition the grid *down*, not shrink it.
-4. **Weekend rotation**: Baku (Round 15) is current. Run `/weekend` when the calendar moves on.
+1. **GameState clobber fix** (`fb4d562`): the saved blob is the source of truth; every mutator goes through `mutateGameState`; instances subscribe to saves. Before this, tapping mute after a race could erase the local bests the race had just saved.
+2. **Rewards**: trophies (`lib/trophies.ts`), daily streak (`lib/dailyStreak.ts`), fact mastery (`lib/factMastery.ts`), persisted in `GameState`; settled by one effect in `Game.tsx`; shown by `RewardStrip` on all finish screens, `TrophySplash` on Race Day, the `/trophies` page (`TrophyCabinet.tsx`), a streak chip and "N new" pill on the Hub, a Trophies tile on the Garage. Verified in the browser: Quick Race → First Win badge + Day 1 streak; full GP weekend with pole + win → gold `gp:2026:15:baku`.
+3. **Cleanup** (`f18ecfd`): DeployHarvest, TrackProgress, the legacy Express leaderboard routes/storage/tables, `update_gp.md` and the Madrid handoff are gone; CLAUDE.md corrected (no championship/Career mode exists).
+4. **Version single source** (`25f6c8b`): `npm run version:bump 1.4.0`; the Garage footer shows `__APP_VERSION__`.
 
-*(The former "Superlicence reward screen" idea is done: see `components/SuperlicenceSplash.tsx`.)*
+## Open tasks (v1.4 branch)
 
-## TL;DR
+1. **Quick Race HUD** (phone layout): push the sector grid down closer to the numpad and make the operation a bit bigger. An earlier bigger-operation/smaller-grid attempt was reverted; reposition the grid *down*, don't shrink it. Do it with the user, one screenshot at a time.
+2. **Desktop frame for menu pages**: Hub, Welcome, Garage, Leaderboard, RacerLog, Regulations, StrategyGuide, GrandPrixInfo, ReactionTest, TrophyCabinet still render the phone column stretched on desktop. Direction to agree with the user first.
+3. **Flashcards polish**: walk `/driving-school` together and list issues one screen at a time.
+4. **iOS smoke test** of the branch on the iPhone 17 simulator (Race Day → trophy splash, `/trophies`), then before release: rebase onto `main` after the Austin `/weekend` rotation, `npm run version:bump 1.4.0`, refresh these notes.
+5. **Leaderboards scope (debate)**: deferred; not in 1.4.
+6. **Weekend rotation** on `main`: Baku (Round 15) is current. Run `/weekend` when the calendar moves on.
+
+### Working in the worktree
+`preview_start` runs the **main checkout's** server even from the worktree; start the branch's server with a background `npm run dev` from the worktree and open the pane with `preview_start {url}`. Server/vite-config changes need a `pkill -f "tsx server/index.ts"` + restart.
+
+## TL;DR (main)
 
 The app is at **v1.3.15**, themed to **Round 15 / Azerbaijan (Baku City Circuit)**. The latest session (2026-09-17/18) rotated the app from Madrid to Baku. Baku is a new circuit, so it took the full new-circuit path, plus two small generalisations that make future rotations config-only:
 
