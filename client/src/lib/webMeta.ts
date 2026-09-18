@@ -36,6 +36,7 @@ const PAGES: Record<string, PageEntry> = {
   '/multiplayer': { page: 'Multiplayer' },
   '/regulations': { page: 'Regulations' },
   '/racer-log': { page: 'Racer Log' },
+  '/trophies': { page: 'Trophies' },
   '/leaderboard': { page: 'Leaderboard' },
   '/lane-racer': { page: 'Lane Racer' },
   '/dev/circuit-maps': { page: 'Circuit Maps' },

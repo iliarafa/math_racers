@@ -99,7 +99,7 @@ function playGradeSound(color: Exclude<CardColor, 'pending'>) {
 }
 
 export default function DrivingSchool() {
-  const { state } = useGameState();
+  const { state, touchDailyStreak } = useGameState();
   const [highestCleared, setHighestCleared] = useState(() => loadHighestClearedStage());
   const [screen, setScreen] = useState<Screen>('stages');
   // Desktop and laptop browsers render the flashcard beside a stats pane, with a key strip.
@@ -148,6 +148,7 @@ export default function DrivingSchool() {
     // End of pass — clear on a purple majority with no reds, else re-drill non-purple
     if (isStageCleared(nextDeck)) {
       setDeck(nextDeck);
+      touchDailyStreak(); // a cleared stage counts as today's session
       if (stage) {
         saveHighestClearedStage(stage.id);
         setHighestCleared(loadHighestClearedStage());

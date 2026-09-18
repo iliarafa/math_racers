@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useGameState } from "@/lib/gameLogic";
-import { TrendingUp, Volume2, VolumeX, Flag, Trophy, ClipboardList, RotateCcw, ChevronLeft } from "lucide-react";
+import { TrendingUp, Volume2, VolumeX, Flag, Trophy, ClipboardList, RotateCcw, ChevronLeft, Award } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { isNativePlatform } from "@/lib/purchases";
 import garageSound from "@/assets/garsound.m4a";
@@ -84,6 +84,20 @@ export default function Garage() {
                 )}
                 <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Sound</span>
               </div>
+              <Link href="/trophies">
+                <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass relative" data-testid="button-trophies">
+                  <Award className="w-10 h-10 text-[#ffcc00]" />
+                  <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Trophies</span>
+                  {state.unseenRewards.length > 0 && (
+                    <span
+                      className="absolute top-2 right-2 rounded-full bg-[#ffcc00] text-black text-[10px] font-bold px-1.5 py-0.5"
+                      data-testid="trophies-new-count"
+                    >
+                      {state.unseenRewards.length}
+                    </span>
+                  )}
+                </div>
+              </Link>
               <Link href="/racer-log">
                 <div className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass" data-testid="button-racer-log">
                   <ClipboardList className="w-10 h-10 text-white" />
@@ -108,15 +122,17 @@ export default function Garage() {
                   <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Strategy</span>
                 </div>
               </Link>
-              <div
-                onClick={handleRetireCar}
-                className="rounded-xl bg-white/10 backdrop-blur-sm p-4 flex flex-col items-center gap-3 cursor-pointer active:scale-[0.97] transition-all web-hover-glass"
-                data-testid="button-retire"
-              >
-                <RotateCcw className="w-10 h-10 text-white" />
-                <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Reset</span>
-              </div>
             </div>
+
+            {/* Reset lives under the grid as plain text so a stray tap on a tile can't wipe progress. */}
+            <button
+              type="button"
+              onClick={handleRetireCar}
+              className="self-center flex items-center gap-2 text-xs text-white/40 hover:text-white/60 transition-colors uppercase tracking-widest"
+              data-testid="button-retire"
+            >
+              <RotateCcw className="w-4 h-4" /> Reset all progress
+            </button>
 
             {isNativePlatform() && (
               <div className="flex flex-col items-center gap-3">

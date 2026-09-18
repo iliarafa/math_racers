@@ -31,6 +31,7 @@ import GrandPrixInfo from "@/pages/GrandPrixInfo";
 import Hub from "@/pages/Hub";
 import DevCircuitMaps from "@/pages/DevCircuitMaps";
 import DrivingSchool from "@/pages/DrivingSchool";
+import TrophyCabinet from "@/pages/TrophyCabinet";
 
 function Router() {
   return (
@@ -48,6 +49,7 @@ function Router() {
       <Route path="/multiplayer" component={Multiplayer} />
       <Route path="/regulations" component={Regulations} />
       <Route path="/racer-log" component={RacerLog} />
+      <Route path="/trophies" component={TrophyCabinet} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/lane-racer" component={LaneRacer} />
       {/* <Route path="/deploy-harvest" component={DeployHarvest} /> archived — re-enable later */}
@@ -56,7 +58,7 @@ function Router() {
   );
 }
 
-const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/leaderboard', '/lane-racer', '/multiplayer', '/grand-prix', '/driving-school', '/reaction'];
+const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/trophies', '/leaderboard', '/lane-racer', '/multiplayer', '/grand-prix', '/driving-school', '/reaction'];
 const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
 
 function PersistentVideo() {

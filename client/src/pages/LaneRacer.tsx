@@ -104,7 +104,7 @@ function playBeep(freq: number, duration: number, volume = 0.15) {
 }
 
 export default function LaneRacer() {
-  const { state } = useGameState();
+  const { state, touchDailyStreak } = useGameState();
   const [, navigate] = useLocation();
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
   // Desktop and laptop browsers: steering key legend over the canvas.
@@ -485,6 +485,19 @@ export default function LaneRacer() {
     () => estimateRivalRaceTimeMs(raceLength, paceDifficulty, selectedOperation),
     [raceLength, paceDifficulty, selectedOperation],
   );
+
+  // A completed race counts toward the daily streak, win or not; once per finish.
+  const streakCountedRef = useRef(false);
+  useEffect(() => {
+    if (gameStatus !== 'finished') {
+      streakCountedRef.current = false;
+      return;
+    }
+    if (streakCountedRef.current) return;
+    streakCountedRef.current = true;
+    if (raceLength > 0 && questionNum >= raceLength) touchDailyStreak();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameStatus, raceLength, questionNum]);
 
   // Licence path: a completed full race finished ahead of the rival counts as the P1 win.
   const [licenceWin, setLicenceWin] = useState<null | 'new' | 'repeat'>(null);

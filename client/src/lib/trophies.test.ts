@@ -3,8 +3,10 @@ import { test } from 'node:test';
 import {
   BADGES,
   BADGE_EVERYTHING_IS_PURPLE,
+  SEASON_ROUNDS,
   evaluateMilestones,
   sanitizeTrophies,
+  seasonSlots,
   trophyId,
   upgradeTrophy,
   weekendTrophyTier,
@@ -74,8 +76,20 @@ test('badge registry has unique ids and includes the existing purple badge', () 
   assert.ok(ids.includes(BADGE_EVERYTHING_IS_PURPLE));
   assert.equal(BADGE_EVERYTHING_IS_PURPLE, 'everything-is-purple');
   for (const badge of BADGES) {
-    assert.ok(badge.label.length > 0 && badge.blurb.length > 0, `${badge.id} has copy`);
+    assert.ok(badge.label.length > 0 && badge.blurb.length > 0 && badge.glyph.length > 0, `${badge.id} has copy`);
   }
+});
+
+test('seasonSlots lists every round of the season with its trophy, if any', () => {
+  const baku = trophy();
+  const madrid = trophy({ id: trophyId(2026, 14, 'madrid'), round: 14, circuitId: 'madrid', name: 'MADRID', tier: 'gold' });
+  const lastYear = trophy({ id: trophyId(2025, 15, 'baku'), season: 2025 });
+  const slots = seasonSlots([baku, lastYear, madrid], 2026, SEASON_ROUNDS);
+  assert.equal(slots.length, SEASON_ROUNDS);
+  assert.deepEqual(slots[0], { round: 1, trophy: undefined });
+  assert.deepEqual(slots[13], { round: 14, trophy: madrid });
+  assert.deepEqual(slots[14], { round: 15, trophy: baku });
+  assert.ok(!slots.some((s) => s.trophy === lastYear), 'another season is not shown');
 });
 
 function ctx(extra: Partial<MilestoneContext> = {}): MilestoneContext {

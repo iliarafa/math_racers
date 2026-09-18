@@ -60,22 +60,41 @@ export function sanitizeTrophies(raw: unknown): Trophy[] {
   return raw.filter(isTrophy);
 }
 
+/** Rounds in a season; the cabinet shows one slot per round. */
+export const SEASON_ROUNDS = 24;
+
+export type SeasonSlot = { round: number; trophy: Trophy | undefined };
+
+/** One slot per round of `season`, in order, with the trophy raced there if any. */
+export function seasonSlots(trophies: readonly Trophy[], season: number, rounds: number = SEASON_ROUNDS): SeasonSlot[] {
+  return Array.from({ length: rounds }, (_, i) => {
+    const round = i + 1;
+    return { round, trophy: trophies.find((t) => t.season === season && t.round === round) };
+  });
+}
+
 // ── Badges ─────────────────────────────────────────────────────────
 
-export type Badge = { id: string; label: string; blurb: string };
+export type Badge = {
+  id: string;
+  label: string;
+  blurb: string;
+  /** Short mark shown on the badge tile. */
+  glyph: string;
+};
 
 /** Free Practice: complete a full circuit tour with every sector purple. */
 export const BADGE_EVERYTHING_IS_PURPLE = 'everything-is-purple';
 
 export const BADGES: readonly Badge[] = [
-  { id: BADGE_EVERYTHING_IS_PURPLE, label: 'Everything Is Purple', blurb: 'A full Free Practice circuit tour with every sector purple.' },
-  { id: 'first-win', label: 'First Win', blurb: 'Beat the bot for the first time.' },
-  { id: 'laps-100', label: '100 Laps', blurb: 'Answer 100 questions correctly.' },
-  { id: 'laps-1000', label: '1000 Laps', blurb: 'Answer 1000 questions correctly.' },
-  { id: 'gp-all-purple', label: 'Purple Race Day', blurb: 'Every sector purple on a Grand Prix Race Day.' },
-  { id: 'streak-7', label: '7-Day Streak', blurb: 'Race seven days in a row.' },
-  { id: 'streak-30', label: '30-Day Streak', blurb: 'Race thirty days in a row.' },
-  { id: 'facts-50', label: '50 Facts', blurb: 'Master fifty maths facts.' },
+  { id: BADGE_EVERYTHING_IS_PURPLE, label: 'Everything Is Purple', blurb: 'A full Free Practice circuit tour with every sector purple.', glyph: 'P' },
+  { id: 'first-win', label: 'First Win', blurb: 'Beat the bot for the first time.', glyph: 'P1' },
+  { id: 'laps-100', label: '100 Laps', blurb: 'Answer 100 questions correctly.', glyph: '100' },
+  { id: 'laps-1000', label: '1000 Laps', blurb: 'Answer 1000 questions correctly.', glyph: '1K' },
+  { id: 'gp-all-purple', label: 'Purple Race Day', blurb: 'Every sector purple on a Grand Prix Race Day.', glyph: 'GP' },
+  { id: 'streak-7', label: '7-Day Streak', blurb: 'Race seven days in a row.', glyph: '7' },
+  { id: 'streak-30', label: '30-Day Streak', blurb: 'Race thirty days in a row.', glyph: '30' },
+  { id: 'facts-50', label: '50 Facts', blurb: 'Master fifty maths facts.', glyph: '50' },
 ];
 
 export type MilestoneContext = {
