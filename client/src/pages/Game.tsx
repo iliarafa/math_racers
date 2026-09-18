@@ -30,6 +30,10 @@ import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, Chevr
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 import { grandPrixDevBypass, hasSuperlicence } from "@/lib/drivingSchoolLicence";
+import { factKey, pickCallout } from "@/lib/factMastery";
+import { BADGES, evaluateMilestones, trophyId, weekendTrophyTier } from "@/lib/trophies";
+import { RewardStrip, type RewardOutcome } from "@/components/RewardStrip";
+import { TrophySplash } from "@/components/TrophySplash";
 
 /** Temporary QA: force purple-lap lit (level → ALL PURPLE) as soon as Free Practice starts. */
 const FORCE_PURPLE_LAP_PREVIEW = false;
@@ -356,7 +360,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, updatePersonalBest, recordLocalBest, recordLapTime, setPlayerName } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, awardWeekendTrophy, touchDailyStreak, ingestFactResults, updatePersonalBest, recordLocalBest, recordLapTime, setPlayerName } = useGameState();
   const { isPremium, isLoading: isPurchaseLoading } = usePurchase();
   const [, setLocation] = useLocation();
   /** `/game/free-practice` | `/game/grand-prix` | `/game/quick-race` — replaces the old mode_select screen. */
@@ -531,6 +535,10 @@ export default function Game() {
     sectorColor: 'green' | 'purple' | 'yellow' | 'red';
     responseTime: number;
     wrongAttempts?: number[];
+    /** Mastery key (lib/factMastery.ts); the reward effect folds these in. */
+    fact?: string;
+    /** The extra sector an AERO/OVERTAKE gain adds; not a second answer. */
+    isBonus?: boolean;
   }>>([]);
   const [mistakes, setMistakes] = useState(0);
   const [inPurpleMode, setInPurpleMode] = useState(false);
@@ -643,6 +651,65 @@ export default function Game() {
       setOvertakeActive(false);
       setBotFrozen(false);
     }
+  }, [gameStatus]);
+
+  // Rewards settle once per finished session: daily streak, fact mastery, the
+  // weekend trophy on Race Day, then any milestone badges. Runs as an effect
+  // rather than inside finishRace so lapResults is complete, and re-arms the
+  // moment the screen leaves 'finished' (restart, or the next GP phase).
+  const rewardsSettledRef = useRef(false);
+  const [rewardOutcome, setRewardOutcome] = useState<RewardOutcome | null>(null);
+  const [showTrophySplash, setShowTrophySplash] = useState(false);
+  useEffect(() => {
+    if (gameStatus !== 'finished') {
+      rewardsSettledRef.current = false;
+      setRewardOutcome(null);
+      setShowTrophySplash(false);
+      return;
+    }
+    if (rewardsSettledRef.current) return;
+    rewardsSettledRef.current = true;
+
+    const streak = touchDailyStreak();
+    const mastery = ingestFactResults(lapResults);
+
+    const isRaceDay = isGrandPrix && grandPrixPhase === 'rw_race';
+    let trophy: RewardOutcome['trophy'] = null;
+    if (isRaceDay) {
+      const tier = weekendTrophyTier({ beatBot: raceMode === 'bot' && !botFinished, pole: grandPrixPolePosition });
+      const status = awardWeekendTrophy({
+        id: trophyId(CURRENT_GRAND_PRIX.season, CURRENT_GRAND_PRIX.round, CURRENT_GRAND_PRIX.circuitId),
+        season: CURRENT_GRAND_PRIX.season,
+        round: CURRENT_GRAND_PRIX.round,
+        circuitId: CURRENT_GRAND_PRIX.circuitId,
+        name: CURRENT_GRAND_PRIX.name,
+        tier,
+        operation: selectedOperation,
+        at: Date.now(),
+      });
+      trophy = { status, tier, name: CURRENT_GRAND_PRIX.name };
+      if (status !== 'unchanged') setShowTrophySplash(true);
+    }
+
+    // totalLaps and racesWon were bumped by finishRace before this render.
+    const newBadges = evaluateMilestones({
+      totalLaps: state.totalLaps,
+      racesWon: state.racesWon,
+      dailyStreak: streak.streak.count,
+      factsMastered: mastery.factsMastered,
+      allPurpleRaceDay: isRaceDay && lapResults.length > 0 && lapResults.every((r) => r.sectorColor === 'purple'),
+    }, state.earnedBadges).filter((id) => earnBadge(id));
+    for (const id of newBadges) {
+      toast({ title: 'Badge unlocked', description: BADGES.find((b) => b.id === id)?.label ?? id });
+    }
+
+    setRewardOutcome({
+      trophy,
+      badges: newBadges,
+      streak: { change: streak.change, count: streak.streak.count },
+      callout: pickCallout(mastery),
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameStatus]);
 
   // Sync raceMode with selectedTab - race mode always uses bot, practice uses solo
@@ -1207,6 +1274,7 @@ export default function Game() {
         correctAnswer: question.answer,
         sectorColor,
         responseTime,
+        fact: factKey(question),
         ...(wrongAttemptsRef.current.length > 0 && { wrongAttempts: [...wrongAttemptsRef.current] }),
       };
       wrongAttemptsRef.current = [];
@@ -1252,6 +1320,7 @@ export default function Game() {
         setLapResults(prev => [...prev, mainEntry, {
           ...mainEntry,
           sectorColor: bonusSectorColor!,
+          isBonus: true,
         }]);
       } else {
         setLapResults(prev => [...prev, mainEntry]);
@@ -2459,6 +2528,8 @@ export default function Game() {
   const localBestNoteEl = localBestNote ? (
     <p className="text-xs text-white/50 text-center" data-testid="local-best-note">{localBestNote}</p>
   ) : null;
+  // What this session earned (trophy, badges, streak, mastery); shared by every finish screen.
+  const rewardStrip = rewardOutcome ? <RewardStrip outcome={rewardOutcome} /> : null;
 
   // Pre-Season Testing Finish Screen
   if (gameStatus === 'finished' && isPreSeasonTesting) {
@@ -2471,6 +2542,7 @@ export default function Game() {
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Pre-Season Testing</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Testing Complete</div>
               {localBestFlash}
+              {rewardStrip}
             </div>
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -2584,6 +2656,7 @@ export default function Game() {
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Grand Prix</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Practice Complete</div>
               {localBestFlash}
+              {rewardStrip}
             </div>
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -2649,6 +2722,7 @@ export default function Game() {
                 {gotPole ? 'POLE POSITION' : 'Front Row'}
               </div>
               {localBestFlash}
+              {rewardStrip}
             </div>
             <div className="py-6 space-y-4">
               <div className="flex justify-between items-center">
@@ -2705,6 +2779,15 @@ export default function Game() {
 
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
+        {showTrophySplash && rewardOutcome?.trophy && rewardOutcome.trophy.status !== 'unchanged' && (
+          <TrophySplash
+            tier={rewardOutcome.trophy.tier}
+            status={rewardOutcome.trophy.status}
+            name={rewardOutcome.trophy.name}
+            round={CURRENT_GRAND_PRIX.round}
+            onClose={() => setShowTrophySplash(false)}
+          />
+        )}
         <div className="flex-1 flex flex-col items-center justify-start max-w-xl mx-auto w-full overflow-y-auto p-4">
           <div className="rounded-xl p-6 w-full text-center space-y-6">
 
@@ -2718,6 +2801,7 @@ export default function Game() {
                  </div>
                )}
                {(isGrandPrix || isQuickRace) && localBestFlash}
+               {rewardStrip}
             </div>
 
             <div className="py-6 space-y-4">
