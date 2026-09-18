@@ -21,7 +21,11 @@ npm run start            # Run production server
 
 # Database
 npm run db:push          # Sync Drizzle ORM schema to PostgreSQL
+
+# Release
+npm run version:bump 1.4.0   # package.json + lockfile, capacitor.config.ts, both Xcode MARKETING_VERSIONs (build number +1)
 ```
+The client shows `__APP_VERSION__` (from package.json via Vite `define`) in the Garage footer.
 
 ## Dev Workflow
 

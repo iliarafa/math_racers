@@ -153,6 +153,10 @@ export default function Garage() {
               </div>
             )}
 
+            <p className="text-center text-[10px] uppercase tracking-widest text-white/25" data-testid="app-version">
+              Math Racer v{__APP_VERSION__}
+            </p>
+
           </div>
 
         </div>

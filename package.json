@@ -10,7 +10,8 @@
     "build": "tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
-    "test": "tsx --test client/src/lib/*.test.ts",
+    "test": "tsx --test client/src/lib/*.test.ts script/*.test.ts",
+    "version:bump": "tsx script/bumpVersion.ts",
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
