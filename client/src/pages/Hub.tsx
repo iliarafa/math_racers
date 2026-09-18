@@ -265,7 +265,7 @@ export default function Hub() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  color: '#1a1a1a',
+                  color: CURRENT_GRAND_PRIX.bannerTextColor,
                   boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
                   textDecoration: 'none',
                 }}
@@ -282,7 +282,15 @@ export default function Hub() {
                     boxShadow: '0 0 0 0.5px rgba(255,255,255,0.3)',
                   }}
                 />
-                <div style={{ flex: 1, lineHeight: 1.1, fontFamily: 'Oxanium, sans-serif' }}>
+                <div
+                  style={{
+                    flex: 1,
+                    lineHeight: 1.1,
+                    fontFamily: 'Oxanium, sans-serif',
+                    // White text needs a soft edge over light gradient stops (e.g. Baku's light blue).
+                    textShadow: CURRENT_GRAND_PRIX.bannerTextColor === '#1a1a1a' ? undefined : '0 1px 2px rgba(0,0,0,0.35)',
+                  }}
+                >
                   <div style={{ fontSize: '9px', letterSpacing: '0.3em', fontWeight: 800, opacity: 0.85 }}>
                     WEEKEND BRIEFING
                   </div>

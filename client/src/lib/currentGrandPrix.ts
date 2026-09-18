@@ -24,6 +24,12 @@ export const CURRENT_GRAND_PRIX = {
   rainProbability: 0.15,
   simLapCount: 51,
   gradient: 'linear-gradient(90deg, #00B9E4 0%, #EF3340 50%, #509E2F 100%)',
+  /**
+   * Text colour on the paddock's Weekend Briefing banner, which sits on `gradient`.
+   * Pick whatever reads on this round's gradient: dark `#1a1a1a` for light or yellow
+   * gradients (Madrid), white `#ffffff` for saturated ones (Baku).
+   */
+  bannerTextColor: '#ffffff' as string,
   welcomeBlurb: 'This week we head to Baku — a street circuit that squeezes through the old castle walls before a two-kilometre blast along the Caspian seafront — for the Azerbaijan Grand Prix.',
   /**
    * Optional per-circuit override for the setup-card silhouette stage's HEIGHT classes

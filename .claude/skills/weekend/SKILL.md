@@ -43,6 +43,7 @@ The single config everything reads (Game.tsx builds FLAG/TRACK/MAP/RAIN lookups 
 - `rainProbability` (circuit-realistic, e.g. Silverstone 0.45, Austria 0.35)
 - `simLapCount` (real race lap count)
 - `gradient` — CSS linear-gradient in the national flag's colors
+- `bannerTextColor` — text colour on the paddock Weekend Briefing banner, which sits on `gradient`: `'#1a1a1a'` for light/yellow gradients, `'#ffffff'` for saturated ones (white gets a soft shadow automatically)
 - `welcomeBlurb` — one kid-friendly sentence ("This week we head to …")
 
 ## Step 3 — New circuit ONLY
