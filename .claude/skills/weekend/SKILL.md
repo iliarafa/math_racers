@@ -37,7 +37,7 @@ Getting dark-vs-colored backwards is the classic mistake: `trackImage` (Step 2) 
 
 The single config everything reads (Game.tsx builds FLAG/TRACK/MAP/RAIN lookups from `circuitId`). Update the asset imports and every `CURRENT_GRAND_PRIX` field:
 
-- `round`, `circuitId`, `name` (UPPERCASE circuit), `country` (UPPERCASE)
+- `season` (calendar year — weekend trophies are keyed by season and round), `round`, `circuitId`, `name` (UPPERCASE circuit), `country` (UPPERCASE)
 - `circuitName` — the proper venue name, shown on the GP card and in Regulations Art. 7, where it is used as "at the `circuitName`" ("at the Hungaroring", "at the Madring"). Pick a form that reads naturally after "the" — e.g. `'Circuit de Monaco'`, `'Silverstone Circuit'`, `'Autodromo Nazionale Monza'` — not a bare town name.
 - `trackImage` (dark silhouette import), `flagImage`
 - `rainProbability` (circuit-realistic, e.g. Silverstone 0.45, Austria 0.35)

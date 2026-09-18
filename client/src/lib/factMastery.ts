@@ -137,16 +137,16 @@ export function ingestSession(stats: FactStats, rows: readonly FactRow[], now: n
   }
 
   const improved: Improvement[] = [];
-  for (const [fact, times] of cleanTimes) {
+  cleanTimes.forEach((times, fact) => {
     const prior = stats[fact];
-    if (!prior || prior.seen < 2 || prior.ewmaMs <= 0) continue;
+    if (!prior || prior.seen < 2 || prior.ewmaMs <= 0) return;
     const mean = times.reduce((sum, t) => sum + t, 0) / times.length;
     if (mean < prior.ewmaMs * IMPROVEMENT_RATIO) {
       improved.push({ fact, beforeMs: prior.ewmaMs, afterMs: Math.round(mean) });
     }
-  }
+  });
 
-  const newlyMastered = [...cleanTimes.keys()].filter((fact) => !isMastered(fact, stats[fact]) && isMastered(fact, next[fact]));
+  const newlyMastered = Array.from(cleanTimes.keys()).filter((fact) => !isMastered(fact, stats[fact]) && isMastered(fact, next[fact]));
 
   const keys = Object.keys(next);
   if (keys.length > FACT_STATS_CAP) {

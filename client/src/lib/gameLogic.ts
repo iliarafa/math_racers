@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { Difficulty, Question } from '@shared/mathEngine';
 import { compareLocalBest, sanitizeLocalBests, type LocalBestEntry, type LocalBests } from './localBests';
+import { sanitizeTrophies, upgradeTrophy, type Trophy, type TrophyUpgrade } from './trophies';
+import { EMPTY_STREAK, advanceDailyStreak, localDayString, sanitizeDailyStreak, type DailyStreak, type StreakChange } from './dailyStreak';
+import { countMastered, ingestSession, sanitizeFactStats, type FactRow, type FactStats, type IngestOutcome } from './factMastery';
 
 export type { Difficulty, Question, DynamicDifficultyState } from '@shared/mathEngine';
 export {
@@ -49,6 +52,7 @@ export interface GameState {
   unlockedItems: string[];
   equippedLivery: string;
   equippedTires: string;
+  /** Correct answers in a row inside the current race; see `dailyStreak` for days. */
   streak: number;
   totalLaps: number;
   careerPoints: number;
@@ -65,6 +69,14 @@ export interface GameState {
   playerId: string;
   /** Local leaderboard tier, keyed by localBestKey(). Higher score wins. */
   localBests: LocalBests;
+  /** Trophy cabinet: one per Grand Prix weekend raced (lib/trophies.ts). */
+  trophies: Trophy[];
+  /** Consecutive days with a finished session (lib/dailyStreak.ts). */
+  dailyStreak: DailyStreak;
+  /** Per-fact response statistics (lib/factMastery.ts). */
+  factStats: FactStats;
+  /** Trophy and badge ids earned but not yet viewed on the trophies page. */
+  unseenRewards: string[];
 }
 
 export { BADGE_EVERYTHING_IS_PURPLE } from './trophies';
@@ -361,6 +373,10 @@ const INITIAL_STATE: GameState = {
   playerName: '',
   playerId: '',
   localBests: {},
+  trophies: [],
+  dailyStreak: EMPTY_STREAK,
+  factStats: {},
+  unseenRewards: [],
 };
 
 /** Maths type, persisted under its own key rather than in the GameState blob. */
@@ -438,6 +454,10 @@ function parseGameState(parsed: Record<string, any>): GameState {
     playerName: parsed.playerName ?? '',
     playerId: typeof parsed.playerId === 'string' ? parsed.playerId : '',
     localBests: sanitizeLocalBests(parsed.localBests),
+    trophies: sanitizeTrophies(parsed.trophies),
+    dailyStreak: sanitizeDailyStreak(parsed.dailyStreak),
+    factStats: sanitizeFactStats(parsed.factStats),
+    unseenRewards: Array.isArray(parsed.unseenRewards) ? parsed.unseenRewards.filter((id: unknown) => typeof id === 'string') : [],
   };
 }
 
@@ -501,6 +521,45 @@ export function resetGameState(): void {
   } catch (error) {
     console.error('Failed to reset data:', error);
   }
+}
+
+// ── Rewards: trophies, daily streak, mastery, badges ───────────────
+// Pure state transitions; the hook wraps each one in `mutate`.
+
+function addUnseen(list: string[], id: string): string[] {
+  return list.includes(id) ? list : [...list, id];
+}
+
+export function applyWeekendTrophy(state: GameState, incoming: Trophy): { state: GameState; status: TrophyUpgrade['status'] } {
+  const existing = state.trophies.find((t) => t.id === incoming.id);
+  const { trophy, status } = upgradeTrophy(existing, incoming);
+  if (status === 'unchanged') return { state, status };
+  const trophies = existing
+    ? state.trophies.map((t) => (t.id === trophy.id ? trophy : t))
+    : [...state.trophies, trophy];
+  return { state: { ...state, trophies, unseenRewards: addUnseen(state.unseenRewards, trophy.id) }, status };
+}
+
+export function applyDailyStreak(state: GameState, today: string = localDayString()): { state: GameState; change: StreakChange } {
+  const { next, change } = advanceDailyStreak(state.dailyStreak, today);
+  return { state: change === 'same' ? state : { ...state, dailyStreak: next }, change };
+}
+
+export function applyFactResults(state: GameState, rows: readonly FactRow[], now: number = Date.now()): { state: GameState } & Omit<IngestOutcome, 'stats'> {
+  const { stats, improved, newlyMastered } = ingestSession(state.factStats, rows, now);
+  return { state: { ...state, factStats: stats }, improved, newlyMastered };
+}
+
+export function applyBadge(state: GameState, id: string): { state: GameState; newlyEarned: boolean } {
+  if (state.earnedBadges.includes(id)) return { state, newlyEarned: false };
+  return {
+    state: { ...state, earnedBadges: [...state.earnedBadges, id], unseenRewards: addUnseen(state.unseenRewards, id) },
+    newlyEarned: true,
+  };
+}
+
+export function applyRewardsSeen(state: GameState): GameState {
+  return state.unseenRewards.length === 0 ? state : { ...state, unseenRewards: [] };
 }
 
 export function useGameState() {
@@ -589,11 +648,46 @@ export function useGameState() {
   const earnBadge = (id: string): boolean => {
     let newlyEarned = false;
     mutate(prev => {
-      if (prev.earnedBadges.includes(id)) return prev;
-      newlyEarned = true;
-      return { ...prev, earnedBadges: [...prev.earnedBadges, id] };
+      const result = applyBadge(prev, id);
+      newlyEarned = result.newlyEarned;
+      return result.state;
     });
     return newlyEarned;
+  };
+
+  const awardWeekendTrophy = (trophy: Trophy): TrophyUpgrade['status'] => {
+    let status: TrophyUpgrade['status'] = 'unchanged';
+    mutate(prev => {
+      const result = applyWeekendTrophy(prev, trophy);
+      status = result.status;
+      return result.state;
+    });
+    return status;
+  };
+
+  /** Counts today once; returns how the streak moved and its new value. */
+  const touchDailyStreak = (): { change: StreakChange; streak: DailyStreak } => {
+    let change: StreakChange = 'same';
+    const next = mutate(prev => {
+      const result = applyDailyStreak(prev);
+      change = result.change;
+      return result.state;
+    });
+    return { change, streak: next.dailyStreak };
+  };
+
+  const ingestFactResults = (rows: readonly FactRow[]): Omit<IngestOutcome, 'stats'> & { factsMastered: number } => {
+    let outcome: Omit<IngestOutcome, 'stats'> = { improved: [], newlyMastered: [] };
+    const next = mutate(prev => {
+      const result = applyFactResults(prev, rows);
+      outcome = { improved: result.improved, newlyMastered: result.newlyMastered };
+      return result.state;
+    });
+    return { ...outcome, factsMastered: countMastered(next.factStats) };
+  };
+
+  const markRewardsSeen = () => {
+    mutate(applyRewardsSeen);
   };
 
   const updatePersonalBest = (circuitId: string, time: number, difficulty?: Difficulty) => {
@@ -681,6 +775,10 @@ export function useGameState() {
     addCareerPoints,
     incrementRacesWon,
     earnBadge,
+    awardWeekendTrophy,
+    touchDailyStreak,
+    ingestFactResults,
+    markRewardsSeen,
     updatePersonalBest,
     recordLocalBest,
     resetAllData,

@@ -7,6 +7,8 @@ import flagAzerbaijan from "@/assets/flag_azerbaijan.png";
 // Also add the new track/flag asset imports above and update
 // SIM_LAP_COUNTS in gameLogic.ts if the circuit is new.
 export const CURRENT_GRAND_PRIX = {
+  /** Calendar year. Weekend trophies are keyed by season and round, so keep it current. */
+  season: 2026,
   round: 15,
   circuitId: 'baku',
   name: 'BAKU',
