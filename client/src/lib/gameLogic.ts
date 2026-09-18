@@ -410,116 +410,186 @@ const saveSessionLapTimes = (times: number[]) => {
   }
 };
 
+const GAME_STATE_KEY = 'f1-math-racer-state';
+
+function newPlayerId(): string {
+  return typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2) + Date.now().toString(36);
+}
+
+/** Build a GameState from a saved blob, filling defaults and sanitizing. */
+function parseGameState(parsed: Record<string, any>): GameState {
+  return {
+    coins: parsed.coins ?? 0,
+    unlockedItems: parsed.unlockedItems ?? ['red-livery', 'hard-tires'],
+    equippedLivery: parsed.equippedLivery ?? 'red-livery',
+    equippedTires: parsed.equippedTires ?? 'hard-tires',
+    streak: parsed.streak ?? 0,
+    totalLaps: parsed.totalLaps ?? 0,
+    careerPoints: parsed.careerPoints ?? 0,
+    racesWon: parsed.racesWon ?? 0,
+    earnedBadges: Array.isArray(parsed.earnedBadges) ? parsed.earnedBadges.filter((b: unknown) => typeof b === 'string') : [],
+
+    soundEnabled: parsed.soundEnabled ?? true,
+    simMode: parsed.simMode ?? false,
+    powerUpsEnabled: parsed.powerUpsEnabled ?? true,
+    personalBests: parsed.personalBests ?? {},
+    lapHistory: parsed.lapHistory ?? [],
+    playerName: parsed.playerName ?? '',
+    playerId: typeof parsed.playerId === 'string' ? parsed.playerId : '',
+    localBests: sanitizeLocalBests(parsed.localBests),
+  };
+}
+
+/*
+ * The saved blob is the source of truth. Every useGameState instance (each
+ * page, plus MenuMusic in App.tsx) reads it fresh before mutating and writes
+ * it back synchronously, so a long-lived instance can never overwrite what a
+ * page saved after it mounted. `cached` only stands in when the disk cannot
+ * be read or refuses writes.
+ */
+let cached: GameState | null = null;
+let diskUnreliable = false;
+const listeners = new Set<(state: GameState) => void>();
+
+export function loadGameState(): GameState {
+  if (diskUnreliable && cached) return cached;
+  try {
+    const saved = localStorage.getItem(GAME_STATE_KEY);
+    if (saved) {
+      cached = parseGameState(JSON.parse(saved));
+      return cached;
+    }
+  } catch (error) {
+    console.error('Failed to load saved state:', error);
+    if (cached) return cached;
+  }
+  return INITIAL_STATE;
+}
+
+/** Persist and broadcast; fills in a missing player id. Returns what was saved. */
+export function saveGameState(state: GameState): GameState {
+  const next = state.playerId ? state : { ...state, playerId: newPlayerId() };
+  cached = next;
+  try {
+    localStorage.setItem(GAME_STATE_KEY, JSON.stringify(next));
+    diskUnreliable = false;
+  } catch (error) {
+    diskUnreliable = true;
+    console.error('Failed to save state:', error);
+  }
+  listeners.forEach((listener) => listener(next));
+  return next;
+}
+
+/** Apply `fn` to the saved state and persist the result. Returns what was saved. */
+export function mutateGameState(fn: (state: GameState) => GameState): GameState {
+  return saveGameState(fn(loadGameState()));
+}
+
+/** Called after every save; returns the unsubscribe function. */
+export function subscribeGameState(listener: (state: GameState) => void): () => void {
+  listeners.add(listener);
+  return () => { listeners.delete(listener); };
+}
+
+export function resetGameState(): void {
+  cached = null;
+  diskUnreliable = false;
+  try {
+    localStorage.removeItem(GAME_STATE_KEY);
+  } catch (error) {
+    console.error('Failed to reset data:', error);
+  }
+}
+
 export function useGameState() {
   const [sessionLapTimes, setSessionLapTimes] = useState<number[]>(getSessionLapTimes);
-  
-  const [state, setState] = useState<GameState>(() => {
-    try {
-      const saved = localStorage.getItem('f1-math-racer-state');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          coins: parsed.coins ?? 0,
-          unlockedItems: parsed.unlockedItems ?? ['red-livery', 'hard-tires'],
-          equippedLivery: parsed.equippedLivery ?? 'red-livery',
-          equippedTires: parsed.equippedTires ?? 'hard-tires',
-          streak: parsed.streak ?? 0,
-          totalLaps: parsed.totalLaps ?? 0,
-          careerPoints: parsed.careerPoints ?? 0,
-          racesWon: parsed.racesWon ?? 0,
-          earnedBadges: Array.isArray(parsed.earnedBadges) ? parsed.earnedBadges.filter((b: unknown) => typeof b === 'string') : [],
+  const [state, setState] = useState<GameState>(loadGameState);
 
-          soundEnabled: parsed.soundEnabled ?? true,
-          simMode: parsed.simMode ?? false,
-          powerUpsEnabled: parsed.powerUpsEnabled ?? true,
-          personalBests: parsed.personalBests ?? {},
-          lapHistory: parsed.lapHistory ?? [],
-          playerName: parsed.playerName ?? '',
-          playerId: parsed.playerId || (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36)),
-          localBests: sanitizeLocalBests(parsed.localBests),
-        };
-      }
-    } catch (error) {
-      console.error('Failed to load saved state:', error);
-    }
-    return INITIAL_STATE;
-  });
+  // Follow saves made by any other instance (another page, MenuMusic).
+  useEffect(() => subscribeGameState(setState), []);
 
+  // A fresh install has no player id until something is saved; make one now
+  // so a leaderboard submission never goes out with an empty id.
   useEffect(() => {
-    try {
-      localStorage.setItem('f1-math-racer-state', JSON.stringify(state));
-    } catch (error) {
-      console.error('Failed to save state:', error);
-      // Could show a toast notification here if needed
-    }
-  }, [state]);
+    if (!state.playerId) setState(mutateGameState((s) => s));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Sync session lap times from sessionStorage on mount (for cross-component sharing)
   useEffect(() => {
     setSessionLapTimes(getSessionLapTimes());
   }, []);
 
+  /** Every change goes through the saved blob; see mutateGameState. */
+  const mutate = (fn: (prev: GameState) => GameState): GameState => {
+    const next = mutateGameState(fn);
+    setState(next);
+    return next;
+  };
+
   const addCoins = (amount: number) => {
-    setState(prev => ({ ...prev, coins: prev.coins + amount }));
+    mutate(prev => ({ ...prev, coins: prev.coins + amount }));
   };
 
   const incrementStreak = () => {
-    setState(prev => ({ ...prev, streak: prev.streak + 1 }));
+    mutate(prev => ({ ...prev, streak: prev.streak + 1 }));
   };
 
   const resetStreak = () => {
-    setState(prev => ({ ...prev, streak: 0 }));
+    mutate(prev => ({ ...prev, streak: 0 }));
   };
 
   const buyItem = (itemId: string, cost: number) => {
-    if (state.coins >= cost && !state.unlockedItems.includes(itemId)) {
-      setState(prev => ({
+    let bought = false;
+    mutate(prev => {
+      if (prev.coins < cost || prev.unlockedItems.includes(itemId)) return prev;
+      bought = true;
+      return {
         ...prev,
         coins: prev.coins - cost,
         unlockedItems: [...prev.unlockedItems, itemId]
-      }));
-      return true;
-    }
-    return false;
+      };
+    });
+    return bought;
   };
 
   const equipItem = (itemId: string, type: 'livery' | 'tires') => {
-    if (state.unlockedItems.includes(itemId)) {
-      setState(prev => ({
-        ...prev,
-        [type === 'livery' ? 'equippedLivery' : 'equippedTires']: itemId
-      }));
-    }
+    mutate(prev => prev.unlockedItems.includes(itemId)
+      ? { ...prev, [type === 'livery' ? 'equippedLivery' : 'equippedTires']: itemId }
+      : prev);
   };
 
   const toggleSound = () => {
-    setState(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
+    mutate(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
   };
 
   const toggleSimMode = () => {
-    setState(prev => ({ ...prev, simMode: !prev.simMode }));
+    mutate(prev => ({ ...prev, simMode: !prev.simMode }));
   };
 
   const togglePowerUps = () => {
-    setState(prev => ({ ...prev, powerUpsEnabled: !prev.powerUpsEnabled }));
+    mutate(prev => ({ ...prev, powerUpsEnabled: !prev.powerUpsEnabled }));
   };
 
   const incrementLaps = () => {
-    setState(prev => ({ ...prev, totalLaps: prev.totalLaps + 1 }));
+    mutate(prev => ({ ...prev, totalLaps: prev.totalLaps + 1 }));
   };
 
   const addCareerPoints = (points: number) => {
-    setState(prev => ({ ...prev, careerPoints: prev.careerPoints + points }));
+    mutate(prev => ({ ...prev, careerPoints: prev.careerPoints + points }));
   };
 
   const incrementRacesWon = () => {
-    setState(prev => ({ ...prev, racesWon: prev.racesWon + 1 }));
+    mutate(prev => ({ ...prev, racesWon: prev.racesWon + 1 }));
   };
 
   /** Returns true only when the badge was newly earned. */
   const earnBadge = (id: string): boolean => {
     let newlyEarned = false;
-    setState(prev => {
+    mutate(prev => {
       if (prev.earnedBadges.includes(id)) return prev;
       newlyEarned = true;
       return { ...prev, earnedBadges: [...prev.earnedBadges, id] };
@@ -528,7 +598,7 @@ export function useGameState() {
   };
 
   const updatePersonalBest = (circuitId: string, time: number, difficulty?: Difficulty) => {
-    setState(prev => {
+    mutate(prev => {
       const key = difficulty ? `${circuitId}:${difficulty}` : circuitId;
       const currentBest = prev.personalBests[key];
       if (!currentBest || time < currentBest) {
@@ -543,32 +613,26 @@ export function useGameState() {
 
   /**
    * Local leaderboard tier. Returns the best on file before this call and
-   * whether the new entry replaced it. `previous` is read from the rendered
-   * state on purpose: earlier setState calls in the same handler stop React
-   * from running the updater eagerly, so an in-updater flag would be stale.
+   * whether the new entry replaced it.
    */
   const recordLocalBest = (key: string, entry: LocalBestEntry): { previous: LocalBestEntry | null; isNew: boolean } => {
-    const previous = state.localBests[key] ?? null;
+    const previous = loadGameState().localBests[key] ?? null;
     const isNew = compareLocalBest(previous ?? undefined, entry);
     if (isNew) {
-      setState(prev => compareLocalBest(prev.localBests[key], entry)
-        ? { ...prev, localBests: { ...prev.localBests, [key]: entry } }
-        : prev);
+      mutate(prev => ({ ...prev, localBests: { ...prev.localBests, [key]: entry } }));
     }
     return { previous, isNew };
   };
 
   const resetAllData = () => {
+    resetGameState();
     try {
-      localStorage.removeItem('f1-math-racer-state');
       sessionStorage.removeItem('f1-session-lap-times');
-      setState(INITIAL_STATE);
-      setSessionLapTimes([]);
     } catch (error) {
-      console.error('Failed to reset data:', error);
-      setState(INITIAL_STATE);
-      setSessionLapTimes([]);
+      console.error('Failed to reset session data:', error);
     }
+    setState(INITIAL_STATE);
+    setSessionLapTimes([]);
   };
 
   const recordLapTime = (time: number, trackName?: string, series?: string) => {
@@ -583,7 +647,7 @@ export function useGameState() {
         timestamp: Date.now(),
         series
       };
-      setState(prev => ({
+      mutate(prev => ({
         ...prev,
         lapHistory: [newLapEntry, ...prev.lapHistory].slice(0, 100)
       }));
@@ -595,7 +659,7 @@ export function useGameState() {
   };
 
   const setPlayerName = (name: string) => {
-    setState(prev => ({ ...prev, playerName: name }));
+    mutate(prev => ({ ...prev, playerName: name }));
   };
 
   const getLapHistory = (count: number = 20): LapEntry[] => {
