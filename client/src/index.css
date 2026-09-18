@@ -237,3 +237,20 @@ body {
     background-color: rgb(0 0 0 / 0.05);
   }
 }
+
+/*
+ * Desktop menu frame (html[data-desktop], stamped by main.tsx for fine-pointer
+ * browsers at >= 900px). Menu pages keep their phone column: it is capped,
+ * centred and zoomed a little so the type reads at arm's length, with the page
+ * background filling the sides. GameLayout adds the class for `menuFrame`
+ * pages; Hub and Garage carry it on their own content wrappers. Racing screens
+ * have their own desktop layout and never carry it. Unlayered on purpose so it
+ * beats the Tailwind max-w-* utilities on the same element.
+ */
+html[data-desktop] .menu-frame {
+  width: 100%;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  zoom: 1.15;
+}

@@ -67,7 +67,7 @@ export default function TrophyCabinet() {
     .sort((a, b) => b.season - a.season || b.round - a.round);
 
   return (
-    <GameLayout hideGarageButton lockViewport backHref="/garage" darkBackground>
+    <GameLayout hideGarageButton lockViewport backHref="/garage" darkBackground menuFrame>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-12">
         <h1 className="text-2xl md:text-3xl font-bold tracking-wider text-white text-center mb-6" style={OXANIUM}>
           TROPHIES
@@ -75,7 +75,7 @@ export default function TrophyCabinet() {
         <div className="max-w-2xl md:max-w-4xl mx-auto space-y-8">
           <section>
             <SectionTitle aside={`${raced}/${SEASON_ROUNDS} weekends`}>{`Season ${season}`}</SectionTitle>
-            <div className="grid grid-cols-6 md:grid-cols-12 gap-2" data-testid="season-grid">
+            <div className="grid grid-cols-6 gap-2" data-testid="season-grid">
               {slots.map((slot) => (
                 <TrophyTile key={slot.round} round={slot.round} trophy={slot.trophy} current={slot.round === CURRENT_GRAND_PRIX.round} />
               ))}
@@ -88,7 +88,7 @@ export default function TrophyCabinet() {
           {earlier.length > 0 && (
             <section>
               <SectionTitle>Earlier seasons</SectionTitle>
-              <div className="grid grid-cols-6 md:grid-cols-12 gap-2">
+              <div className="grid grid-cols-6 gap-2">
                 {earlier.map((t) => (
                   <TrophyTile key={t.id} round={t.round} trophy={t} current={false} />
                 ))}

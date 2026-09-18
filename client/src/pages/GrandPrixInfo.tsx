@@ -90,7 +90,7 @@ export default function GrandPrixInfo() {
   const history = getGrandPrixHistory(gp.circuitId);
 
   return (
-    <GameLayout hideLogo hideGarageButton lockViewport backHref="/game" darkBackground>
+    <GameLayout hideLogo hideGarageButton lockViewport backHref="/game" darkBackground menuFrame>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24">
         <div className="max-w-2xl md:max-w-3xl mx-auto">
 

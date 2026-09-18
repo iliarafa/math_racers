@@ -64,7 +64,7 @@ export default function Garage() {
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 md:px-10 relative z-10" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
-        <div className="max-w-2xl md:max-w-4xl mx-auto">
+        <div className="max-w-2xl md:max-w-4xl mx-auto menu-frame">
 
           <h1 className="text-4xl md:text-5xl font-bold tracking-widest uppercase text-white mb-8 text-center">Garage</h1>
 

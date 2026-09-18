@@ -129,7 +129,7 @@ export default function Leaderboard() {
   const showGlobalHint = !loading && !error && !hasGlobalRow;
 
   return (
-    <GameLayout hideGarageButton lockViewport backHref="/garage" darkBackground>
+    <GameLayout hideGarageButton lockViewport backHref="/garage" darkBackground menuFrame>
       <div className="fixed inset-0 overflow-y-auto p-4 md:p-8 pb-20" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)' }}>
         <div className="max-w-2xl md:max-w-4xl mx-auto">
 

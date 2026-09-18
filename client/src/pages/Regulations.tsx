@@ -374,7 +374,7 @@ export default function Regulations() {
   let articleNum = 0;
 
   return (
-    <GameLayout lockViewport backHref="/garage" darkBackground>
+    <GameLayout lockViewport backHref="/garage" darkBackground menuFrame>
       {/* Fixed Title Block */}
       <div className="shrink-0 px-6 md:px-10 pt-6 pb-4 text-center">
         <h1
