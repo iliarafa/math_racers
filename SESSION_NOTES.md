@@ -1,121 +1,132 @@
-# Session Notes — 2026-08-06
+# Session Notes — 2026-09-18
 
-Handoff summary of the latest work plus standing context future sessions will need. All facts below were verified against the code at commit `695c3ba` (working tree clean, pushed to `main`, synced + deployed to the iPhone 17 simulator).
+Handoff summary plus the standing context future sessions need. Everything below was checked against the code at commit `2aa006b` (working tree clean, pushed to `main`, installed on the iPhone 17 simulator), except where marked as an idea or open question.
 
 ## Open tasks (next session)
 
-1. **Flashcards polish** — see if there is room for more polish in the flashcards mode.
-2. **Leaderboards scope (debate)** — consider limiting leaderboards to only the modes in the RACE WEEKEND menu.
-3. **Quick Race UI** — push the sector grid down closer to the numpad and make the operation a bit bigger. (A first attempt at bigger-operation/smaller-grid was reverted — this asks for repositioning the grid *down*, not shrinking it.)
-4. **Superlicence reward screen (idea, not committed)** — a stamped superlicence card as the school-completion celebration; the mockup direction exists from the school-page redesign round.
-5. **Weekend rotation** — Zandvoort (round 12) is still current; the next `/weekend` rotation is due whenever the calendar moves on.
+1. **Flashcards polish**: look for more polish in the flashcards mode.
+2. **Leaderboards scope (debate)**: consider limiting leaderboards to the RACE WEEKEND modes. Note that a Quick Race board now also exists (see Leaderboard below), which widens the scope rather than narrowing it.
+3. **Quick Race UI**: push the sector grid down closer to the numpad and make the operation a bit bigger. An earlier bigger-operation/smaller-grid attempt was reverted; the ask is to reposition the grid *down*, not shrink it.
+4. **Weekend rotation**: Baku (Round 15) is current. Run `/weekend` when the calendar moves on.
 
-*(The former task 1 — finalize the setup-card width — was resolved later on 2026-08-06: see the setup-card redesign note below and `setup_cards.md`.)*
+*(The former "Superlicence reward screen" idea is done: see `components/SuperlicenceSplash.tsx`.)*
 
 ## TL;DR
 
-The app is at **v1.3.12** (no version bump today — those happen with GP rotations), themed to **Round 12 / Netherlands (Circuit Zandvoort)**. Today (31 commits, `2e2d7e7..47457ff`) built the **Driving School ecosystem** and spread its track-path design language across the app:
+The app is at **v1.3.15**, themed to **Round 15 / Azerbaijan (Baku City Circuit)**. The latest session (2026-09-17/18) rotated the app from Madrid to Baku. Baku is a new circuit, so it took the full new-circuit path, plus two small generalisations that make future rotations config-only:
 
-1. **Flashcards session redesign** — per-grade F1 sounds, landscape 5:3 card, LAP counter, purple-majority clearing, chevron-only exit.
-2. **Driving School licence path** — soft-gated story: flashcards → reaction (<0.33s) → beat the instructor in Lane Racer; COMPLETED badge on the Paddock card.
-3. **Driving School page identity** — track-path layout (rail, sector nodes, checkered finish), white logo, hand-drawn kerb backdrop, no video, superlicence caption.
-4. **Setup screens as track paths** — all four modes' setup cards restyled: settings are numbered stations ending at THE GRID.
-5. **Free Practice selectable length** — 25/50/100 laps; only 100 posts to the leaderboard.
-6. **Paddock order** — DRIVING SCHOOL now sits above RACE WEEKEND.
-
-An in-scene Lane Racer rival car was tried and reverted (see licence-path notes).
+1. **Baku rotation** (`5397f64`): config, circuit data, history, live-map centerline and four assets. Shipped inside 1.3.15, with no version bump.
+2. **`setupTrackImage`** on `CURRENT_GRAND_PRIX` replaces a hardcoded `circuitId === 'madrid'` branch in `Game.tsx` that picked the setup-card art.
+3. **`bannerTextColor`** on `CURRENT_GRAND_PRIX` replaces the paddock Weekend Briefing banner's hardcoded dark text (`2aa006b`). Baku uses white.
+4. Most Wins shows **Max Verstappen — 2 wins** (`2439450`). He is tied with Pérez on 2; the user chose Verstappen.
+5. Baku source art committed in `baku-assets/` (`9ee6a45`).
 
 ---
 
-## Latest session: feature details
+## Latest session: Round 15 / Baku
 
-### Paddock menu (`client/src/pages/Hub.tsx`)
-- **Menu A order:** Weekend Briefing (Zandvoort card) · RACE NOW ("ZANDVOORT · 20 LAPS") · DRIVING SCHOOL · RACE WEEKEND ("PRACTICE · QUALIFY · RACE") · GARAGE (`7998692`).
-- **RACE WEEKEND →** Free Practice, Grand Prix. **DRIVING SCHOOL →** the licence path view (below).
-- **Driving School view** (`view === 'school'`): track-path layout — vertical rail (ribbon + dashed centerline) with sector nodes (done ✓ purple / current yellow number / upcoming dashed), glass cards per mode, checkered FINISH LINE node ("SCHOOL COMPLETED" in green when the licence is earned). White logo (`attached_assets/logo-white.svg`), hand-drawn kerb backdrop (`attached_assets/driving-school-bg.jpg`, 55% over black), thin caption "COMPLETE TO EARN YOUR SUPERLICENCE". The background video is hidden+paused on this view via a `hubSchoolViewChange` event consumed by `PersistentVideo` in `App.tsx` (menu music unaffected).
-- Lane Racer's school card reads "SECTOR 3 · BEAT THE INSTRUCTOR".
+### Config (`client/src/lib/currentGrandPrix.ts`)
+- `round: 15`, `circuitId: 'baku'`, `name: 'BAKU'`, `circuitName: 'Baku City Circuit'`, `country: 'AZERBAIJAN'`, `rainProbability: 0.15`, `simLapCount: 51`, blue-red-green gradient.
+- **New field `setupTrackImage`**: the stripped full-colour map (sector ribbon and start line, no corner labels) shown un-inverted on the Free Practice / Grand Prix setup card. When it's omitted, the card falls back to the briefing's `detailMapImage`, then to the dark silhouette.
+- **New field `bannerTextColor`**: the text colour on the paddock Weekend Briefing banner. Use `#1a1a1a` for light or yellow gradients (Madrid) and `#ffffff` for saturated ones (Baku). Any non-dark value gets a soft `0 1px 2px rgba(0,0,0,0.35)` text shadow in `Hub.tsx`, so white stays legible over light stops.
+- Both fields are listed in Step 2 of the `/weekend` skill.
 
-### Driving School licence path (`client/src/lib/drivingSchoolLicence.ts`)
-- **Soft gating** (nothing locked): 1. clear all 10 flashcard stages → 2. Reaction Test best **< 0.33s** (`REACTION_LICENCE_MS = 330`) → 3. **P1 in any completed Lane Racer race** (finish time under the rival target, any circuit/difficulty).
-- localStorage: `reactionBestMs` (min kept, written by `ReactionTest.tsx`, licence line shown under the launch button), `laneRacerP1Win` (`'1'`, written by the finish effect in `LaneRacer.tsx`; results screen shows "P1 · Beat the rival" + one-time licence note); flashcards derive from `drivingSchoolHighestCleared >= 10`. `getLicenceStatus()` derives everything — no stored aggregate.
-- DRIVING SCHOOL Paddock card gets a green COMPLETED pill when all three are done.
-- **Rival representation: progress-strip marker only.** An in-scene rival car (2D+3D) was tried (`647fd45`) and reverted (`7574f9c`) — its "drift to the lane farthest from the player" rule produced an endless distracting lane-swap dance. The rival lives on the progress strip (marker car, P1/P2, strip color); the licence P1 detection is independent and unaffected.
+### New-circuit wiring
+- `gameLogic.ts`: `SIM_LAP_COUNTS.baku = 51` and a `CIRCUITS` entry.
+- `circuitMenuArt.ts`: `baku` uses `baku_setup_track.png` with `invert: false`, the same treatment as Madrid.
+- `circuitPaths.ts`: silhouette added to `CIRCUIT_IMAGES`.
+- `circuitPathData.json`: centerline generated by `npx tsx script/extractCircuitCenterline.ts baku`. `baku` was added to `ASSET_BY_ID` and to the geom-mid branch, because the silhouette is a thick ribbon. QA'd at `/dev/circuit-maps`.
 
-### Flashcards (`client/src/pages/DrivingSchool.tsx`, `client/src/lib/drivingSchool.ts`)
-- **10 gated stages**, 20 cards each. Grades: purple (within `botTime × PURPLE_TIME_FACTOR`, factor 1.0), green (correct but slower), red (wrong).
-- **Clear rule: purple majority** — ≥15/20 purple (`PURPLE_MAJORITY`) and no reds; greens allowed (`isStageCleared`, `4f2ccbb`). Otherwise all non-purple re-drill; each pass is a LAP (numbered continuously). Cleared screen: PERFECT at 20/20, STAGE CLEARED + tally otherwise. Stage list states the rule.
-- **Session UI:** landscape 5:3 card spanning the column (container-query `cqh` type scaling for short viewports; note cqh on the container element itself resolves against the viewport, so sizes live on children), static counter row CARD n/m · LAP n · purple tally (only the card animates — slide + grade pulse merged on one motion.div), chevron-only exit (GameLayout gained `onBack`), centered logo (no header chip).
-- **Per-grade sounds** (`playGradeSound`, shared `getAudioContext()` from `uiSound.ts`): purple = rising sine sweep 600→1200Hz + 1319Hz blip, green = triangle ding, red = detuned penalty buzzer.
-- Progress persists in `drivingSchoolHighestCleared`.
+### History (`client/src/lib/grandPrixHistory.ts`)
+- `officialName` 'FORMULA 1 AZERBAIJAN GRAND PRIX 2026', `firstHeld` 2017, 6.003 km, 51 laps.
+- Lap record: Charles Leclerc, 1:43.009 (2019). Most wins: Max Verstappen, 2.
+- `lastYear` holds the full 2025 race classification (Verstappen won in 1:33:26.408; Piastri DNF) and the full qualifying order (Piastri, Leclerc and Bearman "No time"; Ocon "DSQ"), sourced from Wikipedia's 2025 Azerbaijan GP report.
 
-### Setup screens as track paths (`client/src/components/setup/RaceSetupCard.tsx`, `SetupRow.tsx`)
-- Inside the shared setup card, every setting row is a **numbered station** on a rail (mini glass card + node), readouts (GP LAPS) are dot stations, and the start button is the final checkered **THE GRID** station (`c415d0b`). Tap-to-cycle unchanged; `SetupRow` gained a `bare` prop (no border when framed by a station). All four modes (FP/GP/Lane Racer/Multiplayer host settings) inherit it with no caller changes.
-- **Header (later that day, `066dfa3`→`695c3ba`):** the full-width map band is gone — eyebrow across the top, title (nowrap, may overlay the art's empty frame) over a large rounded flag on the left, circuit art on the right in a 68%-wide box pulled left (`-ml-[24%]`) so it sneaks under the title; "?" absolute in the corner. Card narrowed to **272px (md 372px)** with art at **`h-40 md:h-56`** so the art's right straight sits ~flush (≈4px) with the station tiles' right edge. Art size and card width are coupled (see open task 1); an `object-right` approach was tried and reverted (`ee60d45`/`b439552`) — it reopened the flag↔art gap. `DEFAULT_MAP_STAGE_CLASS` is no longer used by this card (local `h-40 md:h-56` default).
-- **SUPERSEDED — header redesigned again (2026-08-06, after the notes above):** the flag was identified as the root constraint and rethought. The header is now a **centered column**: centered eyebrow, then a small flag chip (`h-[18px] w-[27px]`, md `h-5 w-[30px]`) inline before the title, then the circuit art **centered on its own band** with equal side padding by construction (`object-contain` centered in a `w-full mt-2 px-6` stage, height `h-36 md:h-52`; the `px-6` floor caps squat circuits like Monaco, the height caps tall ones like Zandvoort). Card widened back to **292px (md 420px)**. The width↔art coupling and the flag↔art gap problem no longer exist; `mapStageClass` now overrides only the height classes. Also that pass: "THE GRID" label above the start button removed (checkered node + button stay), and **all setup option values render plain white** — `SetupOption.color` was removed end-to-end (colored values stripped from `levelRow`/`weatherRow`/`viewRow`/chase-cam; dead helpers `difficultyDrumColor`, `CHASE_CAM_ACTIVE_COLOR`, `DIFFICULTY_MODE_COLORS`, `DEFAULT_MAP_STAGE_CLASS` deleted; `LOCKED_LEVEL_COLORS` kept for the in-race HUD; GP phase tabs keep their colors — progression, not settings). Full component + weekend-rotation reference: **`setup_cards.md`** (repo root; the `/weekend` skill links to it).
+### Assets (`client/src/assets/`)
+- `circuit_baku.png`: dark silhouette, 700px wide.
+- `flag_azerbaijan.png`
+- `baku_detail_track.png`: labelled colour map for the briefing.
+- `baku_setup_track.png`: stripped colour map for the setup cards.
 
-### No-outline rule, app-wide (2026-08-06, after the setup-card redesign)
-- **Rule: glass/tile containers carry no grey outlines** — soft fills + shadows define edges. Stripped the white-alpha/grey hairline borders from: Paddock cards, setup/waiting glass cards + help sheet, name-prompt modals (+ cancel buttons gained a `bg-white/5` fill), results stat pills + summary rows + session-log stints, leaderboard rows + Show All, Regulations code pills (tables now use `border-b` row dividers instead of cell grids), Strategy Guide tech-cards + times-table cells (2px grid gap carries separation), flashcard + stage tiles, Racer Log badges (locked = `bg-white/5`).
-- **Kept (functional, not decorative):** form-input borders (incl. focus states), `border-b/t` dividers, dashed upcoming nodes + rail centerlines, station-number rings, F1 start-light rims, colored state accents (yellow current-player row / current-school-card — the latter now sets a full `border: 1px solid #ffcc00` since the base border is gone — and RACE NOW's red edge, tech-card-glow blue). `components/ui` internals and archived `DeployHarvest.tsx` untouched.
-
-### Free Practice session length (`client/src/pages/Game.tsx`, `47457ff`)
-- LAPS is a real station: 25/50/100 (`FP_LAP_OPTIONS`), persisted as `freePracticeLaps`, default 100; `raceLength` reads it for FP.
-- **Only 100-lap sessions submit to the PST leaderboard** (gate in the finish branch) — shorter sprints skew the rate-based score. Help text says so. GP laps stay a readout.
-  - **Local tier (2026-09-13):** every finished FP (25/50/100) and GP (Practice/Qualifying/Race Day) session records a personal best in `state.localBests` (`lib/localBests.ts`). Finish screens show Score + Personal Best + flash + a "Record 100 laps / Finish Race Day to post globally" note; `/leaderboard` shows a "Your Best" card above the global list. Global gates unchanged.
-  - **Quick Race board (2026-09-13):** third tab. Every finished Quick Race posts to `quick_race_leaderboard` (Addition only, one row per player per circuit, P1 badge when the bot is beaten, same score formula). **Run the `quick_race_leaderboard` block at the end of `docs/superpowers/plans/2026-08-17-leaderboards-supabase.sql` in the Supabase SQL editor** — until then Quick Race submits show "Couldn't reach the leaderboard.
+A new circuit now needs **four** images: silhouette, flag, labelled detail map and stripped setup map. Originals are in `baku-assets/`.
 
 ---
 
-## Standing context (accumulated since spring; still current)
+## Standing context
 
 ### Weekly GP rotation
-- `client/src/lib/currentGrandPrix.ts` holds `CURRENT_GRAND_PRIX` — currently **round 12, `circuitId: 'zandvoort'`, Circuit Zandvoort, rainProbability 0.40, simLapCount 72**, Dutch-flag gradient. Single config for Race Now, Free Practice, Grand Prix, and the Weekend Briefing.
-- **New circuits need more than the skill doc says** (Zandvoort commit `4d7d282` is the worked example): an entry in `CIRCUIT_MENU_ART` (`circuitMenuArt.ts` — required or the GP-locked track row is empty), a live-map centerline in `circuitPathData.json` via `npx tsx script/extractCircuitCenterline.ts <id>` (add the ~700px silhouette to its `ASSET_BY_ID` first), and the silhouette in `CIRCUIT_IMAGES` (`circuitPaths.ts`). QA maps at `/dev/circuit-maps`.
-- `client/src/lib/grandPrixHistory.ts` feeds the Grand Prix info page (`/grand-prix`).
-- **Use the `/weekend` skill** (`.claude/skills/weekend`) — the rotation runbook (assets, `SIM_LAP_COUNTS`, version bump, deploy).
-- `mapStageClass` on `CURRENT_GRAND_PRIX` is deliberately `undefined` — all menu silhouettes share `DEFAULT_MAP_STAGE_CLASS`; fix thin/square circuits in the asset, not with a per-circuit size boost.
+- `CURRENT_GRAND_PRIX` in `client/src/lib/currentGrandPrix.ts` is the single config for Race Now, Free Practice, Grand Prix, the Weekend Briefing and Regulations Art. 7.
+- **Use the `/weekend` skill** (`.claude/skills/weekend/SKILL.md`). The best new-circuit template is `5397f64` (Baku), with `4d7d282` (Zandvoort) as the older example.
+- `SIM_LAP_COUNTS` in `gameLogic.ts` is the source of truth for which circuits exist.
+- `LOCK_MENU_TO_CURRENT_GP = true` (`circuitMenuArt.ts`): Lane Racer and Multiplayer show only the current GP's track.
+- `mapStageClass` is deliberately `undefined`. Fix thin or square circuits in the asset, not with a per-circuit size boost.
 
-### Paywall is disabled — app is free
-- `client/src/contexts/PurchaseContext.tsx` hardcodes `isPremium: true` with no-op purchase/restore stubs (commit `ccafb3d`, June 2026). RevenueCat stays installed but is never called; `Paywall.tsx` and the `'paywall'` game status remain latent for easy revert.
+### Driving School and the Superlicence
+- **Flashcards** (`lib/drivingSchool.ts`): 10 stages of 20 cards.
+  - Purple means correct within `PURPLE_TIME_FACTOR` **1.5×** the expected bot time; green means correct but slower; red means wrong.
+  - A stage clears with at least `PURPLE_MAJORITY` (15) purples and no reds.
+- **Licence** (`lib/drivingSchoolLicence.ts`) needs all three:
+  1. All 10 flashcard stages cleared.
+  2. A Reaction Test best under `REACTION_LICENCE_MS` **400 ms**.
+  3. A P1 in Lane Racer.
+- **Grand Prix is locked until the licence is earned.** In `Hub.tsx`, `gpOpen = licence.complete || grandPrixDevBypass()`, and the card says "Graduate Driving School" while it's locked. Earning the licence shows the one-time `SuperlicenceSplash`.
 
-### Difficulty & math engine
-- Shared server-safe question engine: `shared/mathEngine.ts` — imported by both `client/src/lib/gameLogic.ts` and `server/websocket.ts`. Multiplayer difficulty syncs dynamically from the server.
-- Kid-facing **Adaptive vs Locked** difficulty choice exists across Free Practice, Lane Racer, and Multiplayer; Adaptive races start from beginner and adapt live.
+### Leaderboard (Supabase project `pslagmyvlvrpwnbhwqpp`)
+- The client writes directly to three tables via `client/src/lib/supabase.ts`:
+  - `fp_leaderboard`: 100-lap Free Practice only.
+  - `gp_weekend_leaderboard`: GP Race Day.
+  - `quick_race_leaderboard`: every finished Quick Race.
+- All three exist in the live project.
+- The older tables `pst_leaderboard`, `lane_racer_leaderboard` and `gp_leaderboard` are still in the database but unused by the client.
+- **Local tier:** every finished FP (25/50/100 laps, `FP_LAP_OPTIONS`) and GP session records a personal best in `state.localBests` (`lib/localBests.ts`). `/leaderboard` shows a "Your Best" card above the global list.
 
-### Lane Racer 3D
-- Optional Three.js chase-cam view with 2D fallback: `client/src/components/lane-racer/` (`LaneRacerCanvas3D.tsx`, `LaneRacerScene.tsx`, `atmosphere.ts`) + `client/src/lib/laneRacerController3d.ts`. Builds as its own ~916 kB chunk.
+### Paywall is disabled — the app is free
+- `client/src/contexts/PurchaseContext.tsx` hardcodes `isPremium: true`. RevenueCat stays installed but is never called.
+
+### Web and desktop builds (same bundle as iOS)
+- `lib/webMeta.ts` handles per-route title/theme and the `data-web` hover gating.
+- `lib/layoutMode.ts` and `hooks/use-layout-mode.ts` handle the desktop layout, whose race screens live in `components/desktop/`.
+- `lib/orientationLock.ts` holds the iPad landscape lock for Race Weekend.
+- Details are in `CLAUDE.md`.
+
+### Engine and Lane Racer
+- `shared/mathEngine.ts` is shared by `client/src/lib/gameLogic.ts` and `server/websocket.ts`.
+- Lane Racer 3D lives in `client/src/components/lane-racer/` plus `lib/laneRacerController3d.ts`.
 
 ### Routes (`client/src/App.tsx`)
-`/` Welcome · `/hub` Paddock · `/game/:mode` (+bare `/game`) · `/garage` · `/strategy` · `/grand-prix` GP info · `/driving-school` · `/reaction` · `/multiplayer` · `/regulations` · `/racer-log` · `/leaderboard` · `/lane-racer` · `/dev/circuit-maps` (dev tool). `DeployHarvest` route is commented out (archived).
-- Background video (`PersistentVideo`) shows on `/hub`, `/game`, `/lane-racer` when not racing — except the Hub's school view (see above).
-
-### Leaderboard DB (Supabase)
-- Project ref **`pslagmyvlvrpwnbhwqpp`** (`math-racer`, org "Math", us-east-1, $10/mo) — URL + anon key in `client/src/lib/supabase.ts`. Tables: `pst_leaderboard`, `lane_racer_leaderboard`, `gp_leaderboard` (RLS on; public SELECT+INSERT only). Pre-May-2026 history is gone (old project deleted); boards repopulate as people play.
+`/` Welcome · `/hub` Paddock · `/game/:mode` (+bare `/game`) · `/garage` · `/strategy` · `/grand-prix` Weekend Briefing · `/driving-school` · `/reaction` · `/multiplayer` · `/regulations` · `/racer-log` · `/leaderboard` · `/lane-racer` · `/dev/circuit-maps` (dev tool). The `/deploy-harvest` route is commented out (archived).
 
 ---
 
-## Operational notes (read before building/deploying)
+## Operational notes
 
-### Mobile / Capacitor (iOS) — verified working today
+### iOS / Capacitor
 ```
 npm run build
 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios
-LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap run ios --target=A1301ED4-C124-4695-9A60-D05ACF4B4604
 ```
-- **CocoaPods/Ruby gotcha:** cap commands fail with `Encoding::CompatibilityError (ASCII-8BIT)` without the UTF-8 `LANG`/`LC_ALL` prefix.
-- Simulator: **iPhone 17, UDID `A1301ED4-C124-4695-9A60-D05ACF4B4604`** (iOS 26.5).
-- App: `live.mathracer.app` ("Math Racer"), web dir `dist/public`, one plugin (`@revenuecat/purchases-capacitor`).
+- Without the UTF-8 `LANG`/`LC_ALL` prefix, cap commands fail with a CocoaPods `Encoding::CompatibilityError`.
+- Simulator: **iPhone 17, UDID `A1301ED4-C124-4695-9A60-D05ACF4B4604`**, on the iOS 26.5 runtime.
+- App `live.mathracer.app` has two Capacitor plugins: `@capacitor/screen-orientation` and `@revenuecat/purchases-capacitor`.
+- **Simulator on this Mac (Xcode 27.0, build 27A266a):** `Simulator.app` is not on disk, so `cap run ios` can't deploy and `open -a Simulator` fails.
+  - Build and install directly instead:
+    ```
+    xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -destination 'id=<udid>' -derivedDataPath <dir> build
+    ```
+    Then install `<dir>/Build/Products/Debug-iphonesimulator/App.app` with `xcrun simctl install` (or the Claude simulator panel's `launch` action).
+  - The Claude simulator panel was unavailable on 2026-09-17, failing with a misleading "Xcode is installed but not selected". On 2026-09-18 it worked with nothing changed on the Mac. Don't run the `sudo xcode-select` it suggests.
+  - The app registers no URL scheme, so it can't be deep-linked past the splash.
 
 ### Dev server
-- `npm run dev` = full app (Express + Vite middleware) on **port 8081** (`PORT=8081` baked into the script). `dev:client` (Vite-only, port 5000) collides with macOS AirPlay on this machine.
-- `.claude/launch.json` (uncommitted) has a `dev` entry on 8081 plus a `lane-racer` entry pointing at the sibling `../lane-racer` sandbox repo on port 5181.
-- HMR websocket fails through the 8081 proxy (console noise, harmless) — full-reload after edits when verifying in a browser.
+- `npm run dev` runs the full app (Express + Vite) on **port 8081**. `.claude/launch.json` is committed and has a `dev` entry for it.
+- `dev:client` (Vite-only, port 5000) collides with macOS AirPlay on this machine.
 
 ### Git / push
-- Pushing to `main` can be blocked by the harness's auto-mode classifier; **the user authorizes the push** (today's explicit "push it" worked directly).
+- Commit to `main`. Push only when the user says "push it". That instruction covers that one push, not later ones.
 
 ---
 
 ## Watch-outs
-- `client/src/pages/DeployHarvest.tsx` is archived (unrouted) but still compiles; revisit its `'miami'`/`'Ratios'` string args if re-enabled.
-- Chunk-size warnings on build (`index` ~1.0 MB, `LaneRacerCanvas3D` ~0.9 MB) are known and tolerated.
-- Spelling is **"superlicence"/"licence"** (British, matching FIA) across school copy — keep new copy consistent.
+- `client/src/pages/DeployHarvest.tsx` is archived (unrouted) but still compiles.
+- Chunk-size warnings on build (`index` ~1.1 MB, `LaneRacerCanvas3D` ~0.9 MB) are known and tolerated.
+- Spelling is **"superlicence"/"licence"** (British, matching the FIA). Keep new copy consistent.
