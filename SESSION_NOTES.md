@@ -8,15 +8,15 @@ Handoff summary plus the standing context future sessions need. `main` is at `f2
 2. **Rewards**: trophies (`lib/trophies.ts`), daily streak (`lib/dailyStreak.ts`), fact mastery (`lib/factMastery.ts`), persisted in `GameState`; settled by one effect in `Game.tsx`; shown by `RewardStrip` on all finish screens, `TrophySplash` on Race Day, the `/trophies` page (`TrophyCabinet.tsx`), a streak chip and "N new" pill on the Hub, a Trophies tile on the Garage. Verified in the browser: Quick Race → First Win badge + Day 1 streak; full GP weekend with pole + win → gold `gp:2026:15:baku`.
 3. **Cleanup** (`f18ecfd`): DeployHarvest, TrackProgress, the legacy Express leaderboard routes/storage/tables, `update_gp.md` and the Madrid handoff are gone; CLAUDE.md corrected (no championship/Career mode exists).
 4. **Version single source** (`25f6c8b`): `npm run version:bump 1.4.0`; the Garage footer shows `__APP_VERSION__`.
+5. **Desktop menu frame** (`8af6e5f`): `.menu-frame` (520px, centred, `zoom: 1.15`) under `html[data-desktop]`; `GameLayout menuFrame` + the Hub/Garage wrappers. Phone/iPad untouched.
 
 ## Open tasks (v1.4 branch)
 
-1. **Quick Race HUD** (phone layout): push the sector grid down closer to the numpad and make the operation a bit bigger. An earlier bigger-operation/smaller-grid attempt was reverted; reposition the grid *down*, don't shrink it. Do it with the user, one screenshot at a time.
-2. **Desktop frame for menu pages**: Hub, Welcome, Garage, Leaderboard, RacerLog, Regulations, StrategyGuide, GrandPrixInfo, ReactionTest, TrophyCabinet still render the phone column stretched on desktop. Direction to agree with the user first.
-3. **Flashcards polish**: walk `/driving-school` together and list issues one screen at a time.
-4. **iOS smoke test** of the branch on the iPhone 17 simulator (Race Day → trophy splash, `/trophies`), then before release: rebase onto `main` after the Austin `/weekend` rotation, `npm run version:bump 1.4.0`, refresh these notes.
-5. **Leaderboards scope (debate)**: deferred; not in 1.4.
-6. **Weekend rotation** on `main`: Baku (Round 15) is current. Run `/weekend` when the calendar moves on.
+1. **Quick Race HUD** (phone layout): push the sector grid down closer to the numpad and make the operation a bit bigger. An earlier bigger-operation/smaller-grid attempt was reverted; reposition the grid *down*, don't shrink it. Do it with the user, one screenshot at a time (they chose "later this week" on 2026-09-18).
+2. **Flashcards polish**: walk `/driving-school` together and list issues one screen at a time.
+3. **Before release**: rebase onto `main` after the Austin `/weekend` rotation, `npm run version:bump 1.4.0`, iOS build + simulator check, refresh these notes.
+4. **Leaderboards scope (debate)**: deferred; not in 1.4.
+5. **Weekend rotation** on `main`: Baku (Round 15) is current. Run `/weekend` when the calendar moves on.
 
 ### Working in the worktree
 `preview_start` runs the **main checkout's** server even from the worktree; start the branch's server with a background `npm run dev` from the worktree and open the pane with `preview_start {url}`. Server/vite-config changes need a `pkill -f "tsx server/index.ts"` + restart.
