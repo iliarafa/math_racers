@@ -450,7 +450,7 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
     trackLength: '6.003 km',
     laps: 51,
     lapRecord: { driver: 'Charles Leclerc', time: '1:43.009', year: 2019 },
-    mostWins: { driver: 'Sergio Pérez', count: 2 },
+    mostWins: { driver: 'Max Verstappen', count: 2 },
     summary:
       'The Baku City Circuit runs right through the heart of Azerbaijan’s capital, mixing two completely different worlds into one lap. The middle sector threads uphill through the walls of the medieval Old City, where the track narrows to barely eight metres at Turn 8 — the tightest squeeze in Formula 1. Then it opens out onto a two-kilometre seafront straight along the Caspian Sea, where cars hit over 350 km/h and overtakes come thick and fast. The circuit first hosted a race in 2016 as the European Grand Prix and became the Azerbaijan Grand Prix in 2017, and it has produced chaos, safety cars and surprise winners almost every year since.',
     detailMapImage: bakuDetail,
