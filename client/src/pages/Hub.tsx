@@ -3,7 +3,6 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 import { useGameState, RACE_LENGTH } from "@/lib/gameLogic";
-import { usePurchase } from "@/hooks/use-purchase";
 import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { getLicenceStatus, grandPrixDevBypass, REACTION_LICENCE_MS, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
@@ -158,7 +157,6 @@ type HubView = 'paddock' | 'weekend' | 'school';
  */
 export default function Hub() {
   const { state } = useGameState();
-  const { isPremium } = usePurchase();
   const [view, setView] = useState<HubView>(() => {
     try {
       return new URLSearchParams(window.location.search).get('school') === '1' ? 'school' : 'paddock';
@@ -358,7 +356,7 @@ export default function Hub() {
                 href={gpOpen ? "/game/grand-prix" : undefined}
                 title="GRAND PRIX"
                 subtitle={`ROUND ${CURRENT_GRAND_PRIX.round}`}
-                note={gpOpen ? (isPremium ? undefined : 'Full version') : 'Graduate Driving School'}
+                note={gpOpen ? undefined : 'Graduate Driving School'}
                 badge={gpOpen ? undefined : { label: 'locked', color: '#ffcc00' }}
                 testId="link-grand-prix"
                 soundEnabled={state.soundEnabled}

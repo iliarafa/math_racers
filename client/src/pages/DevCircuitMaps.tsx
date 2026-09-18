@@ -10,7 +10,7 @@ const SAMPLE_SECTORS = Array.from({ length: 8 }, (_, i) => ({
 export default function DevCircuitMaps() {
   return (
     <div
-      className="min-h-screen bg-white text-black p-4 space-y-8 overflow-y-auto"
+      className="min-h-dvh bg-white text-black p-4 space-y-8 overflow-y-auto"
       style={{ fontFamily: 'Oxanium, sans-serif' }}
     >
       <h1 className="text-lg font-bold">Circuit map QA (390px)</h1>

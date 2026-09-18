@@ -41,22 +41,24 @@ npm run db:push          # Sync Drizzle ORM schema to PostgreSQL
 client/src/
 ├── pages/               # Route components
 │   ├── Welcome.tsx      # Home/landing page
-│   ├── Game.tsx         # Main single-player racing (~4150 lines)
-│   ├── Multiplayer.tsx  # 1v1 multiplayer racing (~1900 lines)
+│   ├── Game.tsx         # Main single-player racing (~3850 lines)
+│   ├── Multiplayer.tsx  # 1v1 multiplayer racing (~2100 lines)
 │   ├── Garage.tsx       # Dashboard (settings, stats, racer log)
 │   ├── StrategyGuide.tsx # Math reference guide
 │   ├── ReactionTest.tsx # Reaction time mini-game (F1 lights)
 │   ├── Regulations.tsx  # Game rules
 │   ├── Leaderboard.tsx  # FP + GP + Quick Race boards (Supabase) with a local "Your Best" tier
 │   ├── RacerLog.tsx     # Standalone race history log
+│   ├── TrophyCabinet.tsx # Trophy cabinet: season weekends, badges, fact growth
 │   └── not-found.tsx    # 404 error page
 ├── components/
 │   ├── ui/              # 55 Shadcn/ui components
 │   ├── layout/          # GameLayout wrapper
-│   ├── TrackProgress.tsx
+│   ├── RewardStrip.tsx, TrophySplash.tsx, BadgeTile.tsx, DailyStreakChip.tsx, GrowthPanel.tsx  # rewards UI
 │   └── ErrorBoundary.tsx # React error boundary
 ├── lib/
-│   ├── gameLogic.ts     # Core game engine (~1050 lines)
+│   ├── gameLogic.ts     # Core game engine + GameState store (~940 lines)
+│   ├── trophies.ts, dailyStreak.ts, factMastery.ts  # reward models (pure, tested)
 │   ├── queryClient.ts   # React Query config
 │   └── utils.ts
 ├── hooks/
@@ -67,7 +69,7 @@ client/src/
 server/
 ├── index.ts             # Express entry point
 ├── routes.ts            # REST API (room management)
-├── websocket.ts         # Real-time multiplayer (~620 lines)
+├── websocket.ts         # Real-time multiplayer (~900 lines)
 ├── storage.ts           # Abstract data layer (DB/memory fallback)
 ├── static.ts            # Static file serving
 ├── db.ts                # Database connection
@@ -86,7 +88,7 @@ script/build.ts          # Custom build script
 - `@assets/*` → `attached_assets/*`
 
 ### State Management
-- **Single-player:** localStorage via `useGameState()` hook
+- **Single-player:** localStorage via `useGameState()` hook. The saved blob is the source of truth: every mutator goes through `mutateGameState` (load → apply → save synchronously → notify subscribers) and instances follow each other's saves, so a long-lived instance such as `MenuMusic` in `App.tsx` can never overwrite what a page just saved. Never call `setState` with a whole stale copy; add a pure `apply*` function and wrap it in `mutate`.
 - **Session data:** sessionStorage for lap times (cross-component)
 - **Series selection:** localStorage `lastSelectedDriverId` — persisted when selecting a series in single-player, read as default in multiplayer
 - **Server state:** React Query (available but minimally used)
@@ -101,17 +103,18 @@ The same bundle ships to the web and the iOS app. These pieces exist for browser
 - The Figma html-to-design capture script is injected from `main.tsx` only when `import.meta.env.DEV`.
 - Mouse hover: `markWebDocument()` (`webMeta.ts`, called first thing in `main.tsx`) stamps `data-web` on `<html>` only when not native. The `web-hover-*` classes at the end of `index.css` match only under `html[data-web]` inside `@media (hover: hover) and (pointer: fine)`, so the app (even an iPad with a trackpad) and touch browsers never get them. To give a web control a hover, append one of `web-hover-glass`, `-glass-within`, `-brighten`, `-darken`, `-fade`, `-text` or `-wash`. A plain Tailwind `hover:` also fires inside the app on an iPad with a trackpad. Keep `@property` and any `:has()` that depends on `:hover` out of that block: each one changes the iPad app even though nothing matches there (that `:has()` alters how WebKit rasterises scaled images).
 
-### Progression System (Championship)
-- Win a race (beat the bot) to "champion" that circuit at the current series
-- Championing a circuit at a series unlocks that circuit at the next series
-- A series becomes available when at least one circuit is championed at the previous series
-- Series order: Karting → F3 → F2 → F1
-- Practice mode bypasses all series/circuit locks
-- `championedCircuits` state: `{ [circuitId]: string[] }` maps circuits to championed series
-- Legacy `unlockedSeries` field kept for backward compatibility
+### Rewards (v1.4)
+Settled once per finished session by one effect in `Game.tsx` (`gameStatus === 'finished'`, re-armed when the screen leaves `finished`); the finish screens show the result in `RewardStrip`.
+- **Trophy cabinet** (`lib/trophies.ts`, `/trophies`): one trophy per Grand Prix weekend, id `gp:<season>:<round>:<circuitId>` (so a returning circuit gets its own slot). Race Day finished = bronze, beat the bot = silver, pole + win = gold; never downgraded. `TrophySplash` celebrates a new or upgraded trophy. Quick Race and Free Practice earn no trophy. `CURRENT_GRAND_PRIX.season` feeds the id — keep it current in `/weekend`.
+- **Badges** (`BADGES` in `trophies.ts`): the old `everything-is-purple` plus milestones (`first-win`, `laps-100`, `laps-1000`, `gp-all-purple`, `streak-7`, `streak-30`, `facts-50`), evaluated by the pure `evaluateMilestones`. Earned via `earnBadge`, shown by `BadgeTile`.
+- **Daily streak** (`lib/dailyStreak.ts`, `GameState.dailyStreak`): consecutive local calendar days with a finished session; counted by `touchDailyStreak()` from the Game finish effect, a cleared flashcard stage and a completed Lane Racer race. `DailyStreakChip` on the Hub is amber when yesterday counted but today has not. Distinct from `GameState.streak`, the per-answer streak inside a race.
+- **Fact mastery** (`lib/factMastery.ts`, `GameState.factStats`): per-fact stats keyed from `Question.num1/num2/operation` (`factKey`; Variables use the display). Each `lapResults` row carries `fact`; the AERO duplicate is `isBonus` and skipped. A fact is mastered after `MASTERY_MIN_CORRECT` clean answers with an EWMA under `MASTERY_MS[operation]`. `pickCallout` produces "You got faster at 7 × 8"; `GrowthPanel` shows mastered vs learning per operation. Store capped at `FACT_STATS_CAP`.
+- `GameState.unseenRewards` holds trophy/badge ids not yet viewed; the Hub's GARAGE card and the Garage's Trophies tile show the count, and opening `/trophies` clears it.
+- There is no series/championship progression; `coins`, `SHOP_ITEMS` and the per-answer `streak` persist but are not shown anywhere.
 
 ### Key Files
-- `/client/src/lib/gameLogic.ts` - Question generation, bot timing, difficulty curves, sector colors, progression system
+- `/client/src/lib/gameLogic.ts` - Question generation, bot timing, difficulty curves, sector colors, the GameState store and `useGameState()`
+- `/client/src/lib/trophies.ts`, `dailyStreak.ts`, `factMastery.ts` - Reward models (pure, each with a test)
 - `/client/src/pages/Game.tsx` - Main race gameplay with power-ups
 - `/client/src/pages/Multiplayer.tsx` - 1v1 multiplayer implementation
 - `/client/src/pages/Garage.tsx` - Dashboard (settings, telemetry stats, racer log)
@@ -174,10 +177,9 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 
 ### Game Modes
 
-**Career Mode** (default)
-- Race against bot on any unlocked circuit/series
-- Championship progression: champion circuits to unlock higher series
-- Practice mode: infinite loop of 100 questions, no penalties, no leaderboard
+**Quick Race** (`/game/quick-race`, "Race Now" on the Hub)
+- 20 questions against the bot on the current GP circuit, always Addition
+- Every finish posts to the Quick Race board and feeds the streak, mastery and milestone badges; no weekend trophy
 
 **Grand Prix Mode**
 - Uses Melbourne circuit with player-selected operation
@@ -204,14 +206,14 @@ Each mode has its own HUD rules. A layout change in one does not imply the same 
 - **Race Day** (`isGpRace`): GameLayout header hidden; LAP x/y and RETIRE are absolute labels top-left/top-right; no progress grid; question + answer centered in the column with viewport-only sizes and a transform offset on the question; clock sits above the keypad; whole screen flashes on answer.
 - **GP Practice / GP Qualifying** (`largeTenCol`): logo header, mode badge row with pause; clock at top of the column; large 10-column grid (3×10 practice, 2×10 qualifying) with cells capped at 32px; question + answer sized from the column's own height (`cqh`) so they never spill onto the grid. Practice adds the dynamic difficulty label under the clock.
 - **Free Practice / PST** (`isPracticeMode && !isGrandPrix`): BOX button in the header instead of a badge row; single fluid 20-column grid (cells shrink to fit the phone width); series label above the keypad; "Limits" counter.
-- **Career / Quick Race**: badge row with pause; dual 20-column grid (BOT row above player row); "Warnings" counter.
+- **Quick Race**: badge row with pause; dual 20-column grid (BOT row above player row); "Warnings" counter.
 
 **iPad** (`client/index.html` stamps `data-ipad-scale` on `<html>` for iPads only): the phone layout is viewport-scaled to fill the screen (600px-wide layout, at least 800px tall), so nothing above changes per device. In iPad **landscape** the racing screen splits into two panes (`index.css`, `useIpadLandscape`): timer, question, answer and sector grid on the left, keypad on the right. Race Weekend modes (Free Practice and the Grand Prix weekend) race in landscape on iPad via `@capacitor/screen-orientation` (`lib/orientationLock.ts`): the setup card still follows the device, and pressing Start on a portrait-held iPad shows a "Turn your iPad" prompt that holds the lights until it rotates, then locks landscape; the lock is released back at setup and on unmount. `UIRequiresFullScreen` is set in Info.plist because iPadOS ignores orientation locks for multitasking-capable apps. iPhone stays portrait-only and phone browsers are untouched.
 
 **Desktop and laptop browsers** (`lib/layoutMode.ts`, `hooks/use-layout-mode.ts`): `detectLayoutMode()` returns `desktop` only when the build is not native, `data-ipad-scale` is absent, the pointer is fine with hover, and the viewport is at least `DESKTOP_MIN_WIDTH` (900px); `main.tsx` stamps `data-desktop` on `<html>` and the hook keeps it in step on resize. In that mode Game, Multiplayer and Driving School return the cinematic tree from `components/desktop/` inside `GameLayout wideContent`: `DesktopRaceScreen` takes corner slots. The question and answer (`QuestionPane`) fill the middle at room-reading size with the sector grid between them (`between` slot, `cellMax={22}`); the mode badge sits top-left; `HudClock` (clock, difficulty) and `HudPauseButton` sit together top-right (Race Day keeps its absolute LAP / RETIRE labels and pushes the row down with `topInset`); `HudMessages` plus `PowerUpControls` with the `−`/`+` shortcut chips bottom-right; and the one-row `KeyStrip` centred along the bottom. The phone JSX is left byte-identical and renders for every other mode, so the iOS app cannot change. Input is keyboard-first: the strip keys are clickable for mouse-only children and flash white on each physical press via `useKeyEcho` + the `key-flash` keyframes in `index.css` (display only, never submits). Multiplayer got the same physical-keyboard handler as Game. Lane Racer keeps its full-screen canvas and only adds `LaneKeyHints` (arrows / A D). Menu pages are not part of this layout yet.
 
 ### Leaderboard
-- **Global tier (Supabase):** the client writes directly to `fp_leaderboard` (100-lap Free Practice), `gp_weekend_leaderboard` (GP Race Day) and `quick_race_leaderboard` (every finished Quick Race; always Addition, one row per player × circuit, `beat_bot` flag shown as a P1 badge, no score bonus) via `client/src/lib/supabase.ts` (`upsertByBest`: one row per key, replaced only by a strictly higher score). DDL lives in `docs/superpowers/plans/2026-08-17-leaderboards-supabase.sql` and is hand-run on the Supabase project. The Express `/api/leaderboard` routes are legacy and unused by the client.
+- **Global tier (Supabase):** the client writes directly to `fp_leaderboard` (100-lap Free Practice), `gp_weekend_leaderboard` (GP Race Day) and `quick_race_leaderboard` (every finished Quick Race; always Addition, one row per player × circuit, `beat_bot` flag shown as a P1 badge, no score bonus) via `client/src/lib/supabase.ts` (`upsertByBest`: one row per key, replaced only by a strictly higher score). DDL lives in `docs/superpowers/plans/2026-08-17-leaderboards-supabase.sql` and is hand-run on the Supabase project. There are no server leaderboard routes: the legacy Express ones and the `pst_leaderboard` / `gp_leaderboard` / `lane_racer_leaderboard` tables were removed from the code in 1.4 (the Supabase tables of those names may still exist and can be dropped by hand).
 - **Local tier (on-device):** `GameState.localBests` keyed `board:circuitId:operation:session` (`fp` 25/50/100, `gp` practice/qualifying/race, `qr` race) via `client/src/lib/localBests.ts`. Every finished FP or GP session records one; finish screens show Score / Personal Best / "NEW PERSONAL BEST", and `Leaderboard.tsx` shows a "Your Best" card above the global list with a hint until the player has a global row. Lane Racer has no board.
 - Validation: score 0-100k, time 1s-1hr, mistakes 0-200, accuracy 0-100%
 
@@ -237,7 +239,6 @@ Each mode has its own HUD rules. A layout change in one does not imply the same 
 - `POST /api/rooms/:code/join` - Join room
 - `GET /api/rooms/:code` - Get room details
 - `PUT /api/rooms/:code/update` - Update settings before race
-- `POST /api/leaderboard` / `GET /api/leaderboard` - Legacy PST leaderboard (unused; the client talks to Supabase directly)
 
 ### WebSocket Events
 **Client → Server:** `join_room`, `start_countdown`, `progress_update`, `race_finished`, `mistake_update`, `toggle_power_ups`, `energy_update`, `activate_overtake`, `deactivate_overtake`, `activate_aero`

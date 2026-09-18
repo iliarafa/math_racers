@@ -27,7 +27,6 @@ import RacerLog from "@/pages/RacerLog";
 import Leaderboard from "@/pages/Leaderboard";
 import LaneRacer from "@/pages/LaneRacer";
 import GrandPrixInfo from "@/pages/GrandPrixInfo";
-// import DeployHarvest from "@/pages/DeployHarvest"; // archived — re-enable later
 import Hub from "@/pages/Hub";
 import DevCircuitMaps from "@/pages/DevCircuitMaps";
 import DrivingSchool from "@/pages/DrivingSchool";
@@ -52,7 +51,6 @@ function Router() {
       <Route path="/trophies" component={TrophyCabinet} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/lane-racer" component={LaneRacer} />
-      {/* <Route path="/deploy-harvest" component={DeployHarvest} /> archived — re-enable later */}
       <Route component={NotFound} />
     </Switch>
   );

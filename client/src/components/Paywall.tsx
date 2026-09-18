@@ -43,7 +43,7 @@ export function Paywall({ onBack, onPurchaseSuccess }: PaywallProps) {
   ];
 
   return (
-    <div className="h-screen flex flex-col items-center bg-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+    <div className="h-dvh flex flex-col items-center bg-white" style={{ fontFamily: 'Oxanium, sans-serif' }}>
       {/* Logo */}
       <div className="pt-6 pb-4 md:pb-8 flex justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)' }}>
         <img
