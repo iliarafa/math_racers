@@ -67,8 +67,7 @@ export interface GameState {
   localBests: LocalBests;
 }
 
-/** Free Practice: complete a full circuit tour with every sector purple. */
-export const BADGE_EVERYTHING_IS_PURPLE = 'everything-is-purple';
+export { BADGE_EVERYTHING_IS_PURPLE } from './trophies';
 
 export const TEAM_COLORS = [
   { id: 'ferrari', name: 'Scuderia Racing', hex: '#ff2800' },
