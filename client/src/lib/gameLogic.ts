@@ -513,6 +513,7 @@ export function subscribeGameState(listener: (state: GameState) => void): () => 
   return () => { listeners.delete(listener); };
 }
 
+/** Wipe all progress and tell every mounted instance, so none keeps showing the old state. */
 export function resetGameState(): void {
   cached = null;
   diskUnreliable = false;
@@ -521,6 +522,7 @@ export function resetGameState(): void {
   } catch (error) {
     console.error('Failed to reset data:', error);
   }
+  listeners.forEach((listener) => listener(INITIAL_STATE));
 }
 
 // ── Rewards: trophies, daily streak, mastery, badges ───────────────

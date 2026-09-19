@@ -38,7 +38,7 @@ export function isYesterday(earlier: string, later: string): boolean {
 export type StreakChange = 'same' | 'started' | 'incremented' | 'reset';
 
 export function advanceDailyStreak(prev: DailyStreak, today: string): { next: DailyStreak; change: StreakChange } {
-  if (prev.lastDay === today) return { next: prev, change: 'same' };
+  if (prev.count > 0 && prev.lastDay === today) return { next: prev, change: 'same' };
   let change: StreakChange;
   let count: number;
   if (prev.count > 0 && isYesterday(prev.lastDay, today)) {
@@ -70,5 +70,6 @@ export function sanitizeDailyStreak(raw: unknown): DailyStreak {
   if (typeof lastDay !== 'string' || (lastDay !== '' && !DAY_RE.test(lastDay))) return EMPTY_STREAK;
   if (count > 0 && lastDay === '') return EMPTY_STREAK;
   const safeBest = typeof best === 'number' && Number.isInteger(best) && best >= 0 ? best : 0;
-  return { count, lastDay, best: Math.max(safeBest, count) };
+  // A zero count carries no day: a leftover one would make today's first session look already counted.
+  return { count, lastDay: count === 0 ? '' : lastDay, best: Math.max(safeBest, count) };
 }

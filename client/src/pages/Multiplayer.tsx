@@ -103,7 +103,7 @@ type GameStatus = "lobby" | "waiting" | "track_select" | "countdown" | "racing" 
 const KARTING_DRIVER = DRIVERS.find(d => d.id === 'karting') ?? DRIVERS[0];
 
 export default function Multiplayer() {
-  const { state, addCoins, addCareerPoints } = useGameState();
+  const { state, addCoins, addCareerPoints, touchDailyStreak } = useGameState();
   const { isPremium, isLoading } = usePurchase();
   const [, setLocation] = useLocation();
   
@@ -479,6 +479,10 @@ export default function Multiplayer() {
       case "race_complete":
         setRaceResult(message);
         setGameStatus("finished");
+        // A finished race counts toward the daily streak; a crash (999999) does not, as in Game.tsx.
+        if ((isHostRef.current ? message.hostFinishTime : message.guestFinishTime) !== 999999) {
+          touchDailyStreak();
+        }
         if (message.winnerId === playerIdRef.current) {
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
           addCoins(100);

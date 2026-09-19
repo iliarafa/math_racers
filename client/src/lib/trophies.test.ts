@@ -107,6 +107,17 @@ test('milestones fire exactly at their thresholds', () => {
   assert.deepEqual(evaluateMilestones(ctx({ allPurpleRaceDay: true }), []), ['gp-all-purple']);
 });
 
+test('milestones come back in badge-registry order, and each one has a badge', () => {
+  assert.deepEqual(evaluateMilestones(ctx({ totalLaps: 100, racesWon: 1 }), []), ['first-win', 'laps-100']);
+  const all = evaluateMilestones(ctx({ totalLaps: 1000, racesWon: 1, dailyStreak: 30, factsMastered: 50, allPurpleRaceDay: true }), []);
+  assert.deepEqual(all, BADGES.map((b) => b.id).filter((id) => all.includes(id)));
+  assert.deepEqual(
+    BADGES.map((b) => b.id).filter((id) => !all.includes(id)),
+    [BADGE_EVERYTHING_IS_PURPLE],
+    'every badge except the Free Practice purple lap is a milestone',
+  );
+});
+
 test('milestones already earned are not returned again', () => {
   assert.deepEqual(evaluateMilestones(ctx({ totalLaps: 1000, racesWon: 3 }), ['laps-100', 'first-win']), ['laps-1000']);
 });

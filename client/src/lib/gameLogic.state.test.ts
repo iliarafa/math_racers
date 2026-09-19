@@ -52,13 +52,45 @@ test('a mutation is applied to the saved state, not to a stale copy', () => {
     // Game.tsx finishes a race and records a win.
     mutateGameState((s) => ({ ...s, racesWon: s.racesWon + 1 }));
 
-    // The mute button is tapped: it only knows the field it changes.
-    const returned = mutateGameState((s) => ({ ...s, soundEnabled: !stale.soundEnabled }));
+    // The mute button is tapped. Its updater must be handed what Game.tsx saved,
+    // not the copy MenuMusic mounted with.
+    const returned = mutateGameState((s) => {
+      assert.notEqual(s, stale);
+      assert.equal(s.racesWon, 1, 'the updater sees the win saved after mount');
+      return { ...s, soundEnabled: !s.soundEnabled };
+    });
 
     const saved = loadGameState();
     assert.equal(saved.racesWon, 1, 'the win must survive the sound toggle');
     assert.equal(saved.soundEnabled, false);
     assert.deepEqual(returned, saved, 'mutateGameState returns exactly what it saved');
+  });
+});
+
+test('the next mutation starts from the saved blob, not from a memory copy', () => {
+  const store = memoryStorage();
+  withStorage(store, () => {
+    mutateGameState((s) => ({ ...s, racesWon: 1 }));
+    // Something else rewrites the blob (another tab, a restore): the next change builds on it.
+    store.setItem('f1-math-racer-state', JSON.stringify({ ...loadGameState(), racesWon: 5 }));
+    mutateGameState((s) => {
+      assert.equal(s.racesWon, 5);
+      return { ...s, totalLaps: s.totalLaps + 1 };
+    });
+    assert.equal(loadGameState().racesWon, 5);
+    assert.equal(loadGameState().totalLaps, 1);
+  });
+});
+
+test('a reset is broadcast, so every mounted hook instance drops the old progress', () => {
+  withStorage(memoryStorage(), () => {
+    mutateGameState((s) => ({ ...s, racesWon: 3, soundEnabled: false }));
+    const seen: { racesWon: number; soundEnabled: boolean }[] = [];
+    const unsubscribe = subscribeGameState((s) => { seen.push({ racesWon: s.racesWon, soundEnabled: s.soundEnabled }); });
+    resetGameState();
+    unsubscribe();
+    assert.deepEqual(seen, [{ racesWon: 0, soundEnabled: true }]);
+    assert.equal(loadGameState().racesWon, 0);
   });
 });
 

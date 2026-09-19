@@ -106,17 +106,18 @@ export type MilestoneContext = {
   allPurpleRaceDay: boolean;
 };
 
-const MILESTONES: readonly { id: string; reached: (ctx: MilestoneContext) => boolean }[] = [
-  { id: 'laps-100', reached: (c) => c.totalLaps >= 100 },
-  { id: 'laps-1000', reached: (c) => c.totalLaps >= 1000 },
-  { id: 'first-win', reached: (c) => c.racesWon >= 1 },
-  { id: 'streak-7', reached: (c) => c.dailyStreak >= 7 },
-  { id: 'streak-30', reached: (c) => c.dailyStreak >= 30 },
-  { id: 'facts-50', reached: (c) => c.factsMastered >= 50 },
-  { id: 'gp-all-purple', reached: (c) => c.allPurpleRaceDay },
-];
+/** When each milestone badge is reached, keyed by badge id. */
+const MILESTONES: Record<string, (ctx: MilestoneContext) => boolean> = {
+  'first-win': (c) => c.racesWon >= 1,
+  'laps-100': (c) => c.totalLaps >= 100,
+  'laps-1000': (c) => c.totalLaps >= 1000,
+  'gp-all-purple': (c) => c.allPurpleRaceDay,
+  'streak-7': (c) => c.dailyStreak >= 7,
+  'streak-30': (c) => c.dailyStreak >= 30,
+  'facts-50': (c) => c.factsMastered >= 50,
+};
 
-/** Badge ids reached by `ctx` that are not already in `earned`, in registry order. */
+/** Badge ids reached by `ctx` that are not already in `earned`, in BADGES order. */
 export function evaluateMilestones(ctx: MilestoneContext, earned: readonly string[]): string[] {
-  return MILESTONES.filter((m) => !earned.includes(m.id) && m.reached(ctx)).map((m) => m.id);
+  return BADGES.filter((b) => !earned.includes(b.id) && MILESTONES[b.id]?.(ctx) === true).map((b) => b.id);
 }

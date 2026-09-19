@@ -117,9 +117,11 @@ export type IngestOutcome = {
 export function ingestSession(stats: FactStats, rows: readonly FactRow[], now: number): IngestOutcome {
   const next: FactStats = { ...stats };
   const cleanTimes = new Map<string, number[]>();
+  const touched = new Set<string>();
 
   for (const r of rows) {
     if (!r.fact || r.isBonus) continue;
+    touched.add(r.fact);
     const clean = r.result !== 'incorrect' && !(r.wrongAttempts && r.wrongAttempts.length > 0);
     const prev = next[r.fact] ?? EMPTY_STAT;
     const updated: FactStat = { ...prev, seen: prev.seen + 1, lastAt: now };
@@ -148,10 +150,13 @@ export function ingestSession(stats: FactStats, rows: readonly FactRow[], now: n
 
   const newlyMastered = Array.from(cleanTimes.keys()).filter((fact) => !isMastered(fact, stats[fact]) && isMastered(fact, next[fact]));
 
-  const keys = Object.keys(next);
-  if (keys.length > FACT_STATS_CAP) {
-    keys.sort((a, b) => next[a].lastAt - next[b].lastAt);
-    for (const key of keys.slice(0, keys.length - FACT_STATS_CAP)) delete next[key];
+  const overflow = Object.keys(next).length - FACT_STATS_CAP;
+  if (overflow > 0) {
+    // Least recently seen go first, but never this session's facts: a device clock that was
+    // set back can leave older rows stamped later than `now`.
+    const evictable = Object.keys(next).filter((key) => !touched.has(key));
+    evictable.sort((a, b) => next[a].lastAt - next[b].lastAt);
+    for (const key of evictable.slice(0, overflow)) delete next[key];
   }
 
   return { stats: next, improved, newlyMastered };

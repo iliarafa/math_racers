@@ -2779,7 +2779,8 @@ export default function Game() {
 
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
-        {showTrophySplash && rewardOutcome?.trophy && rewardOutcome.trophy.status !== 'unchanged' && (
+        {/* Waits for the leaderboard name prompt: leaving for /trophies from above it would drop the pending entry. */}
+        {showTrophySplash && !showNamePrompt && rewardOutcome?.trophy && rewardOutcome.trophy.status !== 'unchanged' && (
           <TrophySplash
             tier={rewardOutcome.trophy.tier}
             status={rewardOutcome.trophy.status}

@@ -11,4 +11,7 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL,
   },
+  // Legacy leaderboard tables that are still in the Supabase project but no longer in the
+  // schema: keep `db:push` from offering to drop them (and their rows). Drop them by hand if wanted.
+  tablesFilter: ["!pst_leaderboard", "!gp_leaderboard", "!lane_racer_leaderboard"],
 });

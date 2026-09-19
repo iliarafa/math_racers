@@ -126,6 +126,17 @@ test('the store is capped by evicting the least recently seen facts', () => {
   assert.ok(next['1+1000']);
 });
 
+test('eviction never drops a fact answered this session, even when stored stamps ran ahead of the clock', () => {
+  // A device clock that was set forward and then corrected leaves rows stamped in the "future".
+  const stats: FactStats = {};
+  for (let i = 0; i < FACT_STATS_CAP; i++) {
+    stats[`${i}+1000`] = stat({ seen: 1, correct: 1, bestMs: 1, lastMs: 1, ewmaMs: 1, lastAt: 2_000_000_000_000 });
+  }
+  const { stats: next } = ingestSession(stats, [row('7x8', 3000)], 1_700_000_000_000);
+  assert.equal(Object.keys(next).length, FACT_STATS_CAP);
+  assert.ok(next['7x8'], 'the fact just answered is kept');
+});
+
 test('summaries count mastered and learning facts per operation', () => {
   const stats: FactStats = {
     '7x8': stat({ seen: 3, correct: 3, ewmaMs: 1000, lastAt: 1 }),
