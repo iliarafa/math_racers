@@ -34,6 +34,8 @@ export const MASTERY_MIN_CORRECT = 3;
 export const EWMA_ALPHA = 0.3;
 /** A session mean under this share of the prior average counts as a speed-up. */
 export const IMPROVEMENT_RATIO = 0.85;
+/** Slower answers count as seen but not timed: the question clock keeps running through a pause. */
+export const MAX_TIMED_MS = 60_000;
 
 /** Moving average a fact must be under to count as mastered, per operation. */
 export const MASTERY_MS: Record<string, number> = {
@@ -122,7 +124,9 @@ export function ingestSession(stats: FactStats, rows: readonly FactRow[], now: n
   for (const r of rows) {
     if (!r.fact || r.isBonus) continue;
     touched.add(r.fact);
-    const clean = r.result !== 'incorrect' && !(r.wrongAttempts && r.wrongAttempts.length > 0);
+    // A time past the cap was not spent answering (paused, BOX open, app in the background).
+    const timed = Number.isFinite(r.responseTime) && r.responseTime >= 0 && r.responseTime <= MAX_TIMED_MS;
+    const clean = timed && r.result !== 'incorrect' && !(r.wrongAttempts && r.wrongAttempts.length > 0);
     const prev = next[r.fact] ?? EMPTY_STAT;
     const updated: FactStat = { ...prev, seen: prev.seen + 1, lastAt: now };
     if (clean) {

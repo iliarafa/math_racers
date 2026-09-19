@@ -4,6 +4,7 @@ import {
   applyBadge,
   applyDailyStreak,
   applyFactResults,
+  applyMilestones,
   applyRewardsSeen,
   applyWeekendTrophy,
   loadGameState,
@@ -199,6 +200,26 @@ test('a newly earned badge is flagged as unseen; an old one is not', () => {
     const again = applyBadge(first.state, 'first-win');
     assert.equal(again.newlyEarned, false);
     assert.deepEqual(again.state.unseenRewards, ['first-win']);
+  });
+});
+
+test('a streak built outside Game.tsx still earns its badge when the day is counted', () => {
+  withStorage(memoryStorage(), () => {
+    // Six days of flashcards and Lane Racer, then a seventh: no Game.tsx race involved.
+    const before = { ...loadGameState(), dailyStreak: { count: 6, lastDay: '2026-09-17', best: 6 } };
+    const settled = applyMilestones(applyDailyStreak(before, '2026-09-18').state);
+    assert.deepEqual(settled.badges, ['streak-7']);
+    assert.deepEqual(settled.state.earnedBadges, ['streak-7']);
+    assert.deepEqual(settled.state.unseenRewards, ['streak-7']);
+    assert.deepEqual(applyMilestones(settled.state).badges, [], 'awarded once');
+  });
+});
+
+test('milestones are read from the saved state and come back in registry order', () => {
+  withStorage(memoryStorage(), () => {
+    const state = { ...loadGameState(), totalLaps: 100, racesWon: 1 };
+    assert.deepEqual(applyMilestones(state).badges, ['first-win', 'laps-100']);
+    assert.deepEqual(applyMilestones(state, { allPurpleRaceDay: true }).badges, ['first-win', 'laps-100', 'gp-all-purple']);
   });
 });
 

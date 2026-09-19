@@ -10,6 +10,7 @@ import { HudClock, HudMessages } from "@/components/desktop/RaceHud";
 import { KeyStrip } from "@/components/desktop/KeyStrip";
 import { PowerUpControls } from "@/components/desktop/PowerUpControls";
 import { QuestionPane } from "@/components/desktop/QuestionPane";
+import { announceBadges } from "@/lib/announceBadges";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { SetupRow } from "@/components/setup/SetupRow";
 import { levelRow, operationRow } from "@/components/setup/setupRows";
@@ -481,7 +482,7 @@ export default function Multiplayer() {
         setGameStatus("finished");
         // A finished race counts toward the daily streak; a crash (999999) does not, as in Game.tsx.
         if ((isHostRef.current ? message.hostFinishTime : message.guestFinishTime) !== 999999) {
-          touchDailyStreak();
+          announceBadges(touchDailyStreak().badges);
         }
         if (message.winnerId === playerIdRef.current) {
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });

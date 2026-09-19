@@ -9,7 +9,7 @@ Handoff summary plus the standing context future sessions need. The rewards work
 3. **Cleanup** (`f18ecfd`): DeployHarvest, TrackProgress, the legacy Express leaderboard routes/storage/tables, `update_gp.md` and the Madrid handoff are gone; CLAUDE.md corrected (no championship/Career mode exists). `tablesFilter` in `drizzle.config.ts` keeps `db:push` from dropping the three legacy tables still in Supabase.
 4. **Version single source** (`25f6c8b`): `npm run version:bump <x.y.z>` rewrites package.json, the lockfile, capacitor.config.ts and both Xcode `MARKETING_VERSION`s, and sets both build numbers to the higher one + 1; the Garage footer shows `__APP_VERSION__`. This release is **1.3.15 (2)**: the version stayed and the build number went from 1 to 2, so a second 1.3.15 upload is accepted.
 5. **Desktop menu frame** (`8af6e5f`): `.menu-frame` (520px, centred, `zoom: 1.15`) under `html[data-desktop]`; `GameLayout menuFrame` + the Hub/Garage wrappers. Phone/iPad untouched.
-6. **Pre-merge review fixes**: an adversarial review before the merge found the splash-over-name-prompt bug, the un-broadcast reset and the missing multiplayer streak (all fixed), plus smaller model fixes: fact-store eviction never drops this session's facts, a zero-count streak can't swallow a day, milestone badges come back in registry order, and the streak DST test is pinned to Europe/London.
+6. **Pre-merge review fixes** (two adversarial review rounds): the trophy splash waits for the leaderboard name prompt; a reset is broadcast; a finished multiplayer race counts toward the streak; the bot freezes the moment the player crosses the line (`playerCrossedLineRef`), so Race Day's 600 ms hand-off can no longer turn a win into P2/bronze after confetti and "First Win"; milestone badges settle from the saved state inside `touchDailyStreak` (`applyMilestones`), so streaks kept up in Driving School, Lane Racer or Multiplayer earn their badges; the Free Practice, GP Practice and Qualifying finish screens scroll (`overflow-y-auto` + `my-auto`) instead of clipping their buttons on small iPhones; answers slower than `MAX_TIMED_MS` (60 s, a pause) are seen but not timed; plus smaller model fixes (eviction, zero-count streak, badge order, DST test pinned to Europe/London).
 
 ## Open tasks
 
@@ -17,7 +17,8 @@ Handoff summary plus the standing context future sessions need. The rewards work
 2. **Flashcards polish**: walk `/driving-school` together and list issues one screen at a time.
 3. **Release**: `main` is committed but not pushed; push only when the user says "push it" (Vercel deploys the web build from `main`). iOS: build and upload 1.3.15 (2). If 1.3.15 is already live on the App Store, Apple needs a higher version: run `npm run version:bump 1.3.16` first.
 4. **Leaderboards scope (debate)**: deferred; not part of this release.
-5. **Weekend rotation** on `main`: Baku (Round 15) is current. Run `/weekend` when the calendar moves on.
+5. **Setup card on short desktop windows** (pre-existing): below ~600px of window height the Free Practice / Grand Prix setup card cuts off its "Go to track" / Start button with no scroll.
+6. **Weekend rotation** on `main`: Baku (Round 15) is current. Run `/weekend` when the calendar moves on.
 
 ### Working in a worktree
 `preview_start` runs the **main checkout's** server even from the worktree; start the branch's server with a background `npm run dev` from the worktree and open the pane with `preview_start {url}`. Server/vite-config changes need a `pkill -f "tsx server/index.ts"` + restart.

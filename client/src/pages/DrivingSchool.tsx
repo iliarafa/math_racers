@@ -10,6 +10,7 @@ import type { KeyStripKey } from "@/lib/keyStrip";
 import { cn } from "@/lib/utils";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import { useGameState } from "@/lib/gameLogic";
+import { announceBadges } from "@/lib/announceBadges";
 import schoolBgImage from "@assets/driving-school-bg.jpg";
 import {
   DRIVING_SCHOOL_STAGES,
@@ -148,7 +149,7 @@ export default function DrivingSchool() {
     // End of pass — clear on a purple majority with no reds, else re-drill non-purple
     if (isStageCleared(nextDeck)) {
       setDeck(nextDeck);
-      touchDailyStreak(); // a cleared stage counts as today's session
+      announceBadges(touchDailyStreak().badges); // a cleared stage counts as today's session
       if (stage) {
         saveHighestClearedStage(stage.id);
         setHighestCleared(loadHighestClearedStage());

@@ -5,6 +5,7 @@ import {
   FACT_STATS_CAP,
   MASTERY_MIN_CORRECT,
   MASTERY_MS,
+  MAX_TIMED_MS,
   countMastered,
   factClass,
   factKey,
@@ -63,6 +64,20 @@ test('ingestSession counts every attempt as seen but only clean answers as corre
   assert.equal(stats['7x8'].bestMs, 2500, 'timing comes from clean answers only');
   assert.equal(stats['7x8'].lastMs, 2500);
   assert.equal(stats['7x8'].lastAt, 100);
+});
+
+test('an answer slower than MAX_TIMED_MS is seen but not timed, so a pause cannot wreck the average', () => {
+  const prior: FactStats = { '7x8': stat({ seen: 3, correct: 3, bestMs: 2000, lastMs: 2000, ewmaMs: 2000, lastAt: 1 }) };
+  // The child paused (or opened BOX, or left the iPad) for five minutes, then answered first try.
+  const paused = ingestSession(prior, [row('7x8', 5 * 60_000)], 2);
+  assert.equal(paused.stats['7x8'].seen, 4);
+  assert.equal(paused.stats['7x8'].correct, 3);
+  assert.equal(paused.stats['7x8'].ewmaMs, 2000);
+  assert.equal(paused.stats['7x8'].lastAt, 2);
+  assert.equal(factClass('7x8', paused.stats['7x8']), 'mastered', 'still mastered');
+  // The next ordinary answer is not reported as a speed-up.
+  assert.deepEqual(ingestSession(paused.stats, [row('7x8', 2100)], 3).improved, []);
+  assert.equal(ingestSession(prior, [row('7x8', MAX_TIMED_MS)], 4).stats['7x8'].correct, 4, 'an answer at the cap still counts');
 });
 
 test('ingestSession skips bonus rows and rows without a fact', () => {

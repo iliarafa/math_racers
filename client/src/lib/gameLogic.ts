@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Difficulty, Question } from '@shared/mathEngine';
 import { compareLocalBest, sanitizeLocalBests, type LocalBestEntry, type LocalBests } from './localBests';
-import { sanitizeTrophies, upgradeTrophy, type Trophy, type TrophyUpgrade } from './trophies';
+import { evaluateMilestones, sanitizeTrophies, upgradeTrophy, type Trophy, type TrophyUpgrade } from './trophies';
 import { EMPTY_STREAK, advanceDailyStreak, localDayString, sanitizeDailyStreak, type DailyStreak, type StreakChange } from './dailyStreak';
 import { countMastered, ingestSession, sanitizeFactStats, type FactRow, type FactStats, type IngestOutcome } from './factMastery';
 
@@ -560,6 +560,24 @@ export function applyBadge(state: GameState, id: string): { state: GameState; ne
   };
 }
 
+/**
+ * Award every milestone badge the state has reached. Everything but `allPurpleRaceDay` is read
+ * from the state itself, so any mode that saves progress can settle them. Newly earned ids come
+ * back in BADGES order.
+ */
+export function applyMilestones(state: GameState, session: { allPurpleRaceDay?: boolean } = {}): { state: GameState; badges: string[] } {
+  const badges = evaluateMilestones({
+    totalLaps: state.totalLaps,
+    racesWon: state.racesWon,
+    dailyStreak: state.dailyStreak.count,
+    factsMastered: countMastered(state.factStats),
+    allPurpleRaceDay: session.allPurpleRaceDay === true,
+  }, state.earnedBadges);
+  let next = state;
+  for (const id of badges) next = applyBadge(next, id).state;
+  return { state: next, badges };
+}
+
 export function applyRewardsSeen(state: GameState): GameState {
   return state.unseenRewards.length === 0 ? state : { ...state, unseenRewards: [] };
 }
@@ -667,25 +685,43 @@ export function useGameState() {
     return status;
   };
 
-  /** Counts today once; returns how the streak moved and its new value. */
-  const touchDailyStreak = (): { change: StreakChange; streak: DailyStreak } => {
+  /**
+   * Counts today once and settles any milestone badge the saved state has reached, so a streak
+   * kept up in Driving School, Lane Racer or Multiplayer earns its badge too. Returns how the
+   * streak moved, its new value and the newly earned badge ids.
+   */
+  const touchDailyStreak = (): { change: StreakChange; streak: DailyStreak; badges: string[] } => {
     let change: StreakChange = 'same';
+    let badges: string[] = [];
     const next = mutate(prev => {
-      const result = applyDailyStreak(prev);
-      change = result.change;
-      return result.state;
+      const counted = applyDailyStreak(prev);
+      change = counted.change;
+      const settled = applyMilestones(counted.state);
+      badges = settled.badges;
+      return settled.state;
     });
-    return { change, streak: next.dailyStreak };
+    return { change, streak: next.dailyStreak, badges };
   };
 
-  const ingestFactResults = (rows: readonly FactRow[]): Omit<IngestOutcome, 'stats'> & { factsMastered: number } => {
+  /** Award the milestone badges reached by the saved state plus this session; returns the new ids. */
+  const settleMilestones = (session: { allPurpleRaceDay?: boolean } = {}): string[] => {
+    let badges: string[] = [];
+    mutate(prev => {
+      const settled = applyMilestones(prev, session);
+      badges = settled.badges;
+      return settled.state;
+    });
+    return badges;
+  };
+
+  const ingestFactResults = (rows: readonly FactRow[]): Omit<IngestOutcome, 'stats'> => {
     let outcome: Omit<IngestOutcome, 'stats'> = { improved: [], newlyMastered: [] };
-    const next = mutate(prev => {
+    mutate(prev => {
       const result = applyFactResults(prev, rows);
       outcome = { improved: result.improved, newlyMastered: result.newlyMastered };
       return result.state;
     });
-    return { ...outcome, factsMastered: countMastered(next.factStats) };
+    return outcome;
   };
 
   const markRewardsSeen = () => {
@@ -779,6 +815,7 @@ export function useGameState() {
     earnBadge,
     awardWeekendTrophy,
     touchDailyStreak,
+    settleMilestones,
     ingestFactResults,
     markRewardsSeen,
     updatePersonalBest,

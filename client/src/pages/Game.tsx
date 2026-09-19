@@ -31,7 +31,8 @@ import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 import { grandPrixDevBypass, hasSuperlicence } from "@/lib/drivingSchoolLicence";
 import { factKey, pickCallout } from "@/lib/factMastery";
-import { BADGES, evaluateMilestones, trophyId, weekendTrophyTier } from "@/lib/trophies";
+import { trophyId, weekendTrophyTier } from "@/lib/trophies";
+import { announceBadges } from "@/lib/announceBadges";
 import { RewardStrip, type RewardOutcome } from "@/components/RewardStrip";
 import { TrophySplash } from "@/components/TrophySplash";
 
@@ -360,7 +361,7 @@ const playAeroActivatedSound = () => {
 };
 
 export default function Game() {
-  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, awardWeekendTrophy, touchDailyStreak, ingestFactResults, updatePersonalBest, recordLocalBest, recordLapTime, setPlayerName } = useGameState();
+  const { state, addCoins, incrementStreak, resetStreak, incrementLaps, addCareerPoints, incrementRacesWon, earnBadge, awardWeekendTrophy, touchDailyStreak, settleMilestones, ingestFactResults, updatePersonalBest, recordLocalBest, recordLapTime, setPlayerName } = useGameState();
   const { isPremium, isLoading: isPurchaseLoading } = usePurchase();
   const [, setLocation] = useLocation();
   /** `/game/free-practice` | `/game/grand-prix` | `/game/quick-race` — replaces the old mode_select screen. */
@@ -653,6 +654,13 @@ export default function Game() {
     }
   }, [gameStatus]);
 
+  // Set the moment the player's final answer lands. The bot's pending lap timer checks it, so the
+  // bot cannot finish during Race Day's 600 ms hand-off to finishRace and flip a result already won.
+  const playerCrossedLineRef = useRef(false);
+  useEffect(() => {
+    if (gameStatus === 'countdown' || gameStatus === 'selecting') playerCrossedLineRef.current = false;
+  }, [gameStatus]);
+
   // Rewards settle once per finished session: daily streak, fact mastery, the
   // weekend trophy on Race Day, then any milestone badges. Runs as an effect
   // rather than inside finishRace so lapResults is complete, and re-arms the
@@ -691,17 +699,13 @@ export default function Game() {
       if (status !== 'unchanged') setShowTrophySplash(true);
     }
 
-    // totalLaps and racesWon were bumped by finishRace before this render.
-    const newBadges = evaluateMilestones({
-      totalLaps: state.totalLaps,
-      racesWon: state.racesWon,
-      dailyStreak: streak.streak.count,
-      factsMastered: mastery.factsMastered,
-      allPurpleRaceDay: isRaceDay && lapResults.length > 0 && lapResults.every((r) => r.sectorColor === 'purple'),
-    }, state.earnedBadges).filter((id) => earnBadge(id));
-    for (const id of newBadges) {
-      toast({ title: 'Badge unlocked', description: BADGES.find((b) => b.id === id)?.label ?? id });
-    }
+    // Streak, lap and win badges settle inside touchDailyStreak (finishRace has already saved
+    // totalLaps and racesWon); mastery and Race Day badges settle here, after the facts are in.
+    const newBadges = [
+      ...streak.badges,
+      ...settleMilestones({ allPurpleRaceDay: isRaceDay && lapResults.length > 0 && lapResults.every((r) => r.sectorColor === 'purple') }),
+    ];
+    announceBadges(newBadges);
 
     setRewardOutcome({
       trophy,
@@ -1360,6 +1364,7 @@ export default function Game() {
       }
 
       if (newProgress >= raceLength) {
+        playerCrossedLineRef.current = true;
         if (isPreSeasonTesting) {
           // Free Practice session done. Every finished session saves a local
           // personal best; only full 100-lap sessions post to the global
@@ -2037,6 +2042,7 @@ export default function Game() {
     const lapTime = baseSpeed * randomFactor;
 
     const timeout = setTimeout(() => {
+      if (playerCrossedLineRef.current) return; // the player finished first; the result stands
       const sectorIndex = botProgress; // Current sector index (0-based)
 
       // Get the current best time for this sector (use ref to avoid stale closure)
@@ -2536,8 +2542,8 @@ export default function Game() {
     const achievedLabel = DRIVERS.find(d => d.difficulty === (dynamicDifficultyRef.current?.currentDifficulty || dynamicDifficultyDisplay))?.label || 'Karting';
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
-        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full p-4">
-          <div className="rounded-xl p-6 w-full text-center space-y-6">
+        <div className="flex-1 min-h-0 flex flex-col items-center max-w-xl mx-auto w-full overflow-y-auto p-4">
+          <div className="rounded-xl p-6 w-full text-center space-y-6 my-auto">
             <div className="space-y-2">
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Pre-Season Testing</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Testing Complete</div>
@@ -2650,8 +2656,8 @@ export default function Game() {
     const difficultyLabel = DRIVERS.find(d => d.difficulty === (grandPrixLockedDifficulty || 'beginner'))?.label || 'Karting';
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
-        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full p-4">
-          <div className="rounded-xl p-6 w-full text-center space-y-6">
+        <div className="flex-1 min-h-0 flex flex-col items-center max-w-xl mx-auto w-full overflow-y-auto p-4">
+          <div className="rounded-xl p-6 w-full text-center space-y-6 my-auto">
             <div className="space-y-2">
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Grand Prix</div>
               <div className="text-5xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>Practice Complete</div>
@@ -2713,8 +2719,8 @@ export default function Game() {
     const gotPole = grandPrixPolePosition;
     return (
       <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
-        <div className="flex-1 flex flex-col items-center justify-center max-w-xl mx-auto w-full p-4">
-          <div className="rounded-xl p-6 w-full text-center space-y-6">
+        <div className="flex-1 min-h-0 flex flex-col items-center max-w-xl mx-auto w-full overflow-y-auto p-4">
+          <div className="rounded-xl p-6 w-full text-center space-y-6 my-auto">
             <div className="space-y-2">
               <div className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Qualifying Result</div>
               <div className="text-8xl font-bold tracking-tighter" style={{ fontFamily: 'Oxanium, sans-serif' }}>{gotPole ? 'P1' : 'P2'}</div>
