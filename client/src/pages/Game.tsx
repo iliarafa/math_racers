@@ -32,7 +32,7 @@ import { Paywall } from "@/components/Paywall";
 import { grandPrixDevBypass, hasSuperlicence } from "@/lib/drivingSchoolLicence";
 import { factKey, pickCallout } from "@/lib/factMastery";
 import { trophyId, weekendTrophyTier } from "@/lib/trophies";
-import { announceBadges } from "@/lib/announceBadges";
+import { announceRewards } from "@/lib/announceRewards";
 import { RewardStrip, type RewardOutcome } from "@/components/RewardStrip";
 import { TrophySplash } from "@/components/TrophySplash";
 
@@ -705,12 +705,18 @@ export default function Game() {
       ...streak.badges,
       ...settleMilestones({ allPurpleRaceDay: isRaceDay && lapResults.length > 0 && lapResults.every((r) => r.sectorColor === 'purple') }),
     ];
-    announceBadges(newBadges);
+    announceRewards({ badges: newBadges, saved: streak.saved, pitStopEarned: streak.pitStopEarned });
 
     setRewardOutcome({
       trophy,
       badges: newBadges,
-      streak: { change: streak.change, count: streak.streak.count },
+      streak: {
+        change: streak.change,
+        count: streak.streak.count,
+        saved: streak.saved,
+        pitStopEarned: streak.pitStopEarned,
+        pitStops: streak.streak.pitStops,
+      },
       callout: pickCallout(mastery),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

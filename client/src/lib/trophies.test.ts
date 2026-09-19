@@ -4,7 +4,10 @@ import {
   BADGES,
   BADGE_EVERYTHING_IS_PURPLE,
   SEASON_ROUNDS,
+  STREAK_BADGE_DAYS,
   evaluateMilestones,
+  nextStreakGoal,
+  rewardToast,
   sanitizeTrophies,
   seasonSlots,
   trophyId,
@@ -101,15 +104,22 @@ test('milestones fire exactly at their thresholds', () => {
   assert.deepEqual(evaluateMilestones(ctx({ totalLaps: 100 }), []), ['laps-100']);
   assert.deepEqual(evaluateMilestones(ctx({ totalLaps: 1000 }), []), ['laps-100', 'laps-1000']);
   assert.deepEqual(evaluateMilestones(ctx({ racesWon: 1 }), []), ['first-win']);
+  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 6 }), []), []);
   assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 7 }), []), ['streak-7']);
-  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 30 }), []), ['streak-7', 'streak-30']);
+  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 13 }), []), ['streak-7']);
+  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 14 }), []), ['streak-7', 'streak-14']);
+  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 30 }), []), ['streak-7', 'streak-14', 'streak-30']);
+  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 49 }), []), ['streak-7', 'streak-14', 'streak-30']);
+  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 50 }), []), ['streak-7', 'streak-14', 'streak-30', 'streak-50']);
+  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 99 }), []), ['streak-7', 'streak-14', 'streak-30', 'streak-50']);
+  assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 100 }), []), ['streak-7', 'streak-14', 'streak-30', 'streak-50', 'streak-100']);
   assert.deepEqual(evaluateMilestones(ctx({ factsMastered: 50 }), []), ['facts-50']);
   assert.deepEqual(evaluateMilestones(ctx({ allPurpleRaceDay: true }), []), ['gp-all-purple']);
 });
 
 test('milestones come back in badge-registry order, and each one has a badge', () => {
   assert.deepEqual(evaluateMilestones(ctx({ totalLaps: 100, racesWon: 1 }), []), ['first-win', 'laps-100']);
-  const all = evaluateMilestones(ctx({ totalLaps: 1000, racesWon: 1, dailyStreak: 30, factsMastered: 50, allPurpleRaceDay: true }), []);
+  const all = evaluateMilestones(ctx({ totalLaps: 1000, racesWon: 1, dailyStreak: 100, factsMastered: 50, allPurpleRaceDay: true }), []);
   assert.deepEqual(all, BADGES.map((b) => b.id).filter((id) => all.includes(id)));
   assert.deepEqual(
     BADGES.map((b) => b.id).filter((id) => !all.includes(id)),
@@ -120,4 +130,39 @@ test('milestones come back in badge-registry order, and each one has a badge', (
 
 test('milestones already earned are not returned again', () => {
   assert.deepEqual(evaluateMilestones(ctx({ totalLaps: 1000, racesWon: 3 }), ['laps-100', 'first-win']), ['laps-1000']);
+});
+
+test('streak badges run 7, 14, 30, 50 and 100 days, together in the registry', () => {
+  assert.deepEqual([...STREAK_BADGE_DAYS], [7, 14, 30, 50, 100]);
+  const streakBadges = BADGES.filter((b) => b.id.startsWith('streak-'));
+  assert.deepEqual(streakBadges.map((b) => b.id), ['streak-7', 'streak-14', 'streak-30', 'streak-50', 'streak-100']);
+  assert.deepEqual(streakBadges.map((b) => b.glyph), ['7', '14', '30', '50', '100']);
+  assert.equal(streakBadges[1].label, '14-Day Streak');
+  const ids = BADGES.map((b) => b.id);
+  assert.equal(ids.indexOf('streak-100') - ids.indexOf('streak-7'), 4, 'no other badge between them');
+});
+
+test('nextStreakGoal names the next level or unearned streak badge', () => {
+  assert.equal(nextStreakGoal(3, []), '4 days to bronze and the 7-day badge');
+  assert.equal(nextStreakGoal(9, ['streak-7', 'streak-14']), '5 days to silver', 'the 14-day badge is already earned');
+  assert.equal(nextStreakGoal(16, ['streak-7', 'streak-14']), '14 days to gold and the 30-day badge');
+  assert.equal(nextStreakGoal(35, ['streak-7', 'streak-14', 'streak-30']), '15 days to the 50-day badge');
+  assert.equal(nextStreakGoal(29, ['streak-30']), '1 day to gold');
+  assert.equal(nextStreakGoal(60, ['streak-100']), '40 days to purple');
+  assert.equal(nextStreakGoal(100, []), null, 'nothing left after purple');
+});
+
+test('rewardToast puts everything a session earned into one toast', () => {
+  assert.equal(rewardToast({ badges: [] }), null);
+  assert.deepEqual(rewardToast({ badges: ['first-win'] }), { title: 'Badge unlocked', description: 'First Win' });
+  assert.deepEqual(rewardToast({ badges: ['first-win', 'laps-100', 'streak-7'], pitStopEarned: true }), {
+    title: '3 badges unlocked',
+    description: 'First Win · 100 Laps · 7-Day Streak · Pit stop earned',
+  });
+  assert.deepEqual(rewardToast({ badges: [], saved: ['2026-09-18'] }), { title: 'A pit stop saved your streak' });
+  assert.deepEqual(rewardToast({ badges: [], saved: ['2026-09-17', '2026-09-18'], pitStopEarned: true }), {
+    title: '2 pit stops saved your streak',
+    description: 'Pit stop earned',
+  });
+  assert.deepEqual(rewardToast({ badges: [], pitStopEarned: true }), { title: 'Pit stop earned' });
 });

@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { Badge } from "@/lib/trophies";
 
-/** One badge in the Racer Log and Trophies badge rows; purple when earned. */
+/** One badge in the Racer Log and Trophies badge rows; purple when earned. Locked ones keep their name, dimmed, so each is a visible goal (and "100 Laps" never looks like "100-Day Streak"). */
 export function BadgeTile({ badge, earned }: { badge: Badge; earned: boolean }) {
   return (
     <div
@@ -17,7 +17,7 @@ export function BadgeTile({ badge, earned }: { badge: Badge; earned: boolean }) 
         {badge.glyph}
       </span>
       <span className="text-[9px] uppercase tracking-widest text-center leading-tight">
-        {earned ? badge.label : 'Locked'}
+        {badge.label}
       </span>
     </div>
   );

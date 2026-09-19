@@ -22,7 +22,7 @@ import type { Difficulty, DynamicDifficultyState, DifficultyMode, DifficultyDrum
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { operationRow, levelRow } from "@/components/setup/setupRows";
 import { hasLaneRacerWin, saveLaneRacerWin, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
-import { announceBadges } from "@/lib/announceBadges";
+import { announceRewards } from "@/lib/announceRewards";
 import { SuperlicenceSplash } from "@/components/SuperlicenceSplash";
 import { LaneKeyHints } from "@/components/desktop/LaneKeyHints";
 import { useLayoutMode } from "@/hooks/use-layout-mode";
@@ -496,7 +496,7 @@ export default function LaneRacer() {
     }
     if (streakCountedRef.current) return;
     streakCountedRef.current = true;
-    if (raceLength > 0 && questionNum >= raceLength) announceBadges(touchDailyStreak().badges);
+    if (raceLength > 0 && questionNum >= raceLength) announceRewards(touchDailyStreak());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameStatus, raceLength, questionNum]);
 

@@ -76,7 +76,7 @@ export default function TrophyCabinet() {
         <div className="max-w-2xl md:max-w-4xl mx-auto space-y-8">
           <section>
             <SectionTitle aside={state.dailyStreak.best > 0 ? `best ${state.dailyStreak.best}` : undefined}>Daily streak</SectionTitle>
-            <DailyStreakCard streak={state.dailyStreak} />
+            <DailyStreakCard streak={state.dailyStreak} earnedBadges={state.earnedBadges} />
           </section>
 
           <section>

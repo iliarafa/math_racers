@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Difficulty, Question } from '@shared/mathEngine';
 import { compareLocalBest, sanitizeLocalBests, type LocalBestEntry, type LocalBests } from './localBests';
 import { evaluateMilestones, sanitizeTrophies, upgradeTrophy, type Trophy, type TrophyUpgrade } from './trophies';
-import { EMPTY_STREAK, advanceDailyStreak, localDayString, sanitizeDailyStreak, type DailyStreak, type StreakChange } from './dailyStreak';
+import { EMPTY_STREAK, advanceDailyStreak, localDayString, sanitizeDailyStreak, type DailyStreak, type StreakAdvance } from './dailyStreak';
 import { countMastered, ingestSession, sanitizeFactStats, type FactRow, type FactStats, type IngestOutcome } from './factMastery';
 
 export type { Difficulty, Question, DynamicDifficultyState } from '@shared/mathEngine';
@@ -542,9 +542,15 @@ export function applyWeekendTrophy(state: GameState, incoming: Trophy): { state:
   return { state: { ...state, trophies, unseenRewards: addUnseen(state.unseenRewards, trophy.id) }, status };
 }
 
-export function applyDailyStreak(state: GameState, today: string = localDayString()): { state: GameState; change: StreakChange } {
-  const { next, change } = advanceDailyStreak(state.dailyStreak, today);
-  return { state: change === 'same' ? state : { ...state, dailyStreak: next }, change };
+/** What counting today's session did to the streak, plus the badges it settled. */
+export type StreakTouch = Omit<StreakAdvance, 'next'> & { streak: DailyStreak; badges: string[] };
+
+export function applyDailyStreak(
+  state: GameState,
+  today: string = localDayString(),
+): { state: GameState } & Omit<StreakAdvance, 'next'> {
+  const { next, change, saved, pitStopEarned } = advanceDailyStreak(state.dailyStreak, today);
+  return { state: change === 'same' ? state : { ...state, dailyStreak: next }, change, saved, pitStopEarned };
 }
 
 export function applyFactResults(state: GameState, rows: readonly FactRow[], now: number = Date.now()): { state: GameState } & Omit<IngestOutcome, 'stats'> {
@@ -688,19 +694,19 @@ export function useGameState() {
   /**
    * Counts today once and settles any milestone badge the saved state has reached, so a streak
    * kept up in Driving School, Lane Racer or Multiplayer earns its badge too. Returns how the
-   * streak moved, its new value and the newly earned badge ids.
+   * streak moved (and any pit stop spent or earned), its new value and the newly earned badge ids.
    */
-  const touchDailyStreak = (): { change: StreakChange; streak: DailyStreak; badges: string[] } => {
-    let change: StreakChange = 'same';
+  const touchDailyStreak = (): StreakTouch => {
+    let counted: Omit<StreakAdvance, 'next'> = { change: 'same', saved: [], pitStopEarned: false };
     let badges: string[] = [];
     const next = mutate(prev => {
-      const counted = applyDailyStreak(prev);
-      change = counted.change;
-      const settled = applyMilestones(counted.state);
+      const result = applyDailyStreak(prev);
+      counted = { change: result.change, saved: result.saved, pitStopEarned: result.pitStopEarned };
+      const settled = applyMilestones(result.state);
       badges = settled.badges;
       return settled.state;
     });
-    return { change, streak: next.dailyStreak, badges };
+    return { ...counted, streak: next.dailyStreak, badges };
   };
 
   /** Award the milestone badges reached by the saved state plus this session; returns the new ids. */

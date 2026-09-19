@@ -1,12 +1,20 @@
 import { BADGES, type TrophyTier, type TrophyUpgrade } from "@/lib/trophies";
-import type { StreakChange } from "@/lib/dailyStreak";
+import { STREAK_LEVELS, streakLevel, weekdayName, type StreakChange, type StreakLevel } from "@/lib/dailyStreak";
 
 /** What a finished session earned; built once by Game.tsx's reward effect. */
 export type RewardOutcome = {
   trophy: { status: TrophyUpgrade['status']; tier: TrophyTier; name: string } | null;
   /** Newly earned badge ids. */
   badges: string[];
-  streak: { change: StreakChange; count: number } | null;
+  streak: {
+    change: StreakChange;
+    count: number;
+    /** Missed days a pit stop covered this session. */
+    saved: string[];
+    pitStopEarned: boolean;
+    /** Pit stops held after this session. */
+    pitStops: number;
+  } | null;
   /** Mastery line, e.g. "You got faster at 7 × 8". */
   callout: string | null;
 };
@@ -17,11 +25,29 @@ export const TIER_COLORS: Record<TrophyTier, string> = {
   gold: '#ffcc00',
 };
 
+/** Streak colours by level: orange to start, then the trophy tiers, then purple. */
+export const STREAK_LEVEL_COLORS: Record<StreakLevel, string> = {
+  none: '#ff8000',
+  base: '#ff8000',
+  bronze: TIER_COLORS.bronze,
+  silver: TIER_COLORS.silver,
+  gold: TIER_COLORS.gold,
+  purple: '#a855f7',
+};
+
 function streakLine(streak: NonNullable<RewardOutcome['streak']>): string | null {
   switch (streak.change) {
     case 'started': return 'Day 1 · race again tomorrow to keep it going';
-    case 'incremented': return `${streak.count}-day streak`;
     case 'reset': return 'Streak restarted · day 1';
+    case 'incremented': {
+      const reached = STREAK_LEVELS.find((step) => step.from === streak.count && step.level !== 'base');
+      const line = reached
+        ? `${reached.level.charAt(0).toUpperCase()}${reached.level.slice(1)} streak · ${streak.count} days`
+        : `${streak.count}-day streak`;
+      if (streak.saved.length === 0) return line;
+      const covered = streak.saved.map(weekdayName).join(' and ');
+      return `${line} · ${streak.saved.length === 1 ? 'a pit stop' : 'pit stops'} covered ${covered}`;
+    }
     default: return null;
   }
 }
@@ -44,8 +70,12 @@ export function RewardStrip({ outcome }: { outcome: RewardOutcome }) {
     const badge = BADGES.find((b) => b.id === id);
     rows.push({ key: `badge-${id}`, text: `Badge unlocked · ${badge?.label ?? id}`, color: '#a855f7' });
   }
-  const streak = outcome.streak ? streakLine(outcome.streak) : null;
-  if (streak) rows.push({ key: 'streak', text: streak, color: '#ff8000' });
+  if (outcome.streak) {
+    const color = STREAK_LEVEL_COLORS[streakLevel(outcome.streak.count)];
+    const line = streakLine(outcome.streak);
+    if (line) rows.push({ key: 'streak', text: line, color });
+    if (outcome.streak.pitStopEarned) rows.push({ key: 'pit-stop', text: `Pit stop earned · you have ${outcome.streak.pitStops}`, color });
+  }
   if (outcome.callout) rows.push({ key: 'callout', text: outcome.callout, color: '#19c37d' });
   if (rows.length === 0) return null;
 

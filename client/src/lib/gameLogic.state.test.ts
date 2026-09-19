@@ -206,12 +206,30 @@ test('a newly earned badge is flagged as unseen; an old one is not', () => {
 test('a streak built outside Game.tsx still earns its badge when the day is counted', () => {
   withStorage(memoryStorage(), () => {
     // Six days of flashcards and Lane Racer, then a seventh: no Game.tsx race involved.
-    const before = { ...loadGameState(), dailyStreak: { count: 6, lastDay: '2026-09-17', best: 6, recentDays: ['2026-09-12', '2026-09-13', '2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17'] } };
+    const before = { ...loadGameState(), dailyStreak: { count: 6, lastDay: '2026-09-17', best: 6, recentDays: ['2026-09-12', '2026-09-13', '2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17'], pitStops: 0 } };
     const settled = applyMilestones(applyDailyStreak(before, '2026-09-18').state);
     assert.deepEqual(settled.badges, ['streak-7']);
     assert.deepEqual(settled.state.earnedBadges, ['streak-7']);
     assert.deepEqual(settled.state.unseenRewards, ['streak-7']);
     assert.deepEqual(applyMilestones(settled.state).badges, [], 'awarded once');
+  });
+});
+
+test('a day covered by a pit stop can carry the streak to 14: badge, level and a new pit stop', () => {
+  withStorage(memoryStorage(), () => {
+    // 13 days up to Thursday 17 September, Friday missed, Saturday raced.
+    const before = {
+      ...loadGameState(),
+      earnedBadges: ['streak-7'],
+      dailyStreak: { count: 13, lastDay: '2026-09-17', best: 13, recentDays: ['2026-09-11', '2026-09-12', '2026-09-13', '2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17'], pitStops: 1 },
+    };
+    const counted = applyDailyStreak(before, '2026-09-19');
+    assert.equal(counted.change, 'incremented');
+    assert.deepEqual(counted.saved, ['2026-09-18']);
+    assert.equal(counted.pitStopEarned, true);
+    assert.equal(counted.state.dailyStreak.count, 14);
+    assert.equal(counted.state.dailyStreak.pitStops, 1, 'one spent on Friday, one earned on day 14');
+    assert.deepEqual(applyMilestones(counted.state).badges, ['streak-14']);
   });
 });
 
