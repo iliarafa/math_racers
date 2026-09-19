@@ -1,24 +1,25 @@
 # Session Notes — 2026-09-18
 
-Handoff summary plus the standing context future sessions need. `main` is at `f213d48` (v1.3.15, Baku). The **v1.4 work lives on branch `feature/v1.4-rewards`** in the worktree `.claude/worktrees/v1.4-rewards` (not pushed); weekly `/weekend` rotations (1.3.16, 1.3.17) keep shipping from `main` until v1.4 ships with **Round 19 / Austin on 23 Oct 2026**. The plan is `~/.claude/plans/we-have-already-finished-buzzing-nebula.md`.
+Handoff summary plus the standing context future sessions need. The rewards work below was built on branch `feature/v1.4-rewards` and **merged into `main` to ship in 1.3.15**: on 2026-09-18 the user decided not to hold it for a 1.4. Weekly `/weekend` rotations continue on `main` (1.3.16, 1.3.17, …). The original plan is `~/.claude/plans/we-have-already-finished-buzzing-nebula.md`.
 
-## v1.4 branch — done so far (all committed, 96 tests, `tsc` clean)
+## Shipped in 1.3.15 on top of the Baku rotation (`npm test` and `tsc` clean)
 
-1. **GameState clobber fix** (`fb4d562`): the saved blob is the source of truth; every mutator goes through `mutateGameState`; instances subscribe to saves. Before this, tapping mute after a race could erase the local bests the race had just saved.
-2. **Rewards**: trophies (`lib/trophies.ts`), daily streak (`lib/dailyStreak.ts`), fact mastery (`lib/factMastery.ts`), persisted in `GameState`; settled by one effect in `Game.tsx`; shown by `RewardStrip` on all finish screens, `TrophySplash` on Race Day, the `/trophies` page (`TrophyCabinet.tsx`), a streak chip and "N new" pill on the Hub, a Trophies tile on the Garage. Verified in the browser: Quick Race → First Win badge + Day 1 streak; full GP weekend with pole + win → gold `gp:2026:15:baku`.
-3. **Cleanup** (`f18ecfd`): DeployHarvest, TrackProgress, the legacy Express leaderboard routes/storage/tables, `update_gp.md` and the Madrid handoff are gone; CLAUDE.md corrected (no championship/Career mode exists).
-4. **Version single source** (`25f6c8b`): `npm run version:bump 1.4.0`; the Garage footer shows `__APP_VERSION__`.
+1. **GameState clobber fix** (`fb4d562`): the saved blob is the source of truth; every mutator goes through `mutateGameState`; instances subscribe to saves, and a reset is broadcast to all of them. Before this, tapping mute after a race could erase the local bests the race had just saved.
+2. **Rewards**: trophies (`lib/trophies.ts`), daily streak (`lib/dailyStreak.ts`), fact mastery (`lib/factMastery.ts`), persisted in `GameState`; settled by one effect in `Game.tsx`; shown by `RewardStrip` on all finish screens, `TrophySplash` on Race Day (after the leaderboard name prompt, never over it), the `/trophies` page (`TrophyCabinet.tsx`), a streak chip and "N new" pill on the Hub, a Trophies tile on the Garage. A finished multiplayer race also counts toward the streak. Verified in the browser: Quick Race → First Win badge + Day 1 streak; full GP weekend with pole + win → gold `gp:2026:15:baku`.
+3. **Cleanup** (`f18ecfd`): DeployHarvest, TrackProgress, the legacy Express leaderboard routes/storage/tables, `update_gp.md` and the Madrid handoff are gone; CLAUDE.md corrected (no championship/Career mode exists). `tablesFilter` in `drizzle.config.ts` keeps `db:push` from dropping the three legacy tables still in Supabase.
+4. **Version single source** (`25f6c8b`): `npm run version:bump <x.y.z>` rewrites package.json, the lockfile, capacitor.config.ts and both Xcode `MARKETING_VERSION`s, and sets both build numbers to the higher one + 1; the Garage footer shows `__APP_VERSION__`. This release is **1.3.15 (2)**: the version stayed and the build number went from 1 to 2, so a second 1.3.15 upload is accepted.
 5. **Desktop menu frame** (`8af6e5f`): `.menu-frame` (520px, centred, `zoom: 1.15`) under `html[data-desktop]`; `GameLayout menuFrame` + the Hub/Garage wrappers. Phone/iPad untouched.
+6. **Pre-merge review fixes**: an adversarial review before the merge found the splash-over-name-prompt bug, the un-broadcast reset and the missing multiplayer streak (all fixed), plus smaller model fixes: fact-store eviction never drops this session's facts, a zero-count streak can't swallow a day, milestone badges come back in registry order, and the streak DST test is pinned to Europe/London.
 
-## Open tasks (v1.4 branch)
+## Open tasks
 
 1. **Quick Race HUD** (phone layout): push the sector grid down closer to the numpad and make the operation a bit bigger. An earlier bigger-operation/smaller-grid attempt was reverted; reposition the grid *down*, don't shrink it. Do it with the user, one screenshot at a time (they chose "later this week" on 2026-09-18).
 2. **Flashcards polish**: walk `/driving-school` together and list issues one screen at a time.
-3. **Before release**: rebase onto `main` after the Austin `/weekend` rotation, `npm run version:bump 1.4.0`, iOS build + simulator check, refresh these notes.
-4. **Leaderboards scope (debate)**: deferred; not in 1.4.
+3. **Release**: `main` is committed but not pushed; push only when the user says "push it" (Vercel deploys the web build from `main`). iOS: build and upload 1.3.15 (2). If 1.3.15 is already live on the App Store, Apple needs a higher version: run `npm run version:bump 1.3.16` first.
+4. **Leaderboards scope (debate)**: deferred; not part of this release.
 5. **Weekend rotation** on `main`: Baku (Round 15) is current. Run `/weekend` when the calendar moves on.
 
-### Working in the worktree
+### Working in a worktree
 `preview_start` runs the **main checkout's** server even from the worktree; start the branch's server with a background `npm run dev` from the worktree and open the pane with `preview_start {url}`. Server/vite-config changes need a `pkill -f "tsx server/index.ts"` + restart.
 
 ## TL;DR (main)
@@ -104,7 +105,7 @@ A new circuit now needs **four** images: silhouette, flag, labelled detail map a
 - Lane Racer 3D lives in `client/src/components/lane-racer/` plus `lib/laneRacerController3d.ts`.
 
 ### Routes (`client/src/App.tsx`)
-`/` Welcome · `/hub` Paddock · `/game/:mode` (+bare `/game`) · `/garage` · `/strategy` · `/grand-prix` Weekend Briefing · `/driving-school` · `/reaction` · `/multiplayer` · `/regulations` · `/racer-log` · `/leaderboard` · `/lane-racer` · `/dev/circuit-maps` (dev tool). The `/deploy-harvest` route is commented out (archived).
+`/` Welcome · `/hub` Paddock · `/game/:mode` (+bare `/game`) · `/garage` · `/strategy` · `/grand-prix` Weekend Briefing · `/driving-school` · `/reaction` · `/multiplayer` · `/regulations` · `/racer-log` · `/trophies` Trophy cabinet · `/leaderboard` · `/lane-racer` · `/dev/circuit-maps` (dev tool).
 
 ---
 
@@ -137,6 +138,5 @@ LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 npx cap sync ios
 ---
 
 ## Watch-outs
-- `client/src/pages/DeployHarvest.tsx` is archived (unrouted) but still compiles.
 - Chunk-size warnings on build (`index` ~1.1 MB, `LaneRacerCanvas3D` ~0.9 MB) are known and tolerated.
 - Spelling is **"superlicence"/"licence"** (British, matching the FIA). Keep new copy consistent.

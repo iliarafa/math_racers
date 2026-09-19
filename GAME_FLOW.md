@@ -1,8 +1,9 @@
 # F1 Math Racer - Core Game Flow
 
 > **Outdated.** Written before Free Practice, Lane Racer, Driving School, the Paddock hub and the
-> trophy/streak rewards existed; the state machine below is still accurate for `Game.tsx`, the
-> rest is not. `CLAUDE.md` and `SESSION_NOTES.md` are the current references.
+> trophy/streak rewards existed. Only the `countdown → go → racing → finished | crashed` core below
+> still matches `Game.tsx` (there is no `driver_select` state any more, `paywall` is missing, and
+> Quick Race starts at `countdown`). `CLAUDE.md` and `SESSION_NOTES.md` are the current references.
 
 ## Game States
 

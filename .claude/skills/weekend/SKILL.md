@@ -67,7 +67,7 @@ Import the detail map, add a `GP_HISTORY[circuitId]` entry (keyed by circuitId, 
 
 ## Step 5 — Version bump (patch)
 
-e.g. 1.3.8 → 1.3.9: run `npm run version:bump 1.3.9`. It rewrites `package.json`, `package-lock.json`, `capacitor.config.ts` and **both** `MARKETING_VERSION` entries in `ios/App/App.xcodeproj/project.pbxproj`, and raises both `CURRENT_PROJECT_VERSION` build numbers by one. Don't edit those files by hand; the Garage footer shows the version from `package.json`.
+e.g. 1.3.8 → 1.3.9: run `npm run version:bump 1.3.9`. It rewrites `package.json`, `package-lock.json`, `capacitor.config.ts` and **both** `MARKETING_VERSION` entries in `ios/App/App.xcodeproj/project.pbxproj`, and sets both `CURRENT_PROJECT_VERSION` build numbers to the higher of the two plus one. Don't edit those files by hand; the Garage footer shows the version from `package.json`.
 
 ## Step 6 — Verify Web
 

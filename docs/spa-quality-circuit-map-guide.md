@@ -4,7 +4,7 @@
 
 **Verified against code on 2026-07-22:** `script/extractCircuitCenterline.ts`, `client/src/lib/circuitPaths.ts`, `client/src/lib/circuitPathData.json`, `client/src/components/LiveCircuitMap.tsx`, `client/src/pages/LaneRacer.tsx`.
 
-**Related:** [`docs/next-session-handoff.md`](next-session-handoff.md) (session resume). This file supersedes [`docs/spa-live-circuit-map-playbook.md`](spa-live-circuit-map-playbook.md).
+**Related:** [`SESSION_NOTES.md`](../SESSION_NOTES.md) (session resume). This file supersedes [`docs/spa-live-circuit-map-playbook.md`](spa-live-circuit-map-playbook.md).
 
 ---
 

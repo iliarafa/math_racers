@@ -1,10 +1,11 @@
 /**
  * Bump the app version everywhere it lives: package.json, package-lock.json,
  * capacitor.config.ts and both MARKETING_VERSION entries (Debug + Release) in
- * the Xcode project, whose CURRENT_PROJECT_VERSION build numbers go up by one.
- * The client reads package.json's version through `__APP_VERSION__`.
+ * the Xcode project, whose two CURRENT_PROJECT_VERSION build numbers both become the
+ * higher of the two plus one. The client reads package.json's version through
+ * `__APP_VERSION__`.
  *
- * Usage: npm run version:bump 1.4.0
+ * Usage: npm run version:bump <x.y.z>   (e.g. 1.3.16; the same version again only raises the build number)
  */
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
