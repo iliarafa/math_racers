@@ -4,6 +4,7 @@ import { useGameState } from "@/lib/gameLogic";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { BADGES, SEASON_ROUNDS, seasonSlots, type Trophy } from "@/lib/trophies";
 import { BadgeTile } from "@/components/BadgeTile";
+import { DailyStreakCard } from "@/components/DailyStreakCard";
 import { GrowthPanel } from "@/components/GrowthPanel";
 import { TIER_COLORS } from "@/components/RewardStrip";
 import { cn } from "@/lib/utils";
@@ -51,7 +52,7 @@ function TrophyTile({ round, trophy, current }: { round: number; trophy?: Trophy
   );
 }
 
-/** The trophy cabinet: this season's weekends, badges and fact growth. Opening it marks rewards seen. */
+/** The trophy cabinet: the daily streak, this season's weekends, badges and fact growth. Opening it marks rewards seen. */
 export default function TrophyCabinet() {
   const { state, markRewardsSeen } = useGameState();
   useEffect(() => {
@@ -73,6 +74,11 @@ export default function TrophyCabinet() {
           TROPHIES
         </h1>
         <div className="max-w-2xl md:max-w-4xl mx-auto space-y-8">
+          <section>
+            <SectionTitle aside={state.dailyStreak.best > 0 ? `best ${state.dailyStreak.best}` : undefined}>Daily streak</SectionTitle>
+            <DailyStreakCard streak={state.dailyStreak} />
+          </section>
+
           <section>
             <SectionTitle aside={`${raced}/${SEASON_ROUNDS} weekends`}>{`Season ${season}`}</SectionTitle>
             <div className="grid grid-cols-6 gap-2" data-testid="season-grid">

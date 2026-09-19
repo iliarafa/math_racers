@@ -2512,7 +2512,7 @@ export default function Game() {
   const localBestNote = localBestOutcome ? localTierNote(localBestOutcome.board, localBestOutcome.session) : null;
   const localBestFlash = localBestOutcome?.isNew ? (
     <div className="text-sm font-bold text-green-500 animate-pulse" data-testid="local-best-flash">
-      🏆 NEW PERSONAL BEST!
+      NEW PERSONAL BEST!
     </div>
   ) : null;
   const localBestRows = localBestOutcome ? (
@@ -2804,7 +2804,7 @@ export default function Game() {
                <div className="text-xl font-medium">{isWinner ? "World Champion" : "Finish Position"}</div>
                {isNewBest && !isPracticeMode && !isGrandPrix && !isQuickRace && (
                  <div className="text-sm font-bold text-green-500 animate-pulse">
-                   🏆 NEW PERSONAL BEST!
+                   NEW PERSONAL BEST!
                  </div>
                )}
                {(isGrandPrix || isQuickRace) && localBestFlash}

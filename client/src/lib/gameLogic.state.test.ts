@@ -206,7 +206,7 @@ test('a newly earned badge is flagged as unseen; an old one is not', () => {
 test('a streak built outside Game.tsx still earns its badge when the day is counted', () => {
   withStorage(memoryStorage(), () => {
     // Six days of flashcards and Lane Racer, then a seventh: no Game.tsx race involved.
-    const before = { ...loadGameState(), dailyStreak: { count: 6, lastDay: '2026-09-17', best: 6 } };
+    const before = { ...loadGameState(), dailyStreak: { count: 6, lastDay: '2026-09-17', best: 6, recentDays: ['2026-09-12', '2026-09-13', '2026-09-14', '2026-09-15', '2026-09-16', '2026-09-17'] } };
     const settled = applyMilestones(applyDailyStreak(before, '2026-09-18').state);
     assert.deepEqual(settled.badges, ['streak-7']);
     assert.deepEqual(settled.state.earnedBadges, ['streak-7']);

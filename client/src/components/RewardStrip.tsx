@@ -36,17 +36,17 @@ export function RewardStrip({ outcome }: { outcome: RewardOutcome }) {
     const { tier, name, status } = outcome.trophy;
     rows.push({
       key: 'trophy',
-      text: `🏆 ${tier.charAt(0).toUpperCase()}${tier.slice(1)} trophy ${status === 'upgraded' ? 'upgraded' : 'earned'} · ${name}`,
+      text: `${tier.charAt(0).toUpperCase()}${tier.slice(1)} trophy ${status === 'upgraded' ? 'upgraded' : 'earned'} · ${name}`,
       color: TIER_COLORS[tier],
     });
   }
   for (const id of outcome.badges) {
     const badge = BADGES.find((b) => b.id === id);
-    rows.push({ key: `badge-${id}`, text: `★ Badge unlocked · ${badge?.label ?? id}`, color: '#a855f7' });
+    rows.push({ key: `badge-${id}`, text: `Badge unlocked · ${badge?.label ?? id}`, color: '#a855f7' });
   }
   const streak = outcome.streak ? streakLine(outcome.streak) : null;
-  if (streak) rows.push({ key: 'streak', text: `🔥 ${streak}`, color: '#ff8000' });
-  if (outcome.callout) rows.push({ key: 'callout', text: `⚡ ${outcome.callout}`, color: '#19c37d' });
+  if (streak) rows.push({ key: 'streak', text: streak, color: '#ff8000' });
+  if (outcome.callout) rows.push({ key: 'callout', text: outcome.callout, color: '#19c37d' });
   if (rows.length === 0) return null;
 
   return (

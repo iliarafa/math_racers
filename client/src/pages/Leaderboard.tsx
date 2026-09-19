@@ -16,6 +16,7 @@ import { globalHint, selectLocalBests, sessionLabel, type LocalBoard } from "@/l
 import { cn } from "@/lib/utils";
 import { Trophy, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TIER_COLORS } from "@/components/RewardStrip";
 
 interface LeaderboardEntry {
   id: string;
@@ -32,6 +33,9 @@ interface LeaderboardEntry {
   polePosition?: boolean;
   beatBot?: boolean;
 }
+
+/** Ranks 1-3 in the trophy tiers' colours. */
+const PODIUM_COLORS = [TIER_COLORS.gold, TIER_COLORS.silver, TIER_COLORS.bronze];
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   beginner: 'Karting',
@@ -352,12 +356,13 @@ export default function Leaderboard() {
                     >
                       {/* Rank */}
                       <div className="w-8 flex-shrink-0 text-center">
-                        {rank === 1 ? (
-                          <span className="text-lg" role="img">🥇</span>
-                        ) : rank === 2 ? (
-                          <span className="text-lg" role="img">🥈</span>
-                        ) : rank === 3 ? (
-                          <span className="text-lg" role="img">🥉</span>
+                        {rank <= 3 ? (
+                          <span
+                            className="inline-flex w-7 h-7 items-center justify-center rounded-full text-sm font-bold text-black"
+                            style={{ backgroundColor: PODIUM_COLORS[rank - 1], fontFamily: 'Oxanium, sans-serif' }}
+                          >
+                            {rank}
+                          </span>
                         ) : (
                           <span className="text-sm font-bold text-white/70" style={{ fontFamily: 'Oxanium, sans-serif' }}>{rank}</span>
                         )}

@@ -53,12 +53,12 @@ client/src/
 │   ├── Regulations.tsx  # Game rules
 │   ├── Leaderboard.tsx  # FP + GP + Quick Race boards (Supabase) with a local "Your Best" tier
 │   ├── RacerLog.tsx     # Standalone race history log
-│   ├── TrophyCabinet.tsx # Trophy cabinet: season weekends, badges, fact growth
+│   ├── TrophyCabinet.tsx # Trophy cabinet: daily streak, season weekends, badges, fact growth
 │   └── not-found.tsx    # 404 error page
 ├── components/
 │   ├── ui/              # 55 Shadcn/ui components
 │   ├── layout/          # GameLayout wrapper
-│   ├── RewardStrip.tsx, TrophySplash.tsx, BadgeTile.tsx, DailyStreakChip.tsx, GrowthPanel.tsx  # rewards UI
+│   ├── RewardStrip.tsx, TrophySplash.tsx, BadgeTile.tsx, DailyStreakCard.tsx, GrowthPanel.tsx  # rewards UI
 │   └── ErrorBoundary.tsx # React error boundary
 ├── lib/
 │   ├── gameLogic.ts     # Core game engine + GameState store (~940 lines)
@@ -112,10 +112,13 @@ Settled once per finished session by one effect in `Game.tsx` (`gameStatus === '
 - **Trophy cabinet** (`lib/trophies.ts`, `/trophies`): one trophy per Grand Prix weekend, id `gp:<season>:<round>:<circuitId>` (so a returning circuit gets its own slot). Race Day finished = bronze, beat the bot = silver, pole + win = gold; never downgraded. `TrophySplash` celebrates a new or upgraded trophy. Quick Race and Free Practice earn no trophy. `CURRENT_GRAND_PRIX.season` feeds the id — keep it current in `/weekend`.
 - **Badges** (`BADGES` in `trophies.ts`): the old `everything-is-purple` plus milestones (`first-win`, `laps-100`, `laps-1000`, `gp-all-purple`, `streak-7`, `streak-30`, `facts-50`), evaluated by the pure `evaluateMilestones`. `applyMilestones` (gameLogic.ts) settles them from the saved state; `touchDailyStreak()` runs it on every counted session in any mode, and Game.tsx's `settleMilestones()` adds the mastery and Race Day ones. `announceBadges` (lib) toasts new ids; `BadgeTile` shows them.
 - **Race result timing**: `playerCrossedLineRef` in Game.tsx is set when the final answer lands and stops the bot's pending lap timer, so Race Day's 600 ms hand-off to `finishRace` cannot hand the bot a finish the player already beat.
-- **Daily streak** (`lib/dailyStreak.ts`, `GameState.dailyStreak`): consecutive local calendar days with a finished session; counted by `touchDailyStreak()` from the Game finish effect, a cleared flashcard stage, a completed Lane Racer race and a finished multiplayer race (not a crash). `DailyStreakChip` on the Hub is amber when yesterday counted but today has not. Distinct from `GameState.streak`, the per-answer streak inside a race.
+- **Daily streak** (`lib/dailyStreak.ts`, `GameState.dailyStreak`): consecutive local calendar days with a finished session; counted by `touchDailyStreak()` from the Game finish effect, a cleared flashcard stage, a completed Lane Racer race and a finished multiplayer race (not a crash). `DailyStreak.recentDays` keeps the last 7 counted days. `DailyStreakCard` tops `/trophies`: the count, the best and those days as dots (`streakWeek`), amber when yesterday counted but today has not. The Hub shows no streak. Distinct from `GameState.streak`, the per-answer streak inside a race.
 - **Fact mastery** (`lib/factMastery.ts`, `GameState.factStats`): per-fact stats keyed from `Question.num1/num2/operation` (`factKey`; Variables use the display). Each `lapResults` row carries `fact`; the AERO duplicate is `isBonus` and skipped. A fact is mastered after `MASTERY_MIN_CORRECT` clean answers with an EWMA under `MASTERY_MS[operation]`. `pickCallout` produces "You got faster at 7 × 8"; `GrowthPanel` shows mastered vs learning per operation. Store capped at `FACT_STATS_CAP`.
 - `GameState.unseenRewards` holds trophy/badge ids not yet viewed; the Hub's GARAGE card and the Garage's Trophies tile show the count, and opening `/trophies` clears it.
 - There is no series/championship progression; `coins`, `SHOP_ITEMS` and the per-answer `streak` persist but are not shown anywhere.
+
+### UI text
+- No emojis anywhere a player can see them (the user's rule): use text, colour and lucide icons. Typographic symbols such as ✓ and the ← → ⌫ ↵ key glyphs are fine.
 
 ### Key Files
 - `/client/src/lib/gameLogic.ts` - Question generation, bot timing, difficulty curves, sector colors, the GameState store and `useGameState()`

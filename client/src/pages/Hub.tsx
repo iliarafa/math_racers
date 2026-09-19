@@ -7,7 +7,6 @@ import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { getLicenceStatus, grandPrixDevBypass, REACTION_LICENCE_MS, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
 import { SuperlicenceSplash } from "@/components/SuperlicenceSplash";
-import { DailyStreakChip } from "@/components/DailyStreakChip";
 import { DrivingSchoolWhatsNew } from "@/components/DrivingSchoolWhatsNew";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
 import logoWhiteImage from "@assets/logo-white.svg";
@@ -235,11 +234,6 @@ export default function Hub() {
         >
           {title}
         </h2>
-        {view === 'paddock' && (
-          <div className="flex justify-center">
-            <DailyStreakChip streak={state.dailyStreak} />
-          </div>
-        )}
         {view === 'school' && (
           <p
             className="mt-1.5 text-center text-[9px] uppercase tracking-[0.16em] text-white/45 whitespace-nowrap"
