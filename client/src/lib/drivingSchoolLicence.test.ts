@@ -13,7 +13,7 @@ function memoryStorage() {
   };
 }
 
-test('Grand Prix stays locked until every licence step is done', () => {
+test('the Superlicence needs every licence step done', () => {
   const store = memoryStorage();
   const globalObj = globalThis as { localStorage?: ReturnType<typeof memoryStorage> };
   const previous = globalObj.localStorage;

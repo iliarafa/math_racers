@@ -567,17 +567,26 @@ export function applyBadge(state: GameState, id: string): { state: GameState; ne
 }
 
 /**
- * Award every milestone badge the state has reached. Everything but `allPurpleRaceDay` is read
- * from the state itself, so any mode that saves progress can settle them. Newly earned ids come
- * back in BADGES order.
+ * What the session just did, for the badges that cannot be read from the saved state.
+ * `superlicence` comes from `hasSuperlicence()` at the call site — the licence lives in its own
+ * localStorage keys, and importing it here would make an import cycle.
  */
-export function applyMilestones(state: GameState, session: { allPurpleRaceDay?: boolean } = {}): { state: GameState; badges: string[] } {
+export type MilestoneSession = { allPurpleRaceDay?: boolean; superlicence?: boolean };
+
+/**
+ * Award every milestone badge the state has reached. Everything but the `session` flags is read
+ * from the state itself, so any mode that saves progress can settle them. Newly earned ids come
+ * back in BADGES order. Omitting a flag never revokes a badge already held — `evaluateMilestones`
+ * only ever adds ids that are not in `earnedBadges`.
+ */
+export function applyMilestones(state: GameState, session: MilestoneSession = {}): { state: GameState; badges: string[] } {
   const badges = evaluateMilestones({
     totalLaps: state.totalLaps,
     racesWon: state.racesWon,
     dailyStreak: state.dailyStreak.count,
     factsMastered: countMastered(state.factStats),
     allPurpleRaceDay: session.allPurpleRaceDay === true,
+    superlicence: session.superlicence === true,
   }, state.earnedBadges);
   let next = state;
   for (const id of badges) next = applyBadge(next, id).state;
@@ -710,7 +719,7 @@ export function useGameState() {
   };
 
   /** Award the milestone badges reached by the saved state plus this session; returns the new ids. */
-  const settleMilestones = (session: { allPurpleRaceDay?: boolean } = {}): string[] => {
+  const settleMilestones = (session: MilestoneSession = {}): string[] => {
     let badges: string[] = [];
     mutate(prev => {
       const settled = applyMilestones(prev, session);

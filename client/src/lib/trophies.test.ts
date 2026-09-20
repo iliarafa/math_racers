@@ -96,7 +96,7 @@ test('seasonSlots lists every round of the season with its trophy, if any', () =
 });
 
 function ctx(extra: Partial<MilestoneContext> = {}): MilestoneContext {
-  return { totalLaps: 0, racesWon: 0, dailyStreak: 0, factsMastered: 0, allPurpleRaceDay: false, ...extra };
+  return { totalLaps: 0, racesWon: 0, dailyStreak: 0, factsMastered: 0, allPurpleRaceDay: false, superlicence: false, ...extra };
 }
 
 test('milestones fire exactly at their thresholds', () => {
@@ -115,11 +115,12 @@ test('milestones fire exactly at their thresholds', () => {
   assert.deepEqual(evaluateMilestones(ctx({ dailyStreak: 100 }), []), ['streak-7', 'streak-14', 'streak-30', 'streak-50', 'streak-100']);
   assert.deepEqual(evaluateMilestones(ctx({ factsMastered: 50 }), []), ['facts-50']);
   assert.deepEqual(evaluateMilestones(ctx({ allPurpleRaceDay: true }), []), ['gp-all-purple']);
+  assert.deepEqual(evaluateMilestones(ctx({ superlicence: true }), []), ['superlicence']);
 });
 
 test('milestones come back in badge-registry order, and each one has a badge', () => {
   assert.deepEqual(evaluateMilestones(ctx({ totalLaps: 100, racesWon: 1 }), []), ['first-win', 'laps-100']);
-  const all = evaluateMilestones(ctx({ totalLaps: 1000, racesWon: 1, dailyStreak: 100, factsMastered: 50, allPurpleRaceDay: true }), []);
+  const all = evaluateMilestones(ctx({ totalLaps: 1000, racesWon: 1, dailyStreak: 100, factsMastered: 50, allPurpleRaceDay: true, superlicence: true }), []);
   assert.deepEqual(all, BADGES.map((b) => b.id).filter((id) => all.includes(id)));
   assert.deepEqual(
     BADGES.map((b) => b.id).filter((id) => !all.includes(id)),

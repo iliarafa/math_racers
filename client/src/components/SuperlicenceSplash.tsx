@@ -12,9 +12,11 @@ interface SuperlicenceSplashProps {
 }
 
 /**
- * One-time celebration shown the moment Driving School is complete: Grand Prix is now open.
- * Shown from the Lane Racer result (the licence path's last sector) and, as a fallback for
- * out-of-order completion, on the next Hub visit. `markSuperlicenceCelebrated` keeps it to once.
+ * One-time celebration shown the moment Driving School is complete. The Superlicence unlocks
+ * nothing — every mode is already open — it is the school's trophy, and it lands as a badge in
+ * the cabinet. Shown from the Lane Racer result (the licence path's last sector) and, as a
+ * fallback for out-of-order completion, on the next Hub visit. `markSuperlicenceCelebrated`
+ * keeps it to once.
  */
 export function SuperlicenceSplash({ onClose, secondaryLabel = "Back to Paddock" }: SuperlicenceSplashProps) {
   const [, setLocation] = useLocation();
@@ -71,17 +73,17 @@ export function SuperlicenceSplash({ onClose, secondaryLabel = "Back to Paddock"
           Granted
         </div>
         <p className="mt-6 max-w-sm text-base leading-relaxed text-white/70">
-          You cleared the flashcards, beat the lights and out-raced the instructor. The Grand Prix
-          weekend is open.
+          You cleared the flashcards, beat the lights and out-raced the instructor. The
+          Superlicence is yours — it is in the cabinet with your trophies.
         </p>
         <button
           type="button"
-          onClick={() => setLocation("/game/grand-prix")}
+          onClick={() => setLocation("/trophies")}
           className="mt-10 h-14 w-full max-w-xs rounded-xl bg-[#ffcc00] text-black font-bold uppercase tracking-wider text-lg hover:bg-yellow-300 active:scale-[0.98] transition"
           style={{ fontFamily: "Oxanium, sans-serif" }}
-          data-testid="superlicence-go-gp"
+          data-testid="superlicence-go-trophies"
         >
-          Go to Grand Prix
+          View Superlicence
         </button>
         <button
           type="button"

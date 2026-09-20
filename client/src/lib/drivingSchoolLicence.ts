@@ -3,8 +3,8 @@ import { DRIVING_SCHOOL_STAGES, loadHighestClearedStage } from '@/lib/drivingSch
 
 /**
  * Driving School licence path: flashcards → reaction test → lane racer.
- * Grand Prix stays locked until all three are done (`hasSuperlicence`).
- * Race Now and Free Practice stay open.
+ * All three done (`hasSuperlicence`) earns the Superlicence — the school's trophy, awarded as a
+ * badge in the cabinet. It unlocks nothing: every mode, the Grand Prix included, is always open.
  */
 
 /** Best reaction time must beat this to pass the licence step. */
@@ -110,10 +110,11 @@ export function markSuperlicenceCelebrated(): void {
 }
 
 /**
- * Dev-only bypass so the Grand Prix screens can be reviewed on the Vite dev server without
- * grinding Driving School. Never true in a built bundle, so the shipped app (native or web)
- * keeps the Superlicence lock. Note the Capacitor app also serves from a `localhost` origin,
- * which is why a hostname check is not used here.
+ * Dev-only bypass so a Grand Prix phase can be reviewed on the Vite dev server without racing
+ * the weekend in order (practice → qualifying → race). It has nothing to do with the licence —
+ * the Grand Prix itself is open to everyone. Never true in a built bundle, so the shipped app
+ * keeps the phase order. Note the Capacitor app also serves from a `localhost` origin, which is
+ * why a hostname check is not used here.
  */
 export function grandPrixDevBypass(): boolean {
   return Boolean(import.meta.env.DEV) && !Capacitor.isNativePlatform();

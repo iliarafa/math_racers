@@ -73,7 +73,7 @@ export function DrivingSchoolWhatsNew({
           Superlicence
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-white/75">
-          Graduate Driving School before you race a Grand Prix.
+          Sharpen your maths in Driving School. Three sectors, one Superlicence.
         </p>
 
         <div className="mt-5 space-y-3">
@@ -107,7 +107,7 @@ export function DrivingSchoolWhatsNew({
         </div>
 
         <p className="mt-4 text-xs leading-relaxed text-white/55">
-          Finish all three to unlock Grand Prix. Race Now and Free Practice stay open.
+          Finish all three to earn the Superlicence badge. Every mode stays open while you learn.
         </p>
 
         <div className="mt-6 grid gap-3">

@@ -29,7 +29,7 @@ import { toast } from "@/hooks/use-toast";
 import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy, RotateCw } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
-import { grandPrixDevBypass, hasSuperlicence } from "@/lib/drivingSchoolLicence";
+import { grandPrixDevBypass } from "@/lib/drivingSchoolLicence";
 import { factKey, pickCallout } from "@/lib/factMastery";
 import { trophyId, weekendTrophyTier } from "@/lib/trophies";
 import { announceRewards } from "@/lib/announceRewards";
@@ -2102,40 +2102,9 @@ export default function Game() {
     }
   }, [botFinished, overtakeActive]);
 
-  // Grand Prix needs the Superlicence; the dev server alone may skip it to review layout.
+  // The Grand Prix is open to everyone — the Superlicence is a badge, not a key.
+  // This bypass only skips the weekend's phase order (practice → qualifying → race) on the dev server.
   const gpDevBypass = grandPrixDevBypass();
-  if (isGrandPrix && !hasSuperlicence() && !gpDevBypass) {
-    return (
-      <GameLayout trackName={CURRENT_GRAND_PRIX.name} lockViewport hideGarageButton>
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <h2
-            className="text-4xl font-bold uppercase tracking-[0.18em] text-[#ffcc00]"
-            style={{ fontFamily: "Oxanium, sans-serif" }}
-          >
-            Superlicence
-          </h2>
-          <div
-            className="mt-3 text-sm font-bold uppercase tracking-[0.3em] text-foreground"
-            style={{ fontFamily: "Oxanium, sans-serif" }}
-          >
-            Locked
-          </div>
-          <p className="mt-3 max-w-sm text-center text-sm leading-relaxed text-muted-foreground">
-            Graduate Driving School to race a Grand Prix.
-          </p>
-          <button
-            type="button"
-            onClick={() => setLocation("/hub?school=1")}
-            className="mt-6 h-12 w-full max-w-sm rounded-lg bg-yellow-400 font-bold uppercase tracking-wider text-black hover:bg-yellow-300"
-            style={{ fontFamily: "Oxanium, sans-serif" }}
-            data-testid="button-gp-open-school"
-          >
-            Open Driving School
-          </button>
-        </div>
-      </GameLayout>
-    );
-  }
 
   // Grand Prix is premium. The entitlement is currently granted to everyone
   // (see PurchaseContext), so this gate is inert — it stays wired for when it isn't.

@@ -88,6 +88,9 @@ export type Badge = {
 /** Free Practice: complete a full circuit tour with every sector purple. */
 export const BADGE_EVERYTHING_IS_PURPLE = 'everything-is-purple';
 
+/** Driving School graduated: all ten flashcard stages, the Reaction Test target and a Lane Racer win. */
+export const BADGE_SUPERLICENCE = 'superlicence';
+
 /** Daily-streak lengths that earn a badge, id `streak-<days>`. */
 export const STREAK_BADGE_DAYS = [7, 14, 30, 50, 100] as const;
 
@@ -105,6 +108,7 @@ export const BADGES: readonly Badge[] = [
   { id: 'laps-100', label: '100 Laps', blurb: 'Answer 100 questions correctly.', glyph: '100' },
   { id: 'laps-1000', label: '1000 Laps', blurb: 'Answer 1000 questions correctly.', glyph: '1K' },
   { id: 'gp-all-purple', label: 'Purple Race Day', blurb: 'Every sector purple on a Grand Prix Race Day.', glyph: 'GP' },
+  { id: BADGE_SUPERLICENCE, label: 'Superlicence', blurb: 'Graduate Driving School: every flashcard stage, the Reaction Test target and a Lane Racer win.', glyph: 'SL' },
   ...STREAK_BADGES,
   { id: 'facts-50', label: '50 Facts', blurb: 'Master fifty maths facts.', glyph: '50' },
 ];
@@ -116,6 +120,12 @@ export type MilestoneContext = {
   factsMastered: number;
   /** Every sector purple on the Race Day that just finished. */
   allPurpleRaceDay: boolean;
+  /**
+   * Driving School graduated. Passed in by the caller rather than read here: the licence
+   * lives in its own localStorage keys, and importing drivingSchoolLicence would cycle
+   * (it imports drivingSchool, which imports gameLogic, which imports this file).
+   */
+  superlicence: boolean;
 };
 
 /** When each milestone badge is reached, keyed by badge id. */
@@ -124,6 +134,7 @@ const MILESTONES: Record<string, (ctx: MilestoneContext) => boolean> = {
   'laps-100': (c) => c.totalLaps >= 100,
   'laps-1000': (c) => c.totalLaps >= 1000,
   'gp-all-purple': (c) => c.allPurpleRaceDay,
+  [BADGE_SUPERLICENCE]: (c) => c.superlicence,
   ...Object.fromEntries(STREAK_BADGE_DAYS.map((days) => [`streak-${days}`, (c: MilestoneContext) => c.dailyStreak >= days])),
   'facts-50': (c) => c.factsMastered >= 50,
 };

@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { useGameState, RACE_LENGTH } from "@/lib/gameLogic";
 import { playCarouselClick } from "@/lib/uiSound";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
-import { getLicenceStatus, grandPrixDevBypass, REACTION_LICENCE_MS, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
+import { getLicenceStatus, REACTION_LICENCE_MS, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
 import { SuperlicenceSplash } from "@/components/SuperlicenceSplash";
 import { DrivingSchoolWhatsNew } from "@/components/DrivingSchoolWhatsNew";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
@@ -155,7 +155,7 @@ type HubView = 'paddock' | 'weekend' | 'school';
  * DRIVING SCHOOL: Flashcards, Reaction Test, Lane Racer.
  */
 export default function Hub() {
-  const { state } = useGameState();
+  const { state, settleMilestones } = useGameState();
   const [view, setView] = useState<HubView>(() => {
     try {
       return new URLSearchParams(window.location.search).get('school') === '1' ? 'school' : 'paddock';
@@ -179,11 +179,18 @@ export default function Hub() {
     };
   }, [view]);
 
-  // Licence path: flashcards → reaction → lane racer. Grand Prix waits on complete.
+  // Licence path: flashcards → reaction → lane racer. It gates nothing — the Grand Prix is
+  // open to everyone — it just draws the school rail and earns the Superlicence badge.
   const licence = getLicenceStatus();
-  const gpOpen = licence.complete || grandPrixDevBypass();
   const licenceSteps = [licence.flashcards, licence.reaction, licence.laneRacer];
   const currentStep = licenceSteps.findIndex((done) => !done);
+
+  // The Superlicence is a badge now, not a key. Settle it here rather than in the splash:
+  // anyone who graduated before this change has already had their one-time splash, so the
+  // splash alone would skip every existing graduate. Idempotent — applyBadge is a no-op once held.
+  useEffect(() => {
+    if (licence.complete) settleMilestones({ superlicence: true });
+  }, [licence.complete]);
 
   return (
     <div className="h-dvh flex flex-col relative overflow-hidden">
@@ -347,14 +354,11 @@ export default function Hub() {
               />
 
               <HubCard
-                href={gpOpen ? "/game/grand-prix" : undefined}
+                href="/game/grand-prix"
                 title="GRAND PRIX"
                 subtitle={`ROUND ${CURRENT_GRAND_PRIX.round}`}
-                note={gpOpen ? undefined : 'Graduate Driving School'}
-                badge={gpOpen ? undefined : { label: 'locked', color: '#ffcc00' }}
                 testId="link-grand-prix"
                 soundEnabled={state.soundEnabled}
-                onClick={gpOpen ? undefined : () => setView('school')}
               />
             </>
           )}
