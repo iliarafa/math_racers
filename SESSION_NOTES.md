@@ -82,7 +82,7 @@ A new circuit now needs **four** images: silhouette, flag, labelled detail map a
   1. All 10 flashcard stages cleared.
   2. A Reaction Test best under `REACTION_LICENCE_MS` **400 ms**.
   3. A P1 in Lane Racer.
-- **Grand Prix is locked until the licence is earned.** In `Hub.tsx`, `gpOpen = licence.complete || grandPrixDevBypass()`, and the card says "Graduate Driving School" while it's locked. Earning the licence shows the one-time `SuperlicenceSplash`.
+- **The licence gates nothing** (since `c53125d`). The Grand Prix is open to everyone; graduating earns the `superlicence` badge (settled by an effect in `Hub.tsx`) and shows the one-time `SuperlicenceSplash`. `grandPrixDevBypass()` now only skips the weekend's phase order on the dev server.
 
 ### Leaderboard (Supabase project `pslagmyvlvrpwnbhwqpp`)
 - The client writes directly to three tables via `client/src/lib/supabase.ts`:
