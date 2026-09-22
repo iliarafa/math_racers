@@ -5,35 +5,32 @@ import {
   localDayString,
   streakGap,
   streakLevel,
+  streakDots,
   streakStatus,
-  streakWeek,
   weekdayName,
   type DailyStreak,
-  type StreakWeekDay,
+  type StreakDot,
 } from "@/lib/dailyStreak";
 import { nextStreakGoal } from "@/lib/trophies";
 import { STREAK_LEVEL_COLORS } from "@/components/RewardStrip";
 import { cn } from "@/lib/utils";
 
 const OXANIUM = { fontFamily: 'Oxanium, sans-serif' } as const;
-const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const AT_RISK_AMBER = '#ffb020';
 const MUTED = 'rgba(255,255,255,0.4)';
 
-/** One day of the week row: filled when raced, a P ring when a pit stop covered (or will cover) it. */
-function DayDot({ day, color, atRisk }: { day: StreakWeekDay; color: string; atRisk: boolean }) {
-  const base = 'w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold leading-none';
-  if (day.raced) return <span className={base} style={{ backgroundColor: color }} />;
-  if (day.saved) return <span className={base} style={{ border: `1.5px solid ${color}`, color }}>P</span>;
-  if (day.pending) return <span className={base} style={{ border: `1.5px dashed ${AT_RISK_AMBER}`, color: AT_RISK_AMBER }}>P</span>;
-  if (day.isToday) return <span className={base} style={{ border: `1.5px dashed ${atRisk ? AT_RISK_AMBER : MUTED}` }} />;
+/** One streak day: filled once counted, a dashed ring for today while it waits (amber when at risk). */
+function DayDot({ dot, color, atRisk }: { dot: StreakDot; color: string; atRisk: boolean }) {
+  const base = 'w-4 h-4 rounded-full';
+  if (dot.state === 'raced') return <span className={base} style={{ backgroundColor: color }} />;
+  if (dot.state === 'today') return <span className={base} style={{ border: `1.5px dashed ${atRisk ? AT_RISK_AMBER : MUTED}` }} />;
   return <span className={base} style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />;
 }
 
 /**
- * Top of the trophy cabinet: the live day count in its level colour, pit stops held, the last
- * seven days and one line on what comes next. At-risk amber stays off the number (it sits too
- * close to gold) and shows only in the line and on the rings.
+ * Top of the trophy cabinet: the live day count in its level colour, pit stops held, this week of
+ * the streak as seven numbered dots (day 1 on the left) and one line on what comes next. At-risk
+ * amber stays off the number (it sits too close to gold) and shows only in the line and on today's ring.
  */
 export function DailyStreakCard({ streak, earnedBadges }: { streak: DailyStreak; earnedBadges: readonly string[] }) {
   const today = localDayString();
@@ -65,17 +62,15 @@ export function DailyStreakCard({ streak, earnedBadges }: { streak: DailyStreak;
           </span>
         </div>
         <div className="flex gap-2" data-testid="daily-streak-week">
-          {streakWeek(streak, today).map((day) => (
+          {streakDots(streak, today).map((dot) => (
             <div
-              key={day.day}
+              key={dot.day}
               className="w-6 flex flex-col items-center gap-1.5"
-              title={day.day}
-              data-raced={day.raced}
-              data-saved={day.saved}
-              data-pending={day.pending}
+              title={`Day ${dot.day}`}
+              data-state={dot.state}
             >
-              <span className={cn('text-[10px]', day.isToday ? 'text-white' : 'text-white/40')}>{WEEKDAY_LETTERS[day.weekday]}</span>
-              <DayDot day={day} color={color} atRisk={atRisk} />
+              <span className={cn('text-[10px] tabular-nums', dot.isToday ? 'text-white' : 'text-white/40')}>{dot.day}</span>
+              <DayDot dot={dot} color={color} atRisk={atRisk} />
             </div>
           ))}
         </div>

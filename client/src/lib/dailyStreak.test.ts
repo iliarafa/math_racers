@@ -13,7 +13,7 @@ import {
   sanitizeDailyStreak,
   streakLevel,
   streakStatus,
-  streakWeek,
+  streakDots,
   weekdayName,
   type DailyStreak,
 } from './dailyStreak.ts';
@@ -183,41 +183,49 @@ test('the card and the counting agree on every day around the last session', () 
       const label = `${pitStops} pit stops, ${today}`;
       assert.equal(status === 'broken', r.change === 'reset', label);
       assert.equal(status === 'active', r.change === 'same', label);
-      assert.deepEqual(streakWeek(prev, today).filter((d) => d.pending).map((d) => d.day), r.saved, label);
     }
   }
 });
 
-test('streakWeek lists the seven days ending today and marks the ones that counted', () => {
-  // Raced Mon 14, Tue 15, skipped Wed 16 with no pit stop (a reset), raced Thu 17 and Fri 18; today is Sat 19.
-  const streak = s({ count: 2, lastDay: '2026-09-18', best: 2, recentDays: ['2026-09-14', '2026-09-15', '2026-09-17', '2026-09-18'] });
-  const week = streakWeek(streak, '2026-09-19');
-  assert.deepEqual(week.map((d) => d.day), days('2026-09', 13, 19));
-  assert.deepEqual(week.map((d) => d.weekday), [0, 1, 2, 3, 4, 5, 6], 'Sunday first for this week');
-  assert.deepEqual(week.map((d) => d.raced), [false, true, true, false, true, true, false]);
-  assert.deepEqual(week.map((d) => d.saved), [false, false, false, false, false, false, false], 'the 16th ended the old run');
-  assert.deepEqual(week.map((d) => d.isToday), [false, false, false, false, false, false, true]);
+const states = (dots: { state: string }[]) => dots.map((d) => d.state);
+const EMPTY6 = ['empty', 'empty', 'empty', 'empty', 'empty', 'empty'];
 
-  assert.deepEqual(streakWeek(streak, '2026-09-18').at(-1), { day: '2026-09-18', weekday: 5, raced: true, saved: false, pending: false, isToday: true });
+test('streakDots fills from the left, one dot per counted day, numbered by streak day', () => {
+  const day1 = streakDots(s({ count: 1, lastDay: '2026-09-21', best: 1, recentDays: ['2026-09-21'] }), '2026-09-21');
+  assert.deepEqual(states(day1), ['raced', ...EMPTY6], 'the first day is the left dot');
+  assert.deepEqual(day1.map((d) => d.day), [1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual(day1.map((d) => d.isToday), [true, false, false, false, false, false, false]);
+
+  const day3 = streakDots(s({ count: 3, lastDay: '2026-09-23', best: 3, recentDays: days('2026-09', 21, 23) }), '2026-09-23');
+  assert.deepEqual(states(day3), ['raced', 'raced', 'raced', 'empty', 'empty', 'empty', 'empty']);
+  assert.equal(day3.findIndex((d) => d.isToday), 2);
 });
 
-test('streakWeek shows a pit stop as pending until it is used, then as saved until the run ends', () => {
-  const before = s({ count: 5, lastDay: '2026-09-14', best: 5, recentDays: days('2026-09', 10, 14), pitStops: 1 });
-  const pending = streakWeek(before, '2026-09-16').find((d) => d.day === '2026-09-15');
-  assert.deepEqual({ pending: pending?.pending, saved: pending?.saved }, { pending: true, saved: false });
+test('streakDots holds a dashed dot for today until it counts, and starts from the first dot with no streak', () => {
+  const atRisk = streakDots(s({ count: 4, lastDay: '2026-09-24', best: 4, recentDays: days('2026-09', 21, 24) }), '2026-09-25');
+  assert.deepEqual(states(atRisk), ['raced', 'raced', 'raced', 'raced', 'today', 'empty', 'empty']);
+  assert.equal(atRisk.findIndex((d) => d.isToday), 4);
 
-  const used = advanceDailyStreak(before, '2026-09-16').next;
-  const saved = streakWeek(used, '2026-09-16').find((d) => d.day === '2026-09-15');
-  assert.deepEqual({ pending: saved?.pending, saved: saved?.saved, raced: saved?.raced }, { pending: false, saved: true, raced: false });
+  const broken = streakDots(s({ count: 4, lastDay: '2026-09-24', best: 4, recentDays: days('2026-09', 21, 24) }), '2026-09-27');
+  assert.deepEqual(states(broken), ['today', ...EMPTY6], 'a broken streak restarts at day 1');
+  assert.deepEqual(states(streakDots(EMPTY_STREAK, '2026-09-21')), ['today', ...EMPTY6]);
 
-  const restarted = advanceDailyStreak(used, '2026-09-20').next;
-  assert.equal(restarted.count, 1, 'three missed days and no pit stop left');
-  assert.equal(streakWeek(restarted, '2026-09-20').find((d) => d.day === '2026-09-15')?.saved, false, 'the run it saved has ended');
+  // A pit stop will cover the missed 26th: the streak is still alive, so today is dot 5.
+  const covered = s({ count: 4, lastDay: '2026-09-25', best: 4, recentDays: days('2026-09', 22, 25), pitStops: 1 });
+  assert.deepEqual(states(streakDots(covered, '2026-09-27')), ['raced', 'raced', 'raced', 'raced', 'today', 'empty', 'empty']);
+  const afterCover = advanceDailyStreak(covered, '2026-09-27').next;
+  assert.deepEqual(states(streakDots(afterCover, '2026-09-27')), ['raced', 'raced', 'raced', 'raced', 'raced', 'empty', 'empty'], 'a covered day adds no dot');
 });
 
-test('streakWeek steps whole days across daylight-saving changes and month ends', () => {
-  assert.deepEqual(streakWeek(EMPTY_STREAK, '2026-10-28').map((d) => d.day), days('2026-10', 22, 28));
-  assert.deepEqual(streakWeek(EMPTY_STREAK, '2026-04-01').map((d) => d.day), [...days('2026-03', 26, 31), '2026-04-01']);
+test('streakDots starts a new row after every seventh day', () => {
+  const run = (count: number, lastDay: string) => s({ count, lastDay, best: count, recentDays: [lastDay] });
+  assert.deepEqual(states(streakDots(run(7, '2026-09-27'), '2026-09-27')), Array(7).fill('raced'), 'a full row on day 7');
+  const next = streakDots(run(7, '2026-09-27'), '2026-09-28');
+  assert.deepEqual(states(next), ['today', ...EMPTY6], 'day 8 waits at the start of a new row');
+  assert.deepEqual(next.map((d) => d.day), [8, 9, 10, 11, 12, 13, 14]);
+  assert.deepEqual(states(streakDots(run(8, '2026-09-28'), '2026-09-28')), ['raced', ...EMPTY6]);
+  assert.deepEqual(states(streakDots(run(14, '2026-10-04'), '2026-10-04')), Array(7).fill('raced'));
+  assert.deepEqual(streakDots(run(30, '2026-10-20'), '2026-10-20').map((d) => d.day), [29, 30, 31, 32, 33, 34, 35]);
 });
 
 test('streak levels start at 1, 7, 14, 30 and 100 days', () => {

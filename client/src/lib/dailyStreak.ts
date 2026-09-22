@@ -6,7 +6,7 @@
  * GameState.dailyStreak.
  */
 
-/** Days kept in `recentDays`: the Trophies page shows the last week. */
+/** Days in one row of streak dots on /trophies, and the most `recentDays` keeps. */
 export const STREAK_WEEK = 7;
 /** A pit stop is earned each time the streak reaches a multiple of this. */
 export const PIT_STOP_EVERY = 7;
@@ -17,7 +17,7 @@ export type DailyStreak = {
   /** Local calendar day of the last counted session, 'YYYY-MM-DD'; '' when none. */
   lastDay: string;
   best: number;
-  /** The last counted days (at most STREAK_WEEK), oldest first; drives the week dots on /trophies. */
+  /** The last counted days (at most STREAK_WEEK), oldest first. The /trophies dots count streak days and no longer read it. */
   recentDays: string[];
   /** Pit stops held, 0..MAX_PIT_STOPS. Spent only when a session counts after missed days. */
   pitStops: number;
@@ -151,37 +151,28 @@ export function streakLevel(count: number): StreakLevel {
   return level;
 }
 
-export type StreakWeekDay = {
-  day: string;
-  /** 0 = Sunday, as Date.getDay(). */
-  weekday: number;
-  raced: boolean;
-  /** A missed day a pit stop covered. */
-  saved: boolean;
-  /** A missed day a pit stop will cover when the player races today. */
-  pending: boolean;
+export type StreakDot = {
+  /** The streak day this dot stands for: 1–7 in the first week, 8–14 in the second, and so on. */
+  day: number;
+  /** raced: counted. today: today's day, still waiting for a session. empty: still to come. */
+  state: 'raced' | 'today' | 'empty';
   isToday: boolean;
 };
 
-/** The STREAK_WEEK days ending today, oldest first, marking raced, saved and pending days. */
-export function streakWeek(streak: DailyStreak, today: string): StreakWeekDay[] {
-  const { missed } = streakGap(streak, today);
-  // Every gap inside the current run was covered, or the run would have reset there. Any covered
-  // day in this week has both neighbours among the last STREAK_WEEK counted days of the run.
-  const run = streak.recentDays.filter((d) => d <= streak.lastDay).slice(-Math.min(streak.count, STREAK_WEEK));
-  const runStart = run[0] ?? '';
-  const runEnd = run[run.length - 1] ?? '';
+/**
+ * The seven dots on /trophies: the current week of the streak, first day on the left. Each counted
+ * day fills the next dot and every seventh starts a new row, in step with pit stops (one every
+ * PIT_STOP_EVERY days) and the 7- and 14-day levels. Until today counts, its dot is the next one: the
+ * first of a new row after a full one, and the first dot when there is no streak to keep. A day a pit
+ * stop covered adds nothing to the count, so it adds no dot.
+ */
+export function streakDots(streak: DailyStreak, today: string): StreakDot[] {
+  const count = liveCount(streak, today);
+  const todayDay = streakStatus(streak, today) === 'active' ? count : count + 1;
+  const rowStart = Math.floor((todayDay - 1) / STREAK_WEEK) * STREAK_WEEK;
   return Array.from({ length: STREAK_WEEK }, (_, i) => {
-    const day = addDays(today, i + 1 - STREAK_WEEK);
-    const raced = streak.recentDays.includes(day);
-    return {
-      day,
-      weekday: new Date(noonOf(day)).getDay(),
-      raced,
-      saved: !raced && day > runStart && day < runEnd,
-      pending: missed.includes(day),
-      isToday: day === today,
-    };
+    const day = rowStart + i + 1;
+    return { day, state: day <= count ? 'raced' : day === todayDay ? 'today' : 'empty', isToday: day === todayDay };
   });
 }
 
