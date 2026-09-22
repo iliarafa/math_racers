@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { PurchaseProvider } from "@/contexts/PurchaseContext";
 import { useGameState } from "@/lib/gameLogic";
+import { isMenuMusicRoute } from "@/lib/menuMusic";
 import { Volume2, VolumeX } from "lucide-react";
 import { initSuperlicenceCelebration } from "@/lib/drivingSchoolLicence";
 import { applyPageMeta } from "@/lib/webMeta";
@@ -56,7 +57,6 @@ function Router() {
   );
 }
 
-const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/trophies', '/leaderboard', '/lane-racer', '/multiplayer', '/grand-prix', '/driving-school', '/reaction'];
 const VIDEO_ROUTES = ['/hub', '/game', '/lane-racer'];
 
 function PersistentVideo() {
@@ -142,7 +142,7 @@ function MenuMusic() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const isMenu = MENU_ROUTES.includes(location);
+    const isMenu = isMenuMusicRoute(location);
     if (isMenu && state.soundEnabled && userInteracted && !isRacing) {
       audio.play().catch(() => {});
     } else {

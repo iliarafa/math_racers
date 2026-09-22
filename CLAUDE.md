@@ -92,7 +92,7 @@ script/build.ts          # Custom build script
 - `@assets/*` → `attached_assets/*`
 
 ### State Management
-- **Single-player:** localStorage via `useGameState()` hook. The saved blob is the source of truth: every mutator goes through `mutateGameState` (load → apply → save synchronously → notify subscribers) and instances follow each other's saves, so a long-lived instance such as `MenuMusic` in `App.tsx` can never overwrite what a page just saved. Never call `setState` with a whole stale copy; add a pure `apply*` function and wrap it in `mutate`.
+- **Single-player:** localStorage via `useGameState()` hook. The saved blob is the source of truth: every mutator goes through `mutateGameState` (load → apply → save synchronously → notify subscribers) and instances follow each other's saves, so a long-lived instance such as `MenuMusic` in `App.tsx` can never overwrite what a page just saved. `MenuMusic` plays on the routes in `isMenuMusicRoute` (`lib/menuMusic.ts`), which include every `/game/<mode>` setup card; Game pauses it from the red lights on by sending `racingStateChange`. Never call `setState` with a whole stale copy; add a pure `apply*` function and wrap it in `mutate`.
 - **Session data:** sessionStorage for lap times (cross-component)
 - **Series selection:** localStorage `lastSelectedDriverId` — persisted when selecting a series in single-player, read as default in multiplayer
 - **Server state:** React Query (available but minimally used)
