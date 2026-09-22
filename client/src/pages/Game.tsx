@@ -1090,7 +1090,7 @@ export default function Game() {
     if (freePracticePreview && earnBadge(BADGE_EVERYTHING_IS_PURPLE)) {
       toast({
         title: 'Badge unlocked',
-        description: 'Everything Is Purple!',
+        description: 'All Purple!',
       });
     }
     // Ensure race mode has bot opponent (practice mode uses solo)
@@ -1361,7 +1361,7 @@ export default function Game() {
               if (earnBadge(BADGE_EVERYTHING_IS_PURPLE)) {
                 toast({
                   title: 'Badge unlocked',
-                  description: 'Everything Is Purple!',
+                  description: 'All Purple!',
                 });
               }
             }

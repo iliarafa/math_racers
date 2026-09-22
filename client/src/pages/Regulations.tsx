@@ -142,7 +142,7 @@ const chapters: Chapter[] = [
           "Locked — pick Karting / F3 / F2 / F1 / Pro; level stays fixed for the session (no promotion or demotion).",
           "No penalties — wrong answers don't count against you.",
           "ALL PURPLE — complete a full circuit tour with every sector purple and the level label temporarily shows ALL PURPLE.",
-          "Everything Is Purple — the first time you do this, unlock a persistent badge in Racer Log (Free Practice only — not Grand Prix Practice).",
+          "All Purple — the first time you do this, unlock a persistent badge in Racer Log (Free Practice only — not Grand Prix Practice).",
           "Your mission — only a full 100-lap session submits your score to the Leaderboard; 25- and 50-lap sessions are for practice.",
           "On iPad, Free Practice runs in landscape like the rest of Race Weekend.",
           "BOX — click to exit to the pits and log your current stint. Go back to the track to start a new one.",

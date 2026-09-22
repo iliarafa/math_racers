@@ -103,7 +103,7 @@ const STREAK_BADGES: Badge[] = STREAK_BADGE_DAYS.map((days) => ({
 }));
 
 export const BADGES: readonly Badge[] = [
-  { id: BADGE_EVERYTHING_IS_PURPLE, label: 'Everything Is Purple', blurb: 'A full Free Practice circuit tour with every sector purple.', glyph: 'P' },
+  { id: BADGE_EVERYTHING_IS_PURPLE, label: 'All Purple', blurb: 'A full Free Practice circuit tour with every sector purple.', glyph: 'P' },
   { id: 'first-win', label: 'First Win', blurb: 'Beat the bot for the first time.', glyph: 'P1' },
   { id: 'laps-100', label: '100 Laps', blurb: 'Answer 100 questions correctly.', glyph: '100' },
   { id: 'laps-1000', label: '1000 Laps', blurb: 'Answer 1000 questions correctly.', glyph: '1K' },
