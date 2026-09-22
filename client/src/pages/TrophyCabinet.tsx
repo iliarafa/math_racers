@@ -8,6 +8,7 @@ import { DailyStreakCard } from "@/components/DailyStreakCard";
 import { GrowthPanel } from "@/components/GrowthPanel";
 import { TIER_COLORS } from "@/components/RewardStrip";
 import { cn } from "@/lib/utils";
+import { Trophy as TrophyIcon } from "lucide-react";
 
 const OXANIUM = { fontFamily: 'Oxanium, sans-serif' } as const;
 
@@ -45,9 +46,8 @@ function TrophyTile({ round, trophy, current }: { round: number; trophy?: Trophy
       data-testid={`trophy-slot-${round}`}
       data-tier={trophy.tier}
     >
-      <span className="text-[9px] leading-none" style={{ color }}>R{trophy.round}</span>
-      <span className="text-[9px] font-bold uppercase tracking-wider text-white leading-tight text-center">{trophy.name}</span>
-      <span className="text-[8px] uppercase tracking-widest" style={{ color }}>{trophy.tier}</span>
+      <TrophyIcon className="w-7 h-7 shrink-0" style={{ color }} strokeWidth={1.5} aria-hidden="true" />
+      <span className="text-[9px] font-bold uppercase tracking-wider leading-tight text-center" style={{ color }}>{trophy.name}</span>
     </div>
   );
 }

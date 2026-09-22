@@ -22,7 +22,8 @@ export type RewardOutcome = {
 export const TIER_COLORS: Record<TrophyTier, string> = {
   bronze: '#cd7f32',
   silver: '#c0c0c0',
-  gold: '#ffcc00',
+  // A warm metallic gold, not the app's yellow accent (#ffcc00), so it reads as a medal.
+  gold: '#e2b64c',
 };
 
 /** Streak colours by level: orange to start, then the trophy tiers, then purple. */
