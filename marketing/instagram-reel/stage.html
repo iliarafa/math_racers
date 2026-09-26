@@ -1,0 +1,621 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Math Racer reel stage</title>
+<style>
+  html, body { margin: 0; background: #000; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1920"></canvas>
+<script>
+/*
+ * The 9:16 reel as a pure function of time: window.render(t) draws frame t (seconds) on the
+ * canvas, window.cues() lists the sound cues. Footage comes from the capture scripts (JPEG
+ * frames of the real app at 393x852 CSS px), paths passed as ?work=<dir>.
+ */
+const W = 1080, H = 1920, FPS = 30;
+// The renderer serves the capture output under work/ and the repository under repo/.
+const WORK = 'work', REPO = 'repo/';
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+
+const C = {
+  red: '#e10600', redHot: '#ff2d1f', purple: '#a855f7', purpleApp: '#9333ea', green: '#22c55e',
+  yellow: '#facc15', white: '#ffffff', ink: '#0a0a0d',
+};
+
+// ---------------------------------------------------------------- timeline (seconds)
+const LIGHTS = [0.20, 0.50, 0.80, 1.10, 1.40];
+const T = {
+  out: 2.0, phoneIn: [2.0, 2.45],
+  ffIn: 4.5, ffOut: 6.0, lastAnswerAt: 7.95,
+  flag: [8.0, 8.42], swap: 8.2,
+  lane: 10.0, gp: 11.5, trophies: 12.5, cta: 14.0, end: 18.0,
+};
+const CAPTIONS = [
+  { a: 0.0, b: 2.0, lines: ['YOUR KID', 'LOVES [RACING?]'], y: 400, size: 100, enterAt0: true },
+  { a: 2.1, b: 4.5, lines: ['EVERY RIGHT ANSWER', 'IS A [LAP]'] },
+  { a: 4.5, b: 6.0, lines: ['ANSWER FAST.', 'GO {PURPLE.}'] },
+  { a: 6.0, b: 8.0, lines: ['LEAVE THE BOT', '[BEHIND]'] },
+  { a: 8.25, b: 10.0, lines: ['BEAT THE BOT', 'TO THE [FLAG]'] },
+  { a: 10.0, b: 11.5, lines: ['THE RIGHT LANE IS', 'THE <RIGHT ANSWER>'] },
+  { a: 11.5, b: 12.5, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
+  { a: 12.5, b: 14.0, lines: ['WIN TROPHIES.', '[KEEP THE STREAK.]'] },
+];
+
+// ---------------------------------------------------------------- helpers
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, p) => a + (b - a) * p;
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const eOutCubic = p => 1 - Math.pow(1 - p, 3);
+const eInCubic = p => p * p * p;
+const eInOut = p => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+const eOutBack = p => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2); };
+function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = Math.imul(s ^ (s >>> 15), 1 | s) + 0x6d2b79f5 >>> 0) / 4294967296); }
+
+// ---------------------------------------------------------------- assets
+const imgCache = new Map();
+function loadImage(src) {
+  if (!imgCache.has(src)) {
+    const img = new Image();
+    img.src = src;
+    imgCache.set(src, img.decode().then(() => img, () => null));
+    if (imgCache.size > 40) imgCache.delete(imgCache.keys().next().value);
+  }
+  return imgCache.get(src);
+}
+const clipFrame = (clip, i) => `${WORK}/clips/${clip}/${String(i).padStart(5, '0')}.jpg`;
+let META = {};
+async function loadMeta() {
+  for (const clip of ['race', 'lane']) {
+    META[clip] = await (await fetch(`${WORK}/clips/${clip}/events.json`)).json();
+  }
+}
+
+// ---------------------------------------------------------------- race footage
+// Output time -> footage frame (fractional). 1x at the start, a blurred fast-forward while
+// the camera sits on the sector rows, 1x for the last two laps, then the finish screen.
+function raceMarks() {
+  const ev = META.race.events;
+  const answered = ev.filter(e => e.type === 'mark' && e.name === 'answered');
+  return { last: answered[answered.length - 1].frame, answered, taps: ev.filter(e => e.type === 'tap') };
+}
+function raceFrameAt(t) {
+  const { last } = raceMarks();
+  const aEnd = (T.ffIn - T.out) * FPS;                    // footage frame where the fast-forward starts
+  const cStart = last - (T.lastAnswerAt - T.ffOut) * FPS;  // footage frame where 1x resumes
+  const pos = u => {
+    if (u < T.ffIn) return (u - T.out) * FPS;
+    if (u < T.ffOut) {
+      // 1x at both ends, eased up to ~17x in the middle
+      const p = (u - T.ffIn) / (T.ffOut - T.ffIn), d = (T.ffOut - T.ffIn) * FPS;
+      return aEnd + d * p + (cStart - aEnd - d) * eInOut(p);
+    }
+    if (u < T.swap) return cStart + (u - T.ffOut) * FPS;
+    return last + 30 + (u - T.swap) * FPS;
+  };
+  const f = pos(t);
+  const speed = Math.abs(pos(t + 0.5 / FPS) - pos(t - 0.5 / FPS));
+  // Quick Race jumps straight to the result on the final tick, so hold the frame with the
+  // final answer typed and the tick pressed until the chequered flag has covered the phone.
+  const { taps } = raceMarks();
+  const finalTick = taps[taps.length - 1].frame + 1;
+  const shown = t < T.swap ? Math.min(f, finalTick) : f;
+  return { f: shown, clock: f, speed: t >= T.swap || t < T.out ? 1 : speed };
+}
+
+// ---------------------------------------------------------------- background
+function drawBackground(t) {
+  // Lights: pure black warming with each lamp. Later: deep red to near-black.
+  const lit = LIGHTS.filter(x => t >= x).length;
+  const s1 = t < T.out ? 1 : 1 - prog(t, T.out, T.out + 0.4);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#2a0709'); g.addColorStop(0.45, '#12060a'); g.addColorStop(1, '#060608');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (s1 > 0) { ctx.fillStyle = `rgba(0,0,0,${s1})`; ctx.fillRect(0, 0, W, H); }
+  // warm glow behind the gantry / phone
+  const glowA = t < T.out ? 0.08 * lit : 0.45;
+  const rg = ctx.createRadialGradient(540, 1050, 40, 540, 1050, 900);
+  rg.addColorStop(0, `rgba(225,6,0,${glowA})`); rg.addColorStop(1, 'rgba(225,6,0,0)');
+  ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+  // speed streaks after lights out
+  if (t >= T.out) {
+    const r = rng(42);
+    const boost = 1 + 5 * Math.exp(-(t - T.out) * 4);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 26; i++) {
+      const y = r() * H, len = 180 + r() * 420, spd = (900 + r() * 1400) * boost, th = 1 + r() * 2.5;
+      const x = ((r() * 3000 + (t - T.out) * spd) % (W + len + 400)) - len - 200;
+      const a = 0.05 + r() * 0.1;
+      const lg = ctx.createLinearGradient(x, 0, x + len, 0);
+      const col = r() < 0.35 ? '255,40,30' : '255,255,255';
+      lg.addColorStop(0, `rgba(${col},0)`); lg.addColorStop(1, `rgba(${col},${a})`);
+      ctx.fillStyle = lg; ctx.fillRect(x, y, len, th);
+    }
+    ctx.restore();
+  }
+  // vignette
+  const vg = ctx.createRadialGradient(540, 960, 500, 540, 960, 1250);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+}
+
+// ---------------------------------------------------------------- start-light gantry
+function drawGantry(t) {
+  if (t > T.out + 0.35) return;
+  const outP = prog(t, T.out, T.out + 0.3);
+  const sc = 1 + eInCubic(outP) * 1.6, alpha = 1 - outP;
+  const shake = t > T.out && t < T.out + 0.12 ? (Math.sin(t * 200) * 6) : 0;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(540 + shake, 928); ctx.scale(sc, sc); ctx.translate(-540, -928);
+  const podW = 158, podH = 336, gap = 26, x0 = (W - (5 * podW + 4 * gap)) / 2, y0 = 760;
+  // beam and hangers
+  ctx.fillStyle = '#17171b'; ctx.fillRect(40, y0 - 70, W - 80, 30);
+  ctx.fillStyle = '#0f0f12';
+  for (let k = 0; k < 5; k++) ctx.fillRect(x0 + k * (podW + gap) + podW / 2 - 12, y0 - 44, 24, 48);
+  for (let k = 0; k < 5; k++) {
+    const x = x0 + k * (podW + gap);
+    const on = t >= LIGHTS[k] && t < T.out;
+    const flick = on ? clamp((t - LIGHTS[k]) / 0.05) : 0;
+    ctx.fillStyle = '#0b0b0e'; ctx.strokeStyle = '#2a2a30'; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.roundRect(x, y0, podW, podH, 28); ctx.fill(); ctx.stroke();
+    for (const cy of [y0 + 92, y0 + 244]) {
+      const cx = x + podW / 2, r = 56;
+      if (flick > 0) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const bloom = ctx.createRadialGradient(cx, cy, r * 0.4, cx, cy, r * 3.2);
+        bloom.addColorStop(0, `rgba(255,40,20,${0.55 * flick})`); bloom.addColorStop(1, 'rgba(255,0,0,0)');
+        ctx.fillStyle = bloom; ctx.fillRect(cx - r * 3.2, cy - r * 3.2, r * 6.4, r * 6.4);
+        ctx.restore();
+        const lamp = ctx.createRadialGradient(cx - 14, cy - 16, 4, cx, cy, r);
+        lamp.addColorStop(0, `rgba(255,190,170,${flick})`); lamp.addColorStop(0.25, `rgba(255,50,30,${flick})`);
+        lamp.addColorStop(0.8, `rgba(210,4,0,${flick})`); lamp.addColorStop(1, `rgba(120,0,0,${flick})`);
+        ctx.fillStyle = '#1b1b1f'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = lamp; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      } else {
+        const off = ctx.createRadialGradient(cx - 12, cy - 14, 2, cx, cy, r);
+        off.addColorStop(0, '#34343a'); off.addColorStop(1, '#141417');
+        ctx.fillStyle = off; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+  }
+  ctx.restore();
+  // lights-out flash
+  if (t >= T.out && t < T.out + 0.2) {
+    ctx.fillStyle = `rgba(255,255,255,${0.35 * (1 - prog(t, T.out, T.out + 0.2))})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+// ---------------------------------------------------------------- captions
+// [word] = red, {word} = purple, <word> = green.
+function parseLine(line) {
+  const out = [];
+  const re = /\[([^\]]+)\]|\{([^}]+)\}|<([^>]+)>|([^\[{<]+)/g;
+  let m;
+  while ((m = re.exec(line))) {
+    const [, r, p, g, plain] = m;
+    const color = r ? C.redHot : p ? C.purple : g ? C.green : C.white;
+    for (const w of (r || p || g || plain).trim().split(/\s+/).filter(Boolean)) out.push({ w, color });
+  }
+  return out;
+}
+function drawCaption(t, cap) {
+  if (t < cap.a - 0.001 || t > cap.b + 0.001) return;
+  const y0 = cap.y ?? 318;
+  const exitP = prog(t, cap.b - 0.16, cap.b);
+  ctx.save();
+  ctx.letterSpacing = '2px';
+  let size = cap.size ?? 88;
+  ctx.font = `800 ${size}px Oxanium`;
+  const widest = Math.max(...cap.lines.map(l => ctx.measureText(parseLine(l).map(w => w.w).join(' ')).width));
+  if (widest > 920) size = Math.floor(size * 920 / widest);
+  ctx.font = `800 ${size}px Oxanium`;
+  const lh = Math.round(size * 1.18);
+  ctx.textBaseline = 'alphabetic';
+  let idx = 0;
+  cap.lines.forEach((line, li) => {
+    const words = parseLine(line);
+    const space = ctx.measureText(' ').width + 6;
+    const widths = words.map(w => ctx.measureText(w.w).width);
+    const total = widths.reduce((a, b) => a + b, 0) + space * (words.length - 1);
+    let x = (W - total) / 2;
+    words.forEach((w, wi) => {
+      const start = cap.enterAt0 ? -1 : cap.a + idx * 0.045;
+      const p = cap.enterAt0 ? 1 : eOutCubic(prog(t, start, start + 0.26));
+      const dy = (1 - p) * 46 - eInCubic(exitP) * 30;
+      ctx.globalAlpha = p * (1 - exitP);
+      ctx.shadowColor = 'rgba(0,0,0,0.65)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 4;
+      ctx.fillStyle = w.color;
+      ctx.fillText(w.w, x, y0 + li * lh + dy);
+      x += widths[wi] + space;
+      idx++;
+    });
+  });
+  // accent bar
+  const barP = cap.enterAt0 ? 1 : eOutCubic(prog(t, cap.a + 0.1, cap.a + 0.4));
+  ctx.shadowBlur = 0; ctx.globalAlpha = 1 - exitP;
+  ctx.fillStyle = C.red;
+  const bw = 120 * barP;
+  if (!cap.noBar) ctx.fillRect(540 - bw / 2, y0 + (cap.lines.length - 1) * lh + 40, bw, 8);
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- phone
+const K = 660 / 393;                 // canvas px per app CSS px at zoom 1
+const SCR = { w: 393, h: 852, r: 55 };
+const BASE = { z: 1, fx: 0, fy: 0, ax: 540, ay: 545 + 426 * K };
+
+// Camera keyframes: [time, z, focus x/y (app CSS px from screen centre), anchor x/y (canvas px)]
+const CAM = [
+  [2.45, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [4.40, 1.07, 0, -176, 540, BASE.ay - 176 * K],
+  [4.50, 1.07, 0, -176, 540, BASE.ay - 176 * K],
+  [4.95, 1.30, 0, 44, 540, 1150],
+  [5.95, 1.34, 0, 44, 540, 1150],
+  [6.35, 1.15, 0, -40, 540, 1060],
+  [8.00, 1.19, 0, -40, 540, 1060],
+  [8.20, 1.00, 0, 0, BASE.ax, BASE.ay],
+];
+function camAt(t) {
+  if (t <= CAM[0][0]) return { z: 1, fx: 0, fy: 0, ax: BASE.ax, ay: BASE.ay };
+  for (let i = 0; i < CAM.length - 1; i++) {
+    const [ta, ...a] = CAM[i], [tb, ...b] = CAM[i + 1];
+    if (t <= tb) {
+      const p = eInOut(prog(t, ta, tb));
+      const [z, fx, fy, ax, ay] = a.map((v, j) => lerp(v, b[j], p));
+      return { z, fx, fy, ax, ay };
+    }
+  }
+  return { z: 1, fx: 0, fy: 0, ax: BASE.ax, ay: BASE.ay };
+}
+
+function statusBar(dark) {
+  // dark = light icons on a dark screen
+  const col = dark ? '#ffffff' : '#000000';
+  ctx.save();
+  ctx.fillStyle = col; ctx.strokeStyle = col;
+  ctx.font = '600 17px "Liberation Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('9:41', -196.5 + 64, -426 + 37);
+  // signal
+  const sx = 196.5 - 116, sy = -426 + 37;
+  [4, 6.5, 9, 11.5].forEach((h, i) => { ctx.beginPath(); ctx.roundRect(sx + i * 5, sy - h, 3.2, h, 1); ctx.fill(); });
+  // wifi
+  const wx = 196.5 - 80, wy = sy + 0.5;
+  ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+  for (const [r, a] of [[10.5, 0.7], [6.8, 0.7], [3.2, 0.7]]) { ctx.beginPath(); ctx.arc(wx, wy, r, -Math.PI / 2 - a, -Math.PI / 2 + a); ctx.stroke(); }
+  ctx.beginPath(); ctx.arc(wx, wy - 0.5, 1.4, 0, Math.PI * 2); ctx.fill();
+  // battery
+  const bx = 196.5 - 62, by = sy - 11;
+  ctx.globalAlpha = 0.4; ctx.lineWidth = 1; ctx.beginPath(); ctx.roundRect(bx, by, 25, 12, 3.5); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(bx + 26.5, by + 4, 1.8, 4, 1); ctx.fill();
+  ctx.globalAlpha = 1; ctx.beginPath(); ctx.roundRect(bx + 2, by + 2, 21, 8, 2); ctx.fill();
+  ctx.restore();
+}
+
+async function drawScreenContent(t, content) {
+  // content: { layers: [{ src, alpha, dx, zoom, oy }], dark, taps: [{x, y, age}] }
+  for (const L of content.layers) {
+    const img = await loadImage(L.src);
+    if (!img) continue;
+    ctx.save();
+    ctx.globalAlpha = L.alpha ?? 1;
+    const z = L.zoom ?? 1;
+    ctx.translate(L.dx ?? 0, L.oy ?? 0);
+    ctx.scale(z, z);
+    ctx.drawImage(img, -SCR.w / 2, -SCR.h / 2, SCR.w, SCR.h);
+    ctx.restore();
+  }
+  statusBar(content.dark);
+  for (const tp of content.taps || []) {
+    const a = tp.age < 0.08 ? 1 : 1 - prog(tp.age, 0.08, 0.3);
+    const r = 23 * (0.75 + 0.25 * eOutCubic(prog(tp.age, 0, 0.07)));
+    ctx.fillStyle = content.dark ? `rgba(255,255,255,${0.35 * a})` : `rgba(20,20,24,${0.22 * a})`;
+    ctx.strokeStyle = content.dark ? `rgba(255,255,255,${0.6 * a})` : `rgba(20,20,24,${0.32 * a})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(tp.x - SCR.w / 2, tp.y - SCR.h / 2, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  // home indicator
+  ctx.fillStyle = content.dark ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.85)';
+  ctx.beginPath(); ctx.roundRect(-67, SCR.h / 2 - 13, 134, 5, 2.5); ctx.fill();
+}
+
+async function drawPhone(t, cam, content, opts = {}) {
+  const s = K * cam.z;
+  ctx.save();
+  ctx.globalAlpha = opts.alpha ?? 1;
+  ctx.translate(cam.ax + (opts.dx || 0), cam.ay + (opts.dy || 0));
+  if (opts.rot) ctx.rotate(opts.rot);
+  ctx.scale(s, s);
+  ctx.translate(-cam.fx, -cam.fy);
+  // body
+  const bz = 8, r0 = SCR.r + bz;
+  ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 60 / s; ctx.shadowOffsetY = 18 / s;
+  ctx.fillStyle = '#050506';
+  ctx.beginPath(); ctx.roundRect(-SCR.w / 2 - bz, -SCR.h / 2 - bz, SCR.w + 2 * bz, SCR.h + 2 * bz, r0); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  const edge = ctx.createLinearGradient(-SCR.w / 2, -SCR.h / 2, SCR.w / 2, SCR.h / 2);
+  edge.addColorStop(0, '#8d8a86'); edge.addColorStop(0.3, '#3a3937'); edge.addColorStop(0.7, '#5d5b58'); edge.addColorStop(1, '#2b2a29');
+  ctx.strokeStyle = edge; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.roundRect(-SCR.w / 2 - bz + 1, -SCR.h / 2 - bz + 1, SCR.w + 2 * bz - 2, SCR.h + 2 * bz - 2, r0 - 1); ctx.stroke();
+  // screen
+  ctx.save();
+  ctx.beginPath(); ctx.roundRect(-SCR.w / 2, -SCR.h / 2, SCR.w, SCR.h, SCR.r); ctx.clip();
+  ctx.fillStyle = content.dark ? '#000' : '#fff'; ctx.fillRect(-SCR.w / 2, -SCR.h / 2, SCR.w, SCR.h);
+  await drawScreenContent(t, content);
+  if (opts.after) await opts.after();
+  ctx.restore();
+  // dynamic island
+  ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.roundRect(-62.5, -SCR.h / 2 + 11, 125, 37, 18.5); ctx.fill();
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- per-scene screen content
+function raceContent(t) {
+  const { f, clock, speed } = raceFrameAt(t);
+  const n = META.race.frames;
+  const layers = [];
+  if (speed > 1.5) {
+    // motion blur: average frames across this output frame's footage span
+    const span = speed * 0.5, samples = 3;
+    for (let i = 0; i < samples; i++) {
+      const fi = Math.round(clamp(f - span / 2 + (span * i) / (samples - 1), 0, n - 1));
+      layers.push({ src: clipFrame('race', fi), alpha: 1 / (i + 1) });
+    }
+  } else {
+    layers.push({ src: clipFrame('race', Math.round(clamp(f, 0, n - 1))) });
+  }
+  const taps = [];
+  if (speed <= 1.01 && t < T.swap) {
+    for (const tp of raceMarks().taps) {
+      const age = (clock - tp.frame) / FPS;
+      if (age >= 0 && age < 0.32) taps.push({ x: tp.x, y: tp.y, age });
+    }
+  }
+  return { layers, dark: false, taps };
+}
+function laneStart() {
+  // The first straight run through a middle-lane answer (web chase cam doesn't follow side
+  // lanes), timed so the hit and its green burst land 0.3 s before the next cut.
+  const ev = META.lane.events.filter(e => e.type === 'mark');
+  for (let i = 0; i < ev.length - 1; i++) {
+    if (ev[i].name === 'question' && ev[i].lane === 1 && ev[i + 1].name === 'hit') {
+      return clamp(ev[i + 1].frame - Math.round((T.gp - 0.3 - T.lane) * FPS), 0, META.lane.frames - 46);
+    }
+  }
+  return 0;
+}
+function laneContent(t) {
+  const f = Math.round(laneStart() + (t - T.lane) * FPS);
+  return { layers: [{ src: clipFrame('lane', clamp(f, 0, META.lane.frames - 1)) }], dark: true };
+}
+function stillContent(name, t, a, b, { zoom = [1, 1.05], oy = [0, 0] } = {}) {
+  const p = prog(t, a, b);
+  return { layers: [{ src: `${WORK}/stills/${name}.png`, zoom: lerp(zoom[0], zoom[1], p), oy: lerp(oy[0], oy[1], p) }], dark: true };
+}
+function featureContentAt(t) {
+  if (t < T.gp) return laneContent(t);
+  if (t < T.trophies) return stillContent('grand-prix', t, T.gp, T.trophies, { zoom: [1.0, 1.05] });
+  return stillContent('trophies', t, T.trophies, T.cta, { zoom: [1.0, 1.04], oy: [0, -10] });
+}
+
+// ---------------------------------------------------------------- caption scrim
+function phoneTop(t) {
+  if (t < T.out || t >= T.cta) return H;
+  const cam = camAt(t);
+  return cam.ay + (-SCR.h / 2 - 8 - cam.fy) * K * cam.z;
+}
+function drawScrim(t) {
+  const a = clamp((560 - phoneTop(t)) / 90);
+  if (a <= 0) return;
+  const g = ctx.createLinearGradient(0, 0, 0, 660);
+  g.addColorStop(0, `rgba(12,4,6,${0.94 * a})`); g.addColorStop(0.62, `rgba(12,4,6,${0.88 * a})`);
+  g.addColorStop(1, 'rgba(12,4,6,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 660);
+}
+
+// ---------------------------------------------------------------- chequered flag wipe
+function drawFlagWipe(t) {
+  const [a, b] = T.flag;
+  if (t < a || t > b) return;
+  const p = eInOut(prog(t, a, b));
+  const band = 1500, sq = 84;
+  const x = lerp(-band - 500, W + 500, p);
+  ctx.save();
+  ctx.translate(x, H / 2); ctx.rotate(-0.2);
+  ctx.beginPath(); ctx.rect(0, -1400, band, 2800); ctx.clip();
+  ctx.fillStyle = '#f4f4f4'; ctx.fillRect(0, -1400, band, 2800);
+  ctx.fillStyle = '#0b0b0b';
+  for (let i = 0; i < band / sq + 1; i++) for (let j = -Math.ceil(1400 / sq); j < 1400 / sq; j++) {
+    if ((i + j) % 2 === 0) ctx.fillRect(i * sq, j * sq, sq, sq);
+  }
+  ctx.fillStyle = C.red; ctx.fillRect(band - 22, -1400, 22, 2800);
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- confetti (outside the phone)
+function drawConfetti(t, t0) {
+  const age = t - t0;
+  if (age < 0 || age > 2.4) return;
+  const r = rng(7);
+  const cols = [C.red, '#ffffff', C.purple, C.green, C.yellow];
+  for (let i = 0; i < 150; i++) {
+    const side = i % 2 ? 1 : -1;
+    const x0 = side < 0 ? -20 : W + 20, y0 = 1250 + r() * 200;
+    const ang = (side < 0 ? -1 : -Math.PI + 1) + (r() - 0.5) * 0.9 - (side < 0 ? 0.25 : -0.25);
+    const v = 1500 + r() * 1300, g = 1900, drag = 1.3;
+    const k = (1 - Math.exp(-drag * age)) / drag;
+    const x = x0 + Math.cos(ang) * v * k * (side < 0 ? 1 : 1);
+    const y = y0 + Math.sin(ang) * v * k + 0.5 * g * age * age * 0.6;
+    const rot = r() * 6 + age * (4 + r() * 8);
+    ctx.save();
+    ctx.globalAlpha = 1 - prog(age, 1.6, 2.4);
+    ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1, Math.cos(age * (6 + r() * 6)));
+    ctx.fillStyle = cols[i % cols.length];
+    ctx.fillRect(-9, -5, 18, 10);
+    ctx.restore();
+  }
+}
+
+// ---------------------------------------------------------------- end card
+async function drawCTA(t) {
+  const a = t - T.cta;
+  if (a < 0) return;
+  // darken towards black
+  ctx.fillStyle = `rgba(0,0,0,${0.65 * eOutCubic(prog(a, 0, 0.3))})`; ctx.fillRect(0, 0, W, H);
+  const glow = ctx.createRadialGradient(540, 930, 60, 540, 930, 720);
+  glow.addColorStop(0, `rgba(225,6,0,${0.42 * prog(a, 0.05, 0.6)})`); glow.addColorStop(1, 'rgba(225,6,0,0)');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+  // hero car (its black background screens away)
+  const car = await loadImage(REPO + 'attached_assets/hero_tight_post.png');
+  if (car) {
+    const p = eOutCubic(prog(a, 0.15, 0.85));
+    const cw = 820 * lerp(1.25, 1, p), ch = cw * car.height / car.width;
+    ctx.save();
+    ctx.globalAlpha = prog(a, 0.15, 0.45);
+    ctx.globalCompositeOperation = 'screen';
+    ctx.drawImage(car, 540 - cw / 2, 872 - ch / 2, cw, ch);
+    ctx.restore();
+  }
+  // logo
+  const logo = await loadImage(REPO + 'attached_assets/logo-white.svg');
+  if (logo) {
+    const p = prog(a, 0.15, 0.5);
+    const s = lerp(1.35, 1, eOutBack(p));
+    const lw = 540 * s, lh = lw * 504.95 / 1436.03;
+    ctx.save(); ctx.globalAlpha = clamp(p * 3);
+    ctx.drawImage(logo, 540 - lw / 2, 352 - lh / 2, lw, lh);
+    ctx.restore();
+  }
+  // tagline
+  drawCaption(t, { a: T.cta + 0.45, b: T.end + 1, lines: ['MATHS PRACTICE THAT', 'FEELS LIKE [RACE DAY]'], y: 548, size: 64, noBar: true });
+  // play line + url pill
+  const pp = eOutCubic(prog(a, 0.9, 1.25));
+  if (pp > 0) {
+    ctx.save();
+    ctx.globalAlpha = pp;
+    ctx.translate(0, (1 - pp) * 40);
+    ctx.font = '600 32px Oxanium'; ctx.letterSpacing = '7px'; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 16;
+    ctx.fillText('PLAY FREE  ·  AGES 6+', 540, 1112);
+    const pw = 680, ph = 100, px = 540 - pw / 2, py = 1140;
+    ctx.shadowColor = 'rgba(225,6,0,0.6)'; ctx.shadowBlur = 40;
+    ctx.fillStyle = C.red; ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 50); ctx.fill();
+    ctx.shadowBlur = 0;
+    const sp = prog(a, 1.7, 2.3);
+    if (sp > 0 && sp < 1) {
+      ctx.save(); ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 50); ctx.clip();
+      const sx = lerp(px - 200, px + pw + 200, sp);
+      const sg = ctx.createLinearGradient(sx - 90, 0, sx + 90, 0);
+      sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(0.5, 'rgba(255,255,255,0.45)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sg; ctx.fillRect(px, py, pw, ph); ctx.restore();
+    }
+    ctx.font = '700 52px Oxanium'; ctx.letterSpacing = '1px'; ctx.fillStyle = '#fff';
+    ctx.fillText('mathracer2026.io', 540, py + 68);
+    ctx.restore();
+  }
+}
+
+// ---------------------------------------------------------------- frame
+window.render = async function (t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  drawBackground(t);
+  drawGantry(t);
+
+  if (t >= T.out && t < T.cta + 0.3) {
+    const cam = camAt(t);
+    const opts = {};
+    if (t < T.phoneIn[1]) {
+      const p = eOutCubic(prog(t, T.phoneIn[0], T.phoneIn[1]));
+      opts.dy = (1 - p) * 1100; cam.z *= lerp(0.92, 1, p);
+    }
+    if (t >= T.lane) {                                       // gentle float in the feature montage
+      opts.dy = (opts.dy || 0) + Math.sin((t - T.lane) * 2.2) * 8;
+      opts.rot = Math.sin((t - T.lane) * 1.6) * 0.012;
+    }
+    if (t >= T.cta) {                                        // drop away for the end card
+      const p = eInCubic(prog(t, T.cta, T.cta + 0.28));
+      opts.dy = (opts.dy || 0) + p * 1000; opts.alpha = 1 - p; cam.z *= lerp(1, 0.85, p);
+    }
+    let content;
+    if (t < T.lane) content = raceContent(t);
+    else content = featureContentAt(t);
+    // whip between feature screens
+    const cuts = [T.gp, T.trophies];
+    const cut = cuts.find(c => t >= c - 0.001 && t < c + 0.2);
+    if (cut != null) {
+      const p = eOutCubic(prog(t, cut, cut + 0.2));
+      const prev = featureContentAt(cut - 0.001);
+      content = { ...content, layers: [
+        ...prev.layers.map(l => ({ ...l, dx: -p * 393 })),
+        ...content.layers.map(l => ({ ...l, dx: (1 - p) * 393 })),
+      ] };
+    }
+    if (t >= T.lane && t < T.lane + 0.2) {
+      const p = eOutCubic(prog(t, T.lane, T.lane + 0.2));
+      const prev = raceContent(T.lane - 0.001);
+      content = { ...content, layers: [
+        ...prev.layers.map(l => ({ ...l, dx: -p * 393 })),
+        ...content.layers.map(l => ({ ...l, dx: (1 - p) * 393 })),
+      ] };
+    }
+    await drawPhone(t, cam, content, opts);
+  }
+
+  drawScrim(t);
+  for (const cap of CAPTIONS) drawCaption(t, cap);
+  drawFlagWipe(t);
+  drawConfetti(t, T.flag[1] - 0.05);
+  await drawCTA(t);
+  // fade from black at the very start is intentionally absent: frame 0 must read as a cover.
+};
+
+// Sound cues: [time, kind, params]
+window.cues = function () {
+  const out = [];
+  LIGHTS.forEach(x => out.push({ t: x, kind: 'beep', f: 800, d: 0.15 }));
+  out.push({ t: T.out, kind: 'beep', f: 1200, d: 0.2 });
+  out.push({ t: T.out, kind: 'launch' });
+  out.push({ t: 1.45, kind: 'riser', d: 0.55 });
+  const { answered, taps } = raceMarks();
+  // footage frame -> output time, for the 1x segments only
+  const toT = fr => {
+    const aT = T.out + fr / FPS;
+    if (aT < T.ffIn) return aT;
+    const cStart = raceMarks().last - (T.lastAnswerAt - T.ffOut) * FPS;
+    const cT = T.ffOut + (fr - cStart) / FPS;
+    if (cT >= T.ffOut && cT < T.swap) return cT;
+    return null;
+  };
+  for (const tp of taps) { const t = toT(tp.frame); if (t != null && t > T.phoneIn[0] + 0.1) out.push({ t, kind: 'click' }); }
+  for (const a of answered) { const t = toT(a.frame); if (t != null) out.push({ t, kind: 'correct' }); }
+  out.push({ t: T.ffIn, kind: 'ff', d: T.ffOut - T.ffIn });
+  out.push({ t: T.flag[0], kind: 'whoosh', d: 0.45 });
+  out.push({ t: T.flag[1] - 0.05, kind: 'win' });
+  for (const c of [T.lane, T.gp, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
+  out.push({ t: T.cta, kind: 'impact' });
+  out.push({ t: T.cta + 0.2, kind: 'shimmer' });
+  return out.sort((a, b) => a.t - b.t);
+};
+
+window.ready = (async () => {
+  const font = new FontFace('Oxanium', `url(${WORK}/fonts/oxanium-latin.woff2)`, { weight: '200 800' });
+  document.fonts.add(await font.load());
+  await document.fonts.load('800 88px Oxanium');
+  await loadMeta();
+  return { duration: T.end, fps: FPS };
+})();
+</script>
+</body>
+</html>
