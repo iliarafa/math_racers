@@ -389,9 +389,9 @@ function scenes() {
     { a: T.practice, b: T.qualifying, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'practice', -3, T.practice, T.qualifying, 0.5), dark: false },
     { a: T.qualifying, b: T.race, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'qualifying', 6, T.qualifying, T.race, 0.5), dark: false },
     { a: T.race, b: T.lane, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'race', -1, T.race, T.lane, 0.6), dark: false },
-    // Lane Racer: the web chase cam doesn't follow the car into the side lanes, so a run of
-    // middle-lane answers from the start of the race, ending just after the second hit
-    { a: T.lane, b: T.trophies, clip: 'lane', start: hits[1].frame + Math.round(0.4 * FPS) - Math.round((T.trophies - T.lane) * FPS), dark: true },
+    // Lane Racer late in a race: it reaches top speed (MAX SPEED) as the flag clears, then four
+    // right answers in five seconds, ending just after answer 26
+    { a: T.lane, b: T.trophies, clip: 'lane', start: hits.find(h => h.answered === 26).frame + Math.round(0.4 * FPS) - Math.round((T.trophies - T.lane) * FPS), dark: true },
   ];
   for (const sc of list) sc.start = clamp(sc.start, 0, META[sc.clip].frames - 1);
   return (scenes.cache = list);

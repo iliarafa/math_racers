@@ -19,7 +19,7 @@ footage of the app. They are identical until the end card:
 | 12.5–15.5 s | Qualifying against the bot: another green sector on a mixed grid | QUALIFY (amber) |
 | 15.5–18.5 s | Race Day: a green full-screen sector flash, then a purple one | RACE (red) |
 | 18.5 s | Chequered-flag wipe | |
-| 19.5–25.5 s | Lane Racer chase cam, driving through two right answers | TRAIN ON THE LANE RACER |
+| 18.5–23.5 s | Lane Racer late in a race, at Formula 1 level: MAX SPEED (340 km/h) as the flag clears, then four right answers in five seconds | TRAIN ON THE LANE RACER |
 | 23.5–26.5 s | Trophy cabinet: streak and season trophies | WIN TROPHIES. KEEP THE STREAK. |
 | 26.5–31.5 s | Logo, hero car, then the website or the App Store badge | MATHS PRACTICE THAT FEELS LIKE RACE DAY |
 
@@ -50,7 +50,7 @@ With the dev server running (`npm run dev`), run `./build.sh`. It needs Playwrig
 | `demo-state.mjs` | The demo player: a name (no name prompt at the flag) and, for the menus, six weekend trophies and a 12-day streak |
 | `capture-freepractice.mjs` | Plays a 100-lap Free Practice (addition, locked at Formula 2), pacing each answer against the question's bot time for a human mix of sector colours; records laps 75–81 |
 | `capture-weekend.mjs` | Races a Grand Prix weekend on times tables in order, pacing each answer like a person's (against the question's bot time in Practice, against the bot's lap in Qualifying and the Race), recording the menu, Practice, Qualifying and Race Day |
-| `capture-lane.mjs` | Plays Lane Racer with the chase cam, steering from the game's own controller |
+| `capture-lane.mjs` | Plays a Lane Racer race with the chase cam, steering from the game's own controller: the first 20 answers off camera, then 18 s of the race at top speed, with the iPhone app's follow cam (the browser build keeps the camera centred) |
 | `snap-screens.mjs` | Stills of the menu screens |
 | `stage.html` | The reel itself: `render(t)` draws frame *t* on a canvas; `cues()` lists sound cues; `?variant=web\|appstore` picks the end card |
 | `render.mjs` | Drives the stage: `cues`, `stills <t…>` for review, `video`, `cover` (`VARIANT=appstore` for the App Store version) |
