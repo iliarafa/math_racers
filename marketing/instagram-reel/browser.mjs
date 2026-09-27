@@ -108,10 +108,10 @@ export class Recorder {
     this.events = [];       // taps and markers, stamped with frame index
     fs.mkdirSync(dir, { recursive: true });
   }
-  /** Frames count from the moment recording starts, however long the page ran before. */
+  /** Frames count from the moment recording (re)starts, however long the page ran unrecorded. */
   get recording() { return this._recording; }
   set recording(on) {
-    if (on && !this._recording) this.t0 = this.vt;
+    if (on && !this._recording) this.t0 = this.vt - Math.round((this.frame * 1000) / FPS);
     this._recording = on;
   }
   nextFrameTime() { return this.t0 + Math.round((this.frame * 1000) / FPS); }

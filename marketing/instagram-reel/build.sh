@@ -22,8 +22,8 @@ for f in "$REPO"/attached_assets/*.mp4; do
 done
 
 cd "$HERE"
-node capture-race.mjs          # Quick Race: 20 laps + the P1 screen
-node capture-raceday.mjs       # Grand Prix weekend, recording Race Day
+node capture-freepractice.mjs  # Free Practice: addition at Formula 2
+node capture-weekend.mjs       # Grand Prix weekend: menu, Practice, Qualifying, Race Day
 node capture-lane.mjs          # Lane Racer, chase cam
 node snap-screens.mjs trophies
 node render.mjs cues

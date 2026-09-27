@@ -1,13 +1,13 @@
-// Records a Grand Prix Race Day (the weekend's race, full-screen sector flashes) on times
-// tables. The weekend is raced in order, as a player would: Practice sets the difficulty for
-// the weekend (fast answers climb it), Qualifying decides pole, then Race Day is recorded.
-// Practice and Qualifying run unrecorded, which only costs virtual time.
+// Records a Grand Prix weekend on times tables, raced in order as a player would: the weekend
+// menu (setup card) and the tap on Start, then Practice (which sets the weekend's level; fast
+// answers climb it), Qualifying (which decides pole) and Race Day with its full-screen sector
+// flashes. Recording pauses through the start lights and the result screens in between.
 import { openPhone, Recorder, FPS, waitForApp } from './browser.mjs';
 import { RACER, stateStorage } from './demo-state.mjs';
 
 const WORK = process.env.WORK;
 const APP = process.env.APP_URL || 'http://localhost:8081';
-const LAPS = Number(process.env.RACEDAY_LAPS || 12);
+const RACE_LAPS = Number(process.env.RACE_LAPS || 10);
 
 let seed = 3;
 const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -17,7 +17,7 @@ const OPS = { '+': (a, b) => a + b, '-': (a, b) => a - b, '−': (a, b) => a - b
 const { browser, page } = await openPhone({ cacheDir: `${WORK}/netcache`, webmDir: `${WORK}/webm`, seed: Number(process.env.SEED || 21),
   storage: { ...stateStorage(RACER), setupOperation: 'Multiplication' } });
 page.on('pageerror', e => console.log('pageerror:', e.message));
-const rec = new Recorder(page, `${WORK}/clips/raceday`);
+const rec = new Recorder(page, `${WORK}/clips/weekend`);
 const answerEl = page.getByTestId('display-answer');
 const questionEl = answerEl.locator('xpath=preceding-sibling::div[1]');
 
@@ -27,10 +27,12 @@ async function step(ms) {
   if (!rec.recording) await rec.settle({ video: false });
 }
 
-/** Start the session on the setup card and answer until it ends (or `laps` are done). */
+/** Tap Start on the setup card, wait out the lights off camera, then answer `laps` questions. */
 async function race(label, laps = 60) {   // 60: a safety cap, far above any session here
   await rec.tap(page.getByTestId('button-start-race'));
+  rec.recording = false;
   for (let i = 0; i < 400 && !(await answerEl.count()); i++) await step(1000 / FPS);
+  rec.recording = true;
   rec.mark(`${label}-racing`);
   for (let lap = 1; lap <= laps; lap++) {
     if (!(await answerEl.count())) break;
@@ -52,10 +54,13 @@ async function race(label, laps = 60) {   // 60: a safety cap, far above any ses
       if (!(await answerEl.count())) break;
       if ((await answerEl.innerText()).trim() === '0') break;
     }
-    if (rec.recording) console.log(`${label} lap ${lap}: ${q} = ${ans}  (frame ${rec.frame})`);
+    console.log(`${label} lap ${lap}: ${q} = ${ans}  (frame ${rec.frame})`);
   }
+  rec.mark(`${label}-end`);
+  rec.recording = false;
 }
 
+/** Off camera: the result screen's Continue button, back to the setup card for the next session. */
 async function continueTo(name) {
   const btn = page.getByRole('button', { name });
   for (let i = 0; i < 300 && !(await btn.count()); i++) await step(100);
@@ -65,18 +70,19 @@ async function continueTo(name) {
 
 await page.goto(`${APP}/game/grand-prix`, { waitUntil: 'load' });
 await waitForApp(page);
-for (let t = 0; t < 1500; t += 100) await step(100);
+rec.recording = true;
+rec.mark('menu');
+for (let t = 0; t < 3000; t += 1000 / FPS) await step(1000 / FPS);   // the card arrives and settles
 
 await race('practice');
-console.log('practice done:', (await page.locator('text=Achieved Level').locator('xpath=following-sibling::*[1]').innerText().catch(() => '?')).trim());
 await continueTo(/Continue to Qualifying/i);
+rec.recording = true;
+rec.mark('qualifying-menu');
 await race('qualifying');
 await continueTo(/Continue to Race/i);
-
 rec.recording = true;
-rec.mark('start');
-await race('race', LAPS);
-await rec.advance(800);
+rec.mark('race-menu');
+await race('race', RACE_LAPS);
 rec.save();
 console.log('frames:', rec.frame);
 await browser.close();

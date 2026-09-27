@@ -217,7 +217,15 @@ def shimmer():
 raw = subprocess.run([FFMPEG, "-hide_banner", "-loglevel", "error", "-i", MUSIC, "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"],
                      check=True, capture_output=True).stdout
 music = np.frombuffer(raw, np.float32).reshape(-1, 2).astype(np.float64)
-m = music[: N - int(MUSIC_AT * SR)].copy()
+need = N - int(MUSIC_AT * SR)
+# The track is a 16-bar loop (it loops in the app), so repeat it if the reel outlasts it,
+# with a 10 ms crossfade at the seam so the join can't click.
+xf = int(0.01 * SR)
+looped = music.copy()
+while len(looped) < need:
+    seam = looped[-xf:] * np.linspace(1, 0, xf)[:, None] + music[:xf] * np.linspace(0, 1, xf)[:, None]
+    looped = np.concatenate([looped[:-xf], seam, music[xf:]])
+m = looped[:need].copy()
 tm = np.arange(len(m)) / SR + MUSIC_AT
 fade_in = np.clip((tm - MUSIC_AT) / 0.008, 0, 1)
 fade_out = np.clip((DUR - tm) / 1.1, 0, 1) ** 1.5

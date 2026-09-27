@@ -32,7 +32,7 @@ const ctx = cv.getContext('2d');
 
 const C = {
   red: '#e10600', redHot: '#ff2d1f', purple: '#a855f7', purpleApp: '#9333ea', green: '#22c55e',
-  yellow: '#facc15', white: '#ffffff', ink: '#0a0a0d',
+  yellow: '#facc15', amber: '#f59e0b', white: '#ffffff', ink: '#0a0a0d',
 };
 
 // ---------------------------------------------------------------- timeline (seconds)
@@ -40,18 +40,20 @@ const C = {
 const LIGHTS = [0.4, 0.9, 1.4, 1.9, 2.4];
 const T = {
   out: 3.0, phoneIn: [3.0, 3.45],
-  ffIn: 6.5, ffOut: 9.5, lastAnswerAt: 12.45,
-  flag: [12.5, 12.92], swap: 12.7,
-  raceday: 12.5, lane: 16.0, trophies: 22.0, cta: 25.0, end: 30.0,
+  menu: 9.0, practice: 12.5, qualifying: 15.5, race: 18.5,
+  lane: 21.5, trophies: 27.5, cta: 30.5, end: 35.5,
 };
+T.flag = [T.lane - 0.21, T.lane + 0.21];   // chequered flag: the weekend's finish, into Lane Racer
 const CAPTIONS = [
   { a: 0.0, b: 3.0, lines: ['LOVE [RACING?]'], y: 470, size: 120, enterAt0: true },
-  { a: 3.1, b: 6.5, lines: ['EVERY QUESTION', 'IS A [LAP]'] },
-  { a: 6.5, b: 9.5, lines: ['ANSWER FAST.', 'GO {PURPLE.}'] },
-  { a: 9.5, b: 12.5, lines: ['LEAVE THE BOT', '[BEHIND]'] },
-  { a: 12.75, b: 16.0, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
-  { a: 16.0, b: 22.0, lines: ['THE RIGHT LANE IS', 'THE <RIGHT ANSWER>'] },
-  { a: 22.0, b: 25.0, lines: ['WIN TROPHIES.', '[KEEP THE STREAK.]'] },
+  { a: 3.1, b: 9.0, lines: ['IMMERSE IN', '[FREE PRACTICE]'] },
+  { a: 9.0, b: 12.5, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
+  // the weekend's sessions, coloured like the app's own Practice / Qualifying / Race tabs
+  { a: 12.5, b: 15.5, lines: ['<PRACTICE>'], y: 420, size: 120 },
+  { a: 15.5, b: 18.5, lines: ['~QUALIFY~'], y: 420, size: 120 },
+  { a: 18.5, b: 21.5, lines: ['[RACE]'], y: 420, size: 120 },
+  { a: T.flag[1], b: 27.5, lines: ['TRAIN ON THE', '[LANE RACER]'] },
+  { a: 27.5, b: 30.5, lines: ['WIN TROPHIES.', '[KEEP THE STREAK.]'] },
 ];
 
 // ---------------------------------------------------------------- helpers
@@ -78,41 +80,9 @@ function loadImage(src) {
 const clipFrame = (clip, i) => `${WORK}/clips/${clip}/${String(i).padStart(5, '0')}.jpg`;
 let META = {};
 async function loadMeta() {
-  for (const clip of ['race', 'lane', 'raceday']) {
+  for (const clip of ['freepractice', 'weekend', 'lane']) {
     META[clip] = await (await fetch(`${WORK}/clips/${clip}/events.json`)).json();
   }
-}
-
-// ---------------------------------------------------------------- race footage
-// Output time -> footage frame (fractional). 1x at the start, a blurred fast-forward while
-// the camera sits on the sector rows, 1x for the last two laps, then the finish screen.
-function raceMarks() {
-  const ev = META.race.events;
-  const answered = ev.filter(e => e.type === 'mark' && e.name === 'answered');
-  return { last: answered[answered.length - 1].frame, answered, taps: ev.filter(e => e.type === 'tap') };
-}
-function raceFrameAt(t) {
-  const { last } = raceMarks();
-  const aEnd = (T.ffIn - T.out) * FPS;                    // footage frame where the fast-forward starts
-  const cStart = last - (T.lastAnswerAt - T.ffOut) * FPS;  // footage frame where 1x resumes
-  const pos = u => {
-    if (u < T.ffIn) return (u - T.out) * FPS;
-    if (u < T.ffOut) {
-      // 1x at both ends, eased up to ~17x in the middle
-      const p = (u - T.ffIn) / (T.ffOut - T.ffIn), d = (T.ffOut - T.ffIn) * FPS;
-      return aEnd + d * p + (cStart - aEnd - d) * eInOut(p);
-    }
-    if (u < T.swap) return cStart + (u - T.ffOut) * FPS;
-    return last + 30 + (u - T.swap) * FPS;
-  };
-  const f = pos(t);
-  const speed = Math.abs(pos(t + 0.5 / FPS) - pos(t - 0.5 / FPS));
-  // Quick Race jumps straight to the result on the final tick, so hold the frame with the
-  // final answer typed and the tick pressed until the chequered flag has covered the phone.
-  const { taps } = raceMarks();
-  const finalTick = taps[taps.length - 1].frame + 1;
-  const shown = t < T.swap ? Math.min(f, finalTick) : f;
-  return { f: shown, clock: f, speed: t >= T.swap || t < T.out ? 1 : speed };
 }
 
 // ---------------------------------------------------------------- background
@@ -203,15 +173,15 @@ function drawGantry(t) {
 }
 
 // ---------------------------------------------------------------- captions
-// [word] = red, {word} = purple, <word> = green.
+// [word] = red, {word} = purple, <word> = green, ~word~ = amber.
 function parseLine(line) {
   const out = [];
-  const re = /\[([^\]]+)\]|\{([^}]+)\}|<([^>]+)>|([^\[{<]+)/g;
+  const re = /\[([^\]]+)\]|\{([^}]+)\}|<([^>]+)>|~([^~]+)~|([^\[{<~]+)/g;
   let m;
   while ((m = re.exec(line))) {
-    const [, r, p, g, plain] = m;
-    const color = r ? C.redHot : p ? C.purple : g ? C.green : C.white;
-    for (const w of (r || p || g || plain).trim().split(/\s+/).filter(Boolean)) out.push({ w, color });
+    const [, r, p, g, am, plain] = m;
+    const color = r ? C.redHot : p ? C.purple : g ? C.green : am ? C.amber : C.white;
+    for (const w of (r || p || g || am || plain).trim().split(/\s+/).filter(Boolean)) out.push({ w, color });
   }
   return out;
 }
@@ -264,13 +234,8 @@ const BASE = { z: 1, fx: 0, fy: 0, ax: 540, ay: 545 + 426 * K };
 // Camera keyframes: [time, z, focus x/y (app CSS px from screen centre), anchor x/y (canvas px)]
 const CAM = [
   [3.45, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [6.35, 1.07, 0, -176, 540, BASE.ay - 176 * K],
-  [6.50, 1.07, 0, -176, 540, BASE.ay - 176 * K],
-  [6.95, 1.30, 0, 44, 540, 1150],
-  [9.40, 1.36, 0, 44, 540, 1150],
-  [9.85, 1.15, 0, -40, 540, 1060],
-  [12.50, 1.19, 0, -40, 540, 1060],
-  [12.70, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [8.80, 1.06, 0, -434, 540, BASE.ay - 434 * K],   // push in, the phone's top edge held still
+  [9.05, 1.00, 0, 0, BASE.ax, BASE.ay],
 ];
 function camAt(t) {
   if (t <= CAM[0][0]) return { z: 1, fx: 0, fy: 0, ax: BASE.ax, ay: BASE.ay };
@@ -386,23 +351,6 @@ async function drawPhone(t, cam, content, opts = {}) {
 }
 
 // ---------------------------------------------------------------- per-scene screen content
-function raceContent(t) {
-  const { f, clock, speed } = raceFrameAt(t);
-  const n = META.race.frames;
-  const layers = [];
-  if (speed > 1.5) {
-    // motion blur: average frames across this output frame's footage span
-    const span = speed * 0.5, samples = 3;
-    for (let i = 0; i < samples; i++) {
-      const fi = Math.round(clamp(f - span / 2 + (span * i) / (samples - 1), 0, n - 1));
-      layers.push({ src: clipFrame('race', fi), alpha: 1 / (i + 1) });
-    }
-  } else {
-    layers.push({ src: clipFrame('race', Math.round(clamp(f, 0, n - 1))) });
-  }
-  const taps = speed <= 1.01 && t < T.swap ? tapsNear('race', clock) : [];
-  return { layers, dark: false, taps };
-}
 /** Finger-tap indicators for the taps in the last ~0.3 s of footage. */
 function tapsNear(clip, clock) {
   const out = [];
@@ -413,41 +361,47 @@ function tapsNear(clip, clock) {
   }
   return out;
 }
-// Race Day: the scene's length of footage ending just after a submit, so the full-screen
-// sector flash is on camera when the scene cuts.
-const RACEDAY_ANSWER = 3;   // which Race Day answer to show (0-based)
-function racedayStart() {
-  const ans = META.raceday.events.filter(e => e.type === 'mark' && e.name === 'answered');
-  const a = ans[Math.min(RACEDAY_ANSWER, ans.length - 1)];
-  const len = Math.round((T.lane - T.raceday) * FPS);
-  return clamp(a.frame - len + Math.round(0.5 * FPS), 0, META.raceday.frames - len - 1);
+const marks = (clip, name, session) => META[clip].events.filter(e => e.type === 'mark' && e.name === name && (session == null || e.session === session));
+/** First frame of a scene that ends `tail` seconds after the chosen answer (negative = from the end). */
+function windowEndingAfterAnswer(clip, session, which, a, b, tail) {
+  const ans = marks(clip, 'answered', session);
+  const pick = ans[which < 0 ? ans.length + which : which];
+  return pick.frame + Math.round(tail * FPS) - Math.round((b - a) * FPS);
 }
-function racedayContent(t) {
-  const f = racedayStart() + (t - T.raceday) * FPS;
-  return { layers: [{ src: clipFrame('raceday', Math.round(clamp(f, 0, META.raceday.frames - 1))) }], dark: false, taps: tapsNear('raceday', f) };
+// Each scene plays one clip at 1x from `start` (a clip frame). `last` caps the frame shown.
+function scenes() {
+  if (scenes.cache) return scenes.cache;
+  const racing = s => marks('weekend', `${s}-racing`)[0].frame;
+  const hits = marks('lane', 'hit');
+  const list = [
+    // Free Practice from its first question
+    { a: T.out, b: T.menu, clip: 'freepractice', start: marks('freepractice', 'racing')[0].frame, dark: false },
+    // the weekend menu: the card arrives, then the tap on Start Practice (held until the cut)
+    { a: T.menu, b: T.practice, clip: 'weekend', start: marks('weekend', 'menu')[0].frame, last: racing('practice') - 1, dark: true },
+    // late in Practice (the level has climbed), a lap of Qualifying, a Race Day lap with its flash
+    { a: T.practice, b: T.qualifying, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'practice', -3, T.practice, T.qualifying, 0.5), dark: false },
+    { a: T.qualifying, b: T.race, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'qualifying', 6, T.qualifying, T.race, 0.5), dark: false },
+    { a: T.race, b: T.lane, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'race', 3, T.race, T.lane, 0.8), dark: false },
+    // Lane Racer: the web chase cam doesn't follow the car into the side lanes, so a run of
+    // middle-lane answers from the start of the race, ending just after the second hit
+    { a: T.lane, b: T.trophies, clip: 'lane', start: hits[1].frame + Math.round(0.4 * FPS) - Math.round((T.trophies - T.lane) * FPS), dark: true },
+  ];
+  for (const sc of list) sc.start = clamp(sc.start, 0, META[sc.clip].frames - 1);
+  return (scenes.cache = list);
 }
-// Lane Racer: the web chase cam doesn't follow the car into the side lanes, so the scene is a
-// run of middle-lane answers from the start of the race, ending just after the LANE_HIT-th hit
-// and its green burst.
-const LANE_HIT = 1;   // which hit ends the scene (0-based)
-function laneHits() { return META.lane.events.filter(e => e.type === 'mark' && e.name === 'hit'); }
-function laneStart() {
-  const hits = laneHits();
-  const len = Math.round((T.trophies - T.lane) * FPS);
-  const end = hits[Math.min(LANE_HIT, hits.length - 1)].frame + Math.round(0.4 * FPS);
-  return clamp(end - len, 0, META.lane.frames - len - 1);
-}
-function laneContent(t) {
-  const f = Math.round(laneStart() + (t - T.lane) * FPS);
-  return { layers: [{ src: clipFrame('lane', clamp(f, 0, META.lane.frames - 1)) }], dark: true };
+function sceneAt(t) { return scenes().find(sc => t >= sc.a && t < sc.b); }
+function footageContent(sc, t) {
+  const f = sc.start + (t - sc.a) * FPS;
+  const shown = Math.round(clamp(Math.min(f, sc.last ?? Infinity), 0, META[sc.clip].frames - 1));
+  return { layers: [{ src: clipFrame(sc.clip, shown) }], dark: sc.dark, taps: tapsNear(sc.clip, f) };
 }
 function stillContent(name, t, a, b, { zoom = [1, 1.05], oy = [0, 0] } = {}) {
   const p = prog(t, a, b);
   return { layers: [{ src: `${WORK}/stills/${name}.png`, zoom: lerp(zoom[0], zoom[1], p), oy: lerp(oy[0], oy[1], p) }], dark: true };
 }
-function featureContentAt(t) {
-  if (t < T.lane) return racedayContent(t);
-  if (t < T.trophies) return laneContent(t);
+function contentAt(t) {
+  const sc = sceneAt(t);
+  if (sc) return footageContent(sc, t);
   return stillContent('trophies', t, T.trophies, T.cta, { zoom: [1.0, 1.04], oy: [0, -10] });
 }
 
@@ -598,24 +552,21 @@ window.render = async function (t) {
       const p = eOutCubic(prog(t, T.phoneIn[0], T.phoneIn[1]));
       opts.dy = (1 - p) * 1100; cam.z *= lerp(0.92, 1, p);
     }
-    if (t >= T.raceday) {                                    // gentle float in the feature montage
-      opts.dy = (opts.dy || 0) + Math.sin((t - T.raceday) * 2.2) * 8;
-      opts.rot = Math.sin((t - T.raceday) * 1.6) * 0.012;
+    if (t >= T.menu) {                                       // gentle float once the tour starts
+      opts.dy = (opts.dy || 0) + Math.sin((t - T.menu) * 2.2) * 8;
+      opts.rot = Math.sin((t - T.menu) * 1.6) * 0.012;
     }
     if (t >= T.cta) {                                        // drop away for the end card
       const p = eInCubic(prog(t, T.cta, T.cta + 0.28));
       opts.dy = (opts.dy || 0) + p * 1000; opts.alpha = 1 - p; cam.z *= lerp(1, 0.85, p);
     }
-    // The chequered flag covers the hand-over from the Quick Race to Race Day at T.swap.
-    let content;
-    if (t < T.swap) content = raceContent(t);
-    else content = featureContentAt(t);
-    // whip between feature screens
-    const cuts = [T.lane, T.trophies];
+    // Scenes change with a whip across the screen; the chequered flag covers the cut to Lane Racer.
+    let content = contentAt(t);
+    const cuts = [T.menu, T.practice, T.qualifying, T.race, T.trophies];
     const cut = cuts.find(c => t >= c - 0.001 && t < c + 0.2);
     if (cut != null) {
       const p = eOutCubic(prog(t, cut, cut + 0.2));
-      const prev = featureContentAt(cut - 0.001);
+      const prev = contentAt(cut - 0.001);
       content = { ...content, layers: [
         ...prev.layers.map(l => ({ ...l, dx: -p * 393 })),
         ...content.layers.map(l => ({ ...l, dx: (1 - p) * 393 })),
@@ -638,35 +589,19 @@ window.cues = function () {
   out.push({ t: T.out, kind: 'beep', f: 1200, d: 0.2 });
   out.push({ t: T.out, kind: 'launch' });
   out.push({ t: T.out - 0.55, kind: 'riser', d: 0.55 });
-  const { answered, taps } = raceMarks();
-  // footage frame -> output time, for the 1x segments only
-  const toT = fr => {
-    const aT = T.out + fr / FPS;
-    if (aT < T.ffIn) return aT;
-    const cStart = raceMarks().last - (T.lastAnswerAt - T.ffOut) * FPS;
-    const cT = T.ffOut + (fr - cStart) / FPS;
-    if (cT >= T.ffOut && cT < T.swap) return cT;
-    return null;
-  };
-  for (const tp of taps) { const t = toT(tp.frame); if (t != null && t > T.phoneIn[0] + 0.1) out.push({ t, kind: 'click' }); }
-  for (const a of answered) { const t = toT(a.frame); if (t != null) out.push({ t, kind: 'correct' }); }
-  out.push({ t: T.ffIn, kind: 'ff', d: T.ffOut - T.ffIn });
+  // keypad clicks and correct chimes for what is on screen in each scene
+  for (const sc of scenes()) {
+    const len = (sc.b - sc.a) * FPS;
+    for (const e of META[sc.clip].events) {
+      const t = sc.a + (e.frame - sc.start) / FPS;
+      if (e.frame < sc.start || e.frame >= sc.start + len || e.frame > (sc.last ?? Infinity) + 1) continue;
+      if (t < sc.a + 0.15 || t >= sc.b || (t > T.flag[0] - 0.05 && t < T.flag[1])) continue;
+      if (e.type === 'tap') out.push({ t, kind: 'click' });
+      if (e.type === 'mark' && (e.name === 'answered' || e.name === 'hit')) out.push({ t, kind: 'correct' });
+    }
+  }
+  for (const c of [T.menu, T.practice, T.qualifying, T.race, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
   out.push({ t: T.flag[0], kind: 'whoosh', d: 0.45 });
-  for (const c of [T.lane, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
-  // Race Day: the keypad clicks and correct chimes once the flag has passed
-  const r0 = racedayStart();
-  for (const e of META.raceday.events) {
-    const t = T.raceday + (e.frame - r0) / FPS;
-    if (t < T.flag[1] || t >= T.lane) continue;
-    if (e.type === 'tap') out.push({ t, kind: 'click' });
-    if (e.type === 'mark' && e.name === 'answered') out.push({ t, kind: 'correct' });
-  }
-  // Lane Racer: a chime for each answer the car drives through
-  const l0 = laneStart();
-  for (const h of laneHits()) {
-    const t = T.lane + (h.frame - l0) / FPS;
-    if (t > T.lane + 0.2 && t < T.trophies) out.push({ t, kind: 'correct' });
-  }
   out.push({ t: T.cta, kind: 'impact' });
   out.push({ t: T.cta + 0.2, kind: 'shimmer' });
   return out.sort((a, b) => a.t - b.t);
