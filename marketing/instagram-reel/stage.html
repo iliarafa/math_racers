@@ -40,14 +40,14 @@ const C = {
 const LIGHTS = [0.4, 0.9, 1.4, 1.9, 2.4];
 const T = {
   out: 3.0, phoneIn: [3.0, 3.45],
-  menu: 7.0, practice: 10.5, qualifying: 13.5, race: 16.5,
-  lane: 19.5, trophies: 25.5, cta: 28.5, end: 33.5,
+  menu: 6.0, practice: 9.5, qualifying: 12.5, race: 15.5,
+  lane: 18.5, trophies: 23.5, cta: 26.5, end: 31.5,
 };
 T.flag = [T.lane - 0.21, T.lane + 0.21];   // chequered flag: the weekend's finish, into Lane Racer
 const CAPTIONS = [
   { a: 0.0, b: 3.0, lines: ['HERE COME', 'THE [LIGHTS!]'], y: 410, size: 120, enterAt0: true },
-  { a: 3.1, b: T.menu, lines: ['IMMERSE YOURSELF IN', '[FREE PRACTICE]'] },
-  { a: T.menu, b: T.practice, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
+  { a: T.out, b: T.menu, lines: ['IMMERSE YOURSELF IN', '[FREE PRACTICE]'] },
+  { a: T.menu, b: T.practice, lines: ['FOLLOW THE', '[LIVE SEASON]'] },
   // the weekend's sessions, coloured like the app's own Practice / Qualifying / Race tabs
   { a: T.practice, b: T.qualifying, lines: ['<PRACTICE>'], y: 420, size: 120 },
   { a: T.qualifying, b: T.race, lines: ['~QUALIFY~'], y: 420, size: 120 },
@@ -235,9 +235,13 @@ const BASE = { z: 1, fx: 0, fy: 0, ax: 540, ay: 545 + 426 * K };
 const CAM = [
   [3.45, 1.00, 0, 0, BASE.ax, BASE.ay],
   [3.70, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [4.70, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
-  [6.80, 1.25, 0, -80, 540, 1030],
-  [7.05, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [4.60, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
+  [5.80, 1.25, 0, -80, 540, 1030],
+  [6.05, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [6.40, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [8.00, 2.25, 0, -60, 540, 1030],     // the Grand Prix card: in on Baku and its circuit map
+  [9.30, 2.35, 0, -60, 540, 1030],
+  [9.55, 1.00, 0, 0, BASE.ax, BASE.ay],
 ];
 function camAt(t) {
   if (t <= CAM[0][0]) return { z: 1, fx: 0, fy: 0, ax: BASE.ax, ay: BASE.ay };
@@ -376,8 +380,8 @@ function scenes() {
   const racing = s => marks('weekend', `${s}-racing`)[0].frame;
   const hits = marks('lane', 'hit');
   const list = [
-    // Free Practice, laps 75-76 of 100: the second answer on camera lands just before the cut
-    { a: T.out, b: T.menu, clip: 'freepractice', start: windowEndingAfterAnswer('freepractice', null, 1, T.out, T.menu, 0.3), dark: false },
+    // Free Practice, laps 75-76 of 100: cut as the second answer (41) turns green, before the next card
+    { a: T.out, b: T.menu, clip: 'freepractice', start: windowEndingAfterAnswer('freepractice', null, 1, T.out, T.menu, 0.17), dark: false },
     // the weekend menu: the card arrives, then the tap on Start Practice (held until the cut)
     { a: T.menu, b: T.practice, clip: 'weekend', start: marks('weekend', 'menu')[0].frame, last: racing('practice') - 1, dark: true },
     // late in Practice (the level has climbed) and mid-Qualifying, each landing a green sector on

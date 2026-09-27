@@ -1,6 +1,6 @@
 # Instagram Reel
 
-Two 33.5-second 9:16 ads (1080 × 1920, 30 fps, H.264 + AAC, −14 LUFS) built from real
+Two 31.5-second 9:16 ads (1080 × 1920, 30 fps, H.264 + AAC, −14 LUFS) built from real
 footage of the app. They are identical until the end card:
 
 - `math-racer-reel.mp4`: website end card (`mathracer2026.io`), app shown in a phone frame.
@@ -13,15 +13,15 @@ footage of the app. They are identical until the end card:
 |---|---|---|
 | 0–3 s | Five start lights, one every half second, with the app's own 800 Hz beeps | HERE COME THE LIGHTS! |
 | 3 s | Lights out: 1200 Hz beep, the Lane Racer track drops in, the phone arrives | |
-| 3–7 s | Free Practice, 100-lap session at Formula 2 (addition): laps 75–76, the sector grid a human mix of purple, green and yellow | IMMERSE YOURSELF IN FREE PRACTICE |
-| 7–10.5 s | The Grand Prix weekend menu (Round 15, Baku) and a tap on Start Practice | A NEW GRAND PRIX EVERY WEEK |
-| 10.5–13.5 s | Grand Prix Practice, late in the session (times tables at Formula 1 level): a green sector lands on a grid of purple, green and yellow | PRACTICE (green) |
-| 13.5–16.5 s | Qualifying against the bot: another green sector on a mixed grid | QUALIFY (amber) |
-| 16.5–19.5 s | Race Day: a green full-screen sector flash, then a purple one | RACE (red) |
-| 19.5 s | Chequered-flag wipe | |
+| 3–6 s | Free Practice, 100-lap session at Formula 2 (addition): laps 75–76, cut as 41 turns green; the sector grid a human mix of purple, green and yellow | IMMERSE YOURSELF IN FREE PRACTICE |
+| 6–9.5 s | The Grand Prix weekend card arrives and the camera pushes in on Round 15, Baku and its circuit map | FOLLOW THE LIVE SEASON |
+| 9.5–12.5 s | Grand Prix Practice, late in the session (times tables at Formula 1 level): a green sector lands on a grid of purple, green and yellow | PRACTICE (green) |
+| 12.5–15.5 s | Qualifying against the bot: another green sector on a mixed grid | QUALIFY (amber) |
+| 15.5–18.5 s | Race Day: a green full-screen sector flash, then a purple one | RACE (red) |
+| 18.5 s | Chequered-flag wipe | |
 | 19.5–25.5 s | Lane Racer chase cam, driving through two right answers | TRAIN ON THE LANE RACER |
-| 25.5–28.5 s | Trophy cabinet: streak and season trophies | WIN TROPHIES. KEEP THE STREAK. |
-| 28.5–33.5 s | Logo, hero car, then the website or the App Store badge | MATHS PRACTICE THAT FEELS LIKE RACE DAY |
+| 23.5–26.5 s | Trophy cabinet: streak and season trophies | WIN TROPHIES. KEEP THE STREAK. |
+| 26.5–31.5 s | Logo, hero car, then the website or the App Store badge | MATHS PRACTICE THAT FEELS LIKE RACE DAY |
 
 Every session is played at a person's pace, so the sector grids and Race Day's flashes show a
 mix of purple, green and yellow rather than a wall of purple. Every caption stays up for at
