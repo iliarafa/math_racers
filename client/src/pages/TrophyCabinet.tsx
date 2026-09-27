@@ -47,7 +47,7 @@ function TrophyTile({ round, trophy, current }: { round: number; trophy?: Trophy
       data-tier={trophy.tier}
     >
       <TrophyIcon className="w-7 h-7 shrink-0" style={{ color }} strokeWidth={1.5} aria-hidden="true" />
-      <span className="text-[9px] font-bold uppercase tracking-wider leading-tight text-center" style={{ color }}>{trophyCode(trophy)}</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider leading-tight text-center" style={{ color }}>{trophyCode(trophy)}</span>
     </div>
   );
 }
