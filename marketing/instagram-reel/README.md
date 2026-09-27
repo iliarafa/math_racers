@@ -1,6 +1,6 @@
 # Instagram Reel
 
-Two 18.5-second 9:16 ads (1080 × 1920, 30 fps, H.264 + AAC, −14 LUFS) built from real
+Two 30-second 9:16 ads (1080 × 1920, 30 fps, H.264 + AAC, −14 LUFS) built from real
 footage of the app. They are identical until the end card:
 
 - `math-racer-reel.mp4`: website end card (`mathracer2026.io`), app shown in a phone frame.
@@ -11,19 +11,20 @@ footage of the app. They are identical until the end card:
 
 | Time | Picture | Caption |
 |---|---|---|
-| 0–2 s | Five start lights, one by one, with the app's own 800 Hz beeps | YOUR KID LOVES RACING? |
-| 2 s | Lights out: 1200 Hz beep, the Lane Racer track drops in, the phone arrives | |
-| 2–4.5 s | Quick Race, laps 1–2, taps shown on the keypad | EVERY QUESTION IS A LAP |
-| 4.5–6 s | Fast-forward (motion blurred) on the sector rows | ANSWER FAST. GO PURPLE. |
-| 6–8 s | The last two laps | LEAVE THE BOT BEHIND |
-| 8–10 s | Chequered-flag wipe, the P1 result screen, confetti | BEAT THE BOT TO THE FLAG |
-| 10–11.5 s | Grand Prix Race Day at Baku (times tables at Formula 1 level, full-screen sector flash) | A NEW GRAND PRIX EVERY WEEK |
-| 11.5–13 s | Lane Racer chase cam through the right answer | THE RIGHT LANE IS THE RIGHT ANSWER |
-| 13–14.5 s | Trophy cabinet: streak and season trophies | WIN TROPHIES. KEEP THE STREAK. |
-| 14.5–18.5 s | Logo, hero car, then the website or the App Store badge | MATHS PRACTICE THAT FEELS LIKE RACE DAY |
+| 0–3 s | Five start lights, one every half second, with the app's own 800 Hz beeps | LOVE RACING? |
+| 3 s | Lights out: 1200 Hz beep, the Lane Racer track drops in, the phone arrives | |
+| 3–6.5 s | Quick Race, laps 1–3, taps shown on the keypad | EVERY QUESTION IS A LAP |
+| 6.5–9.5 s | Fast-forward (motion blurred) on the sector rows | ANSWER FAST. GO PURPLE. |
+| 9.5–12.5 s | The last two laps | LEAVE THE BOT BEHIND |
+| 12.5–16 s | Chequered-flag wipe, the P1 result screen, confetti | BEAT THE BOT TO THE FLAG |
+| 16–19 s | Grand Prix Race Day at Baku (times tables at Formula 1 level, two full-screen purple flashes) | A NEW GRAND PRIX EVERY WEEK |
+| 19–22 s | Lane Racer chase cam through the right answer | THE RIGHT LANE IS THE RIGHT ANSWER |
+| 22–25 s | Trophy cabinet: streak and season trophies | WIN TROPHIES. KEEP THE STREAK. |
+| 25–30 s | Logo, hero car, then the website or the App Store badge | MATHS PRACTICE THAT FEELS LIKE RACE DAY |
 
-Every cut lands on the music's beat grid (120 BPM, lights out on the first downbeat). Text
-stays inside Meta's Reels ad safe zone (y 250–1250 of 1920, 65 px side margins).
+Every caption stays up for at least 3 seconds so it can be read over the footage, and every
+cut lands on the music's beat grid (120 BPM, lights out on the first downbeat). Text stays
+inside Meta's Reels ad safe zone (y 250–1250 of 1920, 65 px side margins).
 
 The App Store version follows Apple's marketing guidelines for the badge
 (developer.apple.com/app-store/marketing/guidelines): the black badge as supplied

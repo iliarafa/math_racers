@@ -18,10 +18,9 @@ WORK = os.environ["WORK"]
 FFMPEG = os.environ.get("FFMPEG", "ffmpeg")
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 MUSIC = os.path.join(REPO, "attached_assets", "laneracer3.mp3")
-MUSIC_AT = 2.0  # lights out: the track's first downbeat lands here
-
 rng = np.random.default_rng(2026)
 cues = json.load(open(os.path.join(WORK, "cues.json")))
+MUSIC_AT = cues["musicAt"]  # lights out: the track's first downbeat lands here
 DUR = cues["duration"]
 N = int(round(DUR * SR))
 mix = np.zeros((N, 2), np.float64)

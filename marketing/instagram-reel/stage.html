@@ -36,22 +36,23 @@ const C = {
 };
 
 // ---------------------------------------------------------------- timeline (seconds)
-const LIGHTS = [0.20, 0.50, 0.80, 1.10, 1.40];
+// Paced for reading: every caption holds for 3 s or more while the footage runs underneath.
+const LIGHTS = [0.4, 0.9, 1.4, 1.9, 2.4];
 const T = {
-  out: 2.0, phoneIn: [2.0, 2.45],
-  ffIn: 4.5, ffOut: 6.0, lastAnswerAt: 7.95,
-  flag: [8.0, 8.42], swap: 8.2,
-  raceday: 10.0, lane: 11.5, trophies: 13.0, cta: 14.5, end: 18.5,
+  out: 3.0, phoneIn: [3.0, 3.45],
+  ffIn: 6.5, ffOut: 9.5, lastAnswerAt: 12.45,
+  flag: [12.5, 12.92], swap: 12.7,
+  raceday: 16.0, lane: 19.0, trophies: 22.0, cta: 25.0, end: 30.0,
 };
 const CAPTIONS = [
-  { a: 0.0, b: 2.0, lines: ['YOUR KID', 'LOVES [RACING?]'], y: 400, size: 100, enterAt0: true },
-  { a: 2.1, b: 4.5, lines: ['EVERY QUESTION', 'IS A [LAP]'] },
-  { a: 4.5, b: 6.0, lines: ['ANSWER FAST.', 'GO {PURPLE.}'] },
-  { a: 6.0, b: 8.0, lines: ['LEAVE THE BOT', '[BEHIND]'] },
-  { a: 8.25, b: 10.0, lines: ['BEAT THE BOT', 'TO THE [FLAG]'] },
-  { a: 10.0, b: 11.5, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
-  { a: 11.5, b: 13.0, lines: ['THE RIGHT LANE IS', 'THE <RIGHT ANSWER>'] },
-  { a: 13.0, b: 14.5, lines: ['WIN TROPHIES.', '[KEEP THE STREAK.]'] },
+  { a: 0.0, b: 3.0, lines: ['LOVE [RACING?]'], y: 470, size: 120, enterAt0: true },
+  { a: 3.1, b: 6.5, lines: ['EVERY QUESTION', 'IS A [LAP]'] },
+  { a: 6.5, b: 9.5, lines: ['ANSWER FAST.', 'GO {PURPLE.}'] },
+  { a: 9.5, b: 12.5, lines: ['LEAVE THE BOT', '[BEHIND]'] },
+  { a: 12.75, b: 16.0, lines: ['BEAT THE BOT', 'TO THE [FLAG]'] },
+  { a: 16.0, b: 19.0, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
+  { a: 19.0, b: 22.0, lines: ['THE RIGHT LANE IS', 'THE <RIGHT ANSWER>'] },
+  { a: 22.0, b: 25.0, lines: ['WIN TROPHIES.', '[KEEP THE STREAK.]'] },
 ];
 
 // ---------------------------------------------------------------- helpers
@@ -263,14 +264,14 @@ const BASE = { z: 1, fx: 0, fy: 0, ax: 540, ay: 545 + 426 * K };
 
 // Camera keyframes: [time, z, focus x/y (app CSS px from screen centre), anchor x/y (canvas px)]
 const CAM = [
-  [2.45, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [4.40, 1.07, 0, -176, 540, BASE.ay - 176 * K],
-  [4.50, 1.07, 0, -176, 540, BASE.ay - 176 * K],
-  [4.95, 1.30, 0, 44, 540, 1150],
-  [5.95, 1.34, 0, 44, 540, 1150],
-  [6.35, 1.15, 0, -40, 540, 1060],
-  [8.00, 1.19, 0, -40, 540, 1060],
-  [8.20, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [3.45, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [6.35, 1.07, 0, -176, 540, BASE.ay - 176 * K],
+  [6.50, 1.07, 0, -176, 540, BASE.ay - 176 * K],
+  [6.95, 1.30, 0, 44, 540, 1150],
+  [9.40, 1.36, 0, 44, 540, 1150],
+  [9.85, 1.15, 0, -40, 540, 1060],
+  [12.50, 1.19, 0, -40, 540, 1060],
+  [12.70, 1.00, 0, 0, BASE.ax, BASE.ay],
 ];
 function camAt(t) {
   if (t <= CAM[0][0]) return { z: 1, fx: 0, fy: 0, ax: BASE.ax, ay: BASE.ay };
@@ -413,12 +414,14 @@ function tapsNear(clip, clock) {
   }
   return out;
 }
-// Race Day: 1.5 s that ends just after a submit, so the full-screen sector flash is on camera.
+// Race Day: the scene's length of footage ending just after a submit, so the full-screen
+// sector flash is on camera when the scene cuts.
 const RACEDAY_ANSWER = 3;   // which Race Day answer to show (0-based)
 function racedayStart() {
   const ans = META.raceday.events.filter(e => e.type === 'mark' && e.name === 'answered');
   const a = ans[Math.min(RACEDAY_ANSWER, ans.length - 1)];
-  return clamp(a.frame - Math.round((T.lane - T.raceday - 0.5) * FPS), 0, META.raceday.frames - 46);
+  const len = Math.round((T.lane - T.raceday) * FPS);
+  return clamp(a.frame - len + Math.round(0.5 * FPS), 0, META.raceday.frames - len - 1);
 }
 function racedayContent(t) {
   const f = racedayStart() + (t - T.raceday) * FPS;
@@ -430,7 +433,8 @@ function laneStart() {
   const ev = META.lane.events.filter(e => e.type === 'mark');
   for (let i = 0; i < ev.length - 1; i++) {
     if (ev[i].name === 'question' && ev[i].lane === 1 && ev[i + 1].name === 'hit') {
-      return clamp(ev[i + 1].frame - Math.round((T.trophies - 0.3 - T.lane) * FPS), 0, META.lane.frames - 46);
+      const len = Math.round((T.trophies - T.lane) * FPS);
+      return clamp(ev[i + 1].frame - len + Math.round(0.3 * FPS), 0, META.lane.frames - len - 1);
     }
   }
   return 0;
@@ -667,7 +671,7 @@ window.cues = function () {
   LIGHTS.forEach(x => out.push({ t: x, kind: 'beep', f: 800, d: 0.15 }));
   out.push({ t: T.out, kind: 'beep', f: 1200, d: 0.2 });
   out.push({ t: T.out, kind: 'launch' });
-  out.push({ t: 1.45, kind: 'riser', d: 0.55 });
+  out.push({ t: T.out - 0.55, kind: 'riser', d: 0.55 });
   const { answered, taps } = raceMarks();
   // footage frame -> output time, for the 1x segments only
   const toT = fr => {
@@ -702,7 +706,7 @@ window.ready = (async () => {
   document.fonts.add(await font.load());
   await document.fonts.load('800 88px Oxanium');
   await loadMeta();
-  return { duration: T.end, fps: FPS };
+  return { duration: T.end, fps: FPS, musicAt: T.out };
 })();
 </script>
 </body>

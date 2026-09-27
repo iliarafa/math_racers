@@ -4,7 +4,7 @@
 //   node render.mjs stills 0 2.5 8.4 ... -> $WORK/review/t<sec>.png (single frames, by time)
 //   node render.mjs video                -> $WORK/out/reel.mp4 (frames piped into ffmpeg, muxed
 //                                           with $WORK/soundtrack.wav when it exists)
-//   node render.mjs cover [t]            -> $WORK/out/cover.jpg (the end card, for the Reel cover)
+//   node render.mjs cover [t]            -> $WORK/out/cover.jpg (default: the finished end card)
 import { chromium } from './browser.mjs';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -33,7 +33,7 @@ await page.route('http://reel.local/**', async route => {
   await route.fulfill({ status: 200, body: fs.readFileSync(file), headers: { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' } });
 });
 await page.goto(`http://reel.local/stage.html?variant=${process.env.VARIANT || 'web'}`);
-const { duration, fps } = await page.evaluate(() => window.ready);
+const { duration, fps, musicAt } = await page.evaluate(() => window.ready);
 const frames = Math.round(duration * fps);
 
 async function frameAt(t) {
@@ -43,11 +43,11 @@ async function frameAt(t) {
 
 if (mode === 'cues') {
   const cues = await page.evaluate(() => window.cues());
-  fs.writeFileSync(path.join(WORK, 'cues.json'), JSON.stringify({ duration, cues }, null, 1));
+  fs.writeFileSync(path.join(WORK, 'cues.json'), JSON.stringify({ duration, musicAt, cues }, null, 1));
   console.log(`${cues.length} cues, ${duration}s`);
 } else if (mode === 'cover') {
   fs.mkdirSync(path.join(WORK, 'out'), { recursive: true });
-  await page.evaluate(t => window.render(t), Number(rest[0] ?? 17.0));
+  await page.evaluate(t => window.render(t), Number(rest[0] ?? duration - 0.5));
   await page.screenshot({ path: path.join(WORK, 'out', 'cover.jpg'), type: 'jpeg', quality: 92 });
   console.log('cover written');
 } else if (mode === 'stills') {
