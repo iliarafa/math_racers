@@ -11,11 +11,11 @@ export const ENGAGED = {
   ...RACER,
   totalLaps: 1260, racesWon: 23, careerPoints: 410,
   earnedBadges: ['first-win', 'laps-100', 'laps-1000', 'everything-is-purple', 'streak-7'],
+  // Rounds 9 (Silverstone) and 12 (Zandvoort) stay empty: the trophy tile can't fit a name that
+  // long yet (see "Known issue" in README.md).
   trophies: [
-    trophy(9, 'silverstone', 'SILVERSTONE', 'silver', 'Addition', 76),
     trophy(10, 'spa', 'SPA', 'gold', 'Addition', 69),
     trophy(11, 'hungary', 'HUNGARY', 'bronze', 'Subtraction', 62),
-    trophy(12, 'zandvoort', 'ZANDVOORT', 'gold', 'Multiplication', 34),
     trophy(13, 'monza', 'MONZA', 'gold', 'Multiplication', 20),
     trophy(14, 'madrid', 'MADRID', 'silver', 'Division', 13),
   ],

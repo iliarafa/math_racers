@@ -37,6 +37,17 @@ phrase, and Apple's credit line at the end. Apple asks for its own product bezel
 is shown on a device; those downloads were unreachable when this was made, so that version
 shows the screen without a device frame.
 
+## Known issue: long names on trophy tiles
+
+Not fixed yet. The Trophy Cabinet's season grid (`TrophyTile` in
+`client/src/pages/TrophyCabinet.tsx`) can't fit a long circuit name. On an iPhone-width
+screen (393 px) each of its six tiles is about 53 px wide, and the label is a fixed 9 px
+Oxanium Bold, uppercase with `tracking-wider`. Those capitals run 0.69–0.82 em each, so only
+seven or eight letters fit: SILVERSTONE and ZANDVOORT spill across the neighbouring tiles, and
+HUNGARY only just fits. The demo profile (`demo-state.mjs`) leaves rounds 9 and 12 empty for
+now. In the app, a weekend with a long name (SINGAPORE, for instance) would show the same
+overflow.
+
 ## Rebuilding
 
 With the dev server running (`npm run dev`), run `./build.sh`. It needs Playwright with Chromium
