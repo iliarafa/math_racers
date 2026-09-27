@@ -42,16 +42,15 @@ const T = {
   out: 3.0, phoneIn: [3.0, 3.45],
   ffIn: 6.5, ffOut: 9.5, lastAnswerAt: 12.45,
   flag: [12.5, 12.92], swap: 12.7,
-  raceday: 16.0, lane: 19.0, trophies: 22.0, cta: 25.0, end: 30.0,
+  raceday: 12.5, lane: 16.0, trophies: 22.0, cta: 25.0, end: 30.0,
 };
 const CAPTIONS = [
   { a: 0.0, b: 3.0, lines: ['LOVE [RACING?]'], y: 470, size: 120, enterAt0: true },
   { a: 3.1, b: 6.5, lines: ['EVERY QUESTION', 'IS A [LAP]'] },
   { a: 6.5, b: 9.5, lines: ['ANSWER FAST.', 'GO {PURPLE.}'] },
   { a: 9.5, b: 12.5, lines: ['LEAVE THE BOT', '[BEHIND]'] },
-  { a: 12.75, b: 16.0, lines: ['BEAT THE BOT', 'TO THE [FLAG]'] },
-  { a: 16.0, b: 19.0, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
-  { a: 19.0, b: 22.0, lines: ['THE RIGHT LANE IS', 'THE <RIGHT ANSWER>'] },
+  { a: 12.75, b: 16.0, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
+  { a: 16.0, b: 22.0, lines: ['THE RIGHT LANE IS', 'THE <RIGHT ANSWER>'] },
   { a: 22.0, b: 25.0, lines: ['WIN TROPHIES.', '[KEEP THE STREAK.]'] },
 ];
 
@@ -427,17 +426,16 @@ function racedayContent(t) {
   const f = racedayStart() + (t - T.raceday) * FPS;
   return { layers: [{ src: clipFrame('raceday', Math.round(clamp(f, 0, META.raceday.frames - 1))) }], dark: false, taps: tapsNear('raceday', f) };
 }
+// Lane Racer: the web chase cam doesn't follow the car into the side lanes, so the scene is a
+// run of middle-lane answers from the start of the race, ending just after the LANE_HIT-th hit
+// and its green burst.
+const LANE_HIT = 1;   // which hit ends the scene (0-based)
+function laneHits() { return META.lane.events.filter(e => e.type === 'mark' && e.name === 'hit'); }
 function laneStart() {
-  // The first straight run through a middle-lane answer (web chase cam doesn't follow side
-  // lanes), timed so the hit and its green burst land 0.3 s before the next cut.
-  const ev = META.lane.events.filter(e => e.type === 'mark');
-  for (let i = 0; i < ev.length - 1; i++) {
-    if (ev[i].name === 'question' && ev[i].lane === 1 && ev[i + 1].name === 'hit') {
-      const len = Math.round((T.trophies - T.lane) * FPS);
-      return clamp(ev[i + 1].frame - len + Math.round(0.3 * FPS), 0, META.lane.frames - len - 1);
-    }
-  }
-  return 0;
+  const hits = laneHits();
+  const len = Math.round((T.trophies - T.lane) * FPS);
+  const end = hits[Math.min(LANE_HIT, hits.length - 1)].frame + Math.round(0.4 * FPS);
+  return clamp(end - len, 0, META.lane.frames - len - 1);
 }
 function laneContent(t) {
   const f = Math.round(laneStart() + (t - T.lane) * FPS);
@@ -485,30 +483,6 @@ function drawFlagWipe(t) {
   }
   ctx.fillStyle = C.red; ctx.fillRect(band - 22, -1400, 22, 2800);
   ctx.restore();
-}
-
-// ---------------------------------------------------------------- confetti (outside the phone)
-function drawConfetti(t, t0) {
-  const age = t - t0;
-  if (age < 0 || age > 2.4) return;
-  const r = rng(7);
-  const cols = [C.red, '#ffffff', C.purple, C.green, C.yellow];
-  for (let i = 0; i < 150; i++) {
-    const side = i % 2 ? 1 : -1;
-    const x0 = side < 0 ? -20 : W + 20, y0 = 1250 + r() * 200;
-    const ang = (side < 0 ? -1 : -Math.PI + 1) + (r() - 0.5) * 0.9 - (side < 0 ? 0.25 : -0.25);
-    const v = 1500 + r() * 1300, g = 1900, drag = 1.3;
-    const k = (1 - Math.exp(-drag * age)) / drag;
-    const x = x0 + Math.cos(ang) * v * k * (side < 0 ? 1 : 1);
-    const y = y0 + Math.sin(ang) * v * k + 0.5 * g * age * age * 0.6;
-    const rot = r() * 6 + age * (4 + r() * 8);
-    ctx.save();
-    ctx.globalAlpha = 1 - prog(age, 1.6, 2.4);
-    ctx.translate(x, y); ctx.rotate(rot); ctx.scale(1, Math.cos(age * (6 + r() * 6)));
-    ctx.fillStyle = cols[i % cols.length];
-    ctx.fillRect(-9, -5, 18, 10);
-    ctx.restore();
-  }
 }
 
 // ---------------------------------------------------------------- end card
@@ -632,8 +606,9 @@ window.render = async function (t) {
       const p = eInCubic(prog(t, T.cta, T.cta + 0.28));
       opts.dy = (opts.dy || 0) + p * 1000; opts.alpha = 1 - p; cam.z *= lerp(1, 0.85, p);
     }
+    // The chequered flag covers the hand-over from the Quick Race to Race Day at T.swap.
     let content;
-    if (t < T.raceday) content = raceContent(t);
+    if (t < T.swap) content = raceContent(t);
     else content = featureContentAt(t);
     // whip between feature screens
     const cuts = [T.lane, T.trophies];
@@ -646,21 +621,12 @@ window.render = async function (t) {
         ...content.layers.map(l => ({ ...l, dx: (1 - p) * 393 })),
       ] };
     }
-    if (t >= T.raceday && t < T.raceday + 0.2) {
-      const p = eOutCubic(prog(t, T.raceday, T.raceday + 0.2));
-      const prev = raceContent(T.raceday - 0.001);
-      content = { ...content, layers: [
-        ...prev.layers.map(l => ({ ...l, dx: -p * 393 })),
-        ...content.layers.map(l => ({ ...l, dx: (1 - p) * 393 })),
-      ] };
-    }
     await drawPhone(t, cam, content, opts);
   }
 
   drawScrim(t);
   for (const cap of CAPTIONS) drawCaption(t, cap);
   drawFlagWipe(t);
-  drawConfetti(t, T.flag[1] - 0.05);
   await drawCTA(t);
   // fade from black at the very start is intentionally absent: frame 0 must read as a cover.
 };
@@ -686,15 +652,20 @@ window.cues = function () {
   for (const a of answered) { const t = toT(a.frame); if (t != null) out.push({ t, kind: 'correct' }); }
   out.push({ t: T.ffIn, kind: 'ff', d: T.ffOut - T.ffIn });
   out.push({ t: T.flag[0], kind: 'whoosh', d: 0.45 });
-  out.push({ t: T.flag[1] - 0.05, kind: 'win' });
-  for (const c of [T.raceday, T.lane, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
-  // Race Day: the keypad clicks and correct chimes inside the shown 1.5 s
+  for (const c of [T.lane, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
+  // Race Day: the keypad clicks and correct chimes once the flag has passed
   const r0 = racedayStart();
   for (const e of META.raceday.events) {
     const t = T.raceday + (e.frame - r0) / FPS;
-    if (t < T.raceday + 0.2 || t >= T.lane) continue;
+    if (t < T.flag[1] || t >= T.lane) continue;
     if (e.type === 'tap') out.push({ t, kind: 'click' });
     if (e.type === 'mark' && e.name === 'answered') out.push({ t, kind: 'correct' });
+  }
+  // Lane Racer: a chime for each answer the car drives through
+  const l0 = laneStart();
+  for (const h of laneHits()) {
+    const t = T.lane + (h.frame - l0) / FPS;
+    if (t > T.lane + 0.2 && t < T.trophies) out.push({ t, kind: 'correct' });
   }
   out.push({ t: T.cta, kind: 'impact' });
   out.push({ t: T.cta + 0.2, kind: 'shimmer' });

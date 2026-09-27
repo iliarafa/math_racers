@@ -15,10 +15,9 @@ footage of the app. They are identical until the end card:
 | 3 s | Lights out: 1200 Hz beep, the Lane Racer track drops in, the phone arrives | |
 | 3–6.5 s | Quick Race, laps 1–3, taps shown on the keypad | EVERY QUESTION IS A LAP |
 | 6.5–9.5 s | Fast-forward (motion blurred) on the sector rows | ANSWER FAST. GO PURPLE. |
-| 9.5–12.5 s | The last two laps | LEAVE THE BOT BEHIND |
-| 12.5–16 s | Chequered-flag wipe, the P1 result screen, confetti | BEAT THE BOT TO THE FLAG |
-| 16–19 s | Grand Prix Race Day at Baku (times tables at Formula 1 level, two full-screen purple flashes) | A NEW GRAND PRIX EVERY WEEK |
-| 19–22 s | Lane Racer chase cam through the right answer | THE RIGHT LANE IS THE RIGHT ANSWER |
+| 9.5–12.5 s | The last two laps, freezing on the final tap | LEAVE THE BOT BEHIND |
+| 12.5–16 s | Chequered-flag wipe into Grand Prix Race Day at Baku (times tables at Formula 1 level, two full-screen purple flashes) | A NEW GRAND PRIX EVERY WEEK |
+| 16–22 s | Lane Racer chase cam, driving through two right answers | THE RIGHT LANE IS THE RIGHT ANSWER |
 | 22–25 s | Trophy cabinet: streak and season trophies | WIN TROPHIES. KEEP THE STREAK. |
 | 25–30 s | Logo, hero car, then the website or the App Store badge | MATHS PRACTICE THAT FEELS LIKE RACE DAY |
 

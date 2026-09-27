@@ -184,18 +184,6 @@ def fast_forward(d):
     return base + ticks * 0.6
 
 
-def win():
-    d = 1.2
-    t = tvec(d)
-    out = np.zeros_like(t)
-    for i, f in enumerate([1046.5, 1318.5, 1568.0, 2093.0]):
-        s = int(i * 0.075 * SR)
-        tt = t[: len(t) - s]
-        tone = np.sin(2 * np.pi * f * tt) + 0.25 * np.sin(2 * np.pi * f * 2.76 * tt) * np.exp(-tt / 0.15)
-        out[s:] += tone * np.exp(-tt / 0.45) * (1 - np.exp(-tt / 0.004)) * 0.28
-    return out
-
-
 def impact():
     pre = 0.35
     d = pre + 1.4
@@ -255,8 +243,6 @@ for c in cues["cues"]:
         place(fast_forward(c["d"]), t, gain=0.38)
     elif k == "whoosh":
         place(whoosh(c["d"]), t - c["d"] * 0.55, gain=0.33, pan=0.0)
-    elif k == "win":
-        place(win(), t, gain=1.0)
     elif k == "impact":
         buf, pre = impact()
         place(buf, t - pre, gain=0.9)
