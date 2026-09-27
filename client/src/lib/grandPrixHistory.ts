@@ -7,6 +7,7 @@ import zandvoortDetail from "@/assets/zandvoort_detail_track.png";
 import monzaDetail from "@/assets/monza_detail_track.png";
 import madridDetail from "@/assets/madrid_detail_track.png";
 import bakuDetail from "@/assets/baku_detail_track.png";
+import malaysiaDetail from "@/assets/malaysia_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -499,6 +500,65 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Pierre Gasly', team: 'Alpine', time: '1:43.139' },
         { name: 'Alexander Albon', team: 'Williams', time: '1:43.778' },
         { name: 'Esteban Ocon', team: 'Haas', time: 'DSQ' },
+      ],
+    },
+  },
+  malaysia: {
+    officialName: 'FORMULA 1 MALAYSIA GRAND PRIX 2026',
+    firstHeld: 1999,
+    trackLength: '5.543 km',
+    laps: 56,
+    lapRecord: { driver: 'Sebastian Vettel', time: '1:34.080', year: 2017 },
+    mostWins: { driver: 'Sebastian Vettel', count: 4 },
+    summary:
+      'The Sepang International Circuit sits in the tropical heat near Kuala Lumpur, close to Malaysia’s main airport, and Formula 1 raced here every year from 1999 to 2017. Its two long straights run side by side past a giant V-shaped grandstand that faces both of them, and each one ends in a slow corner where most of the overtaking happens. Heat and humidity make it one of the toughest races of the year for the drivers, and tropical storms can soak the track within minutes — in 2009 the rain was so heavy that the race was stopped early and only half points were given. Formula 1 returns in 2026 for the first time since Max Verstappen won here in 2017, the day after his 20th birthday, with this year’s race taking the place of the Bahrain Grand Prix.',
+    detailMapImage: malaysiaDetail,
+    // Sepang's most recent Formula 1 race: Malaysia was off the calendar from 2018 to 2025.
+    lastYear: {
+      season: 2017,
+      race: [
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:30:01.290' },
+        { name: 'Lewis Hamilton', team: 'Mercedes', time: '+12.770' },
+        { name: 'Daniel Ricciardo', team: 'Red Bull', time: '+22.519' },
+        { name: 'Sebastian Vettel', team: 'Ferrari', time: '+37.362' },
+        { name: 'Valtteri Bottas', team: 'Mercedes', time: '+56.021' },
+        { name: 'Sergio Pérez', team: 'Force India', time: '+1:18.630' },
+        { name: 'Stoffel Vandoorne', team: 'McLaren', time: '+1 lap' },
+        { name: 'Lance Stroll', team: 'Williams', time: '+1 lap' },
+        { name: 'Felipe Massa', team: 'Williams', time: '+1 lap' },
+        { name: 'Esteban Ocon', team: 'Force India', time: '+1 lap' },
+        { name: 'Fernando Alonso', team: 'McLaren', time: '+1 lap' },
+        { name: 'Kevin Magnussen', team: 'Haas', time: '+1 lap' },
+        { name: 'Romain Grosjean', team: 'Haas', time: '+1 lap' },
+        { name: 'Pierre Gasly', team: 'Toro Rosso', time: '+1 lap' },
+        { name: 'Jolyon Palmer', team: 'Renault', time: '+1 lap' },
+        { name: 'Nico Hülkenberg', team: 'Renault', time: '+1 lap' },
+        { name: 'Pascal Wehrlein', team: 'Sauber', time: '+1 lap' },
+        { name: 'Marcus Ericsson', team: 'Sauber', time: '+2 laps' },
+        { name: 'Carlos Sainz', team: 'Toro Rosso', time: 'DNF' },
+        { name: 'Kimi Räikkönen', team: 'Ferrari', time: 'DNS' },
+      ],
+      quali: [
+        { name: 'Lewis Hamilton', team: 'Mercedes', time: '1:30.076' },
+        { name: 'Kimi Räikkönen', team: 'Ferrari', time: '1:30.121' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:30.541' },
+        { name: 'Daniel Ricciardo', team: 'Red Bull', time: '1:30.595' },
+        { name: 'Valtteri Bottas', team: 'Mercedes', time: '1:30.758' },
+        { name: 'Esteban Ocon', team: 'Force India', time: '1:31.478' },
+        { name: 'Stoffel Vandoorne', team: 'McLaren', time: '1:31.582' },
+        { name: 'Nico Hülkenberg', team: 'Renault', time: '1:31.607' },
+        { name: 'Sergio Pérez', team: 'Force India', time: '1:31.658' },
+        { name: 'Fernando Alonso', team: 'McLaren', time: '1:31.704' },
+        { name: 'Felipe Massa', team: 'Williams', time: '1:32.034' },
+        { name: 'Jolyon Palmer', team: 'Renault', time: '1:32.100' },
+        { name: 'Lance Stroll', team: 'Williams', time: '1:32.307' },
+        { name: 'Carlos Sainz', team: 'Toro Rosso', time: '1:32.402' },
+        { name: 'Pierre Gasly', team: 'Toro Rosso', time: '1:32.558' },
+        { name: 'Romain Grosjean', team: 'Haas', time: '1:33.308' },
+        { name: 'Kevin Magnussen', team: 'Haas', time: '1:33.434' },
+        { name: 'Pascal Wehrlein', team: 'Sauber', time: '1:33.483' },
+        { name: 'Marcus Ericsson', team: 'Sauber', time: '1:33.970' },
+        { name: 'Sebastian Vettel', team: 'Ferrari', time: 'No time' },
       ],
     },
   },

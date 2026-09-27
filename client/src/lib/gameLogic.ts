@@ -108,6 +108,7 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   zandvoort: 72,
   madrid: 57,
   baku: 51,
+  malaysia: 56,
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -349,6 +350,14 @@ export const CIRCUITS: Circuit[] = [
     name: "BAKU",
     type: "Variables",
     description: "Baku City Circuit, Azerbaijan",
+    mapUrl: "",
+    paths: { s1: "", s2: "", s3: "" }
+  },
+  {
+    id: "malaysia",
+    name: "MALAYSIA",
+    type: "Variables",
+    description: "Sepang International Circuit, Malaysia",
     mapUrl: "",
     paths: { s1: "", s2: "", s3: "" }
   }
@@ -864,6 +873,22 @@ export function isInAeroZone(progress: number, zones: number[], zoneWindow: numb
 // Get the current zone start position (if in a zone)
 export function getCurrentAeroZone(progress: number, zones: number[], zoneWindow: number = 3): number | undefined {
   return zones.find(zone => progress >= zone && progress < zone + zoneWindow);
+}
+
+// AERO zones for one single-player session. Power-ups are Grand Prix only, so any other
+// session gets none and AERO can never become available there, whatever key is pressed.
+// Practice sessions: one zone per 10 laps, evenly spaced. Races: getAeroZones.
+export function getSessionAeroZones(
+  raceLength: number,
+  { powerUpsEnabled, practice, simMode }: { powerUpsEnabled: boolean; practice: boolean; simMode: boolean },
+): number[] {
+  if (!powerUpsEnabled) return [];
+  if (practice) {
+    const count = Math.floor(raceLength / 10);
+    const spacing = raceLength / (count + 1);
+    return Array.from({ length: count }, (_, i) => Math.floor(spacing * (i + 1)));
+  }
+  return getAeroZones(raceLength, simMode);
 }
 
 export function generateWrongAnswers(correctAnswer: number, count: number): number[] {

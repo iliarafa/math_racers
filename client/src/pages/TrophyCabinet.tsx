@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { useGameState } from "@/lib/gameLogic";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
-import { BADGES, SEASON_ROUNDS, seasonSlots, type Trophy } from "@/lib/trophies";
+import { BADGES, SEASON_ROUNDS, seasonSlots, trophyCode, type Trophy } from "@/lib/trophies";
 import { BadgeTile } from "@/components/BadgeTile";
 import { DailyStreakCard } from "@/components/DailyStreakCard";
 import { GrowthPanel } from "@/components/GrowthPanel";
@@ -47,7 +47,7 @@ function TrophyTile({ round, trophy, current }: { round: number; trophy?: Trophy
       data-tier={trophy.tier}
     >
       <TrophyIcon className="w-7 h-7 shrink-0" style={{ color }} strokeWidth={1.5} aria-hidden="true" />
-      <span className="text-[9px] font-bold uppercase tracking-wider leading-tight text-center" style={{ color }}>{trophy.name}</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider leading-tight text-center" style={{ color }}>{trophyCode(trophy)}</span>
     </div>
   );
 }
