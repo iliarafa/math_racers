@@ -3,8 +3,8 @@
 // with a human mix of purple (under half the bot's time), green (under the bot's time) and
 // yellow (slower). Laps 1-74 run off camera and fill the grid with that mix; laps 75-81 are
 // recorded. Every correct answer is followed by the app's 0.6 s pause, so on camera the laps
-// are quick (purple) to fit laps 75-78 into the 6-second scene.
-import { openPhone, Recorder, FPS, waitForApp } from './browser.mjs';
+// are quick (purple) to land two of them (laps 75 and 76) in the 4-second scene.
+import { openPhone, Recorder, FPS, waitForApp, questionBotTime } from './browser.mjs';
 import { RACER, stateStorage } from './demo-state.mjs';
 
 const WORK = process.env.WORK;
@@ -25,24 +25,6 @@ const answerEl = page.getByTestId('display-answer');
 const questionEl = answerEl.locator('xpath=preceding-sibling::div[1]');
 const step = async ms => { await rec.advance(ms); if (!rec.recording) await rec.settle({ video: false }); };
 
-/** The current question's bot time, read from the game's own state through React's fiber tree. */
-const botTimeFor = display => page.evaluate(display => {
-  const root = document.getElementById('root');
-  const key = Object.keys(root).find(k => k.startsWith('__reactContainer$'));
-  const stack = key ? [root[key]] : [];
-  while (stack.length) {
-    const f = stack.pop();
-    for (let h = f.memoizedState, n = 0; h && typeof h === 'object' && n < 1000; h = h.next, n++) {
-      const v = h.memoizedState;
-      if (v && typeof v === 'object' && typeof v.botTime === 'number' && typeof v.display === 'string'
-        && v.display.replace(/\s+/g, ' ').trim() === display) return v.botTime;
-    }
-    if (f.child) stack.push(f.child);
-    if (f.sibling) stack.push(f.sibling);
-  }
-  return null;
-}, display);
-
 await page.goto(`${APP}/game/free-practice`, { waitUntil: 'load' });
 await waitForApp(page);
 for (let t = 0; t < 1500; t += 100) await step(100);
@@ -57,7 +39,7 @@ for (let lap = 1; lap <= LAST_ON_AIR; lap++) {
   const m = q.match(/^(\d+) \+ (\d+)$/);
   if (!m) { console.log('unparsed question', JSON.stringify(q)); break; }
   const ans = String(Number(m[1]) + Number(m[2]));
-  const bot = (await botTimeFor(q)) ?? 3000;
+  const bot = (await questionBotTime(page, q)) ?? 3000;
   const pace = lap >= FIRST_ON_AIR ? 'purple' : offAirPace();
   const share = { purple: between(0.28, 0.42), green: between(0.58, 0.9), yellow: between(1.08, 1.4) }[pace];
   // on camera: a quick but human answer, 0.95-1.25 s (well inside purple for these bot times)

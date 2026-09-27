@@ -1,13 +1,17 @@
 // Records a Grand Prix weekend on times tables, raced in order as a player would: the weekend
-// menu (setup card) and the tap on Start, then Practice (which sets the weekend's level; fast
-// answers climb it), Qualifying (which decides pole) and Race Day with its full-screen sector
-// flashes. Recording pauses through the start lights and the result screens in between.
-import { openPhone, Recorder, FPS, waitForApp } from './browser.mjs';
+// menu (setup card) and the tap on Start, then Practice (which sets the weekend's level),
+// Qualifying and Race Day. Every answer is paced like a person's, so the grids and Race Day's
+// full-screen flashes show a mix of purple, green and yellow:
+//  - Practice colours against the question's own bot time (as Free Practice does);
+//  - Qualifying and Race colour against the bot's time on the same lap, so the player races
+//    just behind the bot and answers faster or slower than it lap by lap.
+// Only the stretches the reel can use are recorded (RECORD below).
+import { openPhone, Recorder, FPS, waitForApp, questionBotTime, botLapTime } from './browser.mjs';
 import { RACER, stateStorage } from './demo-state.mjs';
 
 const WORK = process.env.WORK;
 const APP = process.env.APP_URL || 'http://localhost:8081';
-const RACE_LAPS = Number(process.env.RACE_LAPS || 10);
+const RECORD = { practice: [22, 30], qualifying: [5, 13], race: [2, 10] };
 
 let seed = 3;
 const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
@@ -27,36 +31,56 @@ async function step(ms) {
   if (!rec.recording) await rec.settle({ video: false });
 }
 
-/** Tap Start on the setup card, wait out the lights off camera, then answer `laps` questions. */
+/** How long to take over this answer, and the colour it is aiming for. */
+async function paceFor(session, q) {
+  if (session === 'practice') {
+    const bot = (await questionBotTime(page, q)) ?? 3000;
+    const r = rand(), pace = r < 0.5 ? 'purple' : r < 0.84 ? 'green' : 'yellow';
+    return { pace, ms: { purple: between(0.28, 0.42), green: between(0.58, 0.9), yellow: between(1.08, 1.4) }[pace] * bot };
+  }
+  const hud = (await page.locator('#root').innerText()).match(/LAP\s+(\d+)\s*\/\s*\d+/i);
+  const sector = hud ? Number(hud[1]) - 1 : 0;
+  const bot = await botLapTime(page, sector);
+  if (bot == null) return { pace: 'behind-bot', ms: between(1700, 2400) };   // let the bot lead
+  const r = rand(), pace = r < 0.4 ? 'purple' : r < 0.8 ? 'green' : 'yellow';
+  return { pace, ms: { purple: between(0.62, 0.9), green: between(1.08, 1.42), yellow: between(1.6, 1.95) }[pace] * bot };
+}
+
+/** Tap Start on the setup card, wait out the lights, then answer `laps` questions. */
 async function race(label, laps = 60) {   // 60: a safety cap, far above any session here
   await rec.tap(page.getByTestId('button-start-race'));
   rec.recording = false;
   for (let i = 0; i < 400 && !(await answerEl.count()); i++) await step(1000 / FPS);
-  rec.recording = true;
-  rec.mark(`${label}-racing`);
+  const [from, to] = RECORD[label];
   for (let lap = 1; lap <= laps; lap++) {
     if (!(await answerEl.count())) break;
+    if (lap === from) { rec.recording = true; rec.mark(`${label}-racing`); }
+    if (lap === to + 1) { rec.mark(`${label}-end`); rec.recording = false; }
     const q = (await questionEl.innerText()).trim().replace(/\s+/g, ' ');
     const m = q.match(/^(\d+) ([+\-−×x÷/]) (\d+)$/);
     if (!m) { console.log(label, 'unparsed question', JSON.stringify(q)); break; }
     const ans = String(OPS[m[2]](Number(m[1]), Number(m[3])));
-    rec.mark('question', { session: label, lap, q, ans });
-    await step(between(380, 620));
+    const { pace, ms } = await paceFor(label, q);
+    const gaps = [...ans].map((_, i) => (i ? between(110, 170) : 0));
+    const beforeSubmit = between(120, 190);
+    const typing = gaps.reduce((a, b) => a + b, 0) + 70 * (ans.length + 1) + beforeSubmit;
+    rec.mark('question', { session: label, lap, q, ans, pace });
+    await step(Math.max(350, ms - typing));
     for (const [i, d] of [...ans].entries()) {
-      if (i) await step(between(110, 170));
+      if (i) await step(gaps[i]);
       await rec.tap(page.getByTestId(`keypad-${d}`), { hold: 70 });
     }
-    await step(between(120, 190));
+    await step(beforeSubmit);
     await rec.tap(page.getByTestId('keypad-submit'), { hold: 70 });
-    rec.mark('answered', { session: label, lap, q, ans });
+    rec.mark('answered', { session: label, lap, q, ans, pace });
     for (let w = 0; w < 120; w++) {
       await step(1000 / FPS);
       if (!(await answerEl.count())) break;
       if ((await answerEl.innerText()).trim() === '0') break;
     }
-    console.log(`${label} lap ${lap}: ${q} = ${ans}  (frame ${rec.frame})`);
+    if (lap >= from && lap <= to) console.log(`${label} lap ${lap}: ${q} = ${ans}  ${pace}  (frame ${rec.frame})`);
+    if (label === 'race' && lap >= to) break;
   }
-  rec.mark(`${label}-end`);
   rec.recording = false;
 }
 
@@ -76,13 +100,9 @@ for (let t = 0; t < 3000; t += 1000 / FPS) await step(1000 / FPS);   // the card
 
 await race('practice');
 await continueTo(/Continue to Qualifying/i);
-rec.recording = true;
-rec.mark('qualifying-menu');
 await race('qualifying');
 await continueTo(/Continue to Race/i);
-rec.recording = true;
-rec.mark('race-menu');
-await race('race', RACE_LAPS);
+await race('race');
 rec.save();
 console.log('frames:', rec.frame);
 await browser.close();

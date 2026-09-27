@@ -180,3 +180,43 @@ export class Recorder {
     fs.writeFileSync(path.join(this.dir, 'events.json'), JSON.stringify({ fps: FPS, frames: this.frame, events: this.events, ...extra }, null, 1));
   }
 }
+
+/*
+ * Pacing helpers: the app colours each lap (sector) by comparing the answer time with a bot's.
+ * Practice modes compare with the question's own bot time (purple under half of it, green
+ * under it, yellow slower); race modes compare with the bot's time on the same lap, once the
+ * bot has driven it (purple if faster, green within 1.5x, yellow slower). Both are read from
+ * the game's state through React's fiber tree, so a scripted player can land a chosen colour.
+ */
+async function findState(page, test, arg) {
+  return page.evaluate(([src, arg]) => {
+    const test = new Function('v', 'arg', src);
+    const root = document.getElementById('root');
+    const key = Object.keys(root).find(k => k.startsWith('__reactContainer$'));
+    const stack = key ? [root[key]] : [];
+    while (stack.length) {
+      const f = stack.pop();
+      for (let h = f.memoizedState, n = 0; h && typeof h === 'object' && n < 1000; h = h.next, n++) {
+        const found = test(h.memoizedState, arg);
+        if (found !== undefined) return found;
+      }
+      if (f.child) stack.push(f.child);
+      if (f.sibling) stack.push(f.sibling);
+    }
+    return null;
+  }, [test, arg]);
+}
+
+/** The bot time of the question on screen (practice modes). */
+export function questionBotTime(page, display) {
+  return findState(page, `
+    if (v && typeof v === 'object' && typeof v.botTime === 'number' && typeof v.display === 'string'
+      && v.display.replace(/\\s+/g, ' ').trim() === arg) return v.botTime;`, display);
+}
+
+/** The bot's time on lap `sector` (0-based) if it has driven it yet, else null (race modes). */
+export function botLapTime(page, sector) {
+  return findState(page, `
+    if (Array.isArray(v) && v.length && v[0] && typeof v[0].botTime === 'number' && 'sectorColor' in v[0])
+      return v[arg] ? v[arg].botTime : null;`, sector);
+}

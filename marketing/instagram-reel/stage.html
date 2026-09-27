@@ -40,20 +40,20 @@ const C = {
 const LIGHTS = [0.4, 0.9, 1.4, 1.9, 2.4];
 const T = {
   out: 3.0, phoneIn: [3.0, 3.45],
-  menu: 9.0, practice: 12.5, qualifying: 15.5, race: 18.5,
-  lane: 21.5, trophies: 27.5, cta: 30.5, end: 35.5,
+  menu: 7.0, practice: 10.5, qualifying: 13.5, race: 16.5,
+  lane: 19.5, trophies: 25.5, cta: 28.5, end: 33.5,
 };
 T.flag = [T.lane - 0.21, T.lane + 0.21];   // chequered flag: the weekend's finish, into Lane Racer
 const CAPTIONS = [
   { a: 0.0, b: 3.0, lines: ['LOVE [RACING?]'], y: 470, size: 120, enterAt0: true },
-  { a: 3.1, b: 9.0, lines: ['IMMERSE YOURSELF IN', '[FREE PRACTICE]'] },
-  { a: 9.0, b: 12.5, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
+  { a: 3.1, b: T.menu, lines: ['IMMERSE YOURSELF IN', '[FREE PRACTICE]'] },
+  { a: T.menu, b: T.practice, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
   // the weekend's sessions, coloured like the app's own Practice / Qualifying / Race tabs
-  { a: 12.5, b: 15.5, lines: ['<PRACTICE>'], y: 420, size: 120 },
-  { a: 15.5, b: 18.5, lines: ['~QUALIFY~'], y: 420, size: 120 },
-  { a: 18.5, b: 21.5, lines: ['[RACE]'], y: 420, size: 120 },
-  { a: T.flag[1], b: 27.5, lines: ['TRAIN ON THE', '[LANE RACER]'] },
-  { a: 27.5, b: 30.5, lines: ['WIN TROPHIES.', '[KEEP THE STREAK.]'] },
+  { a: T.practice, b: T.qualifying, lines: ['<PRACTICE>'], y: 420, size: 120 },
+  { a: T.qualifying, b: T.race, lines: ['~QUALIFY~'], y: 420, size: 120 },
+  { a: T.race, b: T.lane, lines: ['[RACE]'], y: 420, size: 120 },
+  { a: T.flag[1], b: T.trophies, lines: ['TRAIN ON THE', '[LANE RACER]'] },
+  { a: T.trophies, b: T.cta, lines: ['WIN TROPHIES.', '[KEEP THE STREAK.]'] },
 ];
 
 // ---------------------------------------------------------------- helpers
@@ -234,10 +234,10 @@ const BASE = { z: 1, fx: 0, fy: 0, ax: 540, ay: 545 + 426 * K };
 // Camera keyframes: [time, z, focus x/y (app CSS px from screen centre), anchor x/y (canvas px)]
 const CAM = [
   [3.45, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [4.20, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [5.40, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
-  [8.80, 1.26, 0, -80, 540, 1030],
-  [9.05, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [3.70, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [4.70, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
+  [6.80, 1.25, 0, -80, 540, 1030],
+  [7.05, 1.00, 0, 0, BASE.ax, BASE.ay],
 ];
 function camAt(t) {
   if (t <= CAM[0][0]) return { z: 1, fx: 0, fy: 0, ax: BASE.ax, ay: BASE.ay };
@@ -376,14 +376,15 @@ function scenes() {
   const racing = s => marks('weekend', `${s}-racing`)[0].frame;
   const hits = marks('lane', 'hit');
   const list = [
-    // Free Practice, laps 75-78 of 100: the fourth answer on camera lands just before the cut
-    { a: T.out, b: T.menu, clip: 'freepractice', start: windowEndingAfterAnswer('freepractice', null, 3, T.out, T.menu, 0.3), dark: false },
+    // Free Practice, laps 75-76 of 100: the second answer on camera lands just before the cut
+    { a: T.out, b: T.menu, clip: 'freepractice', start: windowEndingAfterAnswer('freepractice', null, 1, T.out, T.menu, 0.3), dark: false },
     // the weekend menu: the card arrives, then the tap on Start Practice (held until the cut)
     { a: T.menu, b: T.practice, clip: 'weekend', start: marks('weekend', 'menu')[0].frame, last: racing('practice') - 1, dark: true },
-    // late in Practice (the level has climbed), a lap of Qualifying, a Race Day lap with its flash
+    // late in Practice (the level has climbed) and mid-Qualifying, each landing a green sector on
+    // a grid of purple, green and yellow; then two Race Day laps, a green flash and a purple one
     { a: T.practice, b: T.qualifying, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'practice', -3, T.practice, T.qualifying, 0.5), dark: false },
     { a: T.qualifying, b: T.race, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'qualifying', 6, T.qualifying, T.race, 0.5), dark: false },
-    { a: T.race, b: T.lane, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'race', 3, T.race, T.lane, 0.8), dark: false },
+    { a: T.race, b: T.lane, clip: 'weekend', start: windowEndingAfterAnswer('weekend', 'race', -1, T.race, T.lane, 0.6), dark: false },
     // Lane Racer: the web chase cam doesn't follow the car into the side lanes, so a run of
     // middle-lane answers from the start of the race, ending just after the second hit
     { a: T.lane, b: T.trophies, clip: 'lane', start: hits[1].frame + Math.round(0.4 * FPS) - Math.round((T.trophies - T.lane) * FPS), dark: true },
