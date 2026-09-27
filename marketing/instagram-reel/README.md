@@ -13,7 +13,7 @@ footage of the app. They are identical until the end card:
 |---|---|---|
 | 0–3 s | Five start lights, one every half second, with the app's own 800 Hz beeps | LOVE RACING? |
 | 3 s | Lights out: 1200 Hz beep, the Lane Racer track drops in, the phone arrives | |
-| 3–9 s | Free Practice: addition at Formula 2, taps shown on the keypad | IMMERSE IN FREE PRACTICE |
+| 3–9 s | Free Practice, 100-lap session at Formula 2 (addition): laps 75–78, the sector grid a human mix of purple, green and yellow | IMMERSE YOURSELF IN FREE PRACTICE |
 | 9–12.5 s | The Grand Prix weekend menu (Round 15, Baku) and a tap on Start Practice | A NEW GRAND PRIX EVERY WEEK |
 | 12.5–15.5 s | Grand Prix Practice, late in the session (times tables at Formula 1 level) | PRACTICE (green) |
 | 15.5–18.5 s | Qualifying against the bot | QUALIFY (amber) |
@@ -46,7 +46,7 @@ With the dev server running (`npm run dev`), run `./build.sh`. It needs Playwrig
 |---|---|
 | `browser.mjs` | iPhone-sized page (393 × 852, 3×, Dynamic Island safe areas), Google Fonts served from a curl cache, a fake clock, and a frame recorder that re-seeks CSS and Web Animations to that clock, so footage plays at true game speed however slow each screenshot is |
 | `demo-state.mjs` | The demo player: a name (no name prompt at the flag) and, for the menus, six weekend trophies and a 12-day streak |
-| `capture-freepractice.mjs` | Plays Free Practice (addition, locked at Formula 2) by tapping the keypad; records frames and every tap |
+| `capture-freepractice.mjs` | Plays a 100-lap Free Practice (addition, locked at Formula 2), pacing each answer against the question's bot time for a human mix of sector colours; records laps 75–81 |
 | `capture-weekend.mjs` | Races a Grand Prix weekend on times tables in order, recording the menu, Practice, Qualifying and Race Day |
 | `capture-lane.mjs` | Plays Lane Racer with the chase cam, steering from the game's own controller |
 | `snap-screens.mjs` | Stills of the menu screens |

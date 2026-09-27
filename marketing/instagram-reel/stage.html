@@ -46,7 +46,7 @@ const T = {
 T.flag = [T.lane - 0.21, T.lane + 0.21];   // chequered flag: the weekend's finish, into Lane Racer
 const CAPTIONS = [
   { a: 0.0, b: 3.0, lines: ['LOVE [RACING?]'], y: 470, size: 120, enterAt0: true },
-  { a: 3.1, b: 9.0, lines: ['IMMERSE IN', '[FREE PRACTICE]'] },
+  { a: 3.1, b: 9.0, lines: ['IMMERSE YOURSELF IN', '[FREE PRACTICE]'] },
   { a: 9.0, b: 12.5, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
   // the weekend's sessions, coloured like the app's own Practice / Qualifying / Race tabs
   { a: 12.5, b: 15.5, lines: ['<PRACTICE>'], y: 420, size: 120 },
@@ -234,7 +234,9 @@ const BASE = { z: 1, fx: 0, fy: 0, ax: 540, ay: 545 + 426 * K };
 // Camera keyframes: [time, z, focus x/y (app CSS px from screen centre), anchor x/y (canvas px)]
 const CAM = [
   [3.45, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [8.80, 1.06, 0, -434, 540, BASE.ay - 434 * K],   // push in, the phone's top edge held still
+  [4.20, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [5.40, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
+  [8.80, 1.26, 0, -80, 540, 1030],
   [9.05, 1.00, 0, 0, BASE.ax, BASE.ay],
 ];
 function camAt(t) {
@@ -374,8 +376,8 @@ function scenes() {
   const racing = s => marks('weekend', `${s}-racing`)[0].frame;
   const hits = marks('lane', 'hit');
   const list = [
-    // Free Practice from its first question
-    { a: T.out, b: T.menu, clip: 'freepractice', start: marks('freepractice', 'racing')[0].frame, dark: false },
+    // Free Practice, laps 75-78 of 100: the fourth answer on camera lands just before the cut
+    { a: T.out, b: T.menu, clip: 'freepractice', start: windowEndingAfterAnswer('freepractice', null, 3, T.out, T.menu, 0.3), dark: false },
     // the weekend menu: the card arrives, then the tap on Start Practice (held until the cut)
     { a: T.menu, b: T.practice, clip: 'weekend', start: marks('weekend', 'menu')[0].frame, last: racing('practice') - 1, dark: true },
     // late in Practice (the level has climbed), a lap of Qualifying, a Race Day lap with its flash
