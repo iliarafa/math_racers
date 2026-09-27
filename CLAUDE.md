@@ -150,6 +150,8 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 
 ### Power-Up Systems
 
+Single-player power-ups are Grand Prix only (`powerUpsEnabled = isGrandPrix` in Game.tsx, all three phases); Multiplayer has its own per-room toggle. Quick Race and Free Practice hide the buttons, get no AERO zones (`getSessionAeroZones` in gameLogic.ts returns none) and harvest no OVERTAKE energy, so the `-` and `+` keys do nothing there. Hiding the buttons is not enough on its own: the race keydown handler fires both keys in every mode.
+
 **OVERTAKE (Energy Bar)**
 - Charges by answering correctly (faster = more energy)
 - Activates when behind opponent and within 2 sectors (disabled once opponent finishes)
@@ -193,7 +195,7 @@ Kid-facing Adaptive ladder (soft-caps at F1). Pro is Locked-only (same digit siz
 - Uses Melbourne circuit with player-selected operation
 - Three sequential phases: Practice (30 Qs, dynamic difficulty) → Qualifying (20 Qs, locked difficulty, determines pole) → Race Day (sim-length, pole = 2-sector head start on first correct answer)
 - Difficulty locked after practice phase for the entire weekend
-- Power-ups enabled only during race phase
+- Power-ups (OVERTAKE, AERO) on in all three phases, the only single-player mode with them
 
 **Pre-Season Testing (PST)**
 - Uses Bahrain circuit with player-selected operation

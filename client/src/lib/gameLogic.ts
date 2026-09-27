@@ -866,6 +866,22 @@ export function getCurrentAeroZone(progress: number, zones: number[], zoneWindow
   return zones.find(zone => progress >= zone && progress < zone + zoneWindow);
 }
 
+// AERO zones for one single-player session. Power-ups are Grand Prix only, so any other
+// session gets none and AERO can never become available there, whatever key is pressed.
+// Practice sessions: one zone per 10 laps, evenly spaced. Races: getAeroZones.
+export function getSessionAeroZones(
+  raceLength: number,
+  { powerUpsEnabled, practice, simMode }: { powerUpsEnabled: boolean; practice: boolean; simMode: boolean },
+): number[] {
+  if (!powerUpsEnabled) return [];
+  if (practice) {
+    const count = Math.floor(raceLength / 10);
+    const spacing = raceLength / (count + 1);
+    return Array.from({ length: count }, (_, i) => Math.floor(spacing * (i + 1)));
+  }
+  return getAeroZones(raceLength, simMode);
+}
+
 export function generateWrongAnswers(correctAnswer: number, count: number): number[] {
   const results: number[] = [];
   const maxRange = correctAnswer <= 5 ? 3 : correctAnswer <= 20 ? 5 : Math.min(Math.ceil(correctAnswer * 0.3), 20);

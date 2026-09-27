@@ -16,7 +16,7 @@ import { KeyStrip } from "@/components/desktop/KeyStrip";
 import { PowerUpControls } from "@/components/desktop/PowerUpControls";
 import { QuestionPane } from "@/components/desktop/QuestionPane";
 import { isIpad, isPortrait, lockLandscapeOnIpad, unlockOrientation } from "@/lib/orientationLock";
-import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
+import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getSessionAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import type { DifficultyDrumOption } from "@/lib/gameLogic";
 import { loadSetupOperation, saveSetupOperation } from "@/lib/gameLogic";
@@ -777,16 +777,12 @@ export default function Game() {
     if (gameStatus === 'countdown' && selectedCircuit && selectedDriver && !showQuickRaceIntro) {
       const currentRaceLength = raceLength;
 
-      // Initialize AERO zones based on race length and sim mode
-      let zones: number[];
-      if (isPracticeMode) {
-        // Practice modes: 1 AERO zone per 10 laps, evenly spaced
-        const count = Math.floor(currentRaceLength / 10);
-        const spacing = currentRaceLength / (count + 1);
-        zones = Array.from({ length: count }, (_, i) => Math.floor(spacing * (i + 1)));
-      } else {
-        zones = getAeroZones(currentRaceLength, effectiveSimMode);
-      }
+      // Initialize AERO zones: none outside the Grand Prix, so AERO stays off there even from the keyboard
+      const zones = getSessionAeroZones(currentRaceLength, {
+        powerUpsEnabled,
+        practice: isPracticeMode,
+        simMode: effectiveSimMode,
+      });
       setAeroZones(zones);
       setAeroUsedZones(new Set());
       setAeroAvailable(false);
@@ -839,7 +835,7 @@ export default function Game() {
 
       return () => clearInterval(interval);
     }
-  }, [gameStatus, selectedCircuit, selectedDriver, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, isQuickRace, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation, showQuickRaceIntro]);
+  }, [gameStatus, selectedCircuit, selectedDriver, effectiveSimMode, difficultyMode, lockedDifficulty, isGrandPrix, isPreSeasonTesting, isQuickRace, grandPrixPhase, grandPrixLockedDifficulty, isPracticeMode, raceLength, selectedOperation, showQuickRaceIntro, powerUpsEnabled]);
 
 
   // Timer Logic - only runs during racing and not paused
@@ -1938,8 +1934,9 @@ export default function Game() {
 
   // Handle AERO button activation (DRS-style zone-based)
   const handleAero = () => {
-    // Can only activate if: in a zone, not already active, racing
-    if (!aeroAvailable || aeroActive || gameStatus !== 'racing' || isPaused) {
+    // Can only activate if: power-ups on (Grand Prix only), in a zone, not already active, racing.
+    // The '-' key reaches this in every mode, so the power-ups check can't be left to the hidden button.
+    if (!powerUpsEnabled || !aeroAvailable || aeroActive || gameStatus !== 'racing' || isPaused) {
       return;
     }
 
