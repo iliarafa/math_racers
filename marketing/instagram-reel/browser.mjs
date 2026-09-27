@@ -101,14 +101,21 @@ export async function waitForApp(page) {
 export class Recorder {
   constructor(page, dir, { quality = 92 } = {}) {
     this.page = page; this.dir = dir; this.quality = quality;
-    this.vt = 0;            // virtual ms since recording started
+    this.vt = 0;            // virtual ms elapsed on this page
+    this.t0 = 0;            // virtual time of frame 0
     this.frame = 0;         // next frame index
-    this.recording = false;
+    this._recording = false;
     this.events = [];       // taps and markers, stamped with frame index
     fs.mkdirSync(dir, { recursive: true });
   }
-  nextFrameTime() { return Math.round((this.frame * 1000) / FPS); }
-  async settle() {
+  /** Frames count from the moment recording starts, however long the page ran before. */
+  get recording() { return this._recording; }
+  set recording(on) {
+    if (on && !this._recording) this.t0 = this.vt;
+    this._recording = on;
+  }
+  nextFrameTime() { return this.t0 + Math.round((this.frame * 1000) / FPS); }
+  async settle({ video = true } = {}) {
     await this.page.evaluate(() => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = () => r(); c.port2.postMessage(0); }));
     await this.page.evaluate(() => {
       const now = performance.now();
@@ -119,7 +126,7 @@ export class Recorder {
       }
     });
     // Background videos follow virtual time too.
-    await this.page.evaluate(() => Promise.all([...document.querySelectorAll('video')].map(v => new Promise(r => {
+    if (video) await this.page.evaluate(() => Promise.all([...document.querySelectorAll('video')].map(v => new Promise(r => {
       if (!(v.duration > 0)) return r();
       v.pause();
       const t = (performance.now() / 1000) % v.duration;
@@ -157,13 +164,13 @@ export class Recorder {
     }
     if (target > this.vt) { await this.page.clock.runFor(target - this.vt); this.vt = target; }
   }
-  mark(name, data = {}) { this.events.push({ type: 'mark', name, frame: this.frame, ...data }); }
+  mark(name, data = {}) { if (this.recording) this.events.push({ type: 'mark', name, frame: this.frame, ...data }); }
   /** Press and release an element like a finger: pointer down, hold, pointer up. */
   async tap(locator, { hold = 90 } = {}) {
     const box = await locator.boundingBox();
     if (!box) throw new Error('tap target not visible');
     const x = box.x + box.width / 2, y = box.y + box.height / 2;
-    this.events.push({ type: 'tap', frame: this.frame, x, y, w: box.width, h: box.height });
+    if (this.recording) this.events.push({ type: 'tap', frame: this.frame, x, y, w: box.width, h: box.height });
     await this.page.mouse.move(x, y);
     await this.page.mouse.down();
     await this.advance(hold);

@@ -1,4 +1,5 @@
 // Drives stage.html in headless Chromium.
+//   VARIANT=web|appstore picks the end card (website or App Store badge).
 //   node render.mjs cues                 -> $WORK/cues.json (sound cue list)
 //   node render.mjs stills 0 2.5 8.4 ... -> $WORK/review/t<sec>.png (single frames, by time)
 //   node render.mjs video                -> $WORK/out/reel.mp4 (frames piped into ffmpeg, muxed
@@ -31,7 +32,7 @@ await page.route('http://reel.local/**', async route => {
   if (!file || !fs.existsSync(file)) return route.fulfill({ status: 404, body: 'not found' });
   await route.fulfill({ status: 200, body: fs.readFileSync(file), headers: { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' } });
 });
-await page.goto('http://reel.local/stage.html');
+await page.goto(`http://reel.local/stage.html?variant=${process.env.VARIANT || 'web'}`);
 const { duration, fps } = await page.evaluate(() => window.ready);
 const frames = Math.round(duration * fps);
 
