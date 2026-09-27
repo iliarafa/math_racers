@@ -9,7 +9,7 @@ Re-themes the app to the week's F1 circuit: Free Practice card, Grand Prix mode,
 
 **Templates (trust these over any docs):** the two most recent rotation commits.
 - Existing circuit: `d17e8a0` (Round 9 / Silverstone)
-- New circuit: `4d7d282` (Round 12 / Zandvoort) — complete worked example incl. menu art + live-map centerline
+- New circuit: `4d7d282` (Round 12 / Zandvoort) — complete worked example incl. menu art, **except** its live-map changes (`circuitPaths.ts`, `circuitPathData.json`, `script/extractCircuitCenterline.ts`): skip those. The in-race live map was dropped in `d707166`; only the dev page `/dev/circuit-maps` still draws it, and a circuit without a centerline gets a fallback oval there.
 - `SESSION_NOTES.md` is STALE (describes the old Round-5 setup with config inline in Game.tsx). Ignore it.
 - Setup-card specifics (what the cards read from the rotation, art rules, QA list): `setup_cards.md` at the repo root.
 - **Technical Regulations, Art. 7 (Grand Prix)** in `client/src/pages/Regulations.tsx` is generated from `CURRENT_GRAND_PRIX` (`circuitName`, `round`, `name`, `simLapCount`). It must read correctly for every round — see Step 2 (`circuitName`) and the Step 6 check. Never hard-code a circuit in that article again.
@@ -53,9 +53,7 @@ Skip if the circuit already exists — **`SIM_LAP_COUNTS` in gameLogic.ts is the
 
 - `client/src/lib/gameLogic.ts`: add to `SIM_LAP_COUNTS` (real lap count) and append a `CIRCUITS` entry — mirror the zandvoort entry: `{ id, name: "UPPERCASE", type: "Variables", description: "<venue, town>", mapUrl: "", paths: { s1: "", s2: "", s3: "" } }`.
 - `client/src/lib/circuitMenuArt.ts`: import the flag + silhouette and add a `CIRCUIT_MENU_ART[circuitId]` entry. This is the **single source** for setup-menu silhouettes/flags AND the selection gate — Lane Racer and Multiplayer read it, and while `LOCK_MENU_TO_CURRENT_GP` is true their TRACK row shows only the current GP, so a missing entry means it shows nothing. (The old per-page `FLAG_IMAGES`/`CIRCUIT_MAP_IMAGES` maps in LaneRacer.tsx are gone — don't add them back.)
-- `client/src/lib/circuitPaths.ts`: import the silhouette and add it to `CIRCUIT_IMAGES` (feeds the live circuit map).
 - `client/src/lib/trophies.ts`: if `TROPHY_CODES` has no row for the circuitId, add one: the code F1 shows beside a driver from the host country (GBR, NED, SGP), or a city code when that country already has a row (MIA and LVG beside USA, BAR beside ESP). `npm test` checks that every code is three capitals and none repeats.
-- **Live-map centerline** in `client/src/lib/circuitPathData.json` — never hand-author it. Add the circuit to `ASSET_BY_ID` in `script/extractCircuitCenterline.ts` (use a **~700px** silhouette; the extractor bootstraps a seed for new ids), then run `npx tsx script/extractCircuitCenterline.ts <circuitId>`. If the silhouette is a thick ribbon (wide track fill, like hungary/zandvoort), also add the id to the geom-mid branch in that script (`if (id === 'hungary' || id === 'zandvoort')`) so sectors lock to the visual centerline — see the `4d7d282` diff.
 
 ## Step 4 — `client/src/lib/grandPrixHistory.ts`
 
@@ -75,7 +73,7 @@ e.g. 1.3.8 → 1.3.9: run `npm run version:bump 1.3.9`. It rewrites `package.jso
 
 1. `npm run check` and `npm test`
 2. `npm run build`
-3. Browser on :8081 (launch.json server `dev`): Welcome page Free Practice card (flag, silhouette renders white, blurb), Grand Prix hero, `/grand-prix` briefing (facts, colored map NOT inverted, last-year race + quali tables), and — new circuit only — the Lane Racer/Multiplayer setup card hero (silhouette + flag from circuitMenuArt; the TRACK row is hidden while the picker is locked to the current GP) and the in-race live circuit map (centerline follows the silhouette, sectors sit mid-track).
+3. Browser on :8081 (launch.json server `dev`): Welcome page Free Practice card (flag, silhouette renders white, blurb), Grand Prix hero, `/grand-prix` briefing (facts, colored map NOT inverted, last-year race + quali tables), and — new circuit only — the Lane Racer/Multiplayer setup card hero (silhouette + flag from circuitMenuArt; the TRACK row is hidden while the picker is locked to the current GP).
 4. **Regulations Art. 7** — open `/regulations`, expand "Art. 7 — Grand Prix", and read the description and the Race Day bullet aloud: "A full race weekend at the <circuitName> (Round <n>, <Name> Grand Prix)…" and "<simLapCount> laps at the <circuitName>". Both come from the config, so a wrong value here means Step 2 is wrong. If the sentence reads badly with the new `circuitName`, fix the name in the config, not the article.
 
 ## Step 7 — Deploy iOS
@@ -99,7 +97,7 @@ Commit to `main`, message style of `d17e8a0`: title `Update Free Practice and Gr
 | Colored image as `trackImage` (or dark as `detailMapImage`) | Silhouette = dark (gets inverted); detail map = colored (no invert) |
 | Re-adding an existing circuit to gameLogic/circuitMenuArt | Check `SIM_LAP_COUNTS` first; existing circuits need only Steps 1–2, 4–8 |
 | Skipping circuitMenuArt.ts for a new circuit | The GP-locked Lane Racer/Multiplayer TRACK row renders nothing without a `CIRCUIT_MENU_ART` entry |
-| Hand-editing `circuitPathData.json` | Always generate via `npx tsx script/extractCircuitCenterline.ts <id>` |
+| Building a live-map centerline for a new circuit | Skip it: no race screen draws the live map any more (see Templates) |
 | Bumping only one `MARKETING_VERSION` | The pbxproj has TWO (Debug + Release) |
 | Shipping an `.avif` asset | Convert to `.png` for iOS/WKWebView |
 | Pushing to remote | Commit only; the user runs `git push` |
