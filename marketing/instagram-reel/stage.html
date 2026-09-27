@@ -45,7 +45,7 @@ const T = {
 };
 T.flag = [T.lane - 0.21, T.lane + 0.21];   // chequered flag: the weekend's finish, into Lane Racer
 const CAPTIONS = [
-  { a: 0.0, b: 3.0, lines: ['LOVE [RACING?]'], y: 470, size: 120, enterAt0: true },
+  { a: 0.0, b: 3.0, lines: ['HERE COME', 'THE [LIGHTS!]'], y: 410, size: 120, enterAt0: true },
   { a: 3.1, b: T.menu, lines: ['IMMERSE YOURSELF IN', '[FREE PRACTICE]'] },
   { a: T.menu, b: T.practice, lines: ['A NEW GRAND PRIX', '[EVERY WEEK]'] },
   // the weekend's sessions, coloured like the app's own Practice / Qualifying / Race tabs
@@ -605,8 +605,6 @@ window.cues = function () {
   }
   for (const c of [T.menu, T.practice, T.qualifying, T.race, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
   out.push({ t: T.flag[0], kind: 'whoosh', d: 0.45 });
-  out.push({ t: T.cta, kind: 'impact' });
-  out.push({ t: T.cta + 0.2, kind: 'shimmer' });
   return out.sort((a, b) => a.t - b.t);
 };
 

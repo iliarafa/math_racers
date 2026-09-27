@@ -184,35 +184,6 @@ def fast_forward(d):
     return base + ticks * 0.6
 
 
-def impact():
-    pre = 0.35
-    d = pre + 1.4
-    t = tvec(d)
-    swell = bandsweep(rng.standard_normal(len(t)), 800, 6000, q=1.3)
-    swell = swell / (np.abs(swell).max() + 1e-9) * np.where(t < pre, (t / pre) ** 3, 0) * 0.5
-    k = np.clip(t - pre, 0, None)
-    hit = (t >= pre)
-    boom = np.sin(sweep_phase(np.where(hit, 62 * (28 / 62) ** np.clip(k / 0.9, 0, 1), 0))) * np.exp(-k / 0.5) * hit
-    crack = lowpass(rng.standard_normal(len(t)), 2400) * np.exp(-k / 0.12) * hit * 0.6
-    return swell + boom + crack, pre
-
-
-def shimmer():
-    d = 1.4
-    t = tvec(d)
-    out = np.zeros((len(t), 2))
-    for _ in range(14):
-        f = rng.uniform(2600, 7200)
-        s = int(rng.uniform(0, 0.45) * SR)
-        tt = t[: len(t) - s]
-        tone = np.sin(2 * np.pi * f * tt) * np.exp(-tt / 0.35) * (1 - np.exp(-tt / 0.003)) * 0.06
-        pan = rng.uniform(-0.8, 0.8)
-        th = (pan + 1) * np.pi / 4
-        out[s:, 0] += tone * np.cos(th)
-        out[s:, 1] += tone * np.sin(th)
-    return out * np.sqrt(2)
-
-
 # ------------------------------------------------------------------ music
 raw = subprocess.run([FFMPEG, "-hide_banner", "-loglevel", "error", "-i", MUSIC, "-f", "f32le", "-ac", "2", "-ar", str(SR), "-"],
                      check=True, capture_output=True).stdout
@@ -251,11 +222,6 @@ for c in cues["cues"]:
         place(fast_forward(c["d"]), t, gain=0.38)
     elif k == "whoosh":
         place(whoosh(c["d"]), t - c["d"] * 0.55, gain=0.33, pan=0.0)
-    elif k == "impact":
-        buf, pre = impact()
-        place(buf, t - pre, gain=0.9)
-    elif k == "shimmer":
-        place(shimmer(), t, gain=1.0)
 
 peak = np.abs(mix).max()
 print(f"raw peak {peak:.3f}", file=sys.stderr)
@@ -270,7 +236,11 @@ with wave.open(raw_path, "wb") as w:
     w.setframerate(SR)
     w.writeframes(pcm.tobytes())
 
-# two-pass loudness normalisation
+# Two-pass loudness normalisation. `linear=true` asks for one constant gain, but the effects'
+# peaks rule that out at -14 LUFS / -1.5 dBTP, so loudnorm falls back to its dynamic mode: a
+# slow gain rider. That is the sound the reels were signed off with, but a loud one-off effect
+# pulls everything down for about a second around it, music included (an impact and chime on
+# the end card used to duck the music there), so keep effects near the level of the others.
 meas = subprocess.run([FFMPEG, "-hide_banner", "-i", raw_path, "-af", "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"],
                       capture_output=True, text=True).stderr
 js = json.loads(meas[meas.rindex("{"): meas.rindex("}") + 1])

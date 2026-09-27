@@ -11,7 +11,7 @@ footage of the app. They are identical until the end card:
 
 | Time | Picture | Caption |
 |---|---|---|
-| 0–3 s | Five start lights, one every half second, with the app's own 800 Hz beeps | LOVE RACING? |
+| 0–3 s | Five start lights, one every half second, with the app's own 800 Hz beeps | HERE COME THE LIGHTS! |
 | 3 s | Lights out: 1200 Hz beep, the Lane Racer track drops in, the phone arrives | |
 | 3–7 s | Free Practice, 100-lap session at Formula 2 (addition): laps 75–76, the sector grid a human mix of purple, green and yellow | IMMERSE YOURSELF IN FREE PRACTICE |
 | 7–10.5 s | The Grand Prix weekend menu (Round 15, Baku) and a tap on Start Practice | A NEW GRAND PRIX EVERY WEEK |
@@ -54,7 +54,7 @@ With the dev server running (`npm run dev`), run `./build.sh`. It needs Playwrig
 | `snap-screens.mjs` | Stills of the menu screens |
 | `stage.html` | The reel itself: `render(t)` draws frame *t* on a canvas; `cues()` lists sound cues; `?variant=web\|appstore` picks the end card |
 | `render.mjs` | Drives the stage: `cues`, `stills <t…>` for review, `video`, `cover` (`VARIANT=appstore` for the App Store version) |
-| `make-audio.py` | Music from lights-out plus effects: the app's beeps, keypad clicks and correct chime, engine revs, whooshes, impact; loudness-normalised |
+| `make-audio.py` | Music from lights-out plus effects: the app's beeps, keypad clicks and correct chime, engine revs, whooshes; loudness-normalised |
 
 To change copy or timing, edit `CAPTIONS` / `T` in `stage.html`, check frames with
 `WORK=… node render.mjs stills 3 5.5 8.6`, then `node render.mjs cues && python3 make-audio.py && node render.mjs video`.
