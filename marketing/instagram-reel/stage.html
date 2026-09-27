@@ -693,7 +693,7 @@ window.cues = function () {
   if (TRACK3D) {                                           // the lift, the dive and the engine
     out.push({ t: T.menu + T3D.hand, kind: 'riser', d: T3D.liftEnd - T3D.hand });
     out.push({ t: T.menu + T3D.liftEnd + 0.2, kind: 'whoosh', d: 0.5 });
-    out.push({ t: T.menu + T3D.diveEnd - 0.15, kind: 'launch' });
+    out.push({ t: T.menu + T3D.diveEnd - 0.15, kind: 'rev', d: T3D.finish - T3D.diveEnd + 0.15 });
   }
   out.push({ t: T.flag[0], kind: 'whoosh', d: 0.45 });
   return out.sort((a, b) => a.t - b.t);

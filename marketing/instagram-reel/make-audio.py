@@ -149,6 +149,15 @@ def launch():
     return x + noise + sub
 
 
+def rev(d):
+    """An engine winding up without the launch's thump (its sub-bass hit would make the loudness
+    normaliser duck the music): the camera racing down the 3D track."""
+    t = tvec(d)
+    f = 70 * (240 / 70) ** np.clip(t / (d * 0.85), 0, 1)
+    amp = 0.4 * np.clip(t / 0.35, 0, 1) ** 2 * np.clip((d - t) / 0.35, 0, 1)
+    return engine(f, amp)
+
+
 def whoosh(d):
     t = tvec(d)
     x = bandsweep(rng.standard_normal(len(t)), 350, 3800, q=1.1)
@@ -220,6 +229,8 @@ for c in cues["cues"]:
         place(correct(), t, gain=1.25)
     elif k == "ff":
         place(fast_forward(c["d"]), t, gain=0.38)
+    elif k == "rev":
+        place(rev(c["d"]), t, gain=0.6)
     elif k == "whoosh":
         place(whoosh(c["d"]), t - c["d"] * 0.55, gain=0.33, pan=0.0)
 

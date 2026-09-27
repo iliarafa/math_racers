@@ -156,10 +156,14 @@ export function buildTrack({ pathD, pathW, img, spacing = 1.5 }) {
 const SCREEN = { w: 393, h: 852 };
 /** Road and lift sizes in path units (the map's 700 x 393 space). */
 const ROAD = {
-  width: 9, printed: 3.4, stripe: 1.3, edge: 0.45, deck: 1.6,
+  width: 9, printed: 3.4, stripe: 0.4, edge: 0.45, deck: 1.6,
   float: 55, wave: 7, flyover: 9, ramp: 22,
-  lightEvery: 8, light: 0.55,
+  finish: 6, gantry: 7.5,
 };
+/** Race camera, in path units: height above the road and how far ahead it looks. */
+const CHASE = { height: 4.5, look: 40 };
+/** Where the lift's orbit ends: looking east over the castle toward the straight (world units). */
+const ORBIT = { theta: 1.25, phi: 0.52, dist: 230, target: [-15, -55] };
 const FOV = 40;
 
 const clamp01 = x => Math.min(1, Math.max(0, x));
@@ -227,7 +231,7 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
   // the lift, so the cut to 3D can't show a road where the card prints something else (the
   // chequered start/finish).
   const roadParts = [];
-  function strip({ blending = THREE.NormalBlending, glow = false, map: tex = null, order = 0 } = {}) {
+  function strip({ blending = THREE.NormalBlending, glow = false, fade = true, map: tex = null, order = 0 } = {}) {
     const pos = new Float32Array(m * 6), col = new Float32Array(m * 6), uv = new Float32Array(m * 4), idx = [];
     for (let k = 0; k < m; k++) {
       uv.set([0, k / 8, 1, k / 8], k * 4);
@@ -243,9 +247,9 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
     const mesh = new THREE.Mesh(g, mat);
     mesh.renderOrder = order; mesh.frustumCulled = false;
     scene.add(mesh);
-    if (!glow) roadParts.push(mat);
+    if (!glow && fade) roadParts.push(mat);
     return {
-      mesh,
+      mesh, mat,
       update(at, paint) {
         const o = [0, 0, 0, 0, 0, 0];
         for (let k = 0; k < m; k++) {
@@ -266,13 +270,18 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
   const top = strip(), wallL = strip(), wallR = strip(), bottom = strip(), stripe = strip(), edgeL = strip(), edgeR = strip();
   const halo = strip({ blending: THREE.AdditiveBlending, glow: true, map: glowTex, order: 2 });
 
-  // edge lights: small glowing blocks along both edges
-  const every = Math.max(1, Math.round(ROAD.lightEvery / track.spacing)), lightsAt = [];
-  for (let k = 0; k < m; k += every) lightsAt.push(k);
-  const lightMat = new THREE.MeshBasicMaterial({ color: 0xfff4e0, transparent: true });
-  const lights = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), lightMat, lightsAt.length * 2);
-  roadParts.push(lightMat);
-  lights.frustumCulled = false; scene.add(lights);
+  // dashed lane lines: two across the road, 6 path units on and 6 off (one texture repeat per
+  // 8 points), appearing as the road widens
+  const dashTex = (() => {
+    const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+    const x = c.getContext('2d');
+    x.fillStyle = '#fff';
+    for (const u of [0.25, 0.75]) x.fillRect(Math.round(u * 64) - 1, 0, 2, 32);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapT = THREE.RepeatWrapping; t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    return t;
+  })();
+  const dashes = strip({ map: dashTex, fade: false });
 
   // chequered start/finish across the road
   const checkTex = (() => {
@@ -284,6 +293,12 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
   const finishMat = new THREE.MeshBasicMaterial({ map: checkTex, side: THREE.DoubleSide, transparent: true });
   const finish = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), finishMat);
   roadParts.push(finishMat);
+  // and a chequered banner over it on two posts, which the race drives under
+  const bannerMat = new THREE.MeshBasicMaterial({ map: checkTex, side: THREE.DoubleSide, transparent: true });
+  const banner = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), bannerMat);
+  banner.frustumCulled = false; scene.add(banner);
+  const postMat = new THREE.MeshBasicMaterial({ color: 0xd9d9de, transparent: true });
+  const posts = [0, 1].map(() => { const p = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), postMat); p.frustumCulled = false; scene.add(p); return p; });
   finish.frustumCulled = false; scene.add(finish);
 
   // the ground: the filmed screen, fading out at its edges (clear of the handover view)
@@ -344,25 +359,26 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
     stripe.update((k, o) => { P(k, sw, 0.012, o, 0); P(k, -sw, 0.012, o, 3); }, k => sectorCol[track.sector[k]]);
     edgeL.update((k, o) => { P(k, w, 0.01, o, 0); P(k, w - ew, 0.01, o, 3); }, () => edgeWhite);
     edgeR.update((k, o) => { P(k, -w, 0.01, o, 0); P(k, -w + ew, 0.01, o, 3); }, () => edgeWhite);
+    dashes.update((k, o) => { P(k, w, 0.011, o, 0); P(k, -w, 0.011, o, 3); }, () => edgeWhite);
     const hw = w * 3.2;
     halo.update((k, o) => { P(k, hw, -d * 0.5, o, 0); P(k, -hw, -d * 0.5, o, 3); }, k => sectorCol[track.sector[k]].clone().multiplyScalar(0.34 * L.h));
-    const mtx = new THREE.Matrix4(), size = ROAD.light * ps * L.w;
-    lightsAt.forEach((k, i) => {
-      for (const side of [0, 1]) {
-        const off = (side ? -1 : 1) * (w + size * 0.6);
-        mtx.makeScale(Math.max(size, 1e-4), Math.max(size, 1e-4), Math.max(size, 1e-4));
-        mtx.setPosition(gx[k] + nx[k] * off, deckY[k] + size * 0.5, gz[k] + nz[k] * off);
-        lights.setMatrixAt(2 * i + side, mtx);
-      }
-    });
-    lights.instanceMatrix.needsUpdate = true;
-    const f = track.finish, ang = Math.atan2(nz[f], nx[f]);
-    finish.scale.set(2 * w, Math.max(3 * ps * L.w, 1e-4), 1);
+    const f = track.finish, ang = Math.atan2(nz[f], nx[f]), tiny = 1e-4;
+    finish.scale.set(2 * w, Math.max(ROAD.finish * ps * L.w, tiny), 1);
     finish.position.set(gx[f], deckY[f] + 0.016, gz[f]);
     finish.rotation.set(-Math.PI / 2, 0, -ang);
+    const gh = ROAD.gantry * ps * L.w, bh = 1.8 * ps * L.w;
+    banner.scale.set(2 * w + 1.2 * ps, Math.max(bh, tiny), 1);
+    banner.position.set(gx[f], deckY[f] + gh, gz[f]);
+    banner.rotation.set(0, Math.atan2(nz[f], -nx[f]), 0);               // facing along the road
+    posts.forEach((p, i) => {
+      const off = (i ? -1 : 1) * (w + 0.4 * ps), ph = Math.max(gh + bh / 2, tiny);
+      p.scale.set(0.35 * ps, ph, 0.35 * ps);
+      p.position.set(gx[f] + nx[f] * off, deckY[f] + ph / 2, gz[f] + nz[f] * off);
+    });
     glowGround.material.opacity = 0.6 * L.h;
     scene.fog.density = 0.0026 * L.h;
     for (const mat of roadParts) mat.opacity = L.o;
+    dashes.mat.opacity = bannerMat.opacity = postMat.opacity = L.o * L.w;
   }
 
   // ---- camera
@@ -383,21 +399,21 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
   // race line at full lift: centre of the road, `camH` above it
   shape({ h: 1, w: 1, f: 1, o: 1 });
   const full = Float32Array.from(deckY);
-  const camH = 1.7 * ps, stepW = track.spacing * ps;
+  const camH = CHASE.height * ps, stepW = track.spacing * ps;
   const raceLen = ((race.from - track.finish + m) % m) * stepW;
   const along = dist => {                                  // point `dist` world units into the race
     const kf = race.from - dist / stepW, k0 = Math.floor(kf), fr = kf - k0;
     const a = ((k0 % m) + m) % m, b = (a + 1) % m;
     return V(lerp(gx[a], gx[b], fr), lerp(full[a], full[b], fr) + camH, lerp(gz[a], gz[b], fr));
   };
-  const lookAhead = 34 * ps;
+  const lookAhead = CHASE.look * ps;
   function chase(dist) {
     const pos = along(dist), ahead = along(dist + lookAhead), behind = along(dist - lookAhead);
     const fwd = ahead.clone().sub(pos).normalize();
     // bank into the bend: the turn of the road ahead against the road behind
     const t1 = pos.clone().sub(behind).setY(0).normalize(), t2 = fwd.clone().setY(0).normalize();
     const turn = Math.asin(Math.max(-1, Math.min(1, t1.x * t2.z - t1.z * t2.x)));
-    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(pos, ahead.clone().add(V(0, -camH * 0.35, 0)), V(0, 1, 0)));
+    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(pos, ahead.clone().add(V(0, -camH * 0.5, 0)), V(0, 1, 0)));
     q.multiply(new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), -turn * 0.9));
     return { pos, q };
   }
@@ -405,13 +421,14 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
   const acc = 2 * (raceLen - v0 * tRace) / (tRace * tRace);
   const raceDist = u => { const s = Math.max(0, u - times.diveEnd); return v0 * s + 0.5 * acc * s * s; };
 
-  const orbitEnd = orbit(V(cx, ROAD.float * ps, cz), -0.34, 0.60, 300);
+  const orbitTarget = V(ORBIT.target[0], ROAD.float * ps, ORBIT.target[1]);
+  const orbitEnd = orbit(orbitTarget, ORBIT.theta, ORBIT.phi, ORBIT.dist);
   function cameraAt(u) {
     let pos, q, fov = FOV;
     if (u <= times.liftEnd) {
       const e = eInOut(prog(u, times.hand, times.liftEnd));
-      const target = handTarget.clone().lerp(V(cx, ROAD.float * ps, cz), e);
-      ({ pos, q } = orbit(target, lerp(0, -0.34, e), lerp(Math.PI / 2, 0.60, e), lerp(handDist, 300, e)));
+      const target = handTarget.clone().lerp(orbitTarget, e);
+      ({ pos, q } = orbit(target, lerp(0, ORBIT.theta, e), lerp(Math.PI / 2, ORBIT.phi, e), lerp(handDist, ORBIT.dist, e)));
     } else if (u <= times.diveEnd) {
       const e = eInOut(prog(u, times.liftEnd, times.diveEnd)), start = chase(0);
       const fwd = along(1).sub(along(0)).normalize();
@@ -440,6 +457,10 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
         h: eInOut(prog(u, times.hand + 0.05, times.liftEnd - 0.1)),
         w: eInOut(prog(u, times.hand + 0.25, times.liftEnd)),
       });
+      // once the camera dives onto the road, the card below dims so the highway floats in the dark
+      const dim = lerp(1, 0.22, eInOut(prog(u, times.liftEnd, times.diveEnd)));
+      groundMesh.material.opacity = dim;
+      glowGround.material.opacity *= dim;
       cameraAt(u);
       renderer.render(scene, camera);
       return canvas;
