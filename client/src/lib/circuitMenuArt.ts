@@ -10,6 +10,7 @@ import circuitHungaryBlack from '@/assets/circuit_hungary_black.png';
 import circuitZandvoort from '@/assets/circuit_zandvoort.png';
 import madridSetupTrack from '@/assets/madrid_setup_track.png';
 import bakuSetupTrack from '@/assets/baku_setup_track.png';
+import malaysiaSetupTrack from '@/assets/malaysia_setup_track.png';
 
 import flagBelgium from '@/assets/flag_belgium.png';
 import flagMonaco from '@/assets/flag_monaco.png';
@@ -20,6 +21,7 @@ import flagHungary from '@/assets/flag_hungary.png';
 import flagNetherlands from '@/assets/flag_netherlands.png';
 import flagSpain from '@/assets/flag_spain.png';
 import flagAzerbaijan from '@/assets/flag_azerbaijan.png';
+import flagMalaysia from '@/assets/flag_malaysia.png';
 
 export interface CircuitMenuArt {
   /** Thin-line `_black` silhouette, rendered inverted on the dark setup card. */
@@ -60,6 +62,8 @@ export const CIRCUIT_MENU_ART: Record<string, CircuitMenuArt> = {
   madrid: { image: madridSetupTrack, flag: flagSpain, invert: false },
   // Baku, like Madrid, uses the full-colour setup map (sector ribbon, start line) — never inverted.
   baku: { image: bakuSetupTrack, flag: flagAzerbaijan, invert: false },
+  // Malaysia (Sepang), like Madrid and Baku, uses the full-colour setup map — never inverted.
+  malaysia: { image: malaysiaSetupTrack, flag: flagMalaysia, invert: false },
 };
 
 /**

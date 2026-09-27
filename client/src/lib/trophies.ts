@@ -35,8 +35,9 @@ export function trophyId(season: number, round: number, circuitId: string): stri
 export const TROPHY_CODES: Readonly<Record<string, string>> = {
   melbourne: 'AUS', china: 'CHN', suzuka: 'JPN', bahrain: 'BHR', jeddah: 'KSA', miami: 'MIA',
   canada: 'CAN', monaco: 'MON', barcelona: 'BAR', austria: 'AUT', silverstone: 'GBR', spa: 'BEL',
-  hungary: 'HUN', zandvoort: 'NED', monza: 'ITA', madrid: 'ESP', baku: 'AZE', singapore: 'SGP',
-  austin: 'USA', mexico: 'MEX', brazil: 'BRA', lasvegas: 'LVG', qatar: 'QAT', abudhabi: 'UAE',
+  hungary: 'HUN', zandvoort: 'NED', monza: 'ITA', madrid: 'ESP', baku: 'AZE', malaysia: 'MAS',
+  singapore: 'SGP', austin: 'USA', mexico: 'MEX', brazil: 'BRA', lasvegas: 'LVG', qatar: 'QAT',
+  abudhabi: 'UAE',
 };
 
 /** A trophy's tile code; a circuit missing from TROPHY_CODES shows the first three letters of its name. */
@@ -79,8 +80,11 @@ export function sanitizeTrophies(raw: unknown): Trophy[] {
   return raw.filter(isTrophy);
 }
 
-/** Rounds in a season; the cabinet shows one slot per round. */
-export const SEASON_ROUNDS = 24;
+/**
+ * Rounds in a season; the cabinet shows one slot per round. 2026 has 23: the April rounds in
+ * Bahrain and Saudi Arabia were cancelled, and Bahrain came back as Round 16, held at Sepang.
+ */
+export const SEASON_ROUNDS = 23;
 
 export type SeasonSlot = { round: number; trophy: Trophy | undefined };
 
