@@ -602,6 +602,7 @@ export default function Game() {
   const keyEcho = useKeyEcho(isDesktop && (gameStatus === 'racing' || gameStatus === 'go'));
   const penaltyTimeRef = useRef(0);
   const raceStartTimeRef = useRef<number | null>(null);
+  const pauseStartTimeRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(state.soundEnabled);
   const touchStartXRef = useRef<number | null>(null);
   const touchStartYRef = useRef<number | null>(null);
@@ -844,17 +845,23 @@ export default function Game() {
     if (gameStatus === 'racing' && !isPaused && !showNamePrompt) {
       if (raceStartTimeRef.current === null) {
         raceStartTimeRef.current = Date.now();
+      } else if (pauseStartTimeRef.current !== null) {
+        // Resuming: move the race and question start times forward by the paused duration
+        const now = Date.now();
+        const pausedDuration = now - pauseStartTimeRef.current;
+        raceStartTimeRef.current = raceStartTimeRef.current + pausedDuration;
+        // A question that appeared during the pause (the 600 ms hand-off) starts its clock now
+        questionStartTimeRef.current = Math.min(questionStartTimeRef.current + pausedDuration, now);
       }
+      // Cleared on every start so a race that ended paused can't shift the next one
+      pauseStartTimeRef.current = null;
       interval = setInterval(() => {
         const baseTime = Date.now() - raceStartTimeRef.current!;
         setElapsedTime(baseTime + penaltyTimeRef.current);
       }, 10);
-    } else if ((isPaused || showNamePrompt) && raceStartTimeRef.current !== null) {
-      // When pausing or showing name prompt, adjust the start time to account for paused duration
-      const pausedDuration = Date.now() - raceStartTimeRef.current - (elapsedTime - penaltyTimeRef.current);
-      if (pausedDuration > 0) {
-        raceStartTimeRef.current = raceStartTimeRef.current + pausedDuration;
-      }
+    } else if ((isPaused || showNamePrompt) && raceStartTimeRef.current !== null && pauseStartTimeRef.current === null) {
+      // When pausing or showing name prompt, record when, so resuming can take the paused time off the clocks
+      pauseStartTimeRef.current = Date.now();
     }
     return () => clearInterval(interval);
   }, [gameStatus, isPaused, showNamePrompt]);
