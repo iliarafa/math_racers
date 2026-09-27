@@ -447,20 +447,26 @@ function drawFlagWipe(t) {
 }
 
 // ---------------------------------------------------------------- end card
+// End card, top to bottom inside the Reels safe zone (y 250-1250): logo, tagline, hero car,
+// then the call to action, with about 80 px of air between them. The car image carries a
+// margin of its own (the car spans 7-93% of its height), so `car` is the image's centre and
+// width, not the car's.
+const END = APP_STORE
+  ? { logo: 345, tagline: 549, car: [540, 831, 540], line: 1056 }
+  : { logo: 345, tagline: 549, car: [540, 841, 580], line: 1079, pill: 1119 };
 async function drawCTA(t) {
   const a = t - T.cta;
   if (a < 0) return;
   // darken towards black
   ctx.fillStyle = `rgba(0,0,0,${0.65 * eOutCubic(prog(a, 0, 0.3))})`; ctx.fillRect(0, 0, W, H);
-  const glow = ctx.createRadialGradient(540, 930, 60, 540, 930, 720);
+  const glow = ctx.createRadialGradient(540, END.car[1], 60, 540, END.car[1], 720);
   glow.addColorStop(0, `rgba(225,6,0,${0.42 * prog(a, 0.05, 0.6)})`); glow.addColorStop(1, 'rgba(225,6,0,0)');
   ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
   // hero car (its black background screens away)
   const car = await loadImage(REPO + 'attached_assets/hero_tight_post.png');
   if (car) {
     const p = eOutCubic(prog(a, 0.15, 0.85));
-    // A touch smaller and higher on the App Store card, clear of the badge's clear space.
-    const [cx, cy, w0] = APP_STORE ? [540, 842, 740] : [540, 872, 820];
+    const [cx, cy, w0] = END.car;
     const cw = w0 * lerp(1.25, 1, p), ch = cw * car.height / car.width;
     ctx.save();
     ctx.globalAlpha = prog(a, 0.15, 0.45);
@@ -473,13 +479,13 @@ async function drawCTA(t) {
   if (logo) {
     const p = prog(a, 0.15, 0.5);
     const s = lerp(1.35, 1, eOutBack(p));
-    const lw = 540 * s, lh = lw * 504.95 / 1436.03;
+    const lw = 470 * s, lh = lw * 504.95 / 1436.03;
     ctx.save(); ctx.globalAlpha = clamp(p * 3);
-    ctx.drawImage(logo, 540 - lw / 2, 352 - lh / 2, lw, lh);
+    ctx.drawImage(logo, 540 - lw / 2, END.logo - lh / 2, lw, lh);
     ctx.restore();
   }
   // tagline
-  drawCaption(t, { a: T.cta + 0.45, b: T.end + 1, lines: ['MATHS PRACTICE THAT', 'FEELS LIKE [RACE DAY]'], y: 548, size: 64, noBar: true });
+  drawCaption(t, { a: T.cta + 0.45, b: T.end + 1, lines: ['MATHS PRACTICE THAT', 'FEELS LIKE [RACE DAY]'], y: END.tagline, size: 60, noBar: true });
   if (APP_STORE) return drawAppStoreCall(a);
   // play line + url pill
   const pp = eOutCubic(prog(a, 0.9, 1.25));
@@ -490,8 +496,8 @@ async function drawCTA(t) {
     ctx.font = '600 32px Oxanium'; ctx.letterSpacing = '7px'; ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.8)';
     ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 16;
-    ctx.fillText('PLAY FREE  ·  AGES 6+', 540, 1112);
-    const pw = 680, ph = 100, px = 540 - pw / 2, py = 1140;
+    ctx.fillText('PLAY FREE  ·  AGES 6+', 540, END.line);
+    const pw = 680, ph = 100, px = 540 - pw / 2, py = END.pill;
     ctx.shadowColor = 'rgba(225,6,0,0.6)'; ctx.shadowBlur = 40;
     ctx.fillStyle = C.red; ctx.beginPath(); ctx.roundRect(px, py, pw, ph, 50); ctx.fill();
     ctx.shadowBlur = 0;
@@ -511,7 +517,7 @@ async function drawCTA(t) {
 
 // Apple's badge is shown as supplied: cut in (never animated), black, no shadow, and nothing
 // inside its clear space (a quarter of its height). Credit lines close the video.
-const BADGE = { h: 128, y: 1122 };
+const BADGE = { h: 128, y: 1100 };
 async function drawAppStoreCall(a) {
   const p = eOutCubic(prog(a, 0.9, 1.25));
   if (p > 0) {
@@ -521,7 +527,7 @@ async function drawAppStoreCall(a) {
     ctx.font = '600 34px Oxanium'; ctx.letterSpacing = '1px'; ctx.textAlign = 'center';
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
     ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 16;
-    ctx.fillText('Free on iPhone and iPad  ·  Ages 6+', 540, 1080);
+    ctx.fillText('Free on iPhone and iPad  ·  Ages 6+', 540, END.line);
     ctx.restore();
   }
   if (a >= 1.1) {
