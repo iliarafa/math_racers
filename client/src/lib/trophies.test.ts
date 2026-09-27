@@ -5,11 +5,13 @@ import {
   BADGE_EVERYTHING_IS_PURPLE,
   SEASON_ROUNDS,
   STREAK_BADGE_DAYS,
+  TROPHY_CODES,
   evaluateMilestones,
   nextStreakGoal,
   rewardToast,
   sanitizeTrophies,
   seasonSlots,
+  trophyCode,
   trophyId,
   upgradeTrophy,
   weekendTrophyTier,
@@ -71,6 +73,21 @@ test('sanitizeTrophies keeps well-formed entries and drops junk', () => {
   assert.deepEqual(sanitizeTrophies(raw), [good]);
   assert.deepEqual(sanitizeTrophies(undefined), []);
   assert.deepEqual(sanitizeTrophies({ not: 'an array' }), []);
+});
+
+test('a trophy tile shows the three-letter code for its circuit', () => {
+  assert.equal(trophyCode(trophy()), 'AZE');
+  assert.equal(trophyCode(trophy({ circuitId: 'silverstone', name: 'SILVERSTONE' })), 'GBR');
+});
+
+test('a circuit without a code shows the first three letters of its name', () => {
+  assert.equal(trophyCode(trophy({ circuitId: 'imola', name: 'IMOLA' })), 'IMO');
+});
+
+test('every trophy code is three capitals, and no two circuits share one', () => {
+  const codes = Object.values(TROPHY_CODES);
+  for (const code of codes) assert.match(code, /^[A-Z]{3}$/);
+  assert.equal(new Set(codes).size, codes.length);
 });
 
 test('badge registry has unique ids and includes the existing purple badge', () => {

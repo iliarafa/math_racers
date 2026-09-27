@@ -14,7 +14,7 @@ export type Trophy = {
   season: number;
   round: number;
   circuitId: string;
-  /** Circuit name as shown on the card, e.g. 'BAKU'. */
+  /** Circuit name that weekend, e.g. 'BAKU'. The cabinet tile shows `trophyCode` and keeps the name for its title. */
   name: string;
   tier: TrophyTier;
   /** The maths that earned the current tier. */
@@ -25,6 +25,23 @@ export type Trophy = {
 
 export function trophyId(season: number, round: number, circuitId: string): string {
   return `gp:${season}:${round}:${circuitId}`;
+}
+
+/**
+ * The code on a trophy's cabinet tile, keyed by circuitId: on a phone the tile is too narrow for
+ * most circuit names. It is the code F1 shows beside a driver from the host country (NED, MON);
+ * a country's second or third race takes a city code instead (MIA and LVG beside USA, BAR beside ESP).
+ */
+export const TROPHY_CODES: Readonly<Record<string, string>> = {
+  melbourne: 'AUS', china: 'CHN', suzuka: 'JPN', bahrain: 'BHR', jeddah: 'KSA', miami: 'MIA',
+  canada: 'CAN', monaco: 'MON', barcelona: 'BAR', austria: 'AUT', silverstone: 'GBR', spa: 'BEL',
+  hungary: 'HUN', zandvoort: 'NED', monza: 'ITA', madrid: 'ESP', baku: 'AZE', singapore: 'SGP',
+  austin: 'USA', mexico: 'MEX', brazil: 'BRA', lasvegas: 'LVG', qatar: 'QAT', abudhabi: 'UAE',
+};
+
+/** A trophy's tile code; a circuit missing from TROPHY_CODES shows the first three letters of its name. */
+export function trophyCode(trophy: Pick<Trophy, 'circuitId' | 'name'>): string {
+  return TROPHY_CODES[trophy.circuitId] ?? trophy.name.slice(0, 3);
 }
 
 /** Race Day finished → bronze; beat the bot → silver; pole and win → gold. Pole alone earns nothing extra. */
