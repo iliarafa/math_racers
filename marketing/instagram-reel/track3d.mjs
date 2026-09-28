@@ -9,6 +9,7 @@
 // two passes overlap; there each pass is snapped to its own sector's stripe (the colour of the
 // track it connects to on either side), and the scene lifts one pass over the other as a
 // flyover.
+import { SCREEN, FOV, clamp01, prog, eInOut, smooth, lerp, createView, groundMesh, handoverView, orbitPose } from './scene3d.mjs';
 
 const TWO_PASS_RADIUS = 11;   // path units: closer than this to a far part of the lap = two-way
 const FAR_INDEX = 60;         // centreline points apart before a nearby point counts as "far"
@@ -176,11 +177,8 @@ export function buildTrack({ pathD, pathW, img, spacing = 1.5 }) {
 }
 
 // ---------------------------------------------------------------- the 3D scene
-// World units are the phone screen's CSS px, origin at the screen centre, y up. The ground is
-// the screen itself (393 x 852) lying flat, textured with the filmed frame, so a camera looking
-// straight down reproduces the stage's 2D view of the card exactly (see handoverPose).
+// In scene3d.mjs's world: the phone screen's CSS px, the filmed card lying flat as the ground.
 
-const SCREEN = { w: 393, h: 852 };
 /**
  * Road and lift sizes in path units (the map's 700 x 393 space). `mark` lifts the markings off
  * the asphalt: a bend twists each road quad, so between two sections a narrower strip can sit
@@ -194,15 +192,8 @@ const ROAD = {
 };
 /** Race camera, in path units: height above the road and how far ahead it looks. */
 const CHASE = { height: 4.5, look: 40 };
-
-const FOV = 40;
-
-const clamp01 = x => Math.min(1, Math.max(0, x));
-const prog = (u, a, b) => clamp01((u - a) / (b - a));
-const eInOut = x => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
-const eOut = x => 1 - Math.pow(1 - x, 3);
-const smooth = x => x * x * (3 - 2 * x);
-const lerp = (a, b, t) => a + (b - a) * t;
+/** The part of the card the cut to 3D shows, kept fully opaque (see groundMesh). */
+const GROUND_CLEAR = { x: 150, top: 310, bottom: 190 };
 
 /**
  * @param THREE the three.js module
@@ -216,16 +207,7 @@ const lerp = (a, b, t) => a + (b - a) * t;
  * @param o.orbit     where the lift's orbit ends: { theta, phi, dist, at: [x, y] in path units }
  */
 export function createTrack3D(THREE, { track, map, ground, handover, times, race, orbit: ORBIT }) {
-  const W = 1080, H = 1920;
-  const canvas = document.createElement('canvas');
-  canvas.width = W; canvas.height = H;
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: true, logarithmicDepthBuffer: true });
-  renderer.setPixelRatio(1);
-  renderer.setSize(W, H, false);
-  renderer.setClearColor(0x000000, 0);
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x0b0306, 0);
-  const camera = new THREE.PerspectiveCamera(FOV, W / H, 0.05, 6000);
+  const { canvas, renderer, scene, camera } = createView(THREE);
 
   const m = track.count, ps = map.s;
   const gx = new Float32Array(m), gz = new Float32Array(m), nx = new Float32Array(m), nz = new Float32Array(m);
@@ -352,25 +334,8 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
   const postMat = new THREE.MeshBasicMaterial({ color: 0xd9d9de, transparent: true });
   const posts = [0, 1].map(() => { const p = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), postMat); p.frustumCulled = false; scene.add(p); return p; });
 
-  // the ground: the filmed screen, fading out at its edges (clear of the handover view)
-  const groundTex = new THREE.Texture(ground); groundTex.colorSpace = THREE.SRGBColorSpace; groundTex.needsUpdate = true;
-  groundTex.minFilter = THREE.LinearMipmapLinearFilter; groundTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const fade = (() => {
-    const c = document.createElement('canvas'); c.width = SCREEN.w; c.height = SCREEN.h;
-    const x = c.getContext('2d'), img = x.createImageData(c.width, c.height);
-    for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) {
-      const wx = xx + 0.5 - SCREEN.w / 2, wz = y + 0.5 - SCREEN.h / 2;
-      const ax = 1 - smooth(clamp01((Math.abs(wx) - 150) / 46));
-      const az = wz < 0 ? 1 - smooth(clamp01((-wz - 310) / 116)) : 1 - smooth(clamp01((wz - 190) / 236));
-      const v = Math.round(255 * ax * az), o = (y * c.width + xx) * 4;
-      img.data[o] = img.data[o + 1] = img.data[o + 2] = v; img.data[o + 3] = 255;
-    }
-    x.putImageData(img, 0, 0);
-    return new THREE.CanvasTexture(c);
-  })();
-  const groundMesh = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN.w, SCREEN.h),
-    new THREE.MeshBasicMaterial({ map: groundTex, alphaMap: fade, transparent: true, depthWrite: false }));
-  groundMesh.rotation.x = -Math.PI / 2; scene.add(groundMesh);
+  // the ground: the filmed card, fading out at its edges (clear of the handover view)
+  const card = groundMesh(THREE, renderer, ground, GROUND_CLEAR); scene.add(card);
 
   // the track's light on the card below: a blurred copy of the sector lines
   const glowGround = (() => {
@@ -400,7 +365,7 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
   // (last the finish band over the rest) and the halo. Left to itself, three.js would sort these
   // transparent meshes by bounding spheres cached on their first frame, flat on the card, and
   // the markings would come out in a different order depending on which frame came first.
-  [groundMesh, glowGround, top.mesh, wallL.mesh, wallR.mesh, bottom.mesh, ...posts, banner,
+  [card, glowGround, top.mesh, wallL.mesh, wallR.mesh, bottom.mesh, ...posts, banner,
     dashes.mesh, edgeL.mesh, edgeR.mesh, stripe.mesh, finishBand.mesh, haloL.mesh, haloR.mesh].forEach((o, i) => { o.renderOrder = i; });
 
   // ---- lift state -> geometry
@@ -445,17 +410,8 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
 
   // ---- camera
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
-  /** Orbit pose: looking at `target` from azimuth `theta` (0 = screen-up ahead), elevation `phi`. */
-  function orbit(target, theta, phi, dist) {
-    const dir = V(Math.sin(theta) * Math.cos(phi), -Math.sin(phi), -Math.cos(theta) * Math.cos(phi));
-    const right = V(Math.cos(theta), 0, Math.sin(theta));
-    const back = dir.clone().negate(), up = new THREE.Vector3().crossVectors(back, right);
-    const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, up, back));
-    return { pos: target.clone().addScaledVector(dir, -dist), q };
-  }
-  const K = handover.K * handover.z, f = (H / 2) / Math.tan((FOV / 2) * Math.PI / 180);
-  const handTarget = V(handover.fx + (W / 2 - handover.ax) / K, 0, handover.fy + (H / 2 - handover.ay) / K);
-  const handDist = f / K;
+  const orbit = (target, theta, phi, dist) => orbitPose(THREE, target, theta, phi, dist);
+  const { target: handTarget, dist: handDist } = handoverView(THREE, handover);
   let cx = 0, cz = 0; for (let k = 0; k < m; k++) { cx += gx[k]; cz += gz[k]; } cx /= m; cz /= m;
 
   // race line at full lift: centre of the road, `camH` above it
@@ -539,7 +495,7 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
       });
       // once the camera dives onto the road, the card below dims so the highway floats in the dark
       const dim = lerp(1, 0.22, eInOut(prog(u, times.liftEnd, times.diveEnd)));
-      groundMesh.material.opacity = dim;
+      card.material.opacity = dim;
       glowGround.material.opacity *= dim;
       cameraAt(u);
       renderer.render(scene, camera);
