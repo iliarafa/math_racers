@@ -28,7 +28,7 @@ Decisions taken with the user (brainstorming, 2026-09-28):
   results podium and a one-tap rematch, built from the single-player race pieces rather than a
   separate copy. Still 1v1 with a room code: no strangers, no matchmaking, no chat.
 - **Online, on the web and in the iOS app.**
-- **Transport: Supabase Realtime** (Broadcast + Presence) on the leaderboard project
+- **Transport: Supabase Realtime** (Broadcast) on the leaderboard project
   `pslagmyvlvrpwnbhwqpp`. The org is on the Pro plan: 500 concurrent connections, 500 messages/s,
   5M messages a month. There is no game server; **the host's device referees**, and the room
   ends if the host quits (no host migration).
@@ -73,11 +73,12 @@ players are identified by `GameState.playerId` (a persistent UUID) and `playerNa
 | `sendHeartbeat()` | Resolves at once. It only forces a reconnect when an earlier heartbeat is still unanswered. |
 
 Consequences for the design:
-- **Joining uses broadcast, not presence.** The guest sends `sync` on `SUBSCRIBED` and waits for
-  the host's `room`. Presence is only a liveness hint.
-- **Re-track presence and re-send `sync` on every `SUBSCRIBED`.**
-- **App-level heartbeats decide who is away,** because presence can take a long time to notice a
-  suspended phone.
+- **Broadcast only; no presence.** Joining uses a broadcast handshake (the guest sends `sync`, the
+  host answers `room`), and app-level heartbeats plus `bye` decide who is away, because presence
+  is slow to show a newcomer and can take much longer to notice a suspended phone. Dropping it
+  also removes the re-track-on-rejoin chore.
+- **Re-send `sync` (and the guest's state) on every `SUBSCRIBED`,** since a rejoin can follow a
+  gap in which messages were lost.
 - **Resume probe:** on `visibilitychange` to visible, call `sendHeartbeat()` now and again 2 s
   later. The second call turns a dead socket into a reconnect.
 
@@ -89,38 +90,42 @@ Consequences for the design:
 - `code` is 1000–9999.
 
 The protocol version is **not** in the topic. If it were, players on different versions would
-never meet, and the joiner could only report "no race found". Instead it travels in presence and
-on every message.
-
-**Presence.** Keyed by `playerId`; payload `{ v, app, role: 'host' | 'guest', name }`. It shows
-who is connected, and whether a second guest or a second host is present.
+never meet, and the joiner could only report "no race found". Instead every message carries it,
+and it is checked before the message's shape, so a newer friend's message is reported as a
+version mismatch rather than dropped as garbage.
 
 **Events.** Every payload is validated with zod (already a dependency) and carries
-`v: PROTOCOL_VERSION`. Unknown keys are stripped and lengths are capped (name ≤ 20, display ≤ 24,
-laps ≤ race length).
+`v: PROTOCOL_VERSION` and `app` (the sender's app version). Unknown keys are stripped and lengths
+are capped (name ≤ 20, display ≤ 24).
 
 | Event | Sender | When | Payload |
 |---|---|---|---|
-| `room` | host | Every state change (`seq++`); every 3 s during countdown and race; in reply to `sync` | `{ v, seq, snap: RoomSnapshot }` |
-| `bank` | host | Just before the first countdown `room` of a race; in reply to `sync` asking for it | `{ v, roomId, raceId, level, op, questions }` |
-| `guest` | guest | Every local change (`seq++`); resent every 1.5 s until the snapshot acknowledges it; every 5 s while racing | The guest's complete state: `{ v, seq, id, name, app, ready, rematch, raceId, race }` |
-| `sync` | guest | On every `SUBSCRIBED`; every 1 s while the current race's bank is missing | `{ v, id, name, app, need: ('room' \| 'bank')[] }` |
-| `bye` | either | Leave, unmount, `pagehide` | `{ v, id }` |
+| `room` | host | Every state change (`seq++`), which includes every guest message it receives (that is the acknowledgement); every 3 s regardless; in reply to `sync` | `{ v, app, seq, snap: RoomSnapshot }` |
+| `bank` | host | Just before the first countdown `room` of a race; in reply to a `sync` that asks for it | `{ v, app, roomId, raceId, level, op, questions }` |
+| `guest` | guest | Every local change (`seq++`); resent every 1.5 s until `snap.guestAck` reaches it; every 4 s regardless | The guest's complete state: `{ v, app, seq, session, id, name, agree, raceId, race, raceMs }` |
+| `sync` | guest (and a host probing a code) | On every `SUBSCRIBED`; every 0.8 s while joining; every 1 s while the race's bank is missing | `{ v, app, id, name, need: ('room' \| 'bank')[] }` |
+| `bye` | either | Leave, unmount, `pagehide` | `{ v, app, id }` |
 
-Every message carries the sender's full state, a `seq`, and (for the guest) an acknowledgement
-through `snap.guestAck`. So a lost, duplicated or reordered message does no harm; Broadcast
-delivers at most once.
+- `agree` is `{ raceId, rev }`: "start the race after `raceId` with settings revision `rev`". It is
+  the guest's Ready in the lobby and its Race again after a race; the host's Start and Race again
+  set the same agreement on its side. A race starts when both agree on the current pair, so a
+  resend of an old Ready can never start a race the guest hasn't seen.
+- `session` is new for every page load, so a reloaded guest whose `seq` starts again is not taken
+  as a stale message.
+- `raceMs` is the guest's race time when it sent the message, for the referee's
+  "can it still win" check.
 
 **Joining.**
-- **Host:** subscribe, then send a `sync` probe. If another host answers with `room` within
-  1.5 s, pick a new code (up to 5 tries). Then track presence and broadcast `room`.
-- **Guest:** subscribe, then send `sync`. The first `room` reply decides:
+- **Host:** subscribe, then send a `sync` probe. If another host answers with `room` (or with a
+  message on another protocol version) within 1.5 s, pick a new code (up to 5 tries). Then
+  broadcast `room`.
+- **Guest:** subscribe, then send `sync` every 0.8 s until the first `room` reply, which decides:
   - a matching `v` → join
   - a different `v` → "Your game and your friend's game are different versions. Update both,
     then try again." with both app versions shown
   - a guest already seated → "This race is full"
   - the host is you → "That's your own race"
-  - no reply within 3 s → "No race with code 4821"
+  - no reply within 4 s → "No race with code 4821"
 
 **Volume.** About 125 sends for a 20-lap race of about 90 s, so 5M messages a month is roughly
 20,000 races.
@@ -151,12 +156,11 @@ by construction.
 
 ```ts
 startRacer(raceId, laps): RacerState
-currentQuestion(s, bank): BankQuestion
-submitAnswer(s, bank, value, responseTimeMs, raceMsNow): { state, outcome: 'correct' | 'wrong' | 'crash' | 'finish' }
-retireRacer(s): RacerState
+currentQuestion(s, bank): BankQuestion | null   // null before this race's bank arrives, and once stopped
+submitAnswer(s, bank, value, responseTimeMs, raceMsNow): { state, outcome: 'correct' | 'wrong' | 'crash' | 'finish' | 'ignored' }
+retireRacer(s, raceMsNow): RacerState
 toWire(s): RacerWire
 sectorColors(mine: LapWire[], rival: LapWire[]): { mine: SectorColor[]; rival: SectorColor[] }
-formatRaceTime(ms); formatGap(ms)
 ```
 
 It mirrors Game.tsx's race mode at a fixed level:
@@ -178,8 +182,12 @@ It mirrors Game.tsx's race mode at a fixed level:
 createRoom({ roomId, code, host, level, op, circuit, laps }): RoomState
 reduceRoom(s, action): RoomState
 toSnapshot(s, now): RoomSnapshot
-decideResult(s, now); nextDeadline(s, now): number | null
+lightsOutAt(s): number | null
 ```
+
+Every action carries `now`; the reducer first applies what time alone changes (the lights going
+out, a silent guest dropped or marked out, a start both sides agreed to, a result that has become
+certain), then the action, then the same again. It returns the same object when nothing changed.
 
 **Phases:** lobby → countdown → racing → results → (rematch) → countdown.
 - The countdown is 6 s: lights 1–5 at one-second steps, lights out at 6 s (as `Game.tsx` 816–833).
@@ -187,9 +195,11 @@ decideResult(s, now); nextDeadline(s, now): number | null
   elapsed, and holds on the fifth light until the bank has arrived.
 - Guest race updates count only for the current `raceId`, and laps only ever grow.
 
-**Settings.** Level and maths belong to the host. Changing either clears the guest's Ready, so
-the guest always sees what they are agreeing to. Rematch starts when both have tapped
-"Race again".
+**Settings.** Level and maths belong to the host and can change only between races. Changing
+either bumps the settings revision, which voids every agreement given for the old one (the
+host's included), so the guest always sees what it is agreeing to. A race starts when host and
+guest agree on the current `(raceId, rev)` and the guest is not away; a rematch is the same rule
+in the results phase.
 
 **Winner.** Each device times itself from its own lights-out with `Date.now()` differences.
 No clock sync is needed, and a late start costs nothing. The lowest race time wins. The host
@@ -201,36 +211,47 @@ declares P1 only when the other car provably cannot beat it:
   crosses the line.
 
 A tie goes to fewer warnings, then to the host. A crash, retirement or disconnect is a DNF. If
-both cars are out, nobody wins.
+both cars are out, nobody wins. A declared result never changes. Race updates are accepted only
+for the current race, only if the laps grow, never after a car has stopped, and a finish only
+with every lap done and a race time no shorter than the sum of its lap times.
 
-**Away.**
+The phase moves to results once the result is final **and** both cars have stopped: a winner
+decided early leaves the other car racing to the line, as in Quick Race.
 
-| Situation | Lobby or results | Countdown or race |
-|---|---|---|
-| Guest silent past its heartbeat, or presence leave | Shown as away; removed after 10 s | Host sees "WAITING FOR MIA"; the guest becomes a DNF after 60 s. The guest's own clock keeps running, so the winner rule still holds. |
-| Guest comes back (same `playerId`) | Re-seated | Nothing lost; it resends its full state |
-| Host silent for 6 s | Guest sees "Waiting for [host]…" | Guest keeps racing and shows the waiting pill |
-| Host gone for 60 s, or `bye` | Room closed | Room closed. The guest's own result stands with no position; streak and mastery count, a win does not. |
-| Reload mid-race | — | Counts as leaving the race |
+**Away.** The guest sends its state at least every 4 s; one silent for 9 s is shown as away.
+
+| Situation | Lobby | Countdown or race | Results |
+|---|---|---|---|
+| Guest silent, or sent `bye` | Seat freed after 20 s of silence, at once on `bye` | "WAITING FOR MIA"; a DNF after 60 s of silence, at once on `bye` (a car that already finished keeps its finish). Its own clock keeps running meanwhile, so the winner rule still holds. | Kept on the podium, shown as away; Race again waits for them. The seat is never freed here, so the host's screen never jumps back to the lobby. |
+| Guest comes back (same `playerId`) | Re-seated | Nothing lost; it resends its full state | Can Race again |
+| Host silent for 7 s | Guest sees "Waiting for [host]…" | Guest keeps racing and shows the waiting pill | Same |
+| Host gone for 60 s, or `bye` | Room closed | Room closed. The guest's own result stands with no position; streak and mastery count, a win does not. | Room closed |
+| Reload mid-race (new `session`) | — | Counts as leaving the race | — |
 
 ## 6. Client wiring
 
-- **`multiplayerTransport.ts`:** `RoomTransport { open(meta, handlers); send(event, payload): boolean; retrack(meta); probe(); close() }`.
-  Also `MemoryRoomHub`, an in-process hub for tests that can drop, delay, cut and restore
-  delivery.
+- **The transport contract** lives in `multiplayerController.ts`:
+  `OpenTransport = (topic, { onMessage, onStatus }) => { send(event, payload): boolean; probe(); close() }`,
+  with `onStatus('joined')` on the first join and after every automatic rejoin. The tests supply
+  an in-memory hub (in the test file) that can drop, delay, cut and restore delivery.
 - **`multiplayerSupabase.ts`:** the Supabase transport, not imported by tests.
   - Register every `.on()` before `subscribe()`; adding a listener to a joined channel forces a
     resubscribe.
-  - Call `track()` and send `sync` on every `SUBSCRIBED`.
   - `send()` returns `false` unless the channel is joined (otherwise supabase-js falls back to REST).
   - Before opening, remove any existing channel with the same topic, because
     `supabase.channel(topic)` returns it.
-  - `close()` untracks, then `removeChannel`.
-- **`multiplayerController.ts`:** `RoomController`, plain TypeScript. It holds the transport,
-  then either the reducer (host) or the latest snapshot (guest), plus timers.
-  - The host broadcasts when `seq` changes and schedules a `tick` at `nextDeadline`.
-  - The guest keeps the snapshot with the highest `seq`, resends until acknowledged, and asks
-    for the bank while it is missing.
+  - `probe()` is the resume probe from section 1; `close()` calls `removeChannel`.
+- **`multiplayerController.ts`:** `RoomController.host(deps, settings)` and
+  `RoomController.join(deps, code)`, plain TypeScript with the transport, clock, timers,
+  randomness and ids injected. The view (`stage`, `error`, `snap`, `bank`, `racer`,
+  `countdownEndsAt`, `lightsOutAt`, `hostSilent`, …) is what the page renders; the actions are
+  `agree`, `setLevel`, `setOperation`, `answer`, `retire`, `resume` and `leave`.
+  - The host runs the reducer, ticks it every 250 ms, broadcasts whenever the state changes and
+    every 3 s regardless, and deals the bank when a race starts.
+  - The guest keeps the snapshot with the highest `seq`, resends until acknowledged, heartbeats,
+    and asks for the bank while it is missing. A bank can arrive before the snapshot that starts
+    its race and is kept for it. Its lights go out at the end of the countdown or when the bank
+    arrives, whichever is later.
 - **`hooks/use-multiplayer-room.ts`:** exposes the controller through `useSyncExternalStore`,
   wires `visibilitychange` to the resume probe, and disposes on unmount. Keeping the logic
   outside React avoids v1's stale-closure bugs.
@@ -330,16 +351,23 @@ When the user decides to publish:
   `v` or oversized fields.
 - Questions: 20 questions at the room's level, no back-to-back repeats, each answer matching its
   display.
-- Race state: correct, wrong, retry and red sector; the 4th wrong try crashes; lap 20 finishes;
-  both racers read the identical question at every lap whatever their histories; sector colours;
-  the time formatters.
-- Referee: lobby join and leave, ready, settings clearing ready, the start guard, countdown to
-  racing at 6 s, stale `raceId` ignored, laps only growing; a guest finish inside the 1.5 s
-  margin beats the host's; beaten once the lower bound passes; both crash; crash then finish;
-  retire; tie-breaks; away timeouts; `nextDeadline`.
-- Controller over `MemoryRoomHub` with a fake clock: lobby → race → results → rematch with both
-  sides agreeing on the winner; with 30% of messages dropped; guest cut off and restored; host
-  `bye`; version mismatch; room full; code collision.
+- Race state: correct, wrong, retry and red sector; the 4th wrong try crashes; the last lap
+  finishes; no question before this race's bank; the wire form; sector colours.
+- Referee: lobby join and leave, agreements in either order, settings voiding them, the start
+  guard, countdown to racing at 6 s, stale `seq` and `raceId` ignored, race updates that shrink
+  or don't add up refused; a guest finish inside the 1.5 s margin beats the host's; beaten once
+  the lower bound passes; both crash; crash then finish; retire; tie-breaks; a declared result
+  never changing; away and drop timings in each phase; reload and `bye` mid-race; rematch.
+- Controller over an in-memory hub with a fake clock: joining, not found, full, own race,
+  version mismatch, code collision; lights and identical questions on both screens; a full race
+  with the guest's clock an hour off; 30% message loss; a guest cut off and restored; a crash;
+  race again; an idle lobby; a lost Ready resent before the next heartbeat; lost questions asked
+  for again; the host heard while the guest's messages are lost; a silent host, one coming back,
+  and one leaving. Each of the resend, bank-retry and heartbeat paths was checked by removing it
+  and watching its test fail.
+- A soak run (not committed) of full 20-lap races over 200 loss patterns: at 10% loss all ended
+  the same on both screens; at 30% and 50% the only failures were joins that timed out, and no
+  run ever showed two different or unfinished results.
 
 **Browser:** tab A at `/multiplayer/v2`, tab B with `?player=b`, on a worktree dev server.
 Finishing a multiplayer race is safe (no leaderboard). Browsers slow background tabs' timers, so
