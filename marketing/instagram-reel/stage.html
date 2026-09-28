@@ -44,14 +44,16 @@ const T = {
   lane: 23.0, trophies: 28.0, cta: 31.0, end: 36.0,
 };
 // The Paddock's Weekend Briefing tile in 3D (tile3d.mjs), seconds into the Paddock: the cut to
-// 3D and the end of the lift (the tile's layers apart, the camera round); it drifts on until
-// Free Practice.
-const TILE3D = { hand: 1.2, liftEnd: 2.3 };
+// 3D, the camera landing on the tile's top edge (it skates from there), dropping in at its white
+// end, and down on it. From `bloom` the white washes over everything, into Free Practice.
+const TILE3D = { hand: 1.2, swoopEnd: 2.1, dropStart: 2.95, dropEnd: 3.45, bloom: 3.3 };
 // The push-in on the tile before the cut: zoom, the point it aims at (CSS px from the screen
 // centre: the flag and the words, left of the tile's middle) and where that lands on the canvas,
 // under the caption. At this zoom the cut shows only the app's content, below the status bar
 // (setupTile3D checks), so the filmed frame alone can stand in for it in 3D.
 const TILE = { z: 2.5, focus: [-54, -211.2], at: [540, 640] };
+// Free Practice comes in out of the white close on its question, then pulls back to the phone.
+const FP_IN = { z: 3.2, focus: [0, -209], at: [540, 1000] };
 // The season card's circuit map in 3D, seconds into the card: the cut to 3D, the lift ending,
 // the dive onto the road ending, and the camera crossing the start/finish line.
 const T3D = { hand: 1.0, liftEnd: 2.0, diveEnd: 2.6, finish: 4.35 };
@@ -261,15 +263,17 @@ const K = 660 / 393;                 // canvas px per app CSS px at zoom 1
 const SCR = { w: 393, h: 852, r: 55 };
 const BASE = { z: 1, fx: 0, fy: 0, ax: 540, ay: 545 + 426 * K };
 
-// Camera keyframes: [time, z, focus x/y (app CSS px from screen centre), anchor x/y (canvas px)]
+// Camera keyframes: [time, z, focus x/y (app CSS px from screen centre), anchor x/y (canvas px)],
+// eased in and out between them; 'in' eases only in, arriving at speed.
 const CAM = [
   [T.phoneIn[1], 1.00, 0, 0, BASE.ax, BASE.ay],
   [T.out + 0.6, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [T.out + TILE3D.hand, TILE.z, ...TILE.focus, ...TILE.at],   // in on the Weekend Briefing tile; 3D takes over
+  [T.out + TILE3D.hand, TILE.z, ...TILE.focus, ...TILE.at, 'in'],   // in on the Weekend Briefing tile; 3D takes over at speed
   [T.fp - 0.05, TILE.z, ...TILE.focus, ...TILE.at],
-  [T.fp, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [T.fp + 0.70, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [T.fp + 1.60, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
+  [T.fp, FP_IN.z, ...FP_IN.focus, ...FP_IN.at],                  // Free Practice out of the white
+  [T.fp + 0.60, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.fp + 0.90, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.fp + 1.80, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
   [T.fp + 2.80, 1.25, 0, -80, 540, 1030],
   [T.menu + 0.05, 1.00, 0, 0, BASE.ax, BASE.ay],
   [T.menu + 0.25, 1.00, 0, 0, BASE.ax, BASE.ay],
@@ -282,8 +286,8 @@ function camAt(t) {
   for (let i = 0; i < CAM.length - 1; i++) {
     const [ta, ...a] = CAM[i], [tb, ...b] = CAM[i + 1];
     if (t <= tb) {
-      const p = eInOut(prog(t, ta, tb));
-      const [z, fx, fy, ax, ay] = a.map((v, j) => lerp(v, b[j], p));
+      const x = prog(t, ta, tb), p = b[5] === 'in' ? x * x * (2 - x) : eInOut(x);
+      const [z, fx, fy, ax, ay] = a.slice(0, 5).map((v, j) => lerp(v, b[j], p));
       return { z, fx, fy, ax, ay };
     }
   }
@@ -461,10 +465,10 @@ function drawScrim(t) {
   // caption: there the scrim deepens and ends just above the tile, following it up, until the
   // tile has lifted off in 3D.
   let end = 660, deep = 0;
-  if (t >= T.out && t < T.out + TILE3D.liftEnd) {
+  if (t >= T.out && t < T.out + TILE3D.swoopEnd) {
     const cam = camAt(Math.min(t, T.out + TILE3D.hand));
     const tileTop = cam.ay + (META.paddock.rects.plate.y - SCR.h / 2 - cam.fy) * K * cam.z - 10;
-    deep = clamp((660 - tileTop) / 60) * (1 - prog(t, T.out + TILE3D.hand + 0.4, T.out + TILE3D.liftEnd));
+    deep = clamp((660 - tileTop) / 60) * (1 - prog(t, T.out + TILE3D.hand + 0.25, T.out + TILE3D.swoopEnd));
     end = Math.min(660, lerp(660, tileTop, deep));
   }
   const g = ctx.createLinearGradient(0, 0, 0, end);
@@ -598,17 +602,27 @@ async function drawAppStoreCall(a) {
 }
 
 // ---------------------------------------------------------------- 3D sections
-// Twice the phone gives way to 3D: the Paddock's Weekend Briefing tile comes apart in layers
-// (tile3d.mjs), and the season card's circuit map lifts off as a floating highway (track3d.mjs).
+// Twice the phone gives way to 3D: the Paddock's Weekend Briefing tile, ridden like a skate ramp
+// (tile3d.mjs), and the season card's circuit map, lifted off as a floating highway (track3d.mjs).
 // Each takes over at its cut to 3D, where the stage camera has pushed in to match its first
-// frame, and hands back with a whip into the next scene: its last frame slides out as the phone
-// slides in.
+// frame. The tile hands back through white (its white end washes into Free Practice); the track
+// with a whip, its last frame sliding out as the phone slides in.
 let tile3d = null, track3d = null;
 const SECTIONS_3D = [
-  { at: T.out, from: T.out + TILE3D.hand, to: T.fp, view: () => tile3d, blur: () => 0 },
-  { at: T.menu, from: T.menu + T3D.hand, to: T.practice, view: () => track3d,
+  { at: T.out, from: T.out + TILE3D.hand, to: T.fp, view: () => tile3d, exit: 'white',
+    blur: u => tile3d.blur(u), blurAt: u => tile3d.blurAt(u) },
+  { at: T.menu, from: T.menu + T3D.hand, to: T.practice, view: () => track3d, exit: 'whip',
     blur: u => 0.9 * prog(u, T3D.diveEnd - 0.2, T3D.finish) },           // a zoom blur once it's racing
 ];
+/** Light flooding in as the camera drops onto the tile's white end, then Free Practice out of it. */
+function drawWash(t) {
+  const a = t < T.fp ? prog(t, T.out + TILE3D.bloom, T.fp) ** 2 : (1 - prog(t, T.fp, T.fp + 0.4)) ** 2;
+  if (a <= 0) return;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = a; ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.restore();
+}
 async function setup3D() {
   const [THREE, { buildTrack, createTrack3D }, { createTile3D }] = await Promise.all([
     import(`./${REPO}node_modules/three/build/three.module.js`),
@@ -650,9 +664,10 @@ async function setupTile3D(THREE, createTile3D) {
     loadImage(`${WORK}/clips/paddock/${f}.jpg`), loadImage(`${WORK}/clips/paddock/notile/${f}.jpg`),
     ...names.map(n => loadImage(`${WORK}/clips/paddock/layers/${n}.png`)),
   ]);
-  tile3d = createTile3D(THREE, { rects: P.rects, ground, bare, handover: { ...cam, K },
+  const dt = 0.004, approach = { ...camAt(T.out + TILE3D.hand - dt), K, dt };
+  tile3d = createTile3D(THREE, { rects: P.rects, ground, bare, handover: { ...cam, K }, approach,
     layers: Object.fromEntries(names.map((n, i) => [n, { image: images[i], rect: P.layers[n] }])),
-    times: { ...TILE3D, end: T.fp - T.out } });
+    times: TILE3D });
 }
 /** A 3D section at `u` seconds into its scene. */
 function draw3D(sec, u, g = ctx) {
@@ -660,10 +675,11 @@ function draw3D(sec, u, g = ctx) {
   g.drawImage(c, 0, 0);
   const blur = sec.blur(u);
   if (blur > 0) {
+    const [cx, cy] = sec.blurAt ? sec.blurAt(u) : [W / 2, H / 2];   // streaming out from there
     g.save();
     for (const [z, a] of [[1.03, 0.2], [1.06, 0.1]]) {
       g.globalAlpha = a * blur;
-      g.drawImage(c, W / 2 - (W * z) / 2, H / 2 - (H * z) / 2, W * z, H * z);
+      g.drawImage(c, cx - cx * z, cy - cy * z, W * z, H * z);
     }
     g.restore();
   }
@@ -701,16 +717,17 @@ window.render = async function (t) {
       const p = eInCubic(prog(t, T.cta, T.cta + 0.28));
       opts.dy = (opts.dy || 0) + p * 1000; opts.alpha = 1 - p; cam.z *= lerp(1, 0.85, p);
     }
-    // A 3D section replaces the phone from its cut to 3D until the whip into the next scene,
-    // where its last frame slides out as the phone slides in.
+    // A 3D section replaces the phone from its cut to 3D until it hands back: through the white
+    // wash, or with a whip where its last frame slides out as the phone slides in.
     const in3D = SECTIONS_3D.find(sec => t >= sec.from && t < sec.to);
     if (in3D) {
       draw3D(in3D, t - in3D.at);
+      drawWash(t);
       drawScrim(t);
       for (const cap of CAPTIONS) drawCaption(t, cap);
       return;
     }
-    const out3D = SECTIONS_3D.find(sec => t >= sec.to && t < sec.to + 0.2);
+    const out3D = SECTIONS_3D.find(sec => sec.exit === 'whip' && t >= sec.to && t < sec.to + 0.2);
     if (out3D) {
       const p = eOutCubic(prog(t, out3D.to, out3D.to + 0.2));
       ctx.drawImage(last3D(out3D), -p * W, 0);
@@ -731,6 +748,7 @@ window.render = async function (t) {
     await drawPhone(t, cam, content, opts);
   }
 
+  drawWash(t);
   drawScrim(t);
   for (const cap of CAPTIONS) drawCaption(t, cap);
   drawFlagWipe(t);
@@ -758,9 +776,10 @@ window.cues = function () {
     }
   }
   for (const c of [T.fp, T.menu, T.practice, T.qualifying, T.race, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
-  // the Paddock's tile lifting and coming apart
-  out.push({ t: T.out + TILE3D.hand, kind: 'riser', d: TILE3D.liftEnd - TILE3D.hand });
-  out.push({ t: T.out + TILE3D.hand + 0.3, kind: 'whoosh', d: 0.45 });
+  // the Paddock's tile: the swoop onto its edge, the skate along it, the drop in
+  out.push({ t: T.out + TILE3D.hand, kind: 'riser', d: TILE3D.swoopEnd - TILE3D.hand });
+  out.push({ t: T.out + TILE3D.swoopEnd - 0.1, kind: 'whoosh', d: 0.8 });
+  out.push({ t: T.out + TILE3D.dropStart, kind: 'whoosh', d: TILE3D.dropEnd - TILE3D.dropStart });
   // the lift, the dive and the engine down the 3D track
   out.push({ t: T.menu + T3D.hand, kind: 'riser', d: T3D.liftEnd - T3D.hand });
   out.push({ t: T.menu + T3D.liftEnd + 0.2, kind: 'whoosh', d: 0.5 });
