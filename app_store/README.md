@@ -24,7 +24,7 @@ people see on the product page.
 | `07_superlicence` | Superlicence granted. | Finish Driving School and it joins your trophy cabinet |
 
 `03`, `04` and the iPad `01` (its header chip) show the current Grand Prix. They
-were last captured on Round 15 / Baku. `05` shows the Reaction Test target
+were last captured on Round 16 / Malaysia. `05` shows the Reaction Test target
 (`REACTION_LICENCE_MS`, 0.40s), so retake it if that changes.
 
 ## Regenerating
@@ -58,6 +58,13 @@ Captions use Oxanium, the same font as the app.
   Simulator.app isn't installed here, and on iPadOS 26 an app's own orientation
   lock turns into a floating window instead of a rotation. Panel taps stay in
   portrait coordinates after rotating: `x = landscapeY`, `y = 1376 − landscapeX`
-  (points), for the rotation used on 2026-09-21.
+  (points), for the rotation used on 2026-09-21 and 2026-09-28. `simctl io
+  screenshot` still returns the frame upright at 2752 × 2064. Grand Prix practice
+  has no pause button, so leave the session by tapping the header logo: it goes
+  to the title screen without finishing.
+- **Paddock and setup cards (`03`, `04`)**: the backgrounds are looping videos.
+  Take a burst of screenshots about a second apart and pick a frame close to the
+  previous card's. Before capturing, open Trophies once if the Garage card shows
+  an "N NEW" badge, and switch sound on so the speaker icon isn't crossed out.
 - **App opens in a window** on the iPad (window controls top-left, wallpaper
   around it): tap the controls, then the green button, and it stays full screen.
