@@ -1674,7 +1674,6 @@ export default function Multiplayer() {
                   showBlackWhiteFlag,
                   showFinalLap,
                   onFinalLapDone: () => setShowFinalLap(false),
-                  showCorrect: feedback === "correct",
                 }}
               />
             }
@@ -1814,16 +1813,6 @@ export default function Multiplayer() {
                     style={{ fontFamily: 'Oxanium, sans-serif' }}
                   >
                     FINAL LAP
-                  </motion.div>
-                ) : feedback === "correct" ? (
-                  <motion.div
-                    key="correct"
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="text-green-600 font-medium flex items-center gap-1 text-sm"
-                  >
-                    <Check className="w-4 h-4" /> Correct
                   </motion.div>
                 ) : null}
               </AnimatePresence>

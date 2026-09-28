@@ -3350,7 +3350,6 @@ export default function Game() {
                 showBlackWhiteFlag,
                 showFinalLap,
                 onFinalLapDone: () => setShowFinalLap(false),
-                showCorrect: feedback === 'correct' && !isGpRace,
               }}
             />
           }
@@ -3486,7 +3485,7 @@ export default function Game() {
             </AnimatePresence>
           </div>
 
-          {/* Reserved slot so TRACK LIMITS / Correct never sit on the numbers */}
+          {/* Reserved slot so TRACK LIMITS / FINAL LAP never sit on the numbers */}
           <div className={cn("h-11 shrink-0 flex items-center justify-center mt-3", isGpRace && "mt-6")}>
             <AnimatePresence mode="wait">
               {showPenalty ? (
@@ -3523,16 +3522,6 @@ export default function Game() {
                   style={{ fontFamily: 'Oxanium, sans-serif' }}
                 >
                   FINAL LAP
-                </motion.div>
-              ) : feedback === 'correct' && !isGpRace ? (
-                <motion.div
-                  key="correct"
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="text-green-600 font-medium flex items-center gap-1 text-sm"
-                >
-                  <Check className="w-4 h-4" /> Correct
                 </motion.div>
               ) : null}
             </AnimatePresence>

@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import trackLimitsFlag from "@/assets/track-limits-flag.png";
 
@@ -8,15 +7,14 @@ export interface RaceStatusSlotProps {
   showBlackWhiteFlag: boolean;
   showFinalLap: boolean;
   onFinalLapDone: () => void;
-  showCorrect: boolean;
   className?: string;
 }
 
 /**
- * Reserved slot under the answer so TRACK LIMITS, FINAL LAP and Correct never sit on the
+ * Reserved slot under the answer so TRACK LIMITS and FINAL LAP never sit on the
  * numbers. Desktop copy of the slot in Game.tsx / Multiplayer.tsx, a little taller.
  */
-export function RaceStatusSlot({ showPenalty, showBlackWhiteFlag, showFinalLap, onFinalLapDone, showCorrect, className }: RaceStatusSlotProps) {
+export function RaceStatusSlot({ showPenalty, showBlackWhiteFlag, showFinalLap, onFinalLapDone, className }: RaceStatusSlotProps) {
   return (
     <div className={cn("h-14 shrink-0 flex items-center justify-center", className)} data-testid="race-status-slot">
       <AnimatePresence mode="wait">
@@ -50,16 +48,6 @@ export function RaceStatusSlot({ showPenalty, showBlackWhiteFlag, showFinalLap, 
             style={{ fontFamily: 'Oxanium, sans-serif' }}
           >
             FINAL LAP
-          </motion.div>
-        ) : showCorrect ? (
-          <motion.div
-            key="correct"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="text-green-600 font-medium flex items-center gap-1.5 text-lg"
-          >
-            <Check className="w-5 h-5" /> Correct
           </motion.div>
         ) : null}
       </AnimatePresence>
