@@ -5,8 +5,8 @@
 //   node render.mjs video                -> $WORK/out/reel.mp4 (frames piped into ffmpeg, muxed
 //                                           with $WORK/soundtrack.wav when it exists)
 //   node render.mjs cover [t]            -> $WORK/out/cover.jpg (default: the finished end card)
-//   TRACK3D=1 renders the experimental 3D circuit section (needs WebGL: SwiftShader flags below).
 //   RANGE=from:to (seconds) renders only that slice of the video, with the matching audio.
+// The 3D circuit section needs WebGL, which headless Chromium gets from SwiftShader.
 import { chromium } from './browser.mjs';
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -21,10 +21,7 @@ const [mode = 'video', ...rest] = process.argv.slice(2);
 
 const TYPES = { '.html': 'text/html', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml',
   '.json': 'application/json', '.woff2': 'font/woff2', '.js': 'text/javascript', '.mjs': 'text/javascript' };
-const TRACK3D = process.env.TRACK3D === '1';
-
-const browser = await chromium.launch(TRACK3D
-  ? { args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] } : {});
+const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1080, height: 1920 }, deviceScaleFactor: 1 });
 page.on('pageerror', e => console.error('pageerror:', e.message));
 page.on('console', m => { if (m.type() === 'error') console.error('console:', m.text()); });
@@ -36,7 +33,7 @@ await page.route('http://reel.local/**', async route => {
   if (!file || !fs.existsSync(file)) return route.fulfill({ status: 404, body: 'not found' });
   await route.fulfill({ status: 200, body: fs.readFileSync(file), headers: { 'content-type': TYPES[path.extname(file)] || 'application/octet-stream' } });
 });
-await page.goto(`http://reel.local/stage.html?variant=${process.env.VARIANT || 'web'}${TRACK3D ? '&track3d=1' : ''}`);
+await page.goto(`http://reel.local/stage.html?variant=${process.env.VARIANT || 'web'}`);
 const { duration, fps, musicAt } = await page.evaluate(() => window.ready);
 const frames = Math.round(duration * fps);
 

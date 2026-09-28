@@ -25,8 +25,6 @@
 const W = 1080, H = 1920, FPS = 30;
 const VARIANT = new URLSearchParams(location.search).get('variant') || 'web';
 const APP_STORE = VARIANT === 'appstore';
-// ?track3d=1: the season card's circuit map lifts off into a 3D floating highway (track3d.mjs).
-const TRACK3D = new URLSearchParams(location.search).get('track3d') === '1';
 // The renderer serves the capture output under work/ and the repository under repo/.
 const WORK = 'work', REPO = 'repo/';
 const cv = document.getElementById('c');
@@ -40,15 +38,31 @@ const C = {
 // ---------------------------------------------------------------- timeline (seconds)
 // Paced for reading: every caption holds for 3 s or more while the footage runs underneath.
 const LIGHTS = [0.4, 0.9, 1.4, 1.9, 2.4];
-const EXTRA = TRACK3D ? 1.0 : 0;               // the 3D circuit gives the season card a second more
 const T = {
   out: 3.0, phoneIn: [3.0, 3.45],
-  menu: 6.0, practice: 9.5 + EXTRA, qualifying: 12.5 + EXTRA, race: 15.5 + EXTRA,
-  lane: 18.5 + EXTRA, trophies: 23.5 + EXTRA, cta: 26.5 + EXTRA, end: 31.5 + EXTRA,
+  menu: 6.0, practice: 10.5, qualifying: 13.5, race: 16.5,
+  lane: 19.5, trophies: 24.5, cta: 27.5, end: 32.5,
 };
-// 3D circuit, seconds into the season card: the cut to 3D, the lift ending, the dive onto the
-// road ending, and the car crossing the start/finish line.
+// The season card's circuit map in 3D, seconds into the card: the cut to 3D, the lift ending,
+// the dive onto the road ending, and the camera crossing the start/finish line.
 const T3D = { hand: 1.0, liftEnd: 2.0, diveEnd: 2.6, finish: 4.35 };
+// This round's circuit, for the 3D section (track3d.mjs).
+//  - path: the app's centreline when it has one ('client/src/lib/circuitPathData.json#<id>'),
+//    else one traced from the setup-card map by trace-centreline.py.
+//  - map: where the season card draws the map in the weekend clip: path point p lands at CSS
+//    (x + p.x * s, y + p.y * s). Fitted from the map's sector stripes to the filmed card's
+//    (sub-pixel); re-measure when the card or map changes.
+//  - focus: the map's centre (CSS px from the screen centre), where the push-in aims.
+//  - race: path units raced before the line; orbit: where the lift's orbit ends, set so the
+//    whole circuit sits in frame, centred, clear of the side margins.
+const CIRCUIT = {
+  id: 'malaysia',
+  path: 'marketing/instagram-reel/tracks/malaysia.json',
+  map: { x: 94.836, y: 317.008, s: 0.163114 * 1252 / 700 },
+  focus: [0, -52],
+  race: 405,                                   // down the back straight, round the final hairpin
+  orbit: { theta: 1.48, phi: 0.52, dist: 300, at: [340, 198] },   // looking east down the back straight
+};
 T.flag = [T.lane - 0.21, T.lane + 0.21];   // chequered flag: the weekend's finish, into Lane Racer
 const CAPTIONS = [
   { a: 0.0, b: 3.0, lines: ['HERE COME', 'THE [LIGHTS!]'], y: 410, size: 120, enterAt0: true },
@@ -244,17 +258,10 @@ const CAM = [
   [4.60, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
   [5.80, 1.25, 0, -80, 540, 1030],
   [6.05, 1.00, 0, 0, BASE.ax, BASE.ay],
-  ...(TRACK3D ? [
-    [6.25, 1.00, 0, 0, BASE.ax, BASE.ay],
-    [T.menu + T3D.hand, 2.60, 0, -52, 540, 1030],   // in on the circuit map; 3D takes over here
-    [T.practice - 0.05, 2.60, 0, -52, 540, 1030],
-    [T.practice, 1.00, 0, 0, BASE.ax, BASE.ay],
-  ] : [
-    [6.40, 1.00, 0, 0, BASE.ax, BASE.ay],
-    [8.00, 2.25, 0, -60, 540, 1030],     // the Grand Prix card: in on Baku and its circuit map
-    [9.30, 2.35, 0, -60, 540, 1030],
-    [9.55, 1.00, 0, 0, BASE.ax, BASE.ay],
-  ]),
+  [6.25, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.menu + T3D.hand, 2.60, ...CIRCUIT.focus, 540, 1030],   // in on the circuit map; 3D takes over
+  [T.practice - 0.05, 2.60, ...CIRCUIT.focus, 540, 1030],
+  [T.practice, 1.00, 0, 0, BASE.ax, BASE.ay],
 ];
 function camAt(t) {
   if (t <= CAM[0][0]) return { z: 1, fx: 0, fy: 0, ax: BASE.ax, ay: BASE.ay };
@@ -563,31 +570,31 @@ async function drawAppStoreCall(a) {
   }
 }
 
-// ---------------------------------------------------------------- 3D circuit (?track3d=1)
-// Where the season card draws its circuit map, in the weekend clip: path point p lands at CSS
-// (x + p.x * s, y + p.y * s). Measured by fitting the map image's sector stripes to the
-// filmed card's (mean residual under half a pixel); re-measure if the card or map changes.
-const MAP = { x: 94.897, y: 317.047, s: 0.162869 * 1252 / 700 };
+// ---------------------------------------------------------------- 3D circuit
 let track3d = null, lastFrame3D = null;
 async function setup3D() {
   const [THREE, { buildTrack, createTrack3D }] = await Promise.all([
     import(`./${REPO}node_modules/three/build/three.module.js`),
     import(`./${REPO}marketing/instagram-reel/track3d.mjs`),
   ]);
-  const path = (await (await fetch(`${REPO}client/src/lib/circuitPathData.json`)).json()).baku;
-  const png = await loadImage(`${REPO}client/src/assets/baku_setup_track.png`);
+  const [file, key] = CIRCUIT.path.split('#');
+  const json = await (await fetch(`${REPO}${file}`)).json(), path = key ? json[key] : json;
+  const png = await loadImage(`${REPO}client/src/assets/${CIRCUIT.id}_setup_track.png`);
   const pc = document.createElement('canvas'); pc.width = png.naturalWidth; pc.height = png.naturalHeight;
   const px = pc.getContext('2d'); px.drawImage(png, 0, 0);
   const track = buildTrack({ pathD: path.d, pathW: path.w, img: px.getImageData(0, 0, pc.width, pc.height) });
   // the frame the 2D card shows at the cut, as the ground
   const menu = scenes().find(sc => sc.a === T.menu);
   const ground = await loadImage(clipFrame('weekend', Math.round(menu.start + T3D.hand * FPS)));
-  // The race runs down Baku's seafront straight to the finish: it starts on the castle's lower
-  // side, drives under the flyover (the neck's other pass) and crosses the line.
-  const m = track.count, approach = track.sector[(track.finish + 5) % m];
-  const pass = track.passes.find(p => p.sector === approach);
-  const race = { from: pass ? (pass.toK + 48) % m : (track.finish + 300) % m };
-  track3d = createTrack3D(THREE, { track, map: MAP, ground, handover: { ...camAt(T.menu + T3D.hand), K }, times: T3D, race });
+  // The race ends at the line. Every setup map colours its sectors magenta, yellow, blue in lap
+  // order, so it runs whichever way along the centreline goes from blue into magenta there.
+  const m = track.count, wrap = k => ((k % m) + m) % m, MAGENTA = 2, BLUE = 1;   // buildTrack's classes
+  const dir = track.sector[wrap(track.finish + 5)] === MAGENTA ? 1 : -1;
+  if (track.sector[wrap(track.finish + 5 * dir)] !== MAGENTA || track.sector[wrap(track.finish - 5 * dir)] !== BLUE)
+    throw new Error('the start/finish is not between the blue and magenta sectors');
+  const race = { from: wrap(track.finish - dir * Math.round(CIRCUIT.race / track.spacing)), dir };
+  track3d = createTrack3D(THREE, { track, map: CIRCUIT.map, ground, handover: { ...camAt(T.menu + T3D.hand), K },
+    times: T3D, race, orbit: CIRCUIT.orbit });
 }
 /** The 3D section at `u` seconds into the season card, with a zoom blur once it's racing. */
 function draw3D(u, g = ctx) {
@@ -627,9 +634,10 @@ window.render = async function (t) {
       const p = eOutCubic(prog(t, T.phoneIn[0], T.phoneIn[1]));
       opts.dy = (1 - p) * 1100; cam.z *= lerp(0.92, 1, p);
     }
-    if (t >= T.menu && !(TRACK3D && t < T.practice)) {     // gentle float once the tour starts
-      opts.dy = (opts.dy || 0) + Math.sin((t - T.menu) * 2.2) * 8;
-      opts.rot = Math.sin((t - T.menu) * 1.6) * 0.012;
+    if (t >= T.practice) {                                   // gentle float once the phone is back
+      const f = prog(t, T.practice, T.practice + 0.6);
+      opts.dy = (opts.dy || 0) + Math.sin((t - T.menu) * 2.2) * 8 * f;
+      opts.rot = Math.sin((t - T.menu) * 1.6) * 0.012 * f;
     }
     if (t >= T.cta) {                                        // drop away for the end card
       const p = eInCubic(prog(t, T.cta, T.cta + 0.28));
@@ -637,20 +645,20 @@ window.render = async function (t) {
     }
     // The 3D circuit replaces the phone from the cut to 3D until the whip into Practice, where
     // the last 3D frame slides out as the phone slides in.
-    if (TRACK3D && t >= T.menu + T3D.hand && t < T.practice) {
+    if (t >= T.menu + T3D.hand && t < T.practice) {
       draw3D(t - T.menu);
       drawScrim(t);
       for (const cap of CAPTIONS) drawCaption(t, cap);
       return;
     }
-    if (TRACK3D && t >= T.practice && t < T.practice + 0.2) {
+    if (t >= T.practice && t < T.practice + 0.2) {
       const p = eOutCubic(prog(t, T.practice, T.practice + 0.2));
       ctx.drawImage(last3D(), -p * W, 0);
       opts.dx = (1 - p) * W;
     }
     // Scenes change with a whip across the screen; the chequered flag covers the cut to Lane Racer.
     let content = contentAt(t);
-    const cuts = [T.menu, ...(TRACK3D ? [] : [T.practice]), T.qualifying, T.race, T.trophies];
+    const cuts = [T.menu, T.qualifying, T.race, T.trophies];
     const cut = cuts.find(c => t >= c - 0.001 && t < c + 0.2);
     if (cut != null) {
       const p = eOutCubic(prog(t, cut, cut + 0.2));
@@ -684,17 +692,16 @@ window.cues = function () {
       const t = sc.a + (e.frame - sc.start) / FPS;
       if (e.frame < sc.start || e.frame >= sc.start + len || e.frame > (sc.last ?? Infinity) + 1) continue;
       if (t < sc.a + 0.15 || t >= sc.b || (t > T.flag[0] - 0.05 && t < T.flag[1])) continue;
-      if (TRACK3D && sc.a === T.menu && t >= T.menu + T3D.hand) continue;   // the card is gone by then
+      if (sc.a === T.menu && t >= T.menu + T3D.hand) continue;   // the card is 3D by then
       if (e.type === 'tap') out.push({ t, kind: 'click' });
       if (e.type === 'mark' && (e.name === 'answered' || e.name === 'hit')) out.push({ t, kind: 'correct' });
     }
   }
   for (const c of [T.menu, T.practice, T.qualifying, T.race, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
-  if (TRACK3D) {                                           // the lift, the dive and the engine
-    out.push({ t: T.menu + T3D.hand, kind: 'riser', d: T3D.liftEnd - T3D.hand });
-    out.push({ t: T.menu + T3D.liftEnd + 0.2, kind: 'whoosh', d: 0.5 });
-    out.push({ t: T.menu + T3D.diveEnd - 0.15, kind: 'rev', d: T3D.finish - T3D.diveEnd + 0.15 });
-  }
+  // the lift, the dive and the engine down the 3D track
+  out.push({ t: T.menu + T3D.hand, kind: 'riser', d: T3D.liftEnd - T3D.hand });
+  out.push({ t: T.menu + T3D.liftEnd + 0.2, kind: 'whoosh', d: 0.5 });
+  out.push({ t: T.menu + T3D.diveEnd - 0.15, kind: 'rev', d: T3D.finish - T3D.diveEnd + 0.15 });
   out.push({ t: T.flag[0], kind: 'whoosh', d: 0.45 });
   return out.sort((a, b) => a.t - b.t);
 };
@@ -704,7 +711,7 @@ window.ready = (async () => {
   document.fonts.add(await font.load());
   await document.fonts.load('800 88px Oxanium');
   await loadMeta();
-  if (TRACK3D) await setup3D();
+  await setup3D();
   return { duration: T.end, fps: FPS, musicAt: T.out };
 })();
 </script>

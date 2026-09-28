@@ -12,8 +12,8 @@ import { ENGAGED, stateStorage } from './demo-state.mjs';
 
 const WORK = process.env.WORK;
 const APP = process.env.APP_URL || 'http://localhost:8081';
-const FROM = Number(process.env.LANE_FROM || 22);
-const SECONDS = Number(process.env.LANE_SECONDS || 14);
+const FROM = Number(process.env.LANE_FROM || 20);
+const SECONDS = Number(process.env.LANE_SECONDS || 18);
 
 const nativeChaseCam = [/\/LaneRacerCanvas3D\.tsx(\?|$)/, async route => {
   const res = await route.fetch();
