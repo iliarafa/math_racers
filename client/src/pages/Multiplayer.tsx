@@ -904,8 +904,7 @@ export default function Multiplayer() {
 
       // Harvest energy if power-ups enabled and NOT using overtake
       if (powerUpsEnabled && !overtakeActive) {
-        const circuit = selectedCircuit || CIRCUITS[0];
-        const energyGain = calculateEnergyHarvest(responseTime, dynamicDifficultyDisplay, circuit.type);
+        const energyGain = calculateEnergyHarvest(responseTime, dynamicDifficultyDisplay, selectedOperation);
         const newEnergy = Math.min(100, overtakeEnergy + energyGain);
         setOvertakeEnergy(newEnergy);
 
@@ -1636,7 +1635,7 @@ export default function Multiplayer() {
             center={
               <QuestionPane
                 questionDisplay={currentQuestion ? currentQuestion.display : "..."}
-                answerDisplay={answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
+                answerDisplay={answer || (selectedOperation === 'Variables' ? "X=" : "0")}
                 feedback={feedback}
                 penaltyFlash={showPenaltyText}
                 between={
@@ -1721,10 +1720,10 @@ export default function Multiplayer() {
               {formatTime(elapsedTime)}
             </div>
 
-            {/* Difficulty HUD strip - mirrors server-authoritative difficulty */}
+            {/* Difficulty label - mirrors server-authoritative difficulty */}
             <div
               className="text-xs uppercase tracking-wider font-bold text-center py-1 shrink-0 mt-1 w-full"
-              style={{ fontFamily: 'Oxanium, sans-serif', color: difficultyColor, background: 'black' }}
+              style={{ fontFamily: 'Oxanium, sans-serif', color: difficultyColor }}
             >
               {difficultyLabel}
             </div>
@@ -1742,7 +1741,7 @@ export default function Multiplayer() {
                   feedback === "incorrect" && "text-red-600"
                 )}
               >
-                {answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
+                {answer || (selectedOperation === 'Variables' ? "X=" : "0")}
               </div>
 
               <AnimatePresence>
