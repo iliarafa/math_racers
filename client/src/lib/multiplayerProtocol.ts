@@ -46,6 +46,25 @@ export const LOBBY_DROP_MS = 20_000;
 /** …and is out of a race (a DNF) after this long. */
 export const RACE_DROP_MS = 60_000;
 
+/** A host listens this long for another host already on its code before taking it. */
+export const CODE_PROBE_MS = 1500;
+/** A joining guest gives up with "no race with that code" after this long… */
+export const JOIN_TIMEOUT_MS = 4000;
+/** …asking again this often, in case a request or reply was lost. */
+export const SYNC_RETRY_MS = 800;
+/** The host re-sends the room this often even when nothing changed, so the guest knows it's there. */
+export const HOST_HEARTBEAT_MS = 3000;
+/** The guest re-sends a change this often until the host acknowledges it… */
+export const GUEST_RESEND_MS = 1500;
+/** …and its state this often anyway, for the host's away check and race clock. */
+export const GUEST_HEARTBEAT_MS = 4000;
+/** While the race's questions are missing, the guest asks for them this often. */
+export const BANK_RETRY_MS = 1000;
+/** The guest shows "Waiting for the host" after this long without a room message… */
+export const HOST_SILENCE_MS = 7000;
+/** …and treats the room as closed after this long. */
+export const HOST_GONE_MS = 60_000;
+
 /** The five maths types; ids are the `Circuit.type` strings the setup rows use. */
 export const MATH_OPS = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Variables'] as const;
 export type MathOp = (typeof MATH_OPS)[number];
