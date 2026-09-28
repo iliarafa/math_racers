@@ -3,7 +3,8 @@
  *
  * The AudioContext lives here rather than in a page so that components outside
  * `Game.tsx` (the shared setup card) can make sound without opening a second context.
- * Game-specific race sounds still live in `Game.tsx` and import `getAudioContext`.
+ * The race sounds live in `raceSounds.ts` (the power-up sounds still in `Game.tsx`) and
+ * import `getAudioContext`.
  */
 
 let audioContext: AudioContext | null = null;
