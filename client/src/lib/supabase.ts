@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { shouldReplaceBest } from "./leaderboardRules";
 
-const supabase = createClient(
+export const supabase = createClient(
   "https://pslagmyvlvrpwnbhwqpp.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBzbGFnbXl2bHZycHduYmh3cXBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyOTc1MjMsImV4cCI6MjA5NDg3MzUyM30.--mJ32WicSQT4VKmPzoMfFD0rw68rJnQQY9JoXeZhRY",
 );
