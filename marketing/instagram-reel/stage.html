@@ -39,10 +39,19 @@ const C = {
 // Paced for reading: every caption holds for 3 s or more while the footage runs underneath.
 const LIGHTS = [0.4, 0.9, 1.4, 1.9, 2.4];
 const T = {
-  out: 3.0, phoneIn: [3.0, 3.45],
-  menu: 6.0, practice: 10.5, qualifying: 13.5, race: 16.5,
-  lane: 19.5, trophies: 24.5, cta: 27.5, end: 32.5,
+  out: 3.0, phoneIn: [3.0, 3.45], fp: 6.5,
+  menu: 9.5, practice: 14.0, qualifying: 17.0, race: 20.0,
+  lane: 23.0, trophies: 28.0, cta: 31.0, end: 36.0,
 };
+// The Paddock's Weekend Briefing tile in 3D (tile3d.mjs), seconds into the Paddock: the cut to
+// 3D and the end of the lift (the tile's layers apart, the camera round); it drifts on until
+// Free Practice.
+const TILE3D = { hand: 1.2, liftEnd: 2.3 };
+// The push-in on the tile before the cut: zoom, the point it aims at (CSS px from the screen
+// centre: the flag and the words, left of the tile's middle) and where that lands on the canvas,
+// under the caption. At this zoom the cut shows only the app's content, below the status bar
+// (setupTile3D checks), so the filmed frame alone can stand in for it in 3D.
+const TILE = { z: 2.5, focus: [-54, -211.2], at: [540, 640] };
 // The season card's circuit map in 3D, seconds into the card: the cut to 3D, the lift ending,
 // the dive onto the road ending, and the camera crossing the start/finish line.
 const T3D = { hand: 1.0, liftEnd: 2.0, diveEnd: 2.6, finish: 4.35 };
@@ -66,7 +75,8 @@ const CIRCUIT = {
 T.flag = [T.lane - 0.21, T.lane + 0.21];   // chequered flag: the weekend's finish, into Lane Racer
 const CAPTIONS = [
   { a: 0.0, b: 3.0, lines: ['HERE COME', 'THE [LIGHTS!]'], y: 410, size: 120, enterAt0: true },
-  { a: T.out, b: T.menu, lines: ['IMMERSE YOURSELF IN', '[FREE PRACTICE]'] },
+  { a: T.out, b: T.fp, lines: ['AND ON', 'THEY [GO!]'] },
+  { a: T.fp, b: T.menu, lines: ['MASTER THE TRACK', 'IN [FREE PRACTICE]'] },
   { a: T.menu, b: T.practice, lines: ['FOLLOW THE', '[LIVE SEASON]'] },
   // the weekend's sessions, coloured like the app's own Practice / Qualifying / Race tabs
   { a: T.practice, b: T.qualifying, lines: ['<PRACTICE>'], y: 420, size: 120 },
@@ -100,7 +110,7 @@ function loadImage(src) {
 const clipFrame = (clip, i) => `${WORK}/clips/${clip}/${String(i).padStart(5, '0')}.jpg`;
 let META = {};
 async function loadMeta() {
-  for (const clip of ['freepractice', 'weekend', 'lane']) {
+  for (const clip of ['paddock', 'freepractice', 'weekend', 'lane']) {
     META[clip] = await (await fetch(`${WORK}/clips/${clip}/events.json`)).json();
   }
 }
@@ -253,12 +263,16 @@ const BASE = { z: 1, fx: 0, fy: 0, ax: 540, ay: 545 + 426 * K };
 
 // Camera keyframes: [time, z, focus x/y (app CSS px from screen centre), anchor x/y (canvas px)]
 const CAM = [
-  [3.45, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [3.70, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [4.60, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
-  [5.80, 1.25, 0, -80, 540, 1030],
-  [6.05, 1.00, 0, 0, BASE.ax, BASE.ay],
-  [6.25, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.phoneIn[1], 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.out + 0.6, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.out + TILE3D.hand, TILE.z, ...TILE.focus, ...TILE.at],   // in on the Weekend Briefing tile; 3D takes over
+  [T.fp - 0.05, TILE.z, ...TILE.focus, ...TILE.at],
+  [T.fp, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.fp + 0.70, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.fp + 1.60, 1.22, 0, -80, 540, 1030],     // Free Practice: in on the question and the sector grid
+  [T.fp + 2.80, 1.25, 0, -80, 540, 1030],
+  [T.menu + 0.05, 1.00, 0, 0, BASE.ax, BASE.ay],
+  [T.menu + 0.25, 1.00, 0, 0, BASE.ax, BASE.ay],
   [T.menu + T3D.hand, 2.60, ...CIRCUIT.focus, 540, 1030],   // in on the circuit map; 3D takes over
   [T.practice - 0.05, 2.60, ...CIRCUIT.focus, 540, 1030],
   [T.practice, 1.00, 0, 0, BASE.ax, BASE.ay],
@@ -400,8 +414,10 @@ function scenes() {
   const racing = s => marks('weekend', `${s}-racing`)[0].frame;
   const hits = marks('lane', 'hit');
   const list = [
+    // the Paddock as the lights go out, then in on the Weekend Briefing tile (3D from TILE3D.hand)
+    { a: T.out, b: T.fp, clip: 'paddock', start: marks('paddock', 'paddock')[0].frame, dark: true },
     // Free Practice, laps 75-76 of 100: cut as the second answer (41) turns green, before the next card
-    { a: T.out, b: T.menu, clip: 'freepractice', start: windowEndingAfterAnswer('freepractice', null, 1, T.out, T.menu, 0.17), dark: false },
+    { a: T.fp, b: T.menu, clip: 'freepractice', start: windowEndingAfterAnswer('freepractice', null, 1, T.fp, T.menu, 0.17), dark: false },
     // the weekend menu: the card arrives, then the tap on Start Practice (held until the cut)
     { a: T.menu, b: T.practice, clip: 'weekend', start: marks('weekend', 'menu')[0].frame, last: racing('practice') - 1, dark: true },
     // late in Practice (the level has climbed) and mid-Qualifying, each landing a green sector on
@@ -441,10 +457,21 @@ function phoneTop(t) {
 function drawScrim(t) {
   const a = clamp((560 - phoneTop(t)) / 90);
   if (a <= 0) return;
-  const g = ctx.createLinearGradient(0, 0, 0, 660);
-  g.addColorStop(0, `rgba(12,4,6,${0.94 * a})`); g.addColorStop(0.62, `rgba(12,4,6,${0.88 * a})`);
+  // As the camera pushes in on the Weekend Briefing tile the Paddock's own header rises under the
+  // caption: there the scrim deepens and ends just above the tile, following it up, until the
+  // tile has lifted off in 3D.
+  let end = 660, deep = 0;
+  if (t >= T.out && t < T.out + TILE3D.liftEnd) {
+    const cam = camAt(Math.min(t, T.out + TILE3D.hand));
+    const tileTop = cam.ay + (META.paddock.rects.plate.y - SCR.h / 2 - cam.fy) * K * cam.z - 10;
+    deep = clamp((660 - tileTop) / 60) * (1 - prog(t, T.out + TILE3D.hand + 0.4, T.out + TILE3D.liftEnd));
+    end = Math.min(660, lerp(660, tileTop, deep));
+  }
+  const g = ctx.createLinearGradient(0, 0, 0, end);
+  g.addColorStop(0, `rgba(12,4,6,${lerp(0.94, 1, deep) * a})`);
+  g.addColorStop(lerp(0.62, (end - 45) / end, deep), `rgba(12,4,6,${lerp(0.88, 0.985, deep) * a})`);
   g.addColorStop(1, 'rgba(12,4,6,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, 660);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, end);
 }
 
 // ---------------------------------------------------------------- chequered flag wipe
@@ -570,13 +597,25 @@ async function drawAppStoreCall(a) {
   }
 }
 
-// ---------------------------------------------------------------- 3D circuit
-let track3d = null, lastFrame3D = null;
+// ---------------------------------------------------------------- 3D sections
+// Twice the phone gives way to 3D: the Paddock's Weekend Briefing tile comes apart in layers
+// (tile3d.mjs), and the season card's circuit map lifts off as a floating highway (track3d.mjs).
+// Each takes over at its cut to 3D, where the stage camera has pushed in to match its first
+// frame, and hands back with a whip into the next scene: its last frame slides out as the phone
+// slides in.
+let tile3d = null, track3d = null;
+const SECTIONS_3D = [
+  { at: T.out, from: T.out + TILE3D.hand, to: T.fp, view: () => tile3d, blur: () => 0 },
+  { at: T.menu, from: T.menu + T3D.hand, to: T.practice, view: () => track3d,
+    blur: u => 0.9 * prog(u, T3D.diveEnd - 0.2, T3D.finish) },           // a zoom blur once it's racing
+];
 async function setup3D() {
-  const [THREE, { buildTrack, createTrack3D }] = await Promise.all([
+  const [THREE, { buildTrack, createTrack3D }, { createTile3D }] = await Promise.all([
     import(`./${REPO}node_modules/three/build/three.module.js`),
     import(`./${REPO}marketing/instagram-reel/track3d.mjs`),
+    import(`./${REPO}marketing/instagram-reel/tile3d.mjs`),
   ]);
+  await setupTile3D(THREE, createTile3D);
   const [file, key] = CIRCUIT.path.split('#');
   const json = await (await fetch(`${REPO}${file}`)).json(), path = key ? json[key] : json;
   const png = await loadImage(`${REPO}client/src/assets/${CIRCUIT.id}_setup_track.png`);
@@ -596,11 +635,30 @@ async function setup3D() {
   track3d = createTrack3D(THREE, { track, map: CIRCUIT.map, ground, handover: { ...camAt(T.menu + T3D.hand), K },
     times: T3D, race, orbit: CIRCUIT.orbit });
 }
-/** The 3D section at `u` seconds into the season card, with a zoom blur once it's racing. */
-function draw3D(u, g = ctx) {
-  const c = track3d.render(u);
+/** The Paddock's tile, from the frame filmed at the cut, and its parts filmed on their own. */
+async function setupTile3D(THREE, createTile3D) {
+  // The cut must show nothing but the app's content (no status bar, phone edge or card corner),
+  // since the ground in 3D is the filmed frame alone.
+  const cam = camAt(T.out + TILE3D.hand), s = K * cam.z;
+  const left = cam.fx + SCR.w / 2 - cam.ax / s, top = cam.fy + SCR.h / 2 - cam.ay / s;   // CSS px
+  if (left < 0 || left + W / s > SCR.w || top < 59 || top + H / s > SCR.h)
+    throw new Error(`the cut to the tile shows more than the app (view from ${left.toFixed(1)}, ${top.toFixed(1)})`);
+  const P = META.paddock, paddock = scenes().find(sc => sc.a === T.out);
+  const f = String(Math.round(paddock.start + TILE3D.hand * FPS)).padStart(5, '0');
+  const names = ['plate', 'flag', 'label', 'title'];
+  const [ground, bare, ...images] = await Promise.all([
+    loadImage(`${WORK}/clips/paddock/${f}.jpg`), loadImage(`${WORK}/clips/paddock/notile/${f}.jpg`),
+    ...names.map(n => loadImage(`${WORK}/clips/paddock/layers/${n}.png`)),
+  ]);
+  tile3d = createTile3D(THREE, { rects: P.rects, ground, bare, handover: { ...cam, K },
+    layers: Object.fromEntries(names.map((n, i) => [n, { image: images[i], rect: P.layers[n] }])),
+    times: { ...TILE3D, end: T.fp - T.out } });
+}
+/** A 3D section at `u` seconds into its scene. */
+function draw3D(sec, u, g = ctx) {
+  const c = sec.view().render(u);
   g.drawImage(c, 0, 0);
-  const blur = 0.9 * prog(u, T3D.diveEnd - 0.2, T3D.finish);
+  const blur = sec.blur(u);
   if (blur > 0) {
     g.save();
     for (const [z, a] of [[1.03, 0.2], [1.06, 0.1]]) {
@@ -610,13 +668,13 @@ function draw3D(u, g = ctx) {
     g.restore();
   }
 }
-/** The last 3D frame, kept for the whip into Practice. */
-function last3D() {
-  if (!lastFrame3D) {
-    lastFrame3D = document.createElement('canvas'); lastFrame3D.width = W; lastFrame3D.height = H;
-    draw3D(T.practice - T.menu - 1 / FPS, lastFrame3D.getContext('2d'));
+/** A section's last frame, kept for the whip into the next scene. */
+function last3D(sec) {
+  if (!sec.last) {
+    sec.last = document.createElement('canvas'); sec.last.width = W; sec.last.height = H;
+    draw3D(sec, sec.to - sec.at - 1 / FPS, sec.last.getContext('2d'));
   }
-  return lastFrame3D;
+  return sec.last;
 }
 
 // ---------------------------------------------------------------- frame
@@ -643,17 +701,19 @@ window.render = async function (t) {
       const p = eInCubic(prog(t, T.cta, T.cta + 0.28));
       opts.dy = (opts.dy || 0) + p * 1000; opts.alpha = 1 - p; cam.z *= lerp(1, 0.85, p);
     }
-    // The 3D circuit replaces the phone from the cut to 3D until the whip into Practice, where
-    // the last 3D frame slides out as the phone slides in.
-    if (t >= T.menu + T3D.hand && t < T.practice) {
-      draw3D(t - T.menu);
+    // A 3D section replaces the phone from its cut to 3D until the whip into the next scene,
+    // where its last frame slides out as the phone slides in.
+    const in3D = SECTIONS_3D.find(sec => t >= sec.from && t < sec.to);
+    if (in3D) {
+      draw3D(in3D, t - in3D.at);
       drawScrim(t);
       for (const cap of CAPTIONS) drawCaption(t, cap);
       return;
     }
-    if (t >= T.practice && t < T.practice + 0.2) {
-      const p = eOutCubic(prog(t, T.practice, T.practice + 0.2));
-      ctx.drawImage(last3D(), -p * W, 0);
+    const out3D = SECTIONS_3D.find(sec => t >= sec.to && t < sec.to + 0.2);
+    if (out3D) {
+      const p = eOutCubic(prog(t, out3D.to, out3D.to + 0.2));
+      ctx.drawImage(last3D(out3D), -p * W, 0);
       opts.dx = (1 - p) * W;
     }
     // Scenes change with a whip across the screen; the chequered flag covers the cut to Lane Racer.
@@ -692,12 +752,15 @@ window.cues = function () {
       const t = sc.a + (e.frame - sc.start) / FPS;
       if (e.frame < sc.start || e.frame >= sc.start + len || e.frame > (sc.last ?? Infinity) + 1) continue;
       if (t < sc.a + 0.15 || t >= sc.b || (t > T.flag[0] - 0.05 && t < T.flag[1])) continue;
-      if (sc.a === T.menu && t >= T.menu + T3D.hand) continue;   // the card is 3D by then
+      if (SECTIONS_3D.some(sec => t >= sec.from && t < sec.to)) continue;   // the phone is 3D by then
       if (e.type === 'tap') out.push({ t, kind: 'click' });
       if (e.type === 'mark' && (e.name === 'answered' || e.name === 'hit')) out.push({ t, kind: 'correct' });
     }
   }
-  for (const c of [T.menu, T.practice, T.qualifying, T.race, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
+  for (const c of [T.fp, T.menu, T.practice, T.qualifying, T.race, T.trophies]) out.push({ t: c - 0.04, kind: 'whoosh', d: 0.3 });
+  // the Paddock's tile lifting and coming apart
+  out.push({ t: T.out + TILE3D.hand, kind: 'riser', d: TILE3D.liftEnd - TILE3D.hand });
+  out.push({ t: T.out + TILE3D.hand + 0.3, kind: 'whoosh', d: 0.45 });
   // the lift, the dive and the engine down the 3D track
   out.push({ t: T.menu + T3D.hand, kind: 'riser', d: T3D.liftEnd - T3D.hand });
   out.push({ t: T.menu + T3D.liftEnd + 0.2, kind: 'whoosh', d: 0.5 });

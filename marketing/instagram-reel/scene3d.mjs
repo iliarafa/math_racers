@@ -32,22 +32,26 @@ export function createView(THREE) {
 }
 
 /**
- * A filmed screen frame as the ground, fading out toward the screen's edges. `clear` is what the
- * cut to 3D shows, which must stay fully opaque (world units from the screen centre): |x| up to
- * `x`, and from `top` above the centre to `bottom` below it. The fade runs from there to the edge.
+ * Opaque where the cut to 3D looks (world units from the screen centre: |x| up to `x`, and from
+ * `top` above the centre to `bottom` below it), fading from there to nothing at the screen's
+ * edges. For groundMesh.
  */
-export function groundMesh(THREE, renderer, image, clear) {
+export const edgeFade = clear => (wx, wz) => {
+  const ex = 196, ez = SCREEN.h / 2;                                     // where the fade reaches 0
+  const ax = 1 - smooth(clamp01((Math.abs(wx) - clear.x) / (ex - clear.x)));
+  const az = wz < 0 ? 1 - smooth(clamp01((-wz - clear.top) / (ez - clear.top))) : 1 - smooth(clamp01((wz - clear.bottom) / (ez - clear.bottom)));
+  return 255 * ax * az;
+};
+
+/** A filmed screen frame as the ground; `alpha(wx, wz)` is its opacity there, 0-255. */
+export function groundMesh(THREE, renderer, image, alpha) {
   const tex = new THREE.Texture(image); tex.colorSpace = THREE.SRGBColorSpace; tex.needsUpdate = true;
   tex.minFilter = THREE.LinearMipmapLinearFilter; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
   const fade = (() => {
     const c = document.createElement('canvas'); c.width = SCREEN.w; c.height = SCREEN.h;
     const x = c.getContext('2d'), img = x.createImageData(c.width, c.height);
-    const ex = 196, ez = SCREEN.h / 2;                                   // where the fade reaches 0
     for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) {
-      const wx = xx + 0.5 - SCREEN.w / 2, wz = y + 0.5 - SCREEN.h / 2;
-      const ax = 1 - smooth(clamp01((Math.abs(wx) - clear.x) / (ex - clear.x)));
-      const az = wz < 0 ? 1 - smooth(clamp01((-wz - clear.top) / (ez - clear.top))) : 1 - smooth(clamp01((wz - clear.bottom) / (ez - clear.bottom)));
-      const v = Math.round(255 * ax * az), o = (y * c.width + xx) * 4;
+      const v = Math.round(alpha(xx + 0.5 - SCREEN.w / 2, y + 0.5 - SCREEN.h / 2)), o = (y * c.width + xx) * 4;
       img.data[o] = img.data[o + 1] = img.data[o + 2] = v; img.data[o + 3] = 255;
     }
     x.putImageData(img, 0, 0);

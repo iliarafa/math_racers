@@ -9,7 +9,7 @@
 // two passes overlap; there each pass is snapped to its own sector's stripe (the colour of the
 // track it connects to on either side), and the scene lifts one pass over the other as a
 // flyover.
-import { SCREEN, FOV, clamp01, prog, eInOut, smooth, lerp, createView, groundMesh, handoverView, orbitPose } from './scene3d.mjs';
+import { SCREEN, FOV, clamp01, prog, eInOut, smooth, lerp, createView, groundMesh, edgeFade, handoverView, orbitPose } from './scene3d.mjs';
 
 const TWO_PASS_RADIUS = 11;   // path units: closer than this to a far part of the lap = two-way
 const FAR_INDEX = 60;         // centreline points apart before a nearby point counts as "far"
@@ -192,7 +192,7 @@ const ROAD = {
 };
 /** Race camera, in path units: height above the road and how far ahead it looks. */
 const CHASE = { height: 4.5, look: 40 };
-/** The part of the card the cut to 3D shows, kept fully opaque (see groundMesh). */
+/** The part of the card the cut to 3D shows, kept fully opaque (see edgeFade). */
 const GROUND_CLEAR = { x: 150, top: 310, bottom: 190 };
 
 /**
@@ -335,7 +335,7 @@ export function createTrack3D(THREE, { track, map, ground, handover, times, race
   const posts = [0, 1].map(() => { const p = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), postMat); p.frustumCulled = false; scene.add(p); return p; });
 
   // the ground: the filmed card, fading out at its edges (clear of the handover view)
-  const card = groundMesh(THREE, renderer, ground, GROUND_CLEAR); scene.add(card);
+  const card = groundMesh(THREE, renderer, ground, edgeFade(GROUND_CLEAR)); scene.add(card);
 
   // the track's light on the card below: a blurred copy of the sector lines
   const glowGround = (() => {

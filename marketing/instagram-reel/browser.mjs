@@ -55,7 +55,14 @@ export async function openPhone({ cacheDir, webmDir, dpr = 3, storage = {}, rout
     const name = path.basename(new URL(route.request().url()).pathname, '.mp4').replace(/-[A-Za-z0-9_]{8}$/, '');
     const file = path.join(webmDir, name + '.webm');
     if (!fs.existsSync(file)) return route.abort();
-    await route.fulfill({ status: 200, body: fs.readFileSync(file), headers: { 'content-type': 'video/webm' } });
+    // Answer byte ranges as a real server does: without them the video can't seek, and the
+    // recorder seeks every video to virtual time before each frame.
+    const body = fs.readFileSync(file), range = /bytes=(\d+)-(\d*)/.exec(route.request().headers().range || '');
+    const headers = { 'content-type': 'video/webm', 'accept-ranges': 'bytes' };
+    if (!range) return route.fulfill({ status: 200, body, headers });
+    const start = Number(range[1]), end = range[2] ? Math.min(Number(range[2]), body.length - 1) : body.length - 1;
+    await route.fulfill({ status: 206, body: body.subarray(start, end + 1),
+      headers: { ...headers, 'content-range': `bytes ${start}-${end}/${body.length}` } });
   });
   await context.route(u => !/^(localhost|127\.0\.0\.1)$/.test(u.hostname), async route => {
     const url = route.request().url();

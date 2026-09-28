@@ -22,6 +22,7 @@ for f in "$REPO"/attached_assets/*.mp4; do
 done
 
 cd "$HERE"
+node capture-paddock.mjs       # the Paddock, and the Weekend Briefing tile's parts
 node capture-freepractice.mjs  # Free Practice: addition at Formula 2
 node capture-weekend.mjs       # Grand Prix weekend: menu, Practice, Qualifying, Race Day
 node capture-lane.mjs          # Lane Racer, chase cam
