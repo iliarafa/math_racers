@@ -17,6 +17,7 @@ import { PowerUpControls } from "@/components/desktop/PowerUpControls";
 import { QuestionPane } from "@/components/desktop/QuestionPane";
 import { StartLights } from "@/components/race/StartLights";
 import { RacingScreen, RacingScreenColumn, RacingScreenLeft, RacingScreenRight } from "@/components/race/RacingScreen";
+import { PhoneQuestionPane } from "@/components/race/PhoneQuestionPane";
 import { isIpad, isPortrait, lockLandscapeOnIpad, unlockOrientation } from "@/lib/orientationLock";
 import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getSessionAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
@@ -3311,68 +3312,16 @@ export default function Game() {
           )}
 
           {/* Expression and Answer with Penalty Overlay */}
-          <div className={cn("relative", isGpRace ? "mt-0" : "mt-6 sm:mt-8")}>
-            <div className={cn(
-              "font-bold tracking-tight leading-none text-center px-2 max-w-full",
-              isGpRace ? "text-[clamp(3.375rem,10.5dvh,6rem)] translate-y-10" : "text-[clamp(2.75rem,min(7.6dvh,22cqh),4.75rem)]",
-              isGpRace && gpRaceFlash && "text-white"
-            )}>
-              {question?.display}
-            </div>
-
-            <div
-              className={cn(
-                "font-bold min-w-[80px] text-center leading-none",
-                isGpRace ? "mt-4 text-[clamp(4.5rem,14dvh,8rem)]" : "-mt-2 text-[clamp(2.75rem,min(7.6dvh,22cqh),4.75rem)]",
-                isGpRace && gpRaceFlash && "text-white",
-                !(isGpRace && gpRaceFlash) && feedback === 'idle' && "text-muted-foreground/50",
-                !(isGpRace && gpRaceFlash) && feedback === 'correct' && "text-green-600",
-                !(isGpRace && gpRaceFlash) && feedback === 'incorrect' && "text-red-600"
-              )}
-              data-testid="display-answer"
-            >
-              {answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
-            </div>
-
-            {/* +5s Penalty Flash Overlay */}
-            <AnimatePresence>
-              {showFiveSecPenalty && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: [1, 0.2, 1, 0.2, 1], scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.8 }}
-                  className="absolute inset-0 flex items-center justify-center z-10"
-                >
-                  <span
-                    className="font-bold text-red-600 text-[clamp(1.75rem,4.5dvh,2.75rem)]"
-                    style={{ fontFamily: 'Oxanium, sans-serif' }}
-                  >
-                    +5s
-                  </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Reserved slot so FINAL LAP never sits on the numbers */}
-          <div className={cn("h-11 shrink-0 flex items-center justify-center mt-3", isGpRace && "mt-6")}>
-            <AnimatePresence mode="wait">
-              {showFinalLap ? (
-                <motion.div
-                  key="final-lap"
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: [1, 0.2, 1] }}
-                  transition={{ duration: 0.28, repeat: 2 }}
-                  onAnimationComplete={() => setShowFinalLap(false)}
-                  className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600 uppercase tracking-widest"
-                  style={{ fontFamily: 'Oxanium, sans-serif' }}
-                >
-                  FINAL LAP
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
+          <PhoneQuestionPane
+            questionDisplay={question?.display}
+            answerDisplay={answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
+            feedback={feedback}
+            penaltyFlash={showFiveSecPenalty ? '+5s' : null}
+            showFinalLap={showFinalLap}
+            onFinalLapDone={() => setShowFinalLap(false)}
+            raceDay={isGpRace}
+            flashWhite={isGpRace && !!gpRaceFlash}
+          />
           {ipadLandscape && sectorGrid}
         </RacingScreenColumn>
 
