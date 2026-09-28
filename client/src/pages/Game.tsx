@@ -18,6 +18,7 @@ import { QuestionPane } from "@/components/desktop/QuestionPane";
 import { StartLights } from "@/components/race/StartLights";
 import { RacingScreen, RacingScreenColumn, RacingScreenLeft, RacingScreenRight } from "@/components/race/RacingScreen";
 import { PhoneQuestionPane } from "@/components/race/PhoneQuestionPane";
+import { RaceKeypad } from "@/components/race/RaceKeypad";
 import { isIpad, isPortrait, lockLandscapeOnIpad, unlockOrientation } from "@/lib/orientationLock";
 import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getSessionAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
@@ -30,7 +31,7 @@ import { submitFpLeaderboardEntry, submitGpWeekendEntry, submitQuickRaceEntry, G
 import { localBestKey, fpSessionForLaps, sessionLabel, localTierNote, type LocalBestEntry, type LocalBoard, type LocalSession } from "@/lib/localBests";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { Check, X, RotateCcw, Home, Timer, Delete, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy, RotateCw } from "lucide-react";
+import { X, RotateCcw, Home, Timer, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy, RotateCw } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 import { grandPrixDevBypass } from "@/lib/drivingSchoolLicence";
@@ -3401,9 +3402,15 @@ export default function Game() {
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 lg:gap-3 w-full max-w-md md:max-w-xl lg:max-w-2xl">
-            {/* Power-ups row - integrated as extended keypad row */}
-            {powerUpsEnabled && (
+          <RaceKeypad
+            onDigit={(d) => setAnswer(prev => prev + d)}
+            onDelete={() => setAnswer(prev => prev.slice(0, -1))}
+            onSubmit={() => handleSubmit()}
+            disabled={isPaused}
+            locked={feedback !== 'idle'}
+            canSubmit={!!answer}
+            // Power-ups row - integrated as extended keypad row
+            topRow={powerUpsEnabled && (
               <>
                 {/* AERO Button - above 7 */}
                 <button
@@ -3473,71 +3480,7 @@ export default function Game() {
                 </button>
               </>
             )}
-
-            {/* Regular keypad buttons */}
-            {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
-              <button
-                key={num}
-                type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  if (!isPaused && feedback === 'idle') {
-                    playKeypadClick();
-                    setAnswer(prev => prev + num.toString());
-                  }
-                }}
-                disabled={isPaused}
-                className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none web-hover-darken"
-                data-testid={`keypad-${num}`}
-              >
-                {num}
-              </button>
-            ))}
-            <button
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                if (!isPaused && feedback === 'idle') {
-                  playKeypadClick();
-                  setAnswer(prev => prev.slice(0, -1));
-                }
-              }}
-              disabled={isPaused}
-              className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-muted text-muted-foreground font-bold hover:bg-muted/80 transition-colors active:scale-95 flex items-center justify-center disabled:opacity-50 touch-manipulation select-none web-hover-darken"
-              data-testid="keypad-delete"
-            >
-              <Delete className="w-6 h-6 sm:w-8 sm:h-8" />
-            </button>
-            <button
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                if (!isPaused && feedback === 'idle') {
-                  playKeypadClick();
-                  setAnswer(prev => prev + '0');
-                }
-              }}
-              disabled={isPaused}
-              className="h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl bg-secondary text-secondary-foreground text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold hover:bg-secondary/80 transition-colors active:scale-95 disabled:opacity-50 touch-manipulation select-none web-hover-darken"
-              data-testid="keypad-0"
-            >
-              0
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSubmit()}
-              disabled={!answer || feedback !== 'idle' || isPaused}
-              className={cn(
-                "h-[56px] sm:h-[72px] md:h-[84px] lg:h-[100px] rounded-xl text-xl sm:text-2xl font-bold transition-colors active:scale-95 flex items-center justify-center touch-manipulation select-none",
-                answer && feedback === 'idle' && !isPaused
-                  ? "bg-green-600 text-white hover:bg-green-500"
-                  : "bg-muted text-muted-foreground"
-              )}
-              data-testid="keypad-submit"
-            >
-              <Check className="w-6 h-6 sm:w-8 sm:h-8" />
-            </button>
-          </div>
+          />
         </RacingScreenRight>
 
       </RacingScreen>
