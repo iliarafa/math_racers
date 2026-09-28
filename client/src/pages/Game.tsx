@@ -16,6 +16,7 @@ import { KeyStrip } from "@/components/desktop/KeyStrip";
 import { PowerUpControls } from "@/components/desktop/PowerUpControls";
 import { QuestionPane } from "@/components/desktop/QuestionPane";
 import { StartLights } from "@/components/race/StartLights";
+import { RacingScreen, RacingScreenColumn, RacingScreenLeft, RacingScreenRight } from "@/components/race/RacingScreen";
 import { isIpad, isPortrait, lockLandscapeOnIpad, unlockOrientation } from "@/lib/orientationLock";
 import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getSessionAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
@@ -3256,10 +3257,10 @@ export default function Game() {
           {raceOverlays}
         </DesktopRaceScreen>
       ) : (
-      <div className="racing-screen flex-1 flex flex-col w-full overflow-hidden relative min-h-0 bg-transparent">
+      <RacingScreen>
         {raceOverlays}
 
-        <div className="landscape-left flex-1 flex flex-col min-h-0">
+        <RacingScreenLeft>
         {/* Mode badge and controls — Free Practice skips the green pill to keep HUD lighter */}
         {!isPreSeasonTesting && !isGpRace && (
           <div className="flex justify-between items-center text-sm text-muted-foreground font-medium px-4 py-1 shrink-0">
@@ -3293,7 +3294,7 @@ export default function Game() {
         )}
 
         {/* Non-race phases size the numbers from this column's own height (cqh) so they never spill onto the grid. */}
-        <div className={cn("relative flex-1 flex flex-col items-center min-h-0 px-4", isGpRace ? "justify-center pt-12" : "[container-type:size]")}>
+        <RacingScreenColumn className={isGpRace ? "justify-center pt-12" : "[container-type:size]"}>
           {!isGpRace && <div className="h-[15%] shrink min-h-0" aria-hidden />}
           {!isGpRace && (
           <div className="flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.25rem,2.6dvh,1.75rem)]">
@@ -3373,11 +3374,11 @@ export default function Game() {
             </AnimatePresence>
           </div>
           {ipadLandscape && sectorGrid}
-        </div>
+        </RacingScreenColumn>
 
-        </div>
+        </RacingScreenLeft>
         {/* Large Keypad with integrated Power-ups row */}
-        <div className="landscape-right flex flex-col justify-end lg:justify-center items-center px-4 min-h-0 pb-11 shrink-0">
+        <RacingScreenRight>
           {isGpRace && (
             <div
               className={cn(
@@ -3588,9 +3589,9 @@ export default function Game() {
               <Check className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
           </div>
-        </div>
+        </RacingScreenRight>
 
-      </div>
+      </RacingScreen>
       )}
 
       {/* Name Prompt Overlay */}
