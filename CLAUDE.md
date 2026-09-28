@@ -175,7 +175,7 @@ Single-player power-ups are Grand Prix only (`powerUpsEnabled = isGrandPrix` in 
 
 ### Penalty System (Per-Question Retry)
 - Each question allows up to 4 attempts
-- Wrong answer shows "TRACK LIMITS" warning in a red container (with black-and-white flag)
+- Wrong answer turns the typed answer red for 0.6 s with no message, as a correct one turns it green (Race Day flashes the whole screen instead: red, or the sector colour). The slot under the answer shows only FINAL LAP
 - 4th wrong attempt on the same question: DNF/Crash (race ends)
 - Wrong answer during AERO: AERO deactivated, same retry system applies
 - Practice mode: no penalties, infinite retries

@@ -58,7 +58,6 @@ import flagUK from "@/assets/flag_uk.png";
 import flagAustralia from "@/assets/flag_australia.png";
 import flagChina from "@/assets/flag_china.png";
 import flagBahrain from "@/assets/flag_bahrain.jpeg";
-import trackLimitsFlag from "@/assets/track-limits-flag.png";
 import trackMelbourne from "@/assets/track_melbourne.png";
 import trackChina from "@/assets/track_china.png";
 import circuitMonzaRed from "@/assets/circuit_monza_red.png";
@@ -574,7 +573,6 @@ export default function Game() {
   const [finalMistakes, setFinalMistakes] = useState(0);
   const [showCrashDebrief, setShowCrashDebrief] = useState(false);
   const [showPenalty, setShowPenalty] = useState(false);
-  const [showBlackWhiteFlag, setShowBlackWhiteFlag] = useState(false);
   const [showFiveSecPenalty, setShowFiveSecPenalty] = useState(false);
   const [penaltyMessage, setPenaltyMessage] = useState<{ text: string; color: string }>({ text: '', color: 'red' });
   const [mistakeLog, setMistakeLog] = useState<Array<{ question: string; yourAnswer: number; correctAnswer: number }>>([]);
@@ -3346,8 +3344,6 @@ export default function Game() {
               flashWhite={isGpRace && !!gpRaceFlash}
               between={desktopSectorGrid}
               status={{
-                showPenalty,
-                showBlackWhiteFlag,
                 showFinalLap,
                 onFinalLapDone: () => setShowFinalLap(false),
               }}
@@ -3485,33 +3481,10 @@ export default function Game() {
             </AnimatePresence>
           </div>
 
-          {/* Reserved slot so TRACK LIMITS / FINAL LAP never sit on the numbers */}
+          {/* Reserved slot so FINAL LAP never sits on the numbers */}
           <div className={cn("h-11 shrink-0 flex items-center justify-center mt-3", isGpRace && "mt-6")}>
             <AnimatePresence mode="wait">
-              {showPenalty ? (
-                <motion.div
-                  key="track-limits"
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex items-center justify-center gap-2 pointer-events-none"
-                >
-                  {showBlackWhiteFlag && (
-                    <img
-                      src={trackLimitsFlag}
-                      alt="Black and White Flag"
-                      className="h-8 w-12 object-cover rounded"
-                    />
-                  )}
-                  <motion.div
-                    animate={{ opacity: [1, 0.3, 1] }}
-                    transition={{ duration: 0.3, repeat: 3 }}
-                    className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
-                  >
-                    TRACK LIMITS
-                  </motion.div>
-                </motion.div>
-              ) : showFinalLap ? (
+              {showFinalLap ? (
                 <motion.div
                   key="final-lap"
                   initial={{ opacity: 1 }}

@@ -54,7 +54,7 @@ const chapters: Chapter[] = [
         title: "Track Limits",
         description: "Each question allows up to 4 attempts.",
         details: [
-          "Wrong answers show a track limits warning",
+          "A wrong answer turns your answer red",
           "4th wrong attempt on the same question results in a crash (DNF)",
         ],
       },

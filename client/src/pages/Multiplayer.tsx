@@ -23,7 +23,6 @@ import { Paywall } from "@/components/Paywall";
 
 // Import assets for track selection
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
-import trackLimitsFlag from "@/assets/track-limits-flag.png";
 import { CIRCUIT_MENU_ART, MENU_CIRCUITS } from "@/lib/circuitMenuArt";
 import confetti from "canvas-confetti";
 
@@ -183,8 +182,6 @@ export default function Multiplayer() {
   const [overtakeQuestion, setOvertakeQuestion] = useState<Question | null>(null);
 
   // UI feedback states (matching single-player)
-  const [showPenalty, setShowPenalty] = useState(false);
-  const [showBlackWhiteFlag, setShowBlackWhiteFlag] = useState(false);
   const [showPenaltyText, setShowPenaltyText] = useState<string | null>(null);
   const [showBoostMessage, setShowBoostMessage] = useState<string | null>(null);
   const [showAeroMessage, setShowAeroMessage] = useState<string | null>(null);
@@ -982,13 +979,6 @@ export default function Multiplayer() {
       // Track retries for red sector override in realism mode
       setQuestionAttempts(prev => prev + 1);
 
-      // Show track limits warning
-      setShowPenalty(true);
-      if (newMistakes >= 3) {
-        setShowBlackWhiteFlag(true);
-      }
-      safeTimeout(() => { setShowPenalty(false); }, 1500);
-
       // Reset AERO active state on wrong answer
       if (aeroActive) {
         setAeroActive(false);
@@ -1670,8 +1660,6 @@ export default function Multiplayer() {
               />
                 }
                 status={{
-                  showPenalty,
-                  showBlackWhiteFlag,
                   showFinalLap,
                   onFinalLapDone: () => setShowFinalLap(false),
                 }}
@@ -1779,30 +1767,7 @@ export default function Multiplayer() {
 
             <div className="h-11 shrink-0 flex items-center justify-center mt-3">
               <AnimatePresence mode="wait">
-                {showPenalty ? (
-                  <motion.div
-                    key="track-limits"
-                    initial={{ opacity: 0, y: -5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="flex items-center justify-center gap-2 pointer-events-none"
-                  >
-                    {showBlackWhiteFlag && (
-                      <img
-                        src={trackLimitsFlag}
-                        alt="Black and White Flag"
-                        className="h-8 w-12 object-cover rounded"
-                      />
-                    )}
-                    <motion.div
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ duration: 0.3, repeat: 3 }}
-                      className="text-white px-3 py-0.5 rounded-lg font-bold text-xs bg-red-600"
-                    >
-                      TRACK LIMITS
-                    </motion.div>
-                  </motion.div>
-                ) : showFinalLap ? (
+                {showFinalLap ? (
                   <motion.div
                     key="final-lap"
                     initial={{ opacity: 1 }}
