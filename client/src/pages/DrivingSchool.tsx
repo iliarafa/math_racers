@@ -4,11 +4,14 @@ import { Check, Delete, Lock, RotateCcw } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { DesktopRaceScreen } from "@/components/desktop/DesktopRaceScreen";
 import { KeyStrip } from "@/components/desktop/KeyStrip";
+import { RadioDigits } from "@/components/race/RadioDigits";
 import { useLayoutMode } from "@/hooks/use-layout-mode";
 import { useKeyEcho } from "@/hooks/use-key-echo";
 import type { KeyStripKey } from "@/lib/keyStrip";
 import { cn } from "@/lib/utils";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
+import { playRadioChirp } from "@/lib/raceSounds";
+import { ghostDigits } from "@/lib/answerReveal";
 import { useGameState } from "@/lib/gameLogic";
 import { announceRewards } from "@/lib/announceRewards";
 import schoolBgImage from "@assets/driving-school-bg.jpg";
@@ -112,6 +115,8 @@ export default function DrivingSchool() {
   const [queuePos, setQueuePos] = useState(0);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
+  // Team radio: a red card shows its answer, and the kid types it to move on.
+  const [revealed, setRevealed] = useState(false);
   const [lap, setLap] = useState(1);
   const questionStartRef = useRef(Date.now());
 
@@ -119,13 +124,15 @@ export default function DrivingSchool() {
   const current = currentIndex !== undefined ? deck[currentIndex] : null;
   const purpleCount = deck.filter((c) => c.color === 'purple').length;
 
+  // `lap` too: a card re-drilled alone keeps its index, and its clock must still restart.
   useEffect(() => {
     if (screen === 'session' && current) {
       questionStartRef.current = Date.now();
       setAnswer('');
       setFeedback('idle');
+      setRevealed(false);
     }
-  }, [screen, currentIndex, current?.id]);
+  }, [screen, currentIndex, current?.id, lap]);
 
   const startStage = (s: DrivingSchoolStage) => {
     if (!isStageUnlocked(s.id, highestCleared)) return;
@@ -174,6 +181,22 @@ export default function DrivingSchool() {
     const val = parseInt(answer, 10);
     if (Number.isNaN(val)) return;
 
+    // Copying a red card's answer: the card stays red. The right answer moves on, a wrong one retries.
+    if (revealed) {
+      const copied = val === current.question.answer;
+      setFeedback(copied ? 'correct' : 'incorrect');
+      if (!copied && state.soundEnabled) playGradeSound('red');
+      window.setTimeout(() => {
+        setFeedback('idle');
+        setAnswer('');
+        if (copied) {
+          setRevealed(false);
+          advanceAfterGrade(deck);
+        }
+      }, 550);
+      return;
+    }
+
     const responseTime = Date.now() - questionStartRef.current;
     const correct = val === current.question.answer;
     const color = gradeFlashcard(correct, responseTime, current.question.botTime);
@@ -188,6 +211,11 @@ export default function DrivingSchool() {
     window.setTimeout(() => {
       setFeedback('idle');
       setAnswer('');
+      if (color === 'red') {
+        setRevealed(true);
+        if (state.soundEnabled) playRadioChirp();
+        return;
+      }
       advanceAfterGrade(nextDeck);
     }, 550);
   };
@@ -209,7 +237,7 @@ export default function DrivingSchool() {
     return () => window.removeEventListener('keydown', onKey);
     // Intentionally re-bind when the active card / feedback changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, feedback, currentIndex, answer, deck, queue, queuePos, stage]);
+  }, [screen, feedback, revealed, currentIndex, answer, deck, queue, queuePos, stage]);
 
   if (screen === 'cleared' && stage) {
     return (
@@ -277,7 +305,7 @@ export default function DrivingSchool() {
     const flashcard = (
               <AnimatePresence mode="wait">
                 {(() => {
-                  const lit = feedback !== 'idle' && current.color !== 'pending';
+                  const lit = feedback !== 'idle' && !revealed && current.color !== 'pending';
                   return (
                     <motion.div
                       key={current.id}
@@ -300,11 +328,16 @@ export default function DrivingSchool() {
                       <div
                         className={cn(
                           'text-[min(3.75rem,23cqh)] leading-none font-bold min-h-[1em] mt-[min(1.25rem,8cqh)]',
-                          lit ? 'text-white/90' : 'text-muted-foreground/40',
+                          lit ? 'text-white/90'
+                            : revealed && feedback === 'correct' ? 'text-green-600'
+                            : revealed && feedback === 'incorrect' ? 'text-red-600'
+                            : 'text-muted-foreground/40',
                         )}
                         data-testid="flashcard-answer"
                       >
-                        {answer || '0'}
+                        {revealed && feedback === 'idle'
+                          ? <RadioDigits {...ghostDigits(answer, String(current.question.answer))} />
+                          : (answer || '0')}
                       </div>
                       {/* Colour label, absolutely positioned so it never shifts the centred pair */}
                       <div className="absolute inset-x-0 bottom-[min(0.75rem,5cqh)] h-[min(1.25rem,10cqh)] flex items-center justify-center">
@@ -365,7 +398,7 @@ export default function DrivingSchool() {
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-purple-500 shrink-0" />Purple: right, and faster than the bot</div>
                 <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-green-500 shrink-0" />Green: right</div>
-                <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-red-500 shrink-0" />Red: wrong, back into the deck</div>
+                <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-red-500 shrink-0" />Red: wrong; copy the answer, and it comes back next lap</div>
               </div>
             }
             bottomCenter={
