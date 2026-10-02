@@ -394,13 +394,6 @@ export default function DrivingSchool() {
                 {flashcard}
               </div>
             }
-            bottomLeft={
-              <div className="flex flex-col gap-2 text-sm">
-                <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-purple-500 shrink-0" />Purple: right, and faster than the bot</div>
-                <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-green-500 shrink-0" />Green: right</div>
-                <div className="flex items-center gap-3"><span className="w-4 h-4 rounded bg-red-500 shrink-0" />Red: wrong; copy the answer, and it comes back next lap</div>
-              </div>
-            }
             bottomCenter={
               <KeyStrip
                 onKey={handleStripKey}
