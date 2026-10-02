@@ -1,6 +1,6 @@
 /**
- * Race sounds shared by the racing screens: the start-light beeps, the answer tones and the
- * keypad click, all on the shared AudioContext from `uiSound.ts`. `initAudio` starts that
+ * Race sounds shared by the racing screens: the start-light beeps, the answer tones, the team
+ * radio chirp and the keypad click, all on the shared AudioContext from `uiSound.ts`. `initAudio` starts that
  * context once with a silent blip. The power-up sounds and `playSimplyLovely` stay in `Game.tsx`.
  */
 
@@ -111,6 +111,46 @@ export const playIncorrectSound = () => {
 
     oscillator.start(ctx.currentTime);
     oscillator.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    // Silent fail
+  }
+};
+
+/** Team radio: a squelch click, then a high-low double beep as the engineer keys the mic. */
+export const playRadioChirp = () => {
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+
+    const noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.04), ctx.sampleRate);
+    const samples = noise.getChannelData(0);
+    for (let i = 0; i < samples.length; i++) samples[i] = Math.random() * 2 - 1;
+    const squelch = ctx.createBufferSource();
+    squelch.buffer = noise;
+    const band = ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.frequency.value = 2200;
+    const squelchGain = ctx.createGain();
+    squelchGain.gain.setValueAtTime(0.12, now);
+    squelchGain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+    squelch.connect(band);
+    band.connect(squelchGain);
+    squelchGain.connect(ctx.destination);
+    squelch.start(now);
+
+    for (const [frequency, start] of [[1400, 0.05], [1050, 0.13]]) {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
+      gainNode.gain.setValueAtTime(0.0001, now + start);
+      gainNode.gain.exponentialRampToValueAtTime(0.15, now + start + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + start + 0.07);
+      oscillator.start(now + start);
+      oscillator.stop(now + start + 0.07);
+    }
   } catch (e) {
     // Silent fail
   }

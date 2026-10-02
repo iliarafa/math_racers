@@ -22,7 +22,8 @@ import { RaceKeypad } from "@/components/race/RaceKeypad";
 import { isIpad, isPortrait, lockLandscapeOnIpad, unlockOrientation } from "@/lib/orientationLock";
 import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getSessionAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
-import { initAudio, playBeep, playCorrectSound, playIncorrectSound, playKeypadClick } from "@/lib/raceSounds";
+import { initAudio, playBeep, playCorrectSound, playIncorrectSound, playKeypadClick, playRadioChirp } from "@/lib/raceSounds";
+import { RADIO_HOLD_MS, ghostDigits, revealsOnMiss } from "@/lib/answerReveal";
 import type { DifficultyDrumOption } from "@/lib/gameLogic";
 import { loadSetupOperation, saveSetupOperation } from "@/lib/gameLogic";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
@@ -485,6 +486,12 @@ export default function Game() {
   const overtakeTimerRef = useRef<NodeJS.Timeout | null>(null);
   const overtakeRemainingRef = useRef<number>(0);  // Remaining ms when paused
   const wrongAttemptsRef = useRef<number[]>([]);
+  // Team radio (lib/answerReveal.ts): the answer the second miss reveals, and the key hold after it.
+  // The token voids a reveal still waiting on its red flash when the session moves on.
+  const [revealedAnswer, setRevealedAnswer] = useState<string | null>(null);
+  const [radioHold, setRadioHold] = useState(false);
+  const radioTokenRef = useRef(0);
+  const inputLocked = feedback !== 'idle' || radioHold;
   // AERO system state (DRS-style zone-based)
   const [aeroZones, setAeroZones] = useState<number[]>([]);           // Zone start positions
   const [aeroAvailable, setAeroAvailable] = useState(false);          // Currently in an unused zone?
@@ -715,6 +722,7 @@ export default function Game() {
           if (soundEnabledRef.current) {
             playBeep(1200, 200);
           }
+          resetTeamRadio();
           setQuestion(generateQuestion(selectedCircuit.id, raceDifficulty, false, 0, undefined, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
           setGameStatus('racing');
@@ -761,6 +769,7 @@ export default function Game() {
 
   useEffect(() => () => {
     if (retireLeaveTimerRef.current) clearTimeout(retireLeaveTimerRef.current);
+    radioTokenRef.current += 1; // no reveal or chirp after leaving
   }, []);
 
   // Guard: a race can't run without a circuit, so fall back to setup.
@@ -837,7 +846,7 @@ export default function Game() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameStatus !== 'racing' && gameStatus !== 'go') return;
-      if (feedback !== 'idle') return;
+      if (feedback !== 'idle' || radioHold) return;
       if (isPaused) return;
 
       if (e.key >= '0' && e.key <= '9') {
@@ -858,7 +867,7 @@ export default function Game() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameStatus, feedback, question, answer, selectedCircuit, progress, mistakes, isPaused, aeroAvailable, aeroActive, overtakeEnergy, overtakeActive, overtakeAvailable, botFinished]);
+  }, [gameStatus, feedback, radioHold, question, answer, selectedCircuit, progress, mistakes, isPaused, aeroAvailable, aeroActive, overtakeEnergy, overtakeActive, overtakeAvailable, botFinished]);
 
   const handleDriverSelect = (driver: Driver) => {
     initAudio();
@@ -1027,9 +1036,27 @@ export default function Game() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingLandscape]);
 
+  /** Drop the radio, and void a reveal or hold still waiting on a timer. */
+  const resetTeamRadio = () => {
+    radioTokenRef.current += 1;
+    setRevealedAnswer(null);
+    setRadioHold(false);
+  };
+
+  /** The second miss: the answer goes up as ghost digits and the keys hold. The bot keeps driving. */
+  const startTeamRadio = (q: Question) => {
+    const token = radioTokenRef.current;
+    setRevealedAnswer(String(q.answer));
+    setRadioHold(true);
+    if (soundEnabledRef.current) playRadioChirp();
+    setTimeout(() => {
+      if (radioTokenRef.current === token) setRadioHold(false);
+    }, RADIO_HOLD_MS);
+  };
+
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!question || feedback !== 'idle' || gameStatus !== 'racing' || !selectedCircuit) return;
+    if (!question || feedback !== 'idle' || radioHold || gameStatus !== 'racing' || !selectedCircuit) return;
 
     const val = parseInt(answer);
     if (isNaN(val)) return;
@@ -1438,6 +1465,7 @@ export default function Game() {
           setFeedback('idle');
           setGpRaceFlash(null);
           setAnswer("");
+          setRevealedAnswer(null);
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
           setQuestion(generateQuestion(selectedCircuit.id, currentDifficultyRef.current, false, boostFactor, question?.display, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
@@ -1498,6 +1526,18 @@ export default function Game() {
       }]);
       wrongAttemptsRef.current.push(val);
 
+      // After the red flash the answer clears for the retry. The second miss on this question also
+      // brings the team radio on, unless the session has moved on in the meantime.
+      const missed = question;
+      const revealNow = revealsOnMiss(wrongAttemptsRef.current.length);
+      const radioToken = radioTokenRef.current;
+      const endMissFlash = () => setTimeout(() => {
+        setFeedback('idle');
+        setGpRaceFlash(null);
+        setAnswer('');
+        if (revealNow && radioTokenRef.current === radioToken) startTeamRadio(missed);
+      }, 600);
+
       // If AERO was active, just show "AERO OFF" and skip time penalty
       if (wasAeroActive) {
         setPenaltyMessage({ text: 'AERO OFF', color: 'yellow' });
@@ -1524,19 +1564,11 @@ export default function Game() {
           }
 
           setTimeout(() => { setShowPenalty(false); }, 1500);
-          setTimeout(() => {
-            setFeedback('idle');
-            setGpRaceFlash(null);
-            setAnswer('');
-          }, 600);
+          endMissFlash();
         } else {
           // Practice mode with AERO: just clear and retry
           setTimeout(() => { setShowPenalty(false); }, 1500);
-          setTimeout(() => {
-            setFeedback('idle');
-            setGpRaceFlash(null);
-            setAnswer('');
-          }, 600);
+          endMissFlash();
         }
         return; // Skip time penalty logic
       }
@@ -1547,11 +1579,7 @@ export default function Game() {
         setShowPenalty(true);
         setTimeout(() => setShowPenalty(false), 1500);
         // Clear answer but keep same question
-        setTimeout(() => {
-          setFeedback('idle');
-          setGpRaceFlash(null);
-          setAnswer("");
-        }, 600);
+        endMissFlash();
       } else {
         // Race mode (standard + realism): per-question retry
         const newAttempts = questionAttempts + 1;
@@ -1575,11 +1603,7 @@ export default function Game() {
 
         setTimeout(() => { setShowPenalty(false); }, 1500);
         // Keep same question, clear answer only
-        setTimeout(() => {
-          setFeedback('idle');
-          setGpRaceFlash(null);
-          setAnswer("");
-        }, 600);
+        endMissFlash();
       }
     }
   };
@@ -1660,6 +1684,7 @@ export default function Game() {
     setMistakeLog([]);
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
+    resetTeamRadio();
     setCurrentSectorRed(false);
     resetStreak();
     penaltyTimeRef.current = 0;
@@ -1759,6 +1784,7 @@ export default function Game() {
     setMistakeLog([]);
     setQuestionAttempts(0);
     wrongAttemptsRef.current = [];
+    resetTeamRadio();
     setCurrentSectorRed(false);
     resetStreak();
     penaltyTimeRef.current = 0;
@@ -3165,7 +3191,7 @@ export default function Game() {
     <span style={{ color: LOCKED_LEVEL_COLORS[dynamicDifficultyDisplay] ?? '#22c55e' }}>{desktopLevelLabel}</span>
   ) : undefined;
   const handleStripKey = (key: KeyStripKey) => {
-    if (isPaused || feedback !== 'idle') return;
+    if (isPaused || inputLocked) return;
     if (key === 'Enter') {
       if (answer) handleSubmit();
       return;
@@ -3173,6 +3199,8 @@ export default function Game() {
     playKeypadClick();
     setAnswer(prev => (key === 'Backspace' ? prev.slice(0, -1) : prev + key));
   };
+  // Team radio: typed digits over the revealed answer's ghost digits, between flashes only.
+  const radioDigits = revealedAnswer !== null && feedback === 'idle' ? ghostDigits(answer, revealedAnswer) : null;
 
 
   return (
@@ -3216,6 +3244,7 @@ export default function Game() {
               questionDisplay={question?.display ?? ''}
               answerDisplay={answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
               feedback={feedback}
+              radio={radioDigits}
               penaltyFlash={showFiveSecPenalty ? '+5s' : null}
               flashWhite={isGpRace && !!gpRaceFlash}
               between={desktopSectorGrid}
@@ -3229,7 +3258,7 @@ export default function Game() {
             <KeyStrip
               onKey={handleStripKey}
               pressedKey={keyEcho.key} pressSeq={keyEcho.seq}
-              disabled={isPaused || feedback !== 'idle'}
+              disabled={isPaused || inputLocked}
               submitDisabled={!answer}
             />
           }
@@ -3317,6 +3346,7 @@ export default function Game() {
             questionDisplay={question?.display}
             answerDisplay={answer || (selectedCircuit?.type === 'Variables' ? "X=" : "0")}
             feedback={feedback}
+            radio={radioDigits}
             penaltyFlash={showFiveSecPenalty ? '+5s' : null}
             showFinalLap={showFinalLap}
             onFinalLapDone={() => setShowFinalLap(false)}
@@ -3407,7 +3437,7 @@ export default function Game() {
             onDelete={() => setAnswer(prev => prev.slice(0, -1))}
             onSubmit={() => handleSubmit()}
             disabled={isPaused}
-            locked={feedback !== 'idle'}
+            locked={inputLocked}
             canSubmit={!!answer}
             // Power-ups row - integrated as extended keypad row
             topRow={powerUpsEnabled && (

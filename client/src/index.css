@@ -38,6 +38,9 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* Team radio: the revealed answer's ghost digits (lib/answerReveal.ts) */
+  --color-radio: #2563eb;
+
   --font-mono: 'JetBrains Mono', monospace;
   --font-sans: 'Inter', sans-serif;
   --font-f1: 'Oxanium', sans-serif;

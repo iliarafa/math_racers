@@ -1,10 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import type { GhostDigits } from "@/lib/answerReveal";
+import { RadioDigits } from "./RadioDigits";
 
 export interface PhoneQuestionPaneProps {
   questionDisplay?: string;
   answerDisplay: string;
   feedback: 'idle' | 'correct' | 'incorrect';
+  /** Team radio: the revealed answer, drawn in the answer element in place of answerDisplay. */
+  radio?: GhostDigits | null;
   /** Short flash over the numbers, e.g. "+5s". Null when quiet. */
   penaltyFlash: string | null;
   showFinalLap: boolean;
@@ -17,7 +21,8 @@ export interface PhoneQuestionPaneProps {
 
 /**
  * Phone twin of the desktop `QuestionPane`: the problem and the typed answer (grey, then green
- * or red on feedback), the penalty flash over them, and the reserved FINAL LAP slot underneath.
+ * or red on feedback, or over the team radio's ghost digits), the penalty flash over them, and
+ * the reserved FINAL LAP slot underneath.
  * Returns two siblings for the racing column; outside Race Day the sizes read the column's
  * height (`cqh`), so the column must be a size container.
  */
@@ -25,6 +30,7 @@ export function PhoneQuestionPane({
   questionDisplay,
   answerDisplay,
   feedback,
+  radio = null,
   penaltyFlash,
   showFinalLap,
   onFinalLapDone,
@@ -50,13 +56,13 @@ export function PhoneQuestionPane({
             "font-bold min-w-[80px] text-center leading-none",
             raceDay ? "mt-4 text-[clamp(4.5rem,14dvh,8rem)]" : "-mt-2 text-[clamp(2.75rem,min(7.6dvh,22cqh),4.75rem)]",
             flashWhite && "text-white",
-            !flashWhite && feedback === 'idle' && "text-muted-foreground/50",
+            !flashWhite && feedback === 'idle' && !radio && "text-muted-foreground/50",
             !flashWhite && feedback === 'correct' && "text-green-600",
             !flashWhite && feedback === 'incorrect' && "text-red-600"
           )}
           data-testid="display-answer"
         >
-          {answerDisplay}
+          {radio ? <RadioDigits {...radio} /> : answerDisplay}
         </div>
 
         {/* Penalty Flash Overlay */}

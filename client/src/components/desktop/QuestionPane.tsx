@@ -1,12 +1,16 @@
 import type { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import type { GhostDigits } from "@/lib/answerReveal";
+import { RadioDigits } from "@/components/race/RadioDigits";
 import { RaceStatusSlot, type RaceStatusSlotProps } from "./RaceStatusSlot";
 
 export interface QuestionPaneProps {
   questionDisplay: string;
   answerDisplay: string;
   feedback: 'idle' | 'correct' | 'incorrect';
+  /** Team radio: the revealed answer, drawn in the answer element in place of answerDisplay. */
+  radio?: GhostDigits | null;
   /** Short flash over the numbers, e.g. "+5s" or a multiplayer penalty line. Null when quiet. */
   penaltyFlash: string | null;
   status: RaceStatusSlotProps;
@@ -20,7 +24,7 @@ export interface QuestionPaneProps {
  * Centre of the desktop race: the problem and the typed answer at a size you can read from
  * across the room, with the status slot underneath.
  */
-export function QuestionPane({ questionDisplay, answerDisplay, feedback, penaltyFlash, status, between, flashWhite = false }: QuestionPaneProps) {
+export function QuestionPane({ questionDisplay, answerDisplay, feedback, radio = null, penaltyFlash, status, between, flashWhite = false }: QuestionPaneProps) {
   return (
     <div className="flex flex-col items-center w-full" data-testid="question-pane">
       <div className="relative w-full flex flex-col items-center">
@@ -41,13 +45,13 @@ export function QuestionPane({ questionDisplay, answerDisplay, feedback, penalty
             between ? "mt-0" : "mt-2",
             "text-[clamp(5.5rem,22dvh,15rem)]",
             flashWhite && "text-white",
-            !flashWhite && feedback === 'idle' && "text-muted-foreground/50",
+            !flashWhite && feedback === 'idle' && !radio && "text-muted-foreground/50",
             !flashWhite && feedback === 'correct' && "text-green-600",
             !flashWhite && feedback === 'incorrect' && "text-red-600",
           )}
           data-testid="display-answer"
         >
-          {answerDisplay}
+          {radio ? <RadioDigits {...radio} /> : answerDisplay}
         </div>
 
         <AnimatePresence>
