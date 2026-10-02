@@ -33,7 +33,7 @@
 
 1. **Order of the second miss:** the typed answer flashes red for 0.6 s exactly as today (so the kid sees it was wrong), then the ghost answer appears with the chirp, and the hold (`RADIO_HOLD_MS` = 1500) runs from that moment. Keys are therefore locked for 2.1 s from the miss, 1.5 s of it with the answer on screen.
 2. **Later misses** on a revealed question (3rd, and the 4th that crashes in races) flash red as usual and leave the ghost up, with no new hold and no new chirp.
-3. **Typed digits over the ghost** are drawn in the solid radio colour and the ghost in the same colour at low opacity, like tracing dotted digits. The radio colour starts as cyan `#0891b2` (no sector, AERO pill or penalty uses it); confirm with the user on the first simulator screenshot.
+3. **Typed digits over the ghost** are drawn in the solid radio colour and the ghost in the same colour at low opacity, like tracing dotted digits. The radio colour started as cyan `#0891b2`; on the first screenshot the user picked royal blue `#2563eb` instead (cyan sat too close to the Karting level label).
 4. **Re-ask timing:** revealed on question *n*, asked again as question *n + 3* (two fresh questions in between). If a power-up asks for a harder question at that slot, the re-ask waits for the next normal one. It never repeats the question just asked.
 5. **"Harder question" today means OVERTAKE only.** `handleAero` keeps the current question ("no harder question", commit b430013); only the question generated after a correct answer with OVERTAKE active uses `boostFactor` 0.5. CLAUDE.md's AERO line ("Harder question when active") is stale; flag it to the user rather than widen this change.
 6. **Flashcards get no hold:** the red grade flash (550 ms) shows the wrong answer, then the ghost appears with the chirp and the keys work at once. A wrong copy flashes the digits red and retries; the right copy turns the digits green and moves on. The card face does not light again during the copy.
@@ -261,7 +261,7 @@ git commit -m "Add the team radio rules: reveal on the second miss, ghost digits
 
 ```css
   /* Team radio: the revealed answer's ghost digits (lib/answerReveal.ts) */
-  --color-radio: #0891b2;
+  --color-radio: #2563eb;
 ```
 
 - [ ] **Step 2: `RadioDigits`** (`client/src/components/race/RadioDigits.tsx`)
@@ -429,7 +429,7 @@ Pass `radio={radioDigits}` to `<QuestionPane>` and `<PhoneQuestionPane>`.
 - [ ] **Step 11: Check and verify**
 
 Run: `npm run check` and `npm test` (expected: clean, all pass).
-Simulator (small iPhone, Free Practice 25 laps): miss twice; the ghost answer shows in cyan with the chirp; keys ignore taps for 1.5 s; type the first digit (it turns solid, the rest stays ghost); finish the answer; it turns green and a new question comes. Screenshot each, ask the user about the colour. Browser pane: dispatch digit `keydown`s during the hold and confirm the answer stays empty.
+Simulator (small iPhone, Free Practice 25 laps): miss twice; the ghost answer shows in the radio colour with the chirp; keys ignore taps for 1.5 s; type the first digit (it turns solid, the rest stays ghost); finish the answer; it turns green and a new question comes. Screenshot each, ask the user about the colour. Browser pane: dispatch digit `keydown`s during the hold and confirm the answer stays empty.
 
 - [ ] **Step 12: Commit**
 
