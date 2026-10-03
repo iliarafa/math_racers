@@ -57,6 +57,7 @@ const chapters: Chapter[] = [
           "A wrong answer turns your answer red",
           "A second wrong answer on the same question brings the team radio on: the right answer appears in the answer box, the keys pause for a moment, then type it to carry on (Race Now, Free Practice and the whole Grand Prix weekend)",
           "A question the radio answered comes back about three questions later, so you can get it right on your own",
+          "You can switch the team radio off in the Garage",
           "4th wrong attempt on the same question results in a crash (DNF)",
         ],
       },
@@ -266,7 +267,7 @@ const chapters: Chapter[] = [
         description: "Learn the facts before you race — flashcards, Reaction Test, and Lane Racer, under DRIVING SCHOOL in the Paddock. Graduate to earn your Superlicence.",
         details: [
           "Flashcards — 10 gated stages: Addition (to 10, to 20), Subtraction (to 10, to 20), Multiplication (to 5, 8, 10), Division (to 5, 8, 10)",
-          "Each stage is a 20-card deck — answer correctly within 1.5× the bot's expected time for purple; correct but slower is green; wrong is red, and the card then shows the right answer for you to type before you move on",
+          "Each stage is a 20-card deck — answer correctly within 1.5× the bot's expected time for purple; correct but slower is green; wrong is red, and the card then shows the right answer for you to type before you move on (unless the team radio is off)",
           "A stage is cleared with 15 purple cards out of 20 and no reds — greens are allowed. Cards that aren't purple return for another lap, and purples stay purple, so keep going and you get there",
           "Clearing a stage unlocks the next; progress is saved on your device",
           "Licence path — clear every flashcard stage, beat the Reaction Test target, and win Lane Racer to graduate",
