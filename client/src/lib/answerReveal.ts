@@ -12,9 +12,12 @@ export const RADIO_HOLD_MS = 1500;
 /** A revealed question is asked again this many questions later: two fresh ones in between. */
 export const REASK_AFTER = 3;
 
-/** True only on the revealing miss; later misses leave the answer up without another hold. */
-export function revealsOnMiss(missesOnQuestion: number): boolean {
-  return missesOnQuestion === REVEAL_AFTER_MISSES;
+/**
+ * True only on the revealing miss; later misses leave the answer up without another hold.
+ * `radioOn` is the player's Team Radio switch in the Garage (GameState.teamRadioEnabled).
+ */
+export function revealsOnMiss(missesOnQuestion: number, radioOn: boolean): boolean {
+  return radioOn && missesOnQuestion === REVEAL_AFTER_MISSES;
 }
 
 export type GhostDigits = { typed: string; ghost: string };

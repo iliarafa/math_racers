@@ -14,10 +14,14 @@ import {
 test('the first miss is a free retry; the second reveals the answer, once', () => {
   assert.equal(REVEAL_AFTER_MISSES, 2);
   assert.equal(RADIO_HOLD_MS, 1500);
-  assert.equal(revealsOnMiss(1), false);
-  assert.equal(revealsOnMiss(2), true);
+  assert.equal(revealsOnMiss(1, true), false);
+  assert.equal(revealsOnMiss(2, true), true);
   // A third miss keeps the answer up but brings no second hold
-  assert.equal(revealsOnMiss(3), false);
+  assert.equal(revealsOnMiss(3, true), false);
+});
+
+test('a team radio switched off in the Garage never reveals the answer', () => {
+  assert.equal(revealsOnMiss(2, false), false);
 });
 
 test('typed digits replace the ghost digits from the left', () => {

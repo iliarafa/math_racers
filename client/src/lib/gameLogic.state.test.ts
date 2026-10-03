@@ -115,6 +115,19 @@ test('loadGameState returns defaults when nothing is saved', () => {
   });
 });
 
+test('the team radio stays on unless the player switches it off', () => {
+  const store = memoryStorage();
+  withStorage(store, () => {
+    // A save from before the switch existed has no key for it.
+    store.setItem('f1-math-racer-state', JSON.stringify({ racesWon: 2 }));
+    assert.equal(loadGameState().teamRadioEnabled, true);
+
+    mutateGameState((s) => ({ ...s, teamRadioEnabled: false }));
+    assert.equal(loadGameState().teamRadioEnabled, false, 'switching it off survives a reload');
+    assert.equal(loadGameState().racesWon, 2);
+  });
+});
+
 test('every hook instance is told about a saved state', () => {
   withStorage(memoryStorage(), () => {
     const seen: number[] = [];

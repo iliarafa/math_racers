@@ -115,7 +115,7 @@ export default function DrivingSchool() {
   const [queuePos, setQueuePos] = useState(0);
   const [answer, setAnswer] = useState('');
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'incorrect'>('idle');
-  // Team radio: a red card shows its answer, and the kid types it to move on.
+  // Team radio (switched in the Garage): a red card shows its answer, and the kid types it to move on.
   const [revealed, setRevealed] = useState(false);
   const [lap, setLap] = useState(1);
   const questionStartRef = useRef(Date.now());
@@ -211,7 +211,7 @@ export default function DrivingSchool() {
     window.setTimeout(() => {
       setFeedback('idle');
       setAnswer('');
-      if (color === 'red') {
+      if (color === 'red' && state.teamRadioEnabled) {
         setRevealed(true);
         if (state.soundEnabled) playRadioChirp();
         return;

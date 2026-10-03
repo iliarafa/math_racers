@@ -1537,10 +1537,10 @@ export default function Game() {
       }]);
       wrongAttemptsRef.current.push(val);
 
-      // After the red flash the answer clears for the retry. The second miss on this question also
-      // brings the team radio on, unless the session has moved on in the meantime.
+      // After the red flash the answer clears for the retry. With the Garage's Team Radio switch on,
+      // the second miss on this question also brings the radio on, unless the session has moved on.
       const missed = question;
-      const revealNow = revealsOnMiss(wrongAttemptsRef.current.length);
+      const revealNow = revealsOnMiss(wrongAttemptsRef.current.length, state.teamRadioEnabled);
       const radioToken = radioTokenRef.current;
       const endMissFlash = () => setTimeout(() => {
         setFeedback('idle');

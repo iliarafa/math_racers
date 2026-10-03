@@ -61,6 +61,8 @@ export interface GameState {
   earnedBadges: string[];
 
   soundEnabled: boolean;
+  /** The team radio's answer reveal (lib/answerReveal.ts); switched in the Garage, on by default. */
+  teamRadioEnabled: boolean;
   simMode: boolean;
   powerUpsEnabled: boolean;
   personalBests: { [circuitId: string]: number };
@@ -375,6 +377,7 @@ const INITIAL_STATE: GameState = {
   earnedBadges: [],
 
   soundEnabled: true,
+  teamRadioEnabled: true,
   simMode: false,
   powerUpsEnabled: true,
   personalBests: {},
@@ -456,6 +459,7 @@ function parseGameState(parsed: Record<string, any>): GameState {
     earnedBadges: Array.isArray(parsed.earnedBadges) ? parsed.earnedBadges.filter((b: unknown) => typeof b === 'string') : [],
 
     soundEnabled: parsed.soundEnabled ?? true,
+    teamRadioEnabled: parsed.teamRadioEnabled ?? true,
     simMode: parsed.simMode ?? false,
     powerUpsEnabled: parsed.powerUpsEnabled ?? true,
     personalBests: parsed.personalBests ?? {},
@@ -668,6 +672,10 @@ export function useGameState() {
     mutate(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }));
   };
 
+  const toggleTeamRadio = () => {
+    mutate(prev => ({ ...prev, teamRadioEnabled: !prev.teamRadioEnabled }));
+  };
+
   const toggleSimMode = () => {
     mutate(prev => ({ ...prev, simMode: !prev.simMode }));
   };
@@ -831,6 +839,7 @@ export function useGameState() {
     equipItem,
 
     toggleSound,
+    toggleTeamRadio,
     toggleSimMode,
     togglePowerUps,
     incrementLaps,
