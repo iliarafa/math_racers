@@ -26,6 +26,8 @@ interface DesktopRaceScreenProps {
  * Cinematic racing shell for desktop and laptop browsers. The numbers own the middle of the
  * screen; the HUD lives in the four corners and the key strip runs centred along the bottom.
  * Replaces the phone `.racing-screen` stack, so none of the phone-column CSS applies here.
+ * The HUD rows paint above the centre (`relative z-10`, still under the z-20+ overlays), so their
+ * controls keep the mouse even if the centre outgrows its slot.
  */
 export function DesktopRaceScreen({
   topLeft,
@@ -46,14 +48,14 @@ export function DesktopRaceScreen({
     >
       {children}
 
-      <div className={cn("flex justify-between items-start px-6 shrink-0 min-h-12", topInset ? "pt-14" : "pt-4")}>
+      <div className={cn("relative z-10 flex justify-between items-start px-6 shrink-0 min-h-12", topInset ? "pt-14" : "pt-4")}>
         <div className="flex flex-col items-start" data-testid="hud-top-left">{topLeft}</div>
         <div className="flex items-start" data-testid="hud-top-right">{topRight}</div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6">{center}</div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-6 px-6 pb-4 shrink-0">
+      <div className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-end gap-6 px-6 pb-4 shrink-0">
         <div className="min-w-0 flex justify-start" data-testid="hud-bottom-left">{bottomLeft}</div>
         <div className="w-[clamp(340px,42vw,720px)]">{bottomCenter}</div>
         <div className="min-w-0 flex justify-end" data-testid="hud-bottom-right">{bottomRight}</div>

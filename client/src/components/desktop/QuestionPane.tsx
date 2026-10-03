@@ -23,27 +23,33 @@ export interface QuestionPaneProps {
 /**
  * Centre of the desktop race: the problem and the typed answer at a size you can read from
  * across the room, with the status slot underneath.
+ * Fills the centre slot. The grid and the status slot keep their height; the question and the
+ * answer share what is left (20:22), each up to its full size, and fill their share (`100cqh`),
+ * so on a short window the numbers shrink instead of spilling over the HUD rows.
  */
 export function QuestionPane({ questionDisplay, answerDisplay, feedback, radio = null, penaltyFlash, status, between, flashWhite = false }: QuestionPaneProps) {
   return (
-    <div className="flex flex-col items-center w-full" data-testid="question-pane">
-      <div className="relative w-full flex flex-col items-center">
+    <div className="relative flex-1 min-h-0 w-full flex flex-col items-center justify-center" data-testid="question-pane">
+      <div className="flex-[20] min-h-12 max-h-[clamp(5rem,20dvh,14rem)] w-full flex items-end justify-center [container-type:size]">
         <div
           className={cn(
-            "font-bold tracking-tight leading-none text-center px-2 max-w-full",
-            "text-[clamp(5rem,20dvh,14rem)]",
+            // One line: 18cqw fits the longest question. leading-none stays after the font size,
+            // because cn() drops a line-height that comes before one.
+            "font-bold tracking-tight text-center px-2 whitespace-nowrap",
+            "text-[min(clamp(5rem,20dvh,14rem),100cqh,18cqw)] leading-none",
             flashWhite && "text-white",
           )}
           data-testid="desktop-question"
         >
           {questionDisplay}
         </div>
-        {between && <div className="w-[min(60vw,560px)] py-2">{between}</div>}
+      </div>
+      {between && <div className="w-[min(60vw,560px)] py-2 shrink-0">{between}</div>}
+      <div className={cn("flex-[22] min-h-12 max-h-[clamp(5.5rem,22dvh,15rem)] w-full [container-type:size]", !between && "mt-2")}>
         <div
           className={cn(
-            "font-bold min-w-[160px] text-center leading-none",
-            between ? "mt-0" : "mt-2",
-            "text-[clamp(5.5rem,22dvh,15rem)]",
+            "font-bold min-w-[160px] text-center",
+            "text-[min(clamp(5.5rem,22dvh,15rem),100cqh)] leading-none",
             flashWhite && "text-white",
             !flashWhite && feedback === 'idle' && !radio && "text-muted-foreground/50",
             !flashWhite && feedback === 'correct' && "text-green-600",
@@ -53,23 +59,23 @@ export function QuestionPane({ questionDisplay, answerDisplay, feedback, radio =
         >
           {radio ? <RadioDigits {...radio} /> : answerDisplay}
         </div>
-
-        <AnimatePresence>
-          {penaltyFlash && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: [1, 0.2, 1, 0.2, 1], scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8 }}
-              className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
-            >
-              <span className="font-bold text-red-600 text-[clamp(3rem,9dvh,6rem)]" style={{ fontFamily: 'Oxanium, sans-serif' }}>
-                {penaltyFlash}
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {penaltyFlash && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: [1, 0.2, 1, 0.2, 1], scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
+          >
+            <span className="font-bold text-red-600 text-[clamp(3rem,9dvh,6rem)]" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+              {penaltyFlash}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <RaceStatusSlot {...status} className="mt-4" />
     </div>
