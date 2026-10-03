@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { useGameState } from "@/lib/gameLogic";
-import { TrendingUp, Volume2, VolumeX, Flag, Trophy, ClipboardList, RotateCcw, ChevronLeft, Award } from "lucide-react";
+import { TrendingUp, Volume2, VolumeX, Flag, Trophy, ClipboardList, RotateCcw, ChevronLeft, Award, Radio } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { isNativePlatform } from "@/lib/purchases";
 import garageSound from "@/assets/garsound.m4a";
 import garageBackground from "@assets/garage_background.mp4";
 
 export default function Garage() {
-  const { state, toggleSound, resetAllData } = useGameState();
+  const { state, toggleSound, toggleTeamRadio, resetAllData } = useGameState();
   const { restore } = usePurchase();
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -122,6 +122,27 @@ export default function Garage() {
                   <span className="text-xs uppercase tracking-widest text-white/70 text-center leading-tight">Strategy</span>
                 </div>
               </Link>
+              {/* Team radio switch (lib/answerReveal.ts): a full row under the tiles */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={state.teamRadioEnabled}
+                aria-label="Team Radio"
+                aria-describedby="team-radio-hint"
+                onClick={toggleTeamRadio}
+                className="col-span-3 rounded-xl bg-white/10 backdrop-blur-sm p-4 flex items-center gap-3 text-left cursor-pointer active:scale-[0.97] transition-all web-hover-glass"
+                data-testid="button-team-radio"
+              >
+                <Radio className={`w-8 h-8 shrink-0 ${state.teamRadioEnabled ? 'text-radio' : 'text-white/40'}`} />
+                <span className="flex-1 flex flex-col gap-1">
+                  <span className="text-xs uppercase tracking-widest text-white/70 leading-tight">Team Radio</span>
+                  <span id="team-radio-hint" className="text-xs text-white/50 leading-snug">Shows the answer after a second miss, or on a red flashcard</span>
+                </span>
+                {/* Fixed width, so the line beside it doesn't re-wrap between On and Off */}
+                <span className={`w-10 shrink-0 text-right text-xs uppercase tracking-widest ${state.teamRadioEnabled ? 'text-white' : 'text-white/40'}`}>
+                  {state.teamRadioEnabled ? 'On' : 'Off'}
+                </span>
+              </button>
             </div>
 
             {/* Reset lives under the grid as plain text so a stray tap on a tile can't wipe progress. */}
