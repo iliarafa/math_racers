@@ -56,7 +56,8 @@ const chapters: Chapter[] = [
         details: [
           "A wrong answer turns your answer red",
           "A second wrong answer on the same question brings the team radio on: the right answer appears in the answer box, the keys pause for a moment, then type it to carry on (Race Now, Free Practice and the whole Grand Prix weekend)",
-          "A question the radio answered comes back about three questions later, so you can get it right on your own",
+          "A question you get wrong comes back three to five questions later, so you can get it right on your own",
+          "It comes back again the next time you play (races, Free Practice, flashcards and Lane Racer) until you get it right first time. Most questions are still new ones",
           "You can switch the team radio off in the Garage",
           "4th wrong attempt on the same question results in a crash (DNF)",
         ],
@@ -257,7 +258,7 @@ const chapters: Chapter[] = [
           "Streak colours — orange to start, bronze at 7 days, silver at 14, gold at 30, purple at 100; the dots show this week of your streak, day 1 on the left",
           "Pit stops — every 7 days earns one (hold 2); after missed days they cover all of them or none, and a streak they can't cover starts again (you keep your pit stops)",
           "Badges — first win, 100 and 1,000 laps, a purple Race Day, the Superlicence, streaks from 7 to 100 days, 50 facts and All Purple",
-          "Fact growth — every fact you answer in a race is tracked; after three quick, correct answers (not ones the team radio gave you) it counts as mastered, and the finish screen tells you when you get faster",
+          "Fact growth — every fact you answer is tracked, in races, flashcards and Lane Racer; after three quick, correct typed answers (not ones the team radio gave you) it counts as mastered, and the finish screen tells you when you get faster",
           "New rewards show as a count on the Garage card until you open Trophies",
         ],
       },
@@ -268,6 +269,7 @@ const chapters: Chapter[] = [
         details: [
           "Flashcards — 10 gated stages: Addition (to 10, to 20), Subtraction (to 10, to 20), Multiplication (to 5, 8, 10), Division (to 5, 8, 10)",
           "Each stage is a 20-card deck — answer correctly within 1.5× the bot's expected time for purple; correct but slower is green; wrong is red, and the card then shows the right answer for you to type before you move on (unless the team radio is off)",
+          "A deck also brings back up to five facts you got wrong before, until you get them right first time",
           "A stage is cleared with 15 purple cards out of 20 and no reds — greens are allowed. Cards that aren't purple return for another lap, and purples stay purple, so keep going and you get there",
           "Clearing a stage unlocks the next; progress is saved on your device",
           "Licence path — clear every flashcard stage, beat the Reaction Test target, and win Lane Racer to graduate",

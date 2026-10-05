@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import {
   useGameState,
+  loadGameState,
   generateQuestion,
   generateWrongAnswers,
   RACE_LENGTH,
@@ -283,7 +284,7 @@ export default function LaneRacer() {
     prevDisplayRef.current = undefined;
     // A new session: facts owed from earlier sessions in this operation wait to be mixed in.
     const startedAt = Date.now();
-    pickerRef.current = startPicker(owedFacts(state.factStats, selectedOperation, startedAt), startedAt);
+    pickerRef.current = startPicker(owedFacts(loadGameState().factStats, selectedOperation, startedAt), startedAt);
     currentQuestionRef.current = null;
     factRowsRef.current = [];
   };

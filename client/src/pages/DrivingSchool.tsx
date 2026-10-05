@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import { playRadioChirp } from "@/lib/raceSounds";
 import { ghostDigits } from "@/lib/answerReveal";
-import { applyFactResults, mutateGameState, useGameState } from "@/lib/gameLogic";
+import { applyFactResults, loadGameState, mutateGameState, useGameState } from "@/lib/gameLogic";
 import { factKey, owedFacts, type FactRow } from "@/lib/factMastery";
 import { announceRewards } from "@/lib/announceRewards";
 import schoolBgImage from "@assets/driving-school-bg.jpg";
@@ -130,6 +130,7 @@ export default function DrivingSchool() {
     factRowsRef.current = [];
     mutateGameState((s) => applyFactResults(s, rows, Date.now(), sessionStartRef.current).state);
   };
+  // Leaving the page mid-stage still counts what was answered (flushFactRows reads only refs).
   useEffect(() => () => flushFactRows(), []);
 
   const currentIndex = queue[queuePos];
@@ -153,7 +154,7 @@ export default function DrivingSchool() {
     // Facts missed in earlier sessions come back in the deck when they fit the stage.
     const startedAt = Date.now();
     sessionStartRef.current = startedAt;
-    const nextDeck = buildStageDeck(s, owedFacts(state.factStats, s.operation, startedAt));
+    const nextDeck = buildStageDeck(s, owedFacts(loadGameState().factStats, s.operation, startedAt));
     setStage(s);
     setDeck(nextDeck);
     setQueue(nextDeck.map((_, i) => i));
