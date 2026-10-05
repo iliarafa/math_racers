@@ -201,6 +201,19 @@ export function expectedBotTimeMs(
   return calculateBotTime(difficulty, operationType, num1, num2, false, true);
 }
 
+/**
+ * A race bot's time for a question built outside generateQuestion (a fact asked again), with the
+ * same ±25% roll generateQuestion gives its own questions.
+ */
+export function raceBotTimeMs(
+  difficulty: Difficulty,
+  operationType: string,
+  num1?: number,
+  num2?: number,
+): number {
+  return calculateBotTime(difficulty, operationType, num1, num2);
+}
+
 // Operation-specific ranges by difficulty
 // Karting (beginner): Ages 6-8, basic math
 // F3 (easy): Ages 8-10
@@ -280,6 +293,18 @@ function interpolateRange(
     min: Math.round(current.min + (next.min - current.min) * factor),
     max: Math.round(current.max + (next.max - current.max) * factor),
   };
+}
+
+/** The operand range a level samples for an operation, e.g. Karting addition 1–10. */
+export function operandRange(difficulty: Difficulty, operationType: string): { min: number; max: number } {
+  const ranges = BASE_RANGES[difficulty];
+  switch (operationType) {
+    case 'Subtraction': return ranges.subtraction;
+    case 'Multiplication': return ranges.multiplication;
+    case 'Division': return ranges.division;
+    case 'Variables': return ranges.variables;
+    default: return ranges.addition;
+  }
 }
 
 function getOperationRanges(difficulty: Difficulty, isWet: boolean, boostFactor: number = 0): OperationRanges {

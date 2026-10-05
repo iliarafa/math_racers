@@ -20,10 +20,11 @@ import { RacingScreen, RacingScreenColumn, RacingScreenLeft, RacingScreenRight }
 import { PhoneQuestionPane } from "@/components/race/PhoneQuestionPane";
 import { RaceKeypad } from "@/components/race/RaceKeypad";
 import { isIpad, isPortrait, lockLandscapeOnIpad, unlockOrientation } from "@/lib/orientationLock";
-import { useGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getSessionAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
+import { useGameState, loadGameState, generateQuestion, Question, RACE_LENGTH, GRAND_PRIX_PRACTICE_LENGTH, getRaceLength, POSITION_POINTS, Circuit, DRIVERS, Driver, getSessionAeroZones, getCurrentAeroZone, calculateEnergyHarvest, Difficulty, DynamicDifficultyState, initDynamicDifficulty, updateDynamicDifficulty, getEasierDifficulty, calculatePSTScore, calculateGPScore, DifficultyMode, loadDifficultyMode, loadLockedDifficulty, saveDifficultyPrefs, driverForDifficulty, LOCKED_LEVEL_COLORS, BADGE_EVERYTHING_IS_PURPLE } from "@/lib/gameLogic";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import { initAudio, playBeep, playCorrectSound, playIncorrectSound, playKeypadClick, playRadioChirp } from "@/lib/raceSounds";
-import { RADIO_HOLD_MS, ghostDigits, queueReask, revealsOnMiss, takeReask, type Reask } from "@/lib/answerReveal";
+import { RADIO_HOLD_MS, ghostDigits, revealsOnMiss } from "@/lib/answerReveal";
+import { factQuestion, noteMiss, pickNext, startPicker, type Picker } from "@/lib/questionPicker";
 import type { DifficultyDrumOption } from "@/lib/gameLogic";
 import { loadSetupOperation, saveSetupOperation } from "@/lib/gameLogic";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
@@ -36,7 +37,7 @@ import { X, RotateCcw, Home, Timer, Pause, Play, BarChart3, ChevronLeft, Downloa
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 import { grandPrixDevBypass } from "@/lib/drivingSchoolLicence";
-import { factKey, pickCallout } from "@/lib/factMastery";
+import { factKey, owedFacts, pickCallout, type FactRow } from "@/lib/factMastery";
 import { trophyId, weekendTrophyTier } from "@/lib/trophies";
 import { announceRewards } from "@/lib/announceRewards";
 import { RewardStrip, type RewardOutcome } from "@/components/RewardStrip";
@@ -492,9 +493,9 @@ export default function Game() {
   const [radioHold, setRadioHold] = useState(false);
   const radioTokenRef = useRef(0);
   const inputLocked = feedback !== 'idle' || radioHold;
-  // Questions answered by the radio wait here to be asked again (REASK_AFTER questions on).
-  const questionSerialRef = useRef(0);
-  const reaskQueueRef = useRef<Reask<Question>[]>([]);
+  // Question picking (lib/questionPicker.ts): a missed question comes back a few questions later,
+  // and facts missed in earlier sessions are mixed in once they fit the level. Set at lights out.
+  const pickerRef = useRef<Picker<Question>>(startPicker([], 0));
   // AERO system state (DRS-style zone-based)
   const [aeroZones, setAeroZones] = useState<number[]>([]);           // Zone start positions
   const [aeroAvailable, setAeroAvailable] = useState(false);          // Currently in an unused zone?
@@ -583,7 +584,7 @@ export default function Game() {
     rewardsSettledRef.current = true;
 
     const streak = touchDailyStreak();
-    const mastery = ingestFactResults(lapResults);
+    const mastery = ingestFactResults(lapResults, pickerRef.current.startedAt);
 
     const isRaceDay = isGrandPrix && grandPrixPhase === 'rw_race';
     let trophy: RewardOutcome['trophy'] = null;
@@ -623,6 +624,22 @@ export default function Game() {
       },
       callout: pickCallout(mastery),
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameStatus]);
+
+  // A crash ends the session too. Its facts are folded in with no streak or rewards, the crashing
+  // question as a miss, so it is owed next session (lib/questionPicker.ts asks it again).
+  const crashFactsSettledRef = useRef(false);
+  useEffect(() => {
+    if (gameStatus !== 'crashed') {
+      crashFactsSettledRef.current = false;
+      return;
+    }
+    if (crashFactsSettledRef.current) return;
+    crashFactsSettledRef.current = true;
+    const rows: FactRow[] = [...lapResults];
+    if (question) rows.push({ fact: factKey(question), responseTime: Number.NaN, wrongAttempts: [...wrongAttemptsRef.current], result: 'incorrect' });
+    ingestFactResults(rows, pickerRef.current.startedAt);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameStatus]);
 
@@ -726,7 +743,13 @@ export default function Game() {
             playBeep(1200, 200);
           }
           resetTeamRadio();
-          setQuestion(generateQuestion(selectedCircuit.id, raceDifficulty, false, 0, undefined, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
+          const first = generateQuestion(selectedCircuit.id, raceDifficulty, false, 0, undefined, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined);
+          // A new session: facts owed from earlier sessions in its operation wait to be mixed in.
+          // The first question is always fresh (WARM_UP), so the picker just counts it.
+          const startedAt = Date.now();
+          const owed = owedFacts(loadGameState().factStats, first.operation ?? '', startedAt);
+          pickerRef.current = pickNext(startPicker<Question>(owed, startedAt)).picker;
+          setQuestion(first);
           questionStartTimeRef.current = Date.now();
           setGameStatus('racing');
           return;
@@ -1039,13 +1062,11 @@ export default function Game() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [awaitingLandscape]);
 
-  /** Drop the radio and its re-asks, and void a reveal or hold still waiting on a timer. */
+  /** Drop the radio, and void a reveal or hold still waiting on a timer. */
   const resetTeamRadio = () => {
     radioTokenRef.current += 1;
     setRevealedAnswer(null);
     setRadioHold(false);
-    questionSerialRef.current = 0;
-    reaskQueueRef.current = [];
   };
 
   /** The second miss: the answer goes up as ghost digits and the keys hold. The bot keeps driving. */
@@ -1053,7 +1074,6 @@ export default function Game() {
     const token = radioTokenRef.current;
     setRevealedAnswer(String(q.answer));
     setRadioHold(true);
-    reaskQueueRef.current = queueReask(reaskQueueRef.current, q, questionSerialRef.current);
     if (soundEnabledRef.current) playRadioChirp();
     setTimeout(() => {
       if (radioTokenRef.current === token) setRadioHold(false);
@@ -1474,12 +1494,16 @@ export default function Game() {
           setRevealedAnswer(null);
           // Generate 1.5x harder questions while OVERTAKE is active (boostFactor 0.5)
           const boostFactor = wasOvertakeActive ? 0.5 : 0;
-          // A question the radio answered comes back REASK_AFTER questions later, but never in
-          // place of the harder question OVERTAKE asks for.
-          questionSerialRef.current += 1;
-          const reask = takeReask(reaskQueueRef.current, questionSerialRef.current, { harder: wasOvertakeActive, previousDisplay: question?.display });
-          reaskQueueRef.current = reask.queue;
-          setQuestion(reask.question ?? generateQuestion(selectedCircuit.id, currentDifficultyRef.current, false, boostFactor, question?.display, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
+          // A missed question comes back a few questions later and owed facts are mixed in at the
+          // current level (lib/questionPicker.ts), never in place of the harder question OVERTAKE asks for.
+          const level = currentDifficultyRef.current;
+          const pick = pickNext(pickerRef.current, {
+            harder: wasOvertakeActive,
+            previousDisplay: question?.display,
+            owedQuestion: (key) => factQuestion(key, level),
+          });
+          pickerRef.current = pick.picker;
+          setQuestion(pick.question ?? generateQuestion(selectedCircuit.id, currentDifficultyRef.current, false, boostFactor, question?.display, (isGrandPrix || isPreSeasonTesting || isQuickRace) ? selectedOperation : undefined));
           questionStartTimeRef.current = Date.now();
         }, 600);
       }
@@ -1536,6 +1560,7 @@ export default function Game() {
         correctAnswer: question.answer
       }]);
       wrongAttemptsRef.current.push(val);
+      pickerRef.current = noteMiss(pickerRef.current, question, factKey(question));
 
       // After the red flash the answer clears for the retry. With the Garage's Team Radio switch on,
       // the second miss on this question also brings the radio on, unless the session has moved on.

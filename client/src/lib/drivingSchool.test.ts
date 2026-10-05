@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { expectedBotTimeMs } from '../../../shared/mathEngine.ts';
+import { factKey } from './factMastery.ts';
 import {
   CARDS_PER_STAGE,
+  DRIVING_SCHOOL_STAGES,
+  OWED_SLOTS,
   PURPLE_MAJORITY,
   PURPLE_TIME_FACTOR,
+  buildStageDeck,
   gradeFlashcard,
   isStageCleared,
   type FlashcardItem,
@@ -52,4 +56,28 @@ test('a stage clears on 15 purple with no reds, greens allowed', () => {
   assert.equal(isStageCleared(fill(14, 6)), false);
   assert.equal(isStageCleared(fill(15, 4, 1)), false);
   assert.equal(isStageCleared(fill(15, 4)), false); // a pending card blocks the clear
+});
+
+test('owed facts take up to five slots of a deck when they fit the stage', () => {
+  const stage = DRIVING_SCHOOL_STAGES.find((s) => s.id === 6)!; // Multiplication up to 8
+  const owed = ['7x8', '6x7', '9x12', '15-7', '2x3', '4x6', '5x8', '3x7', '6x8'];
+  const deck = buildStageDeck(stage, owed);
+  assert.equal(deck.length, CARDS_PER_STAGE);
+  const placed = OWED_SLOTS.map((slot) => factKey(deck[slot].question));
+  // 9x12 is past the stage and 15-7 is another operation; the first five that fit go in, in order
+  assert.deepEqual(placed, ['7x8', '6x7', '2x3', '4x6', '5x8']);
+  const fresh = deck.filter((_, i) => !OWED_SLOTS.includes(i)).map((c) => factKey(c.question));
+  assert.ok(fresh.every((key) => !placed.includes(key)), 'no fresh card repeats an owed one');
+  for (const slot of OWED_SLOTS) {
+    const { question } = deck[slot];
+    assert.equal(question.botTime, expectedBotTimeMs(stage.difficulty, stage.operation, question.num1, question.num2));
+  }
+  assert.equal(new Set(deck.map((c) => c.id)).size, CARDS_PER_STAGE, 'card ids stay unique');
+});
+
+test('a deck with nothing owed is all fresh cards', () => {
+  const stage = DRIVING_SCHOOL_STAGES[0];
+  const deck = buildStageDeck(stage);
+  assert.equal(deck.length, CARDS_PER_STAGE);
+  assert.ok(deck.every((c) => c.question.operation === stage.operation && c.color === 'pending'));
 });

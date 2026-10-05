@@ -12,6 +12,9 @@ import {
   factLabel,
   factOperation,
   ingestSession,
+  isOwed,
+  owedFacts,
+  parseFactKey,
   pickCallout,
   sanitizeFactStats,
   summarizeByOperation,
@@ -180,4 +183,81 @@ test('sanitizeFactStats keeps well-formed entries and drops junk', () => {
   assert.deepEqual(sanitizeFactStats(raw), { '7x8': good, '2+2': good });
   assert.deepEqual(sanitizeFactStats(undefined), {});
   assert.deepEqual(sanitizeFactStats([]), {});
+});
+
+test('parseFactKey rebuilds every fact factKey writes', () => {
+  assert.deepEqual(parseFactKey('7x8'), { operation: 'Multiplication', display: '7 × 8', answer: 56, num1: 7, num2: 8 });
+  assert.deepEqual(parseFactKey('9+12'), { operation: 'Addition', display: '9 + 12', answer: 21, num1: 9, num2: 12 });
+  assert.deepEqual(parseFactKey('20-7'), { operation: 'Subtraction', display: '20 − 7', answer: 13, num1: 20, num2: 7 });
+  assert.deepEqual(parseFactKey('56/8'), { operation: 'Division', display: '56 ÷ 8', answer: 7, num1: 56, num2: 8 });
+  assert.deepEqual(parseFactKey('var:x+3=7'), { operation: 'Variables', form: 'plus', display: 'x + 3 = 7', answer: 4, num1: 7, num2: 3 });
+  assert.deepEqual(parseFactKey('var:15−x=9'), { operation: 'Variables', form: 'minus', display: '15 − x = 9', answer: 6, num1: 15, num2: 9 });
+  assert.deepEqual(parseFactKey('var:5x=30'), { operation: 'Variables', form: 'times', display: '5x = 30', answer: 6, num1: 30, num2: 5 });
+  for (const junk of ['Addition:4+4', '3-9', '7/2', 'var:x+9=3', 'var:4x=10', 'nonsense']) {
+    assert.equal(parseFactKey(junk), null, junk);
+  }
+});
+
+test('a miss is owed until a clean answer in a later session pays it off', () => {
+  const missed = ingestSession({}, [row('7x8', 4000, { wrongAttempts: [54] })], 1_000, 500);
+  assert.equal(missed.stats['7x8'].missedAt, 1_000);
+  assert.equal(isOwed(missed.stats['7x8'], 1_000), false, 'not owed to the session that missed it');
+  assert.equal(isOwed(missed.stats['7x8'], 2_000), true);
+
+  const paid = ingestSession(missed.stats, [row('7x8', 3000)], 3_000, 2_000);
+  assert.equal(paid.stats['7x8'].missedAt, undefined);
+  assert.equal(isOwed(paid.stats['7x8'], 9_000), false);
+});
+
+test('a fact missed and then got right in the same session is still owed next time', () => {
+  // One batch: missed, then answered clean when it came back
+  const once = ingestSession({}, [row('7x8', 4000, { result: 'incorrect' }), row('7x8', 2500)], 1_000, 500);
+  assert.equal(once.stats['7x8'].missedAt, 1_000);
+  // Flashcards fold in each lap: a later lap of the same session pays nothing off
+  const lap2 = ingestSession(once.stats, [row('7x8', 2500)], 1_500, 500);
+  assert.equal(lap2.stats['7x8'].missedAt, 1_000);
+});
+
+test('Lane Racer picks are untimed: a wrong one is a miss, a right one pays nothing off', () => {
+  const wrong = ingestSession({}, [row('7x8', Number.NaN, { result: 'incorrect' })], 1_000);
+  assert.equal(wrong.stats['7x8'].missedAt, 1_000);
+  const right = ingestSession(wrong.stats, [row('7x8', Number.NaN)], 2_000, 1_500);
+  assert.equal(right.stats['7x8'].missedAt, 1_000);
+  assert.equal(right.stats['7x8'].seen, 2);
+  assert.equal(right.stats['7x8'].correct, 0);
+});
+
+test('owedFacts lists one operation’s owed facts, the most recent miss first', () => {
+  const stats: FactStats = {
+    '7x8': stat({ seen: 1, missedAt: 100 }),
+    '6x7': stat({ seen: 1, missedAt: 300 }),
+    '3x4': stat({ seen: 1 }),
+    '9+12': stat({ seen: 1, missedAt: 200 }),
+    '8x9': stat({ seen: 1, missedAt: 900 }),
+  };
+  assert.deepEqual(owedFacts(stats, 'Multiplication', 500), ['6x7', '7x8'], '8x9 was missed in this session');
+  assert.deepEqual(owedFacts(stats, 'Addition', 500), ['9+12']);
+  assert.deepEqual(owedFacts(stats, 'Division', 500), []);
+});
+
+test('sanitizeFactStats keeps a real missedAt and drops a bad one', () => {
+  const base = { seen: 1, correct: 0, bestMs: 0, lastMs: 0, ewmaMs: 0, lastAt: 5 };
+  const out = sanitizeFactStats({
+    a: { ...base, missedAt: 42 },
+    b: { ...base, missedAt: -1 },
+    c: { ...base, missedAt: 'soon' },
+    d: { ...base, missedAt: 0 },
+  });
+  assert.equal(out.a.missedAt, 42);
+  for (const key of ['b', 'c', 'd']) assert.equal('missedAt' in out[key], false, key);
+});
+
+test('a full store evicts facts with nothing owed before owed ones', () => {
+  const prior: FactStats = {};
+  for (let i = 0; i < FACT_STATS_CAP; i++) prior[`1+${i + 100}`] = stat({ seen: 1, lastAt: i + 10 });
+  prior['1+100'] = stat({ seen: 1, lastAt: 1, missedAt: 1 }); // the oldest, but owed
+  const { stats } = ingestSession(prior, [row('7x8', 2000)], 10_000);
+  assert.equal(Object.keys(stats).length, FACT_STATS_CAP);
+  assert.ok(stats['1+100'], 'the owed fact stays');
+  assert.equal(stats['1+101'], undefined, 'the oldest fact with nothing owed goes');
 });

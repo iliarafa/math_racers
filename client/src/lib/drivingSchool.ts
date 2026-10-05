@@ -1,5 +1,7 @@
 import { expectedBotTimeMs } from '@shared/mathEngine';
 import { generateQuestion, type Difficulty, type Question } from '@/lib/gameLogic';
+import { factKey } from '@/lib/factMastery';
+import { factQuestion } from '@/lib/questionPicker';
 
 export type CardColor = 'purple' | 'green' | 'red' | 'pending';
 
@@ -80,27 +82,41 @@ export function isStageCleared(deck: FlashcardItem[]): boolean {
   return !blocked && purple >= PURPLE_MAJORITY;
 }
 
-/** Build a 20-card deck for a stage (unique-ish displays). */
-export function buildStageDeck(stage: DrivingSchoolStage): FlashcardItem[] {
+/** Deck slots an owed fact may take: one card in four, never the first two. */
+export const OWED_SLOTS = [2, 6, 10, 14, 18];
+
+/**
+ * Build a 20-card deck for a stage (unique-ish displays). `owed` (owedFacts for the stage's
+ * operation, lib/factMastery.ts) are facts missed in earlier sessions: the first five that fit the
+ * stage take the OWED_SLOTS, and the fresh cards around them never repeat one, so most of the
+ * deck stays fresh and each owed fact appears once.
+ */
+export function buildStageDeck(stage: DrivingSchoolStage, owed: readonly string[] = []): FlashcardItem[] {
+  const owedCards = new Map<number, Question>();
+  const owedKeys = new Set<string>();
+  for (const key of owed) {
+    if (owedCards.size >= OWED_SLOTS.length) break;
+    const question = factQuestion(key, stage.difficulty);
+    if (!question || question.operation !== stage.operation || owedKeys.has(key)) continue;
+    owedCards.set(OWED_SLOTS[owedCards.size], question);
+    owedKeys.add(key);
+  }
+
   const deck: FlashcardItem[] = [];
   let previousDisplay: string | undefined;
   for (let i = 0; i < CARDS_PER_STAGE; i++) {
-    const question = generateQuestion(
-      'spa',
-      stage.difficulty,
-      false,
-      0,
-      previousDisplay,
-      stage.operation,
-    );
+    let question = owedCards.get(i);
+    if (!question) {
+      // A fresh card, drawn again (ten tries at most) when it would repeat an owed one.
+      let tries = 0;
+      do {
+        question = generateQuestion('spa', stage.difficulty, false, 0, previousDisplay, stage.operation);
+      } while (owedKeys.has(factKey(question)) && ++tries < 10);
+    }
     previousDisplay = question.display;
     // Replace the race bot's randomised time with the deterministic expected time.
     question.botTime = expectedBotTimeMs(stage.difficulty, stage.operation, question.num1, question.num2);
-    deck.push({
-      id: `${stage.id}-${i}-${question.display}`,
-      question,
-      color: 'pending',
-    });
+    deck.push({ id: `${stage.id}-${i}-${question.display}`, question, color: 'pending' });
   }
   return deck;
 }

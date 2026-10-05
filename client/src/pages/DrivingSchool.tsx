@@ -12,7 +12,8 @@ import { cn } from "@/lib/utils";
 import { getAudioContext, playCarouselClick } from "@/lib/uiSound";
 import { playRadioChirp } from "@/lib/raceSounds";
 import { ghostDigits } from "@/lib/answerReveal";
-import { useGameState } from "@/lib/gameLogic";
+import { applyFactResults, mutateGameState, useGameState } from "@/lib/gameLogic";
+import { factKey, owedFacts, type FactRow } from "@/lib/factMastery";
 import { announceRewards } from "@/lib/announceRewards";
 import schoolBgImage from "@assets/driving-school-bg.jpg";
 import {
@@ -119,6 +120,17 @@ export default function DrivingSchool() {
   const [revealed, setRevealed] = useState(false);
   const [lap, setLap] = useState(1);
   const questionStartRef = useRef(Date.now());
+  // Every graded card feeds fact mastery, folded in at the end of each lap and when the kid
+  // leaves; a stage run is one session, so a card missed then got right is still owed next time.
+  const sessionStartRef = useRef(0);
+  const factRowsRef = useRef<FactRow[]>([]);
+  const flushFactRows = () => {
+    const rows = factRowsRef.current;
+    if (rows.length === 0) return;
+    factRowsRef.current = [];
+    mutateGameState((s) => applyFactResults(s, rows, Date.now(), sessionStartRef.current).state);
+  };
+  useEffect(() => () => flushFactRows(), []);
 
   const currentIndex = queue[queuePos];
   const current = currentIndex !== undefined ? deck[currentIndex] : null;
@@ -137,7 +149,11 @@ export default function DrivingSchool() {
   const startStage = (s: DrivingSchoolStage) => {
     if (!isStageUnlocked(s.id, highestCleared)) return;
     if (state.soundEnabled) playCarouselClick();
-    const nextDeck = buildStageDeck(s);
+    flushFactRows();
+    // Facts missed in earlier sessions come back in the deck when they fit the stage.
+    const startedAt = Date.now();
+    sessionStartRef.current = startedAt;
+    const nextDeck = buildStageDeck(s, owedFacts(state.factStats, s.operation, startedAt));
     setStage(s);
     setDeck(nextDeck);
     setQueue(nextDeck.map((_, i) => i));
@@ -154,6 +170,7 @@ export default function DrivingSchool() {
       return;
     }
     // End of pass — clear on a purple majority with no reds, else re-drill non-purple
+    flushFactRows();
     if (isStageCleared(nextDeck)) {
       setDeck(nextDeck);
       announceRewards(touchDailyStreak()); // a cleared stage counts as today's session
@@ -201,6 +218,7 @@ export default function DrivingSchool() {
     const correct = val === current.question.answer;
     const color = gradeFlashcard(correct, responseTime, current.question.botTime);
     if (state.soundEnabled) playGradeSound(color);
+    factRowsRef.current.push({ fact: factKey(current.question), responseTime, result: correct ? 'correct' : 'incorrect' });
 
     const nextDeck = deck.map((card, i) =>
       i === currentIndex ? { ...card, color } : card,
@@ -370,6 +388,7 @@ export default function DrivingSchool() {
           centerHeader
           wideContent
           onBack={() => {
+            flushFactRows();
             setScreen('stages');
             setStage(null);
           }}
@@ -415,6 +434,7 @@ export default function DrivingSchool() {
         hideGarageButton
         centerHeader
         onBack={() => {
+          flushFactRows();
           setScreen('stages');
           setStage(null);
         }}

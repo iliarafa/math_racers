@@ -566,8 +566,9 @@ export function applyDailyStreak(
   return { state: change === 'same' ? state : { ...state, dailyStreak: next }, change, saved, pitStopEarned };
 }
 
-export function applyFactResults(state: GameState, rows: readonly FactRow[], now: number = Date.now()): { state: GameState } & Omit<IngestOutcome, 'stats'> {
-  const { stats, improved, newlyMastered } = ingestSession(state.factStats, rows, now);
+/** `sessionStart`: when the session's first question went up (see ingestSession); defaults to `now`. */
+export function applyFactResults(state: GameState, rows: readonly FactRow[], now: number = Date.now(), sessionStart: number = now): { state: GameState } & Omit<IngestOutcome, 'stats'> {
+  const { stats, improved, newlyMastered } = ingestSession(state.factStats, rows, now, sessionStart);
   return { state: { ...state, factStats: stats }, improved, newlyMastered };
 }
 
@@ -746,10 +747,11 @@ export function useGameState() {
     return badges;
   };
 
-  const ingestFactResults = (rows: readonly FactRow[]): Omit<IngestOutcome, 'stats'> => {
+  const ingestFactResults = (rows: readonly FactRow[], sessionStart?: number): Omit<IngestOutcome, 'stats'> => {
     let outcome: Omit<IngestOutcome, 'stats'> = { improved: [], newlyMastered: [] };
+    const now = Date.now();
     mutate(prev => {
-      const result = applyFactResults(prev, rows);
+      const result = applyFactResults(prev, rows, now, sessionStart ?? now);
       outcome = { improved: result.improved, newlyMastered: result.newlyMastered };
       return result.state;
     });

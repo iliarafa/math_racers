@@ -18,7 +18,9 @@ import {
   updateDynamicDifficulty,
   createDifficultyPrefs,
 } from "@/lib/gameLogic";
-import type { Difficulty, DynamicDifficultyState, DifficultyMode, DifficultyDrumOption } from "@/lib/gameLogic";
+import type { Difficulty, DynamicDifficultyState, DifficultyMode, DifficultyDrumOption, Question } from "@/lib/gameLogic";
+import { factKey, owedFacts, type FactRow } from "@/lib/factMastery";
+import { factQuestion, noteMiss, pickNext, startPicker, type Picker } from "@/lib/questionPicker";
 import { RaceSetupCard, type SetupRowSpec } from "@/components/setup/RaceSetupCard";
 import { operationRow, levelRow } from "@/components/setup/setupRows";
 import { hasLaneRacerWin, saveLaneRacerWin, shouldCelebrateSuperlicence } from "@/lib/drivingSchoolLicence";
@@ -105,7 +107,7 @@ function playBeep(freq: number, duration: number, volume = 0.15) {
 }
 
 export default function LaneRacer() {
-  const { state, touchDailyStreak } = useGameState();
+  const { state, touchDailyStreak, ingestFactResults } = useGameState();
   const [, navigate] = useLocation();
   const [gameStatus, setGameStatus] = useState<GameStatus>('setup');
   // Desktop and laptop browsers: steering key legend over the canvas.
@@ -164,6 +166,12 @@ export default function LaneRacer() {
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef(0);
   const prevDisplayRef = useRef<string | undefined>(undefined);
+  // Question picking (lib/questionPicker.ts) and fact mastery, as in Game: a missed question comes
+  // back a few questions later and owed facts are mixed in. Answers are picked, not typed, and the
+  // track sets their timing, so a wrong pick counts as a miss and a right one only as seen.
+  const pickerRef = useRef<Picker<Question>>(startPicker([], 0));
+  const currentQuestionRef = useRef<Question | null>(null);
+  const factRowsRef = useRef<FactRow[]>([]);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const difficultyLabel =
@@ -183,7 +191,13 @@ export default function LaneRacer() {
       engineRef.current?.setPaceDifficulty(pendingPace);
     }
     const difficulty = currentDifficultyRef.current;
-    const q = generateQuestion(selectedCircuit.id, difficulty, false, 0, prevDisplayRef.current, selectedOperation);
+    const pick = pickNext(pickerRef.current, {
+      previousDisplay: prevDisplayRef.current,
+      owedQuestion: (key) => factQuestion(key, difficulty),
+    });
+    pickerRef.current = pick.picker;
+    const q = pick.question ?? generateQuestion(selectedCircuit.id, difficulty, false, 0, prevDisplayRef.current, selectedOperation);
+    currentQuestionRef.current = q;
     prevDisplayRef.current = q.display;
     const wrong = generateWrongAnswers(q.answer, 2);
     setQuestionDisplay(q.display);
@@ -210,16 +224,26 @@ export default function LaneRacer() {
     pendingPaceDifficultyRef.current = paceDifficultyForSpeed(updated.currentDifficulty);
   }, [difficultyMode, selectedOperation]);
 
+  /** One answered token for fact mastery: picked, so untimed (NaN). */
+  const recordFact = useCallback((result: 'correct' | 'incorrect') => {
+    const q = currentQuestionRef.current;
+    if (!q) return;
+    factRowsRef.current.push({ fact: factKey(q), responseTime: Number.NaN, result });
+    if (result === 'incorrect') pickerRef.current = noteMiss(pickerRef.current, q, factKey(q));
+  }, []);
+
   const handleCorrect = useCallback(() => {
+    recordFact('correct');
     applyDynamicDifficulty(true);
     setCorrectCount(prev => prev + 1);
     if (state.soundEnabled) playBeep(880, 0.1);
-  }, [applyDynamicDifficulty, state.soundEnabled]);
+  }, [recordFact, applyDynamicDifficulty, state.soundEnabled]);
 
   const handleWrong = useCallback(() => {
+    recordFact('incorrect');
     applyDynamicDifficulty(false);
     if (state.soundEnabled) playBeep(220, 0.2);
-  }, [applyDynamicDifficulty, state.soundEnabled]);
+  }, [recordFact, applyDynamicDifficulty, state.soundEnabled]);
 
   const handleMiss = useCallback(() => {
     applyDynamicDifficulty(false);
@@ -257,6 +281,11 @@ export default function LaneRacer() {
     setCorrectCount(0);
     setQuestionDisplay('');
     prevDisplayRef.current = undefined;
+    // A new session: facts owed from earlier sessions in this operation wait to be mixed in.
+    const startedAt = Date.now();
+    pickerRef.current = startPicker(owedFacts(state.factStats, selectedOperation, startedAt), startedAt);
+    currentQuestionRef.current = null;
+    factRowsRef.current = [];
   };
 
   // F1 starting lights sequence
@@ -496,6 +525,10 @@ export default function LaneRacer() {
     }
     if (streakCountedRef.current) return;
     streakCountedRef.current = true;
+    // Fold the race's answers into fact mastery first, so the milestones the streak settles see them.
+    const rows = factRowsRef.current;
+    factRowsRef.current = [];
+    if (rows.length > 0) ingestFactResults(rows, pickerRef.current.startedAt);
     if (raceLength > 0 && questionNum >= raceLength) announceRewards(touchDailyStreak());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameStatus, raceLength, questionNum]);
