@@ -75,17 +75,17 @@ export type PickOptions<Q> = {
   owedQuestion?: (key: string) => Q | null;
 };
 
-export type Pick<Q extends QuestionLike> = { picker: Picker<Q>; question: Q | null; kind: 'reask' | 'owed' | null };
+export type PickResult<Q extends QuestionLike> = { picker: Picker<Q>; question: Q | null; kind: 'reask' | 'owed' | null };
 
 /**
  * The next question: the earliest due re-ask, else the first owed fact that fits, else null for a
  * fresh question. Call it for every question, the first included.
  */
-export function pickNext<Q extends QuestionLike>(picker: Picker<Q>, opts: PickOptions<Q> = {}): Pick<Q> {
+export function pickNext<Q extends QuestionLike>(picker: Picker<Q>, opts: PickOptions<Q> = {}): PickResult<Q> {
   const serial = picker.serial + 1;
   const reasks = picker.reasks.filter((r) => r.due + REASK_GRACE >= serial);
   const base: Picker<Q> = { ...picker, serial, reasks };
-  const fresh: Pick<Q> = { picker: base, question: null, kind: null };
+  const fresh: PickResult<Q> = { picker: base, question: null, kind: null };
   if (opts.harder || serial < WARM_UP) return fresh;
   const freshSince = serial - picker.lastTargeted - 1;
   if (freshSince < MIN_FRESH_BETWEEN) return fresh;
