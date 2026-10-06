@@ -5,11 +5,13 @@ Captioned cards built from real simulator screenshots.
 | Folder | Canvas | Device captured |
 |---|---|---|
 | `iphone_6.9/` | 1242 × 2688 | iPhone 17 Pro Max simulator, iOS 26.5 (captured at 1320 × 2868, rendered to the 6.5" canvas) |
+| `iphone_6.3/` | 1206 × 2622 | The `iphone_6.9/` cards scaled to 2622 tall and trimmed 3 px from each side (plain background) |
 | `ipad_13/` | 2064 × 2752 portrait; `01_race.png` and `02_race_day.png` are 2752 × 2064 landscape (Race Weekend runs landscape on iPad) | iPad Pro 13-inch (M5) simulator, iOS 26.5 |
 
-Both sizes are ones App Store Connect accepts for the 6.9" iPhone and 13" iPad
-slots. Upload the files in numeric order — the first three are the ones most
-people see on the product page.
+These are sizes App Store Connect accepts for the 6.9" iPhone slot, the 6.1" / 6.3"
+iPhone slot (which takes 1206 × 2622 or 1179 × 2556) and the 13" iPad slot. Upload
+the files in numeric order — the first three are the ones most people see on the
+product page.
 
 ## Cards
 
@@ -43,6 +45,10 @@ were last captured on Round 17 / Singapore. `02` shows Race Day's lap count
 3. Make a card:
    `./makecard <canvasW> <canvasH> shot.png "Title" "Subtitle" <cornerRatio> out.png`
    Corner ratio is 0.115 for iPhone and 0.045 for iPad.
+4. Remake the 6.3" set from the 6.9" one whenever an iPhone card changes:
+   `sips --resampleHeight 2622 iphone_6.9/<card>.png --out /tmp/<card>.png &&
+   sips --cropToHeightWidth 2622 1206 /tmp/<card>.png --out iphone_6.3/<card>.png`
+   (the crop is centred).
 
 Captions use Oxanium, the same font as the app.
 
