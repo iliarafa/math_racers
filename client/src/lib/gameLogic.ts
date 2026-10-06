@@ -111,6 +111,7 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   madrid: 57,
   baku: 51,
   malaysia: 56,
+  singapore: 62,
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -360,6 +361,14 @@ export const CIRCUITS: Circuit[] = [
     name: "MALAYSIA",
     type: "Variables",
     description: "Sepang International Circuit, Malaysia",
+    mapUrl: "",
+    paths: { s1: "", s2: "", s3: "" }
+  },
+  {
+    id: "singapore",
+    name: "SINGAPORE",
+    type: "Variables",
+    description: "Marina Bay Street Circuit, Singapore",
     mapUrl: "",
     paths: { s1: "", s2: "", s3: "" }
   }

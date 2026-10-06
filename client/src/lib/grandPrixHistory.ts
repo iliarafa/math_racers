@@ -8,6 +8,7 @@ import monzaDetail from "@/assets/monza_detail_track.png";
 import madridDetail from "@/assets/madrid_detail_track.png";
 import bakuDetail from "@/assets/baku_detail_track.png";
 import malaysiaDetail from "@/assets/malaysia_detail_track.png";
+import singaporeDetail from "@/assets/singapore_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -559,6 +560,67 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Pascal Wehrlein', team: 'Sauber', time: '1:33.483' },
         { name: 'Marcus Ericsson', team: 'Sauber', time: '1:33.970' },
         { name: 'Sebastian Vettel', team: 'Ferrari', time: 'No time' },
+      ],
+    },
+  },
+  singapore: {
+    officialName: 'FORMULA 1 SINGAPORE AIRLINES SINGAPORE GRAND PRIX 2026',
+    firstHeld: 2008,
+    trackLength: '4.927 km',
+    laps: 62,
+    lapRecord: { driver: 'Lewis Hamilton', time: '1:33.808', year: 2025 },
+    mostWins: { driver: 'Sebastian Vettel', count: 5 },
+    summary:
+      'The Marina Bay Street Circuit winds through the heart of Singapore, crossing the old Anderson Bridge, sweeping past the Merlion and finishing beside the giant Singapore Flyer wheel. In 2008 it hosted the first night race in Formula 1 history, and about 1,600 floodlights — four times brighter than a normal sports stadium — light up the track so the cars can race in the dark. Even at night, the heat and humidity make it one of the toughest races of the year, and with walls lining the streets, a safety car came out in every Singapore Grand Prix from 2008 to 2023. Sebastian Vettel holds the record with five wins here, and in 2026 Singapore hosts a Sprint race for the very first time.',
+    detailMapImage: singaporeDetail,
+    lastYear: {
+      season: 2025,
+      // Final classification: Hamilton's five-second track-limits penalty dropped him from 7th to 8th.
+      race: [
+        { name: 'George Russell', team: 'Mercedes', time: '1:40:22.367' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '+5.430' },
+        { name: 'Lando Norris', team: 'McLaren', time: '+6.066' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '+8.146' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+33.681' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+45.996' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+1:20.667' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+1:25.251' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+1:33.527' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+1 lap' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+1 lap' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+1 lap' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+1 lap' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+1 lap' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+1 lap' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1 lap' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+1 lap' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1 lap' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1 lap' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '+1 lap' },
+      ],
+      // Both Williams were disqualified from qualifying, so Bortoleto and Stroll moved up to
+      // 14th and 15th on their Q1 times.
+      quali: [
+        { name: 'George Russell', team: 'Mercedes', time: '1:29.158' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:29.340' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:29.524' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:29.537' },
+        { name: 'Lando Norris', team: 'McLaren', time: '1:29.586' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:29.688' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:29.784' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:29.846' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:29.868' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:29.955' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:30.141' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:30.320' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:30.353' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:30.820' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:30.949' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:30.982' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:30.989' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:31.261' },
+        { name: 'Alexander Albon', team: 'Williams', time: 'DSQ' },
+        { name: 'Carlos Sainz', team: 'Williams', time: 'DSQ' },
       ],
     },
   },
