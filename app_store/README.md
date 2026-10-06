@@ -25,8 +25,8 @@ people see on the product page.
 | `08_superlicence` | Superlicence granted. | Finish Driving School and it joins your trophy cabinet |
 
 `04`, `05` and the iPad `01` (its header chip) show the current Grand Prix. They
-were last captured on Round 16 / Malaysia. `02` shows Race Day's lap count
-(`/56`, Malaysia) but no circuit name. `06` shows the Reaction Test target
+were last captured on Round 17 / Singapore. `02` shows Race Day's lap count
+(`/56`, from Round 16 / Malaysia) but no circuit name. `06` shows the Reaction Test target
 (`REACTION_LICENCE_MS`, 0.40s), so retake it if that changes.
 
 ## Regenerating
