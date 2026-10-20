@@ -27,7 +27,7 @@ product page.
 | `08_superlicence` | Superlicence granted. | Finish Driving School and it joins your trophy cabinet |
 
 `04`, `05` and the iPad `01` (its header chip) show the current Grand Prix. They
-were last captured on Round 17 / Singapore. `02` shows Race Day's lap count
+were last captured on Round 18 / Austin. `02` shows Race Day's lap count
 (`/56`, from Round 16 / Malaysia) but no circuit name. `06` shows the Reaction Test target
 (`REACTION_LICENCE_MS`, 0.40s), so retake it if that changes.
 
@@ -66,8 +66,10 @@ Captions use Oxanium, the same font as the app.
   Simulator.app isn't installed here, and on iPadOS 26 an app's own orientation
   lock turns into a floating window instead of a rotation. Panel taps stay in
   portrait coordinates after rotating: `x = landscapeY`, `y = 1376 − landscapeX`
-  (points), for the rotation used on 2026-09-21 and 2026-09-28. `simctl io
-  screenshot` still returns the frame upright at 2752 × 2064. Grand Prix practice
+  (points), for the rotation used on 2026-09-21 and 2026-09-28. On 2026-10-20
+  portrait taps did nothing and upright landscape points (1376 × 1032, read off
+  the `simctl io screenshot` at half its pixels) worked instead, so test one tap
+  first. `simctl io screenshot` still returns the frame upright at 2752 × 2064. Grand Prix practice
   has no pause button, so leave the session by tapping the header logo: it goes
   to the title screen without finishing.
 - **Paddock and setup cards (`04`, `05`)**: the backgrounds are looping videos.
