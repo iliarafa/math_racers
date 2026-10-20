@@ -89,5 +89,13 @@ Captions use Oxanium, the same font as the app.
   keep the clock low, and pause about 0.3 s before tapping ✓, since a tap right
   after a digit is sometimes dropped (Enter on the simulator keyboard doesn't
   submit). Leave with RETIRE → Yes: a DNF that submits nothing.
+- **iPad race card (`01`)** also needs a capture-only build, or its sectors all come
+  out yellow. Practice colours a sector against the question's bot time (purple under
+  half of it, green under it, yellow over), about 2–3 s at Karting, and each answer
+  through the simulator panel takes longer than that. So, temporarily, multiply
+  `question.botTime` in Game.tsx's practice colouring by 12, build, install, then
+  revert with `git checkout --`, rebuild and re-sync. Answering at a steady pace then
+  gives a mix of green and purple; wait about 45 s on one question for a yellow. The
+  2026-10-20 card stops at Lap 8/30: green, purple, purple, yellow, green, purple, green.
 - **App opens in a window** on the iPad (window controls top-left, wallpaper
   around it): tap the controls, then the green button, and it stays full screen.
