@@ -9,6 +9,7 @@ import madridDetail from "@/assets/madrid_detail_track.png";
 import bakuDetail from "@/assets/baku_detail_track.png";
 import malaysiaDetail from "@/assets/malaysia_detail_track.png";
 import singaporeDetail from "@/assets/singapore_detail_track.png";
+import austinDetail from "@/assets/austin_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -621,6 +622,67 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Pierre Gasly', team: 'Alpine', time: '1:31.261' },
         { name: 'Alexander Albon', team: 'Williams', time: 'DSQ' },
         { name: 'Carlos Sainz', team: 'Williams', time: 'DSQ' },
+      ],
+    },
+  },
+  austin: {
+    officialName: 'FORMULA 1 MSC CRUISES UNITED STATES GRAND PRIX 2026',
+    firstHeld: 2012,
+    trackLength: '5.513 km',
+    laps: 56,
+    lapRecord: { driver: 'Charles Leclerc', time: '1:36.169', year: 2019 },
+    mostWins: { driver: 'Lewis Hamilton', count: 5 },
+    summary:
+      'The Circuit of the Americas sits just outside Austin, Texas, and was the first track in the United States built especially for Formula 1. Every lap starts with a charge up a steep hill to a tight hairpin at Turn 1, then the cars flick left and right through a run of fast esses copied from Silverstone\'s Maggotts and Becketts. A tall red observation tower looks down over the whole track, and the long back straight is one of the best places to overtake. Lewis Hamilton won the very first race here in 2012 and holds the record with five wins, while Max Verstappen has won four.',
+    detailMapImage: austinDetail,
+    lastYear: {
+      season: 2025,
+      // Sainz retired on lap 5 after a collision.
+      race: [
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:34:00.161' },
+        { name: 'Lando Norris', team: 'McLaren', time: '+7.959' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+15.373' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+28.536' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '+29.678' },
+        { name: 'George Russell', team: 'Mercedes', time: '+33.456' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+52.714' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '+57.249' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+1:04.722' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+1:10.001' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+1:13.209' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+1:14.778' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+1:15.746' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+1:20.000' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1:23.043' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+1:32.807' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1 lap' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+1 lap' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1 lap' },
+        { name: 'Carlos Sainz', team: 'Williams', time: 'DNF' },
+      ],
+      // Hadjar crashed in Q1 and set no time. Stroll qualified 18th but started 19th after a
+      // five-place grid penalty from the sprint.
+      quali: [
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:32.510' },
+        { name: 'Lando Norris', team: 'McLaren', time: '1:32.801' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:32.807' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:32.826' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:32.912' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:33.084' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:33.114' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:33.139' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:33.150' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:33.160' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:33.334' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:33.360' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:33.466' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:33.651' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:34.044' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:34.125' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:34.136' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:34.540' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:34.690' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: 'No time' },
       ],
     },
   },

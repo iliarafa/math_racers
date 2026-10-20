@@ -1,6 +1,6 @@
-import circuitSingapore from "@/assets/circuit_singapore.png";
-import singaporeSetupTrack from "@/assets/singapore_setup_track.png";
-import flagSingapore from "@/assets/flag_singapore.png";
+import circuitAustin from "@/assets/circuit_austin.png";
+import austinSetupTrack from "@/assets/austin_setup_track.png";
+import flagUS from "@/assets/flag_us.png";
 
 // ── Grand Prix Circuit Config ──────────────────────────────────────
 // Change these fields each week to follow the F1 calendar.
@@ -9,30 +9,30 @@ import flagSingapore from "@/assets/flag_singapore.png";
 export const CURRENT_GRAND_PRIX = {
   /** Calendar year. Weekend trophies are keyed by season and round, so keep it current. */
   season: 2026,
-  round: 17,
-  circuitId: 'singapore',
-  name: 'SINGAPORE',
+  round: 18,
+  circuitId: 'austin',
+  name: 'AUSTIN',
   /** Proper circuit name (e.g. 'Hungaroring', 'Spa-Francorchamps') — shown on the GP card. */
-  circuitName: 'Marina Bay Street Circuit',
-  country: 'SINGAPORE',
-  trackImage: circuitSingapore,
+  circuitName: 'Circuit of the Americas',
+  country: 'USA',
+  trackImage: circuitAustin,
   /**
    * Optional full-colour setup-card map (sector ribbon, start line, no corner labels).
    * Rendered WITHOUT invert on the Free Practice / Grand Prix setup card. When omitted the
    * card falls back to the briefing's `detailMapImage`, then to the dark silhouette.
    */
-  setupTrackImage: singaporeSetupTrack as string | undefined,
-  flagImage: flagSingapore,
-  rainProbability: 0.30,
-  simLapCount: 62,
-  gradient: 'linear-gradient(90deg, #ED2939 0%, #ED2939 45%, #FFFFFF 100%)',
+  setupTrackImage: austinSetupTrack as string | undefined,
+  flagImage: flagUS,
+  rainProbability: 0.20,
+  simLapCount: 56,
+  gradient: 'linear-gradient(90deg, #0A3161 0%, #0A3161 40%, #B31942 100%)',
   /**
    * Text colour on the paddock's Weekend Briefing banner, which sits on `gradient`.
    * Pick whatever reads on this round's gradient: dark `#1a1a1a` for light or yellow
    * gradients (Madrid), white `#ffffff` for saturated ones (Baku).
    */
   bannerTextColor: '#ffffff' as string,
-  welcomeBlurb: 'This week we head to Singapore — home of Formula 1’s first night race, where floodlights light up the streets around Marina Bay as the cars race between the skyscrapers — for the Singapore Grand Prix.',
+  welcomeBlurb: 'This week we head to Austin, Texas — where the cars charge up a steep hill into Turn 1 and snake through fast esses at the Circuit of the Americas — for the United States Grand Prix.',
   /**
    * Optional per-circuit override for the setup-card silhouette stage's HEIGHT classes
    * (replaces RaceSetupCard's `h-36 md:h-52` default; see setup_cards.md).
