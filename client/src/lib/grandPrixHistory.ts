@@ -10,6 +10,7 @@ import bakuDetail from "@/assets/baku_detail_track.png";
 import malaysiaDetail from "@/assets/malaysia_detail_track.png";
 import singaporeDetail from "@/assets/singapore_detail_track.png";
 import austinDetail from "@/assets/austin_detail_track.png";
+import mexicoDetail from "@/assets/mexico_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -683,6 +684,67 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Lance Stroll', team: 'Aston Martin', time: '1:34.540' },
         { name: 'Alexander Albon', team: 'Williams', time: '1:34.690' },
         { name: 'Isack Hadjar', team: 'Racing Bulls', time: 'No time' },
+      ],
+    },
+  },
+  mexico: {
+    officialName: 'FORMULA 1 GRAN PREMIO DE LA CIUDAD DE MÉXICO 2026',
+    firstHeld: 1963,
+    trackLength: '4.304 km',
+    laps: 71,
+    lapRecord: { driver: 'Valtteri Bottas', time: '1:17.774', year: 2021 },
+    mostWins: { driver: 'Max Verstappen', count: 5 },
+    summary:
+      'The Autódromo Hermanos Rodríguez is named after Ricardo and Pedro Rodríguez, two brothers who were Mexico\'s first Formula 1 heroes. It sits more than 2,200 metres up, the highest track of the season, where the thin air gives the wings less grip and the engines less air to breathe. The run from the start to Turn 1 is one of the longest in F1, and near the end of the lap the cars drive right through a baseball stadium packed with cheering fans. Max Verstappen holds the record with five wins here.',
+    detailMapImage: mexicoDetail,
+    lastYear: {
+      season: 2025,
+      // Sainz was classified 17th after retiring on lap 68, having covered more than 90% of the
+      // distance. Alonso, Hülkenberg and Lawson retired and were not classified.
+      race: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:37:58.574' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+30.324' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '+31.049' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+40.955' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '+42.065' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+47.837' },
+        { name: 'George Russell', team: 'Mercedes', time: '+50.287' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+56.446' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1:15.464' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+1:16.863' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+1:19.048' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+1 lap' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+1 lap' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+1 lap' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1 lap' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1 lap' },
+        { name: 'Carlos Sainz', team: 'Williams', time: 'DNF' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: 'DNF' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: 'DNF' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: 'DNF' },
+      ],
+      // Sainz qualified 7th but started 12th after a five-place grid penalty from Austin.
+      quali: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:15.586' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:15.848' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:15.938' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:16.034' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:16.070' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:16.118' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:16.172' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:16.174' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:16.252' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:16.460' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:16.816' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:16.837' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:17.016' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:17.103' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:18.072' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:17.412' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:17.490' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:17.546' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:17.606' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:17.670' },
       ],
     },
   },

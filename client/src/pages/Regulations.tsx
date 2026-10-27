@@ -6,7 +6,7 @@ import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
 import { REACTION_LICENCE_MS } from "@/lib/drivingSchoolLicence";
 
 /** The GP config stores the name uppercase (MADRID) for HUD labels; prose wants Madrid. */
-const gpTitleCase = (name: string) => name.charAt(0) + name.slice(1).toLowerCase();
+const gpTitleCase = (name: string) => name.toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
 
 interface Article {
   id: string;
