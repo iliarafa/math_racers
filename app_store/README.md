@@ -27,7 +27,7 @@ product page.
 | `08_superlicence` | Superlicence granted. | Finish Driving School and it joins your trophy cabinet |
 
 `04`, `05` and the iPad `01` (its header chip) show the current Grand Prix. They
-were last captured on Round 18 / Austin. `02` shows Race Day's lap count
+were last captured on Round 19 / Mexico City. `02` shows Race Day's lap count
 (`/56`, from Round 16 / Malaysia) but no circuit name. `06` shows the Reaction Test target
 (`REACTION_LICENCE_MS`, 0.40s), so retake it if that changes.
 
@@ -62,14 +62,15 @@ Captions use Oxanium, the same font as the app.
   `reactionBestMs` = `350`, `laneRacerP1Win` = `1`, `superlicenceCelebrated` = `0`.
   Relaunch, take a burst of screenshots, and pick a frame just after the confetti
   peaks so the text is clear.
-- **iPad landscape (`01`, `02`)**: rotate the iPad from the Claude simulator panel.
+- **iPad landscape (`01`, `02`)**: rotate the iPad with the simulator `control` tool's
+  `rotate` action (`direction: left`; it worked on 2026-10-27), or from the Claude simulator panel.
   Simulator.app isn't installed here, and on iPadOS 26 an app's own orientation
   lock turns into a floating window instead of a rotation. Panel taps stay in
   portrait coordinates after rotating: `x = landscapeY`, `y = 1376 − landscapeX`
   (points), for the rotation used on 2026-09-21 and 2026-09-28. On 2026-10-20
   portrait taps did nothing and upright landscape points (1376 × 1032, read off
   the `simctl io screenshot` at half its pixels) worked instead, so test one tap
-  first. `simctl io screenshot` still returns the frame upright at 2752 × 2064. Grand Prix practice
+  first (upright landscape points worked again on 2026-10-27 after `rotate`). `simctl io screenshot` still returns the frame upright at 2752 × 2064. Grand Prix practice
   has no pause button, so leave the session by tapping the header logo: it goes
   to the title screen without finishing.
 - **Paddock and setup cards (`04`, `05`)**: the backgrounds are looping videos.
@@ -95,8 +96,9 @@ Captions use Oxanium, the same font as the app.
   through the simulator panel takes longer than that. So, temporarily, multiply
   `question.botTime` in Game.tsx's practice colouring by 12, build, install, then
   revert with `git checkout --`, rebuild and re-sync. Answering at a steady pace then
-  gives a mix of green and purple; wait about 45 s on one question for a yellow. The
-  2026-10-20 iPad card stops at Lap 8/30 (green, purple, purple, yellow, green, purple,
-  green); the iPhone `01` card, retaken the same way, at Lap 7/30 with its next answer typed.
+  gives a mix of green and purple; wait about 45 s on one question for a yellow. On
+  2026-10-27 answering within about 10 s gave purple, pausing about 7 s before ✓ gave
+  green, and a 26 s first answer gave yellow. The 2026-10-27 iPad card stops at Lap 8/30
+  (yellow, purple, green, purple, purple, green, purple) with AERO lit; the iPhone `01` card, retaken the same way, at Lap 7/30 with its next answer typed.
 - **App opens in a window** on the iPad (window controls top-left, wallpaper
   around it): tap the controls, then the green button, and it stays full screen.
