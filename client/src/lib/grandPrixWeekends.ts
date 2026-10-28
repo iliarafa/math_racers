@@ -20,6 +20,12 @@ import circuitSingapore from '@/assets/circuit_singapore.png';
 import circuitAustin from '@/assets/circuit_austin.png';
 import circuitMexico from '@/assets/circuit_mexico.png';
 
+import melbourneSetupTrack from '@/assets/melbourne_setup_track.png';
+import chinaSetupTrack from '@/assets/china_setup_track.png';
+import suzukaSetupTrack from '@/assets/suzuka_setup_track.png';
+import miamiSetupTrack from '@/assets/miami_setup_track.png';
+import canadaSetupTrack from '@/assets/canada_setup_track.png';
+import monacoSetupTrack from '@/assets/monaco_setup_track.png';
 import catalunyaSetupTrack from '@/assets/catalunya_setup_track.png';
 import austriaSetupTrack from '@/assets/austria_setup_track.png';
 import silverstoneSetupTrack from '@/assets/silverstone_setup_track.png';
@@ -69,12 +75,12 @@ type WeekendArt = {
 };
 
 const WEEKEND_ART: Record<string, WeekendArt> = {
-  melbourne: { trackImage: trackMelbourne, flagImage: flagAustralia },
-  china: { trackImage: trackChina, flagImage: flagChina },
-  suzuka: { trackImage: circuitSuzukaBlack, flagImage: flagJapan },
-  miami: { trackImage: trackMiami, flagImage: flagUS },
-  canada: { trackImage: trackCanada, flagImage: flagCanada },
-  monaco: { trackImage: circuitMonacoBlack, flagImage: flagMonaco },
+  melbourne: { trackImage: trackMelbourne, setupTrackImage: melbourneSetupTrack, flagImage: flagAustralia },
+  china: { trackImage: trackChina, setupTrackImage: chinaSetupTrack, flagImage: flagChina },
+  suzuka: { trackImage: circuitSuzukaBlack, setupTrackImage: suzukaSetupTrack, flagImage: flagJapan },
+  miami: { trackImage: trackMiami, setupTrackImage: miamiSetupTrack, flagImage: flagUS },
+  canada: { trackImage: trackCanada, setupTrackImage: canadaSetupTrack, flagImage: flagCanada },
+  monaco: { trackImage: circuitMonacoBlack, setupTrackImage: monacoSetupTrack, flagImage: flagMonaco },
   barcelona: { trackImage: circuitCatalunya, setupTrackImage: catalunyaSetupTrack, flagImage: flagSpain },
   austria: { trackImage: circuitAustria, setupTrackImage: austriaSetupTrack, flagImage: flagAustria },
   silverstone: { trackImage: circuitSilverstoneBlack, setupTrackImage: silverstoneSetupTrack, flagImage: flagUK },
