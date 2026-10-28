@@ -587,7 +587,7 @@ export default function LaneRacer() {
     ];
 
     return (
-      <div className="h-dvh flex flex-col relative overflow-hidden">
+      <div className="h-[var(--stage-h)] flex flex-col relative overflow-hidden">
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '8px' }}>

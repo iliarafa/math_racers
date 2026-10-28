@@ -78,6 +78,13 @@
   --ring: 0 0% 10%;
 
   --radius: 0.5rem;
+
+  /* Desktop stage size. Phones and the iPad keep the viewport; on desktop browsers
+     applyDesktopStage (lib/layoutMode.ts) sets both in px, at least 900 x 720, and zooms
+     #root down to fit a smaller window. Use these instead of vw / dvh anywhere the desktop
+     layout renders. */
+  --stage-w: 100vw;
+  --stage-h: 100dvh;
 }
 
 html, body {
@@ -243,12 +250,13 @@ body {
 
 /*
  * Desktop menu frame (html[data-desktop], stamped by main.tsx for fine-pointer
- * browsers at >= 900px). Menu pages keep their phone column: it is capped,
+ * browsers at any width). Menu pages keep their phone column: it is capped,
  * centred and zoomed a little so the type reads at arm's length, with the page
  * background filling the sides. GameLayout adds the class for `menuFrame`
  * pages; Hub and Garage carry it on their own content wrappers. Racing screens
  * have their own desktop layout and never carry it. Unlayered on purpose so it
- * beats the Tailwind max-w-* utilities on the same element.
+ * beats the Tailwind max-w-* utilities on the same element. Below the desktop stage
+ * floor #root is zoomed as well, so the two multiply and the menus shrink with the rest.
  */
 html[data-desktop] .menu-frame {
   width: 100%;

@@ -193,7 +193,7 @@ export default function Hub() {
   }, [licence.complete]);
 
   return (
-    <div className="h-dvh flex flex-col relative overflow-hidden">
+    <div className="h-[var(--stage-h)] flex flex-col relative overflow-hidden">
       {showSplash && <SuperlicenceSplash onClose={() => setShowSplash(false)} />}
 
       {/* Driving School backdrop: hand-drawn kerb art over black (video is hidden on this view) */}

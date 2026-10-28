@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import { markWebDocument } from "@/lib/webMeta";
-import { markDesktopDocument } from "@/lib/layoutMode";
+import { applyDesktopStage, markDesktopDocument } from "@/lib/layoutMode";
 import "./index.css";
 
 // Browser builds only: `data-web` on <html> gates the mouse hover layer in index.css.
@@ -21,3 +21,13 @@ if (import.meta.env.DEV) {
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Desktop stage: below 900 x 720 the app lays out at that floor and #root is zoomed down to
+// fit the window (see desktopStage). Kept in step on every resize and on every page, not
+// only the racing screens that mount useLayoutMode. Not debounced: it only sets three style
+// properties, and a lag would show the unscaled layout while the window is being dragged.
+applyDesktopStage();
+window.addEventListener("resize", () => {
+  markDesktopDocument();
+  applyDesktopStage();
+});

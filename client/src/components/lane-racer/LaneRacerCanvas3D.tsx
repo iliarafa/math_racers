@@ -217,6 +217,9 @@ export const LaneRacerCanvas3D = forwardRef<LaneRacerEngineRef, LaneRacerCanvas3
       <div className="relative w-full h-full" style={{ backgroundColor: FOG_COLOR }}>
         <Canvas
           className="w-full h-full block"
+          /* Measure in layout px (offsetWidth), not getBoundingClientRect: on a small desktop
+             window #root is zoomed (applyDesktopStage), and the rect would shrink it twice. */
+          resize={{ offsetSize: true }}
           gl={{ antialias: true, alpha: false }}
           /* On iPad the page is viewport-scaled (see client/index.html), so the canvas needs
              devicePixelRatio × that scale to stay crisp; capped so phones keep their 2× budget. */

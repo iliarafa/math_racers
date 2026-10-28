@@ -57,7 +57,7 @@ export function DesktopRaceScreen({
 
       <div className="relative z-10 grid grid-cols-[1fr_auto_1fr] items-end gap-6 px-6 pb-4 shrink-0">
         <div className="min-w-0 flex justify-start" data-testid="hud-bottom-left">{bottomLeft}</div>
-        <div className="w-[clamp(340px,42vw,720px)]">{bottomCenter}</div>
+        <div className="w-[clamp(340px,calc(var(--stage-w)*0.42),720px)]">{bottomCenter}</div>
         <div className="min-w-0 flex justify-end" data-testid="hud-bottom-right">{bottomRight}</div>
       </div>
     </div>

@@ -42,7 +42,7 @@ export default function Welcome() {
         style={{ fontFamily: 'Oxanium, sans-serif' }}
         onClick={() => { if (state.soundEnabled) playClickSound(); }}
       >
-        <div className="flex flex-col items-center" style={{ marginTop: '5dvh' }}>
+        <div className="flex flex-col items-center" style={{ marginTop: 'calc(var(--stage-h) * 0.05)' }}>
           <img
             src={logoImage}
             alt="Math Racer"

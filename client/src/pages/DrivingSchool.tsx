@@ -390,7 +390,7 @@ export default function DrivingSchool() {
               </div>
             }
             center={
-              <div className="w-[min(70vw,1000px)] h-full min-h-0 flex flex-col items-center justify-center py-2">
+              <div className="w-[min(calc(var(--stage-w)*0.7),1000px)] h-full min-h-0 flex flex-col items-center justify-center py-2">
                 {flashcard}
               </div>
             }

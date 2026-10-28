@@ -3,14 +3,15 @@ import {
   detectLayoutMode,
   FINE_POINTER_MEDIA_QUERY,
   markDesktopDocument,
+  applyDesktopStage,
   type LayoutMode,
 } from "@/lib/layoutMode";
 
 /**
- * Live layout mode for the racing screens. Desktop and laptop browsers get `desktop`;
- * everything else keeps the phone or iPad layouts. Re-evaluated on resize (a laptop
- * window dragged across the 1024px line switches trees mid-race) and when the pointer
- * media query changes. Keeps `data-desktop` on <html> in step for CSS scoping.
+ * Live layout mode for the racing screens. Desktop and laptop browsers get `desktop` at any
+ * window size; everything else keeps the phone or iPad layouts. Re-evaluated on resize and
+ * when the pointer media query changes (docking a mouse switches trees). Keeps `data-desktop`
+ * on <html> and the desktop stage size (`applyDesktopStage`) in step.
  */
 export function useLayoutMode(): LayoutMode {
   const [mode, setMode] = useState<LayoutMode>(detectLayoutMode);
@@ -24,6 +25,7 @@ export function useLayoutMode(): LayoutMode {
       timer = setTimeout(() => {
         const next = detectLayoutMode();
         markDesktopDocument(document.documentElement, next);
+        applyDesktopStage(document.documentElement, document.getElementById("root"), next);
         setMode(next);
       }, 50);
     };

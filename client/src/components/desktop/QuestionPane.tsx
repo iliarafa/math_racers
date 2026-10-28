@@ -30,13 +30,13 @@ export interface QuestionPaneProps {
 export function QuestionPane({ questionDisplay, answerDisplay, feedback, radio = null, penaltyFlash, status, between, flashWhite = false }: QuestionPaneProps) {
   return (
     <div className="relative flex-1 min-h-0 w-full flex flex-col items-center justify-center" data-testid="question-pane">
-      <div className="flex-[20] min-h-12 max-h-[clamp(5rem,20dvh,14rem)] w-full flex items-end justify-center [container-type:size]">
+      <div className="flex-[20] min-h-12 max-h-[clamp(5rem,calc(var(--stage-h)*0.2),14rem)] w-full flex items-end justify-center [container-type:size]">
         <div
           className={cn(
             // One line: 18cqw fits the longest question. leading-none stays after the font size,
             // because cn() drops a line-height that comes before one.
             "font-bold tracking-tight text-center px-2 whitespace-nowrap",
-            "text-[min(clamp(5rem,20dvh,14rem),100cqh,18cqw)] leading-none",
+            "text-[min(clamp(5rem,calc(var(--stage-h)*0.2),14rem),100cqh,18cqw)] leading-none",
             flashWhite && "text-white",
           )}
           data-testid="desktop-question"
@@ -44,12 +44,12 @@ export function QuestionPane({ questionDisplay, answerDisplay, feedback, radio =
           {questionDisplay}
         </div>
       </div>
-      {between && <div className="w-[min(60vw,560px)] py-2 shrink-0">{between}</div>}
-      <div className={cn("flex-[22] min-h-12 max-h-[clamp(5.5rem,22dvh,15rem)] w-full [container-type:size]", !between && "mt-2")}>
+      {between && <div className="w-[min(calc(var(--stage-w)*0.6),560px)] py-2 shrink-0">{between}</div>}
+      <div className={cn("flex-[22] min-h-12 max-h-[clamp(5.5rem,calc(var(--stage-h)*0.22),15rem)] w-full [container-type:size]", !between && "mt-2")}>
         <div
           className={cn(
             "font-bold min-w-[160px] text-center",
-            "text-[min(clamp(5.5rem,22dvh,15rem),100cqh)] leading-none",
+            "text-[min(clamp(5.5rem,calc(var(--stage-h)*0.22),15rem),100cqh)] leading-none",
             flashWhite && "text-white",
             !flashWhite && feedback === 'idle' && !radio && "text-muted-foreground/50",
             !flashWhite && feedback === 'correct' && "text-green-600",
@@ -70,7 +70,7 @@ export function QuestionPane({ questionDisplay, answerDisplay, feedback, radio =
             transition={{ duration: 0.8 }}
             className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none"
           >
-            <span className="font-bold text-red-600 text-[clamp(3rem,9dvh,6rem)]" style={{ fontFamily: 'Oxanium, sans-serif' }}>
+            <span className="font-bold text-red-600 text-[clamp(3rem,calc(var(--stage-h)*0.09),6rem)]" style={{ fontFamily: 'Oxanium, sans-serif' }}>
               {penaltyFlash}
             </span>
           </motion.div>

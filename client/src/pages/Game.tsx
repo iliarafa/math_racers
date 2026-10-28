@@ -2134,7 +2134,7 @@ export default function Game() {
     ) : undefined;
 
     return (
-      <div className="min-h-dvh flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
+      <div className="min-h-[var(--stage-h)] flex flex-col relative overflow-hidden" style={{ backgroundColor: '#000000' }}>
         {awaitingLandscape && (
           <div
             className="fixed inset-0 z-[70] flex flex-col items-center justify-center gap-6 bg-black text-white px-8 text-center"
@@ -2319,7 +2319,7 @@ export default function Game() {
       return (
         <GameLayout trackName={selectedCircuit?.name || ""} lockViewport>
           <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
-            <div className="bg-black p-6 w-full max-w-2xl max-h-[80dvh] overflow-y-auto">
+            <div className="bg-black p-6 w-full max-w-2xl max-h-[calc(var(--stage-h)*0.8)] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>Debrief</h2>
                 <button
@@ -2768,7 +2768,7 @@ export default function Game() {
           {/* Debrief Modal */}
           {showAnalytics && (
             <div className="absolute inset-0 bg-black z-50 flex items-center justify-center p-4">
-              <div className="bg-black p-6 w-full max-w-2xl max-h-[80dvh] overflow-y-auto">
+              <div className="bg-black p-6 w-full max-w-2xl max-h-[calc(var(--stage-h)*0.8)] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold uppercase tracking-wider text-yellow-400" style={{ fontFamily: 'Oxanium, sans-serif' }}>Debrief</h2>
                   <button
@@ -3046,7 +3046,7 @@ export default function Game() {
                   quitToPaddock();
                 }, 1200);
               }}
-              className="font-bold leading-none text-white text-[clamp(5rem,18dvh,8rem)]"
+              className="font-bold leading-none text-white text-[clamp(5rem,calc(var(--stage-h)*0.18),8rem)]"
               style={{ fontFamily: 'Oxanium, sans-serif' }}
             >
               DNF
@@ -3274,7 +3274,7 @@ export default function Game() {
             />
           }
           bottomRight={powerUpsEnabled ? (
-            <div className="flex flex-col items-end gap-2 w-[clamp(240px,22vw,360px)]">
+            <div className="flex flex-col items-end gap-2 w-[clamp(240px,calc(var(--stage-w)*0.22),360px)]">
               <HudMessages boost={showBoostMessage} aero={showAeroMessage} botFrozen={botFrozen} />
               <PowerUpControls
                 enabled

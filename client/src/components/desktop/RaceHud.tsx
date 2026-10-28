@@ -20,7 +20,7 @@ export function HudClock({
   return (
     <div className={cn("flex flex-col gap-1", align === 'end' ? "items-end" : "items-start")} data-testid="hud-clock">
       {badge && <div className="flex items-center gap-2 text-sm font-medium">{badge}</div>}
-      <div className={cn("flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.5rem,3.4dvh,2.5rem)]", clockClassName)}>
+      <div className={cn("flex items-center gap-2 font-mono font-medium text-primary text-[clamp(1.5rem,calc(var(--stage-h)*0.034),2.5rem)]", clockClassName)}>
         <Timer className="w-6 h-6" />
         {clock}
       </div>

@@ -1155,7 +1155,7 @@ export default function Multiplayer() {
   // Lobby menu - Access Pass Card Design
   if (gameStatus === "lobby") {
     return (
-      <div className="h-dvh flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="h-[var(--stage-h)] flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* App Logo */}
         <div className="pt-4 pb-2 flex justify-center shrink-0">
           <Link href="/" data-testid="link-home-logo">
@@ -1511,7 +1511,7 @@ export default function Multiplayer() {
     ];
 
     return (
-      <div className="h-dvh flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+      <div className="h-[var(--stage-h)] flex flex-col overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
         {/* Header */}
         <div className="pt-4 pb-2 flex justify-center shrink-0">
           <span
@@ -1673,7 +1673,7 @@ export default function Multiplayer() {
               />
             }
             bottomRight={
-              <div className="flex flex-col items-end gap-2 w-[clamp(240px,22vw,360px)]">
+              <div className="flex flex-col items-end gap-2 w-[clamp(240px,calc(var(--stage-w)*0.22),360px)]">
                 <HudMessages boost={powerUpsEnabled ? showBoostMessage : null} aero={powerUpsEnabled ? showAeroMessage : null} />
                 <PowerUpControls
                   enabled
