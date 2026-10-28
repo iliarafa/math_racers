@@ -9,6 +9,7 @@ test('landing page uses the bare app name and a light toolbar', () => {
 test('menu pages are named after the screen and use the dark toolbar', () => {
   assert.equal(pageMetaFor('/hub').title, 'Paddock · Math Racer');
   assert.equal(pageMetaFor('/leaderboard').title, 'Leaderboard · Math Racer');
+  assert.equal(pageMetaFor('/map?region=europe').title, 'Map · Math Racer');
   assert.equal(pageMetaFor('/hub').themeColor, DARK_THEME_COLOR);
 });
 

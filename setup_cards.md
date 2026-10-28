@@ -51,7 +51,7 @@ Shared builders in `setupRows.ts`: `operationRow` (the five maths types), `level
 
 | Surface | Where | Art + flag source |
 |---|---|---|
-| Free Practice / Grand Prix | `client/src/pages/Game.tsx` (search `<RaceSetupCard`) | `CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black` (map local to Game.tsx) + `CURRENT_GRAND_PRIX.flagImage`; eyebrow `Round N · <mode>` |
+| Free Practice / Grand Prix | `client/src/pages/Game.tsx` (search `<RaceSetupCard`) | `gp.setupTrackImage`, then the briefing's `detailMapImage`, then `CIRCUIT_MAP_IMAGES[gp.circuitId]?.black ?? gp.trackImage` (inverted) + `gp.flagImage`; eyebrow `Round N · <mode>`. `gp` is `CURRENT_GRAND_PRIX`, or the round a Season Map pin picked (`?round=N`, Grand Prix only) |
 | Lane Racer | `client/src/pages/LaneRacer.tsx` | `CIRCUIT_MENU_ART[selectedCircuit.id]` `.image` / `.flag`; eyebrow `LANE RACER` |
 | Multiplayer (host settings) | `client/src/pages/Multiplayer.tsx` | `CIRCUIT_MENU_ART[displayCircuit.id]` `.image` / `.flag`; eyebrow `Room <code>`; `LEVEL` readout; waiting note as `children` |
 
@@ -59,7 +59,7 @@ Shared builders in `setupRows.ts`: `operationRow` (the five maths types), `level
 
 Follow the `/weekend` skill (`.claude/skills/weekend/SKILL.md`) for the full rotation. The setup-card-specific facts:
 
-1. **The FP/GP card art follows the config automatically.** `CIRCUIT_MAP_IMAGES` in `Game.tsx` derives its current-GP entry from `CURRENT_GRAND_PRIX.trackImage`, and the card header reads `round`, `name`, and `flagImage` from the same config. For an **existing** circuit, updating `currentGrandPrix.ts` is all the setup cards need.
+1. **The FP/GP card art follows the config automatically.** The card reads `round`, `name`, `flagImage` and the maps from the weekend (`CURRENT_GRAND_PRIX`, the season calendar's entry for `CURRENT_ROUND`). For an **existing** circuit, filling the round's `weekend` in `seasonCalendar.ts`, adding its art to `WEEKEND_ART` in `grandPrixWeekends.ts` and bumping `CURRENT_ROUND` is all the setup cards need. Don't edit `currentGrandPrix.ts`: it only derives the current round.
 2. **New circuits additionally need a `CIRCUIT_MENU_ART` entry** (`circuitMenuArt.ts`: silhouette + flag import). While `LOCK_MENU_TO_CURRENT_GP` is `true`, Lane Racer's and Multiplayer's card art and TRACK row come *only* from this map — a missing entry renders an empty hero and an empty TRACK row.
 3. **Asset rules** (the classic mistake): the card inverts its art, so `trackImage` must be a **dark** silhouette on transparency, ~700px, thin-line Spa-style framing. The flag chip uses the same `flagImage` as everywhere else, at small size — any normal flag PNG works.
 4. **Never size per circuit.** Leave `CURRENT_GRAND_PRIX.mapStageClass` as `undefined`. The centered stage handles every aspect ratio (see "Art sizing"); if a silhouette looks wrong, fix the asset.

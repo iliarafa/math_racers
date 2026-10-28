@@ -1,5 +1,5 @@
 /** Pages that play the menu music (MenuMusic in App.tsx), matched exactly. */
-const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/trophies', '/leaderboard', '/lane-racer', '/multiplayer', '/grand-prix', '/driving-school', '/reaction'];
+const MENU_ROUTES = ['/', '/hub', '/game', '/strategy', '/regulations', '/racer-log', '/trophies', '/map', '/leaderboard', '/lane-racer', '/multiplayer', '/grand-prix', '/driving-school', '/reaction'];
 
 /**
  * Whether the menu music may play on `location`. Every `/game/<mode>` route counts: its

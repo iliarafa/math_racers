@@ -38,7 +38,7 @@ The app is at **v1.3.15**, themed to **Round 15 / Azerbaijan (Baku City Circuit)
 
 ## Latest session: Round 15 / Baku
 
-### Config (`client/src/lib/currentGrandPrix.ts`)
+### Config (`client/src/lib/currentGrandPrix.ts`; since 2026-10-28 these values live in Round 15's row of `seasonCalendar.ts`)
 - `round: 15`, `circuitId: 'baku'`, `name: 'BAKU'`, `circuitName: 'Baku City Circuit'`, `country: 'AZERBAIJAN'`, `rainProbability: 0.15`, `simLapCount: 51`, blue-red-green gradient.
 - **New field `setupTrackImage`**: the stripped full-colour map (sector ribbon and start line, no corner labels) shown un-inverted on the Free Practice / Grand Prix setup card. When it's omitted, the card falls back to the briefing's `detailMapImage`, then to the dark silhouette.
 - **New field `bannerTextColor`**: the text colour on the paddock Weekend Briefing banner. Use `#1a1a1a` for light or yellow gradients (Madrid) and `#ffffff` for saturated ones (Baku). Any non-dark value gets a soft `0 1px 2px rgba(0,0,0,0.35)` text shadow in `Hub.tsx`, so white stays legible over light stops.
@@ -68,7 +68,7 @@ A new circuit now needs **four** images: silhouette, flag, labelled detail map a
 ## Standing context
 
 ### Weekly GP rotation
-- `CURRENT_GRAND_PRIX` in `client/src/lib/currentGrandPrix.ts` is the single config for Race Now, Free Practice, Grand Prix, the Weekend Briefing and Regulations Art. 7.
+- `CURRENT_GRAND_PRIX` (`client/src/lib/currentGrandPrix.ts`) drives Race Now, Free Practice, Grand Prix, the Weekend Briefing and Regulations Art. 7. Since the Season Map (2026-10-28) it is derived: the season calendar's entry for `CURRENT_ROUND` (`seasonCalendar.ts`, with the art in `grandPrixWeekends.ts`). Rotate by filling the round's `weekend`, adding its art and bumping `CURRENT_ROUND`; never rewrite `currentGrandPrix.ts` as a literal again.
 - **Use the `/weekend` skill** (`.claude/skills/weekend/SKILL.md`). The best new-circuit template is `5397f64` (Baku), with `4d7d282` (Zandvoort) as the older example.
 - `SIM_LAP_COUNTS` in `gameLogic.ts` is the source of truth for which circuits exist.
 - `LOCK_MENU_TO_CURRENT_GP = true` (`circuitMenuArt.ts`): Lane Racer and Multiplayer show only the current GP's track.

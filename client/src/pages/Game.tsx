@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
-import { Link, useLocation, useParams } from "wouter";
+import { Link, useLocation, useParams, useSearch } from "wouter";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { getMapLapLength } from "@/components/LiveCircuitMap";
 import { SectorProgressGrid } from "@/components/SectorProgressGrid";
@@ -32,7 +32,7 @@ import { submitFpLeaderboardEntry, submitGpWeekendEntry, submitQuickRaceEntry, G
 import { localBestKey, fpSessionForLaps, sessionLabel, localTierNote, type LocalBestEntry, type LocalBoard, type LocalSession } from "@/lib/localBests";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { X, RotateCcw, Home, Timer, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy, RotateCw } from "lucide-react";
+import { X, RotateCcw, Home, Timer, Pause, Play, BarChart3, ChevronLeft, Download, Share2, Trophy, RotateCw, Map as MapIcon } from "lucide-react";
 import { usePurchase } from "@/hooks/use-purchase";
 import { Paywall } from "@/components/Paywall";
 import { grandPrixDevBypass } from "@/lib/drivingSchoolLicence";
@@ -79,6 +79,8 @@ import circuitSpaBlack from "@/assets/circuit_spa_black.png";
 import circuitHungaryBlack from "@/assets/circuit_hungary_black.png";
 import trackBahrain from "@/assets/track_bahrain.png";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
+import { weekendForRound, type GrandPrixWeekend } from "@/lib/grandPrixWeekends";
+import { parseWeekendRound } from "@/lib/seasonCalendar";
 import { getGrandPrixHistory } from "@/lib/grandPrixHistory";
 import simplyLovelyAudio from "@/assets/simply_lovely.m4a";
 import logoImage from "@assets/1Asset_3@2x_1767902844976.png";
@@ -124,13 +126,13 @@ const CheckeredFlag = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const createGrandPrixCircuit = (op: string): Circuit => ({
-  id: CURRENT_GRAND_PRIX.circuitId,
-  name: CURRENT_GRAND_PRIX.name,
+const createGrandPrixCircuit = (op: string, weekend: GrandPrixWeekend): Circuit => ({
+  id: weekend.circuitId,
+  name: weekend.name,
   type: op,
   description: 'Grand Prix',
   mapUrl: '',
-  paths: getCircuitPathsForId(CURRENT_GRAND_PRIX.circuitId),
+  paths: getCircuitPathsForId(weekend.circuitId),
 });
 
 const createFreePracticeCircuit = (op: string): Circuit => ({
@@ -262,6 +264,17 @@ export default function Game() {
   /** `/game/free-practice` | `/game/grand-prix` | `/game/quick-race` — replaces the old mode_select screen. */
   const routeMode = useParams<{ mode?: string }>().mode;
   const isQuickRace = routeMode === 'quick-race';
+  /**
+   * A Grand Prix started from the Season Map carries `?round=N` and races that round's weekend.
+   * A missing, unknown or not-yet-open round falls back to this week's, so a typed URL can't
+   * start a locked round.
+   */
+  const search = useSearch();
+  const mapWeekend = routeMode === 'grand-prix' ? weekendForRound(parseWeekendRound(search) ?? 0) : undefined;
+  /** The round this screen runs. Free Practice and Quick Race always follow this week's. */
+  const gp = mapWeekend ?? CURRENT_GRAND_PRIX;
+  /** Leaving a weekend started on the map goes back to its region there, so the new medal shows. */
+  const exitHref = mapWeekend ? `/map?region=${mapWeekend.region}` : '/hub';
   const [raceMode, setRaceMode] = useState<'solo' | 'bot' | 'multiplayer'>('bot');
   const [botProgress, setBotProgress] = useState(0);
   const [botLapResults, setBotLapResults] = useState<Array<{
@@ -362,7 +375,7 @@ export default function Game() {
   } | null>(null);
 
   const commitLocalBest = (board: LocalBoard, session: LocalSession, entry: LocalBestEntry) => {
-    const key = localBestKey(board, CURRENT_GRAND_PRIX.circuitId, selectedOperation, session);
+    const key = localBestKey(board, gp.circuitId, selectedOperation, session);
     const { previous, isNew } = recordLocalBest(key, entry);
     setLocalBestOutcome({ board, session, entry, previous, isNew });
   };
@@ -401,10 +414,10 @@ export default function Game() {
   const powerUpsEnabled = isGrandPrix;
 
   const leaderboardHref = isGrandPrix
-    ? `/leaderboard?mode=grand-prix&circuit=${CURRENT_GRAND_PRIX.circuitId}&operation=${encodeURIComponent(selectedOperation)}`
+    ? `/leaderboard?mode=grand-prix&circuit=${gp.circuitId}&operation=${encodeURIComponent(selectedOperation)}`
     : isQuickRace
-      ? `/leaderboard?mode=quick-race&circuit=${CURRENT_GRAND_PRIX.circuitId}`
-      : `/leaderboard?mode=free-practice&circuit=${CURRENT_GRAND_PRIX.circuitId}&operation=${encodeURIComponent(selectedOperation)}`;
+      ? `/leaderboard?mode=quick-race&circuit=${gp.circuitId}`
+      : `/leaderboard?mode=free-practice&circuit=${gp.circuitId}&operation=${encodeURIComponent(selectedOperation)}`;
 
   const raceLength = (() => {
     if (isQuickRace) return RACE_LENGTH;
@@ -590,16 +603,16 @@ export default function Game() {
     if (isRaceDay) {
       const tier = weekendTrophyTier({ beatBot: raceMode === 'bot' && !botFinished, pole: grandPrixPolePosition });
       const status = awardWeekendTrophy({
-        id: trophyId(CURRENT_GRAND_PRIX.season, CURRENT_GRAND_PRIX.round, CURRENT_GRAND_PRIX.circuitId),
-        season: CURRENT_GRAND_PRIX.season,
-        round: CURRENT_GRAND_PRIX.round,
-        circuitId: CURRENT_GRAND_PRIX.circuitId,
-        name: CURRENT_GRAND_PRIX.name,
+        id: trophyId(gp.season, gp.round, gp.circuitId),
+        season: gp.season,
+        round: gp.round,
+        circuitId: gp.circuitId,
+        name: gp.name,
         tier,
         operation: selectedOperation,
         at: Date.now(),
       });
-      trophy = { status, tier, name: CURRENT_GRAND_PRIX.name };
+      trophy = { status, tier, name: gp.name };
       if (status !== 'unchanged') setShowTrophySplash(true);
     }
 
@@ -824,7 +837,7 @@ export default function Game() {
     } else if (grandPrix) {
       setIsPracticeMode(true);
       setRaceMode('solo');
-      setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
+      setSelectedCircuit(createGrandPrixCircuit(selectedOperation, gp));
       setGrandPrixPhase('rw_practice');
       setGrandPrixLockedDifficulty(null);
       setGrandPrixPolePosition(false);
@@ -840,10 +853,10 @@ export default function Game() {
       setGameStatus('selecting');
     }
     initAudio();
-    // Deliberately keyed on the route only — re-running on operation change would
+    // Deliberately keyed on the route and round only — re-running on operation change would
     // wipe Grand Prix progress mid-weekend. `chooseOperation` handles that case.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [routeMode]);
+  }, [routeMode, gp.round]);
 
   // Keyboard input for desktop
   useEffect(() => {
@@ -877,7 +890,7 @@ export default function Game() {
     setSelectedDriver(driver);
     localStorage.setItem('lastSelectedDriverId', driver.id);
     if (isGrandPrix) {
-      setSelectedCircuit(createGrandPrixCircuit(selectedOperation));
+      setSelectedCircuit(createGrandPrixCircuit(selectedOperation, gp));
     } else if (isPreSeasonTesting) {
       setSelectedCircuit(createFreePracticeCircuit(selectedOperation));
     }
@@ -977,7 +990,7 @@ export default function Game() {
   const chooseOperation = (op: string) => {
     setSelectedOperation(op);
     saveSetupOperation(op);
-    setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(op) : createFreePracticeCircuit(op));
+    setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(op, gp) : createFreePracticeCircuit(op));
   };
 
   const beginRace = () => {
@@ -1327,8 +1340,8 @@ export default function Game() {
           if (raceLength >= 100) {
             const submission = {
               playerId: state.playerId,
-              circuitId: CURRENT_GRAND_PRIX.circuitId,
-              circuitName: CURRENT_GRAND_PRIX.circuitName,
+              circuitId: gp.circuitId,
+              circuitName: gp.circuitName,
               operation: selectedOperation,
               score,
               totalTime: elapsedTime,
@@ -1387,8 +1400,8 @@ export default function Game() {
           const accuracy = Math.max(0, Math.round(((raceLength - mistakes) / raceLength) * 100));
           const gpSubmission = {
             playerId: state.playerId,
-            circuitId: CURRENT_GRAND_PRIX.circuitId,
-            circuitName: CURRENT_GRAND_PRIX.circuitName,
+            circuitId: gp.circuitId,
+            circuitName: gp.circuitName,
             operation: selectedOperation,
             totalTime: elapsedTime,
             mistakes,
@@ -1429,8 +1442,8 @@ export default function Game() {
           const beatBot = botProgress < raceLength;
           const qrSubmission = {
             playerId: state.playerId,
-            circuitId: CURRENT_GRAND_PRIX.circuitId,
-            circuitName: CURRENT_GRAND_PRIX.circuitName,
+            circuitId: gp.circuitId,
+            circuitName: gp.circuitName,
             operation: selectedOperation,
             score: calculatePSTScore(elapsedTime, mistakes, qrDifficulty, raceLength),
             totalTime: elapsedTime,
@@ -1755,16 +1768,16 @@ export default function Game() {
     // which meant re-picking mode and operation to race the same session again; the mode
     // now lives in the route, so the driver and circuit stay valid.
     setGameStatus('selecting');
-    setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(selectedOperation) : createFreePracticeCircuit(selectedOperation));
+    setSelectedCircuit(isGrandPrix ? createGrandPrixCircuit(selectedOperation, gp) : createFreePracticeCircuit(selectedOperation));
     setIsPracticeMode(true);
     setSelectedTab(isGrandPrix ? 'rw_practice' : 'testing');
     setRaceMode('solo');
   };
 
-  /** Leave the session entirely: reset, then back to the Paddock. */
+  /** Leave the session entirely: reset, then back to the Paddock (or the map, for a weekend started there). */
   const quitToPaddock = () => {
     restartRace();
-    setLocation('/hub');
+    setLocation(exitHref);
   };
 
   // Helper to reset race state and go back to selecting screen (for Grand Prix phase transitions)
@@ -2043,13 +2056,13 @@ export default function Game() {
   // Grand Prix is premium. The entitlement is currently granted to everyone
   // (see PurchaseContext), so this gate is inert — it stays wired for when it isn't.
   if (isGrandPrix && !isPremium && !isPurchaseLoading) {
-    return <Paywall onBack={() => setLocation('/hub')} onPurchaseSuccess={() => setGameStatus('selecting')} />;
+    return <Paywall onBack={() => setLocation(exitHref)} onPurchaseSuccess={() => setGameStatus('selecting')} />;
   }
 
   // Quick Race never shows setup — hold a brief shell while the route effect starts countdown.
   if (gameStatus === 'selecting' && isQuickRace) {
     return (
-      <GameLayout trackName={selectedCircuit?.name || CURRENT_GRAND_PRIX.name} lockViewport hideHeader>
+      <GameLayout trackName={selectedCircuit?.name || gp.name} lockViewport hideHeader>
         <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm uppercase tracking-widest">
           Loading…
         </div>
@@ -2092,13 +2105,13 @@ export default function Game() {
           : { label: 'Go to track', tone: 'green' as const };
 
     const helpText = isGrandPrix
-      ? `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${CURRENT_GRAND_PRIX.welcomeBlurb}`
+      ? `Practice (30 questions) always adjusts difficulty as you go. Your difficulty locks at the end of Practice for the rest of the weekend. Beat the bot in Qualifying for Pole Position — a 2-sector head start on Race Day. ${gp.welcomeBlurb}`
       : 'Choose 25, 50 or 100 laps with Adaptive difficulty (or locked to a series) and no penalties. Box at any time to end your current stint — go back on track to start a new one. Every finished session saves a personal best on this device; only full 100-lap sessions post to the global Leaderboard.';
 
     // Prefer the rotation's own stripped setup art; fall back to the briefing detail map.
     const setupDetailMap =
-      CURRENT_GRAND_PRIX.setupTrackImage ??
-      getGrandPrixHistory(CURRENT_GRAND_PRIX.circuitId)?.detailMapImage;
+      gp.setupTrackImage ??
+      getGrandPrixHistory(gp.circuitId)?.detailMapImage;
 
     const phaseTabs = isGrandPrix ? (
       <div className="flex items-center justify-center gap-4 pt-1" data-testid="gp-phase-tabs">
@@ -2165,12 +2178,12 @@ export default function Game() {
 
         {/* Header: Back + Logo */}
         <div className="relative z-10 flex items-center justify-center" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 18px)', paddingBottom: '16px' }}>
-          <Link href="/hub">
+          <Link href={exitHref}>
             <button
               onClick={() => { if (state.soundEnabled) playCarouselClick(); }}
               className="absolute left-4 top-0 flex items-center justify-center w-10 h-10 text-white/60 hover:text-white transition-colors"
               style={{ marginTop: 'calc(env(safe-area-inset-top) + 18px)' }}
-              aria-label="Back to paddock"
+              aria-label={mapWeekend ? 'Back to map' : 'Back to paddock'}
             >
               <ChevronLeft size={24} />
             </button>
@@ -2180,21 +2193,21 @@ export default function Game() {
 
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-4 overflow-y-auto">
           <RaceSetupCard
-            motionKey={`${isGrandPrix ? 'gp' : 'fp'}-${CURRENT_GRAND_PRIX.circuitId}-card`}
-            testId={`hero-card-${isGrandPrix ? '' : 'pst-'}${CURRENT_GRAND_PRIX.circuitId}`}
+            motionKey={`${isGrandPrix ? 'gp' : 'fp'}-${gp.circuitId}-card`}
+            testId={`hero-card-${isGrandPrix ? '' : 'pst-'}${gp.circuitId}`}
             header={{
-              eyebrow: `Round ${CURRENT_GRAND_PRIX.round} · ${isGrandPrix ? 'Grand Prix' : 'Free Practice'}`,
-              title: CURRENT_GRAND_PRIX.name,
-              flagSrc: CURRENT_GRAND_PRIX.flagImage,
+              eyebrow: `Round ${gp.round} · ${isGrandPrix ? 'Grand Prix' : 'Free Practice'}`,
+              title: gp.name,
+              flagSrc: gp.flagImage,
               phase: phaseTabs,
             }}
-            mapImageSrc={setupDetailMap ?? CIRCUIT_MAP_IMAGES[CURRENT_GRAND_PRIX.circuitId]?.black}
+            mapImageSrc={setupDetailMap ?? CIRCUIT_MAP_IMAGES[gp.circuitId]?.black ?? gp.trackImage}
             invertMap={!setupDetailMap}
-            mapStageClass={CURRENT_GRAND_PRIX.mapStageClass}
+            mapStageClass={gp.mapStageClass}
             rows={rows}
             readouts={isGrandPrix ? [{ label: 'Laps', value: String(raceLength) }] : undefined}
             start={{ ...start, onStart: handleStartRace }}
-            onBack={() => setLocation('/hub')}
+            onBack={() => setLocation(exitHref)}
             helpText={helpText}
             soundEnabled={state.soundEnabled}
           />
@@ -2376,6 +2389,10 @@ export default function Game() {
             {isQuickRace ? (
               <button onClick={quitToPaddock} className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all" data-testid="button-crash-paddock">
                 Back to Paddock
+              </button>
+            ) : mapWeekend ? (
+              <button onClick={quitToPaddock} className="w-full bg-green-600 text-white h-12 rounded-lg font-medium hover:bg-green-700 transition-all" data-testid="button-crash-map">
+                Back to Map
               </button>
             ) : (
               <Link href="/garage">
@@ -2681,7 +2698,7 @@ export default function Game() {
             tier={rewardOutcome.trophy.tier}
             status={rewardOutcome.trophy.status}
             name={rewardOutcome.trophy.name}
-            round={CURRENT_GRAND_PRIX.round}
+            round={gp.round}
             onClose={() => setShowTrophySplash(false)}
           />
         )}
@@ -2753,6 +2770,10 @@ export default function Game() {
               {isQuickRace ? (
                 <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken" data-testid="button-main-menu">
                   <Home className="w-4 h-4" /> Back to Paddock
+                </button>
+              ) : mapWeekend ? (
+                <button onClick={quitToPaddock} className="w-full bg-secondary text-secondary-foreground h-12 rounded-lg font-medium hover:bg-secondary/80 transition-all flex items-center justify-center gap-2 web-hover-darken" data-testid="button-back-to-map">
+                  <MapIcon className="w-4 h-4" /> Back to Map
                 </button>
               ) : (
                 <Link href="/">

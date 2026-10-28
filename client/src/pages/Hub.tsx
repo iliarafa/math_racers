@@ -333,6 +333,14 @@ export default function Hub() {
               />
 
               <HubCard
+                href="/map"
+                title="MAP"
+                subtitle={`${CURRENT_GRAND_PRIX.season} SEASON · ANY RACED ROUND`}
+                testId="link-map"
+                soundEnabled={state.soundEnabled}
+              />
+
+              <HubCard
                 href="/garage"
                 title="GARAGE"
                 subtitle="SETTINGS & STATS"

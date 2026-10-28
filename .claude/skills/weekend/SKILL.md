@@ -5,13 +5,14 @@ description: Use when rotating the app to a new Grand Prix weekend — updating 
 
 # Grand Prix Weekend Rotation
 
-Re-themes the app to the week's F1 circuit: Free Practice card, Grand Prix mode, and the `/grand-prix` Weekend Briefing all derive from one config. Follow the steps **in order** — asset decisions and the new-vs-existing-circuit check gate everything downstream.
+Re-themes the app to the week's F1 circuit: Free Practice card, Grand Prix mode, and the `/grand-prix` Weekend Briefing all derive from `CURRENT_GRAND_PRIX`, which is the season calendar's entry for `CURRENT_ROUND`. Rotating also opens the new round's pin on the Season Map (`/map`). Follow the steps **in order** — asset decisions and the new-vs-existing-circuit check gate everything downstream.
 
 **Templates (trust these over any docs):** the two most recent rotation commits.
 - Existing circuit: `d17e8a0` (Round 9 / Silverstone)
 - New circuit: `4d7d282` (Round 12 / Zandvoort) — complete worked example incl. menu art, **except** its live-map changes (`circuitPaths.ts`, `circuitPathData.json`, `script/extractCircuitCenterline.ts`): skip those. The in-race live map was dropped in `d707166`; only the dev page `/dev/circuit-maps` still draws it, and a circuit without a centerline gets a fallback oval there.
 - `SESSION_NOTES.md` is STALE (describes the old Round-5 setup with config inline in Game.tsx). Ignore it.
 - Setup-card specifics (what the cards read from the rotation, art rules, QA list): `setup_cards.md` at the repo root.
+- **Since the Season Map (Oct 2026) the rotation commits above predate the calendar:** they rewrote a literal `currentGrandPrix.ts`. Now that file only derives `CURRENT_GRAND_PRIX`; the round's settings go in `seasonCalendar.ts` and its art in `grandPrixWeekends.ts` (Step 2). Never turn `currentGrandPrix.ts` back into a literal: the Map, the leaderboard picker and the trophy slots read the calendar.
 - **Technical Regulations, Art. 7 (Grand Prix)** in `client/src/pages/Regulations.tsx` is generated from `CURRENT_GRAND_PRIX` (`circuitName`, `round`, `name`, `simLapCount`). It must read correctly for every round — see Step 2 (`circuitName`) and the Step 6 check. Never hard-code a circuit in that article again.
 
 ## Step 0 — Gather inputs (before touching code)
@@ -33,14 +34,19 @@ Re-themes the app to the week's F1 circuit: Free Practice card, Grand Prix mode,
 
 Getting dark-vs-colored backwards is the classic mistake: `trackImage` (Step 2) = dark silhouette; `detailMapImage` (Step 4) = colored map.
 
-## Step 2 — `client/src/lib/currentGrandPrix.ts`
+## Step 2 — the season calendar (`client/src/lib/seasonCalendar.ts` + `grandPrixWeekends.ts`)
 
-The single config everything reads (Game.tsx builds FLAG/TRACK/MAP/RAIN lookups from `circuitId`). Update the asset imports and every `CURRENT_GRAND_PRIX` field:
+`CURRENT_GRAND_PRIX` (`currentGrandPrix.ts`) is `weekendForRound(CURRENT_ROUND)`: don't edit that file. Every round already has a row in `SEASON_CALENDAR` (circuitId, `name`, `circuitName`, `country`, lat/lng, map `region`, and `raceDate` for rounds not yet rotated to). To rotate:
 
-- `season` (calendar year — weekend trophies are keyed by season and round), `round`, `circuitId`, `name` (UPPERCASE circuit), `country` (UPPERCASE)
+1. In `seasonCalendar.ts`, set `CURRENT_ROUND` to the new round (and `CURRENT_SEASON` at a new year — weekend trophies are keyed by season and round). In the round's row, add a `weekend` object (`rainProbability`, `simLapCount`, `gradient`, `bannerTextColor`, `welcomeBlurb`; `mapStageClass` stays unset), check `name` / `circuitName` / `country`, and drop `raceDate` if you like (only unopened pins show it). `npm test` fails if `simLapCount` doesn't match `SIM_LAP_COUNTS`.
+2. In `grandPrixWeekends.ts`, import the round's dark silhouette, flag and stripped setup map and add a `WEEKEND_ART[circuitId]` row (`trackImage`, `flagImage`, `setupTrackImage`). Without it `weekendForRound` returns nothing and the app throws at startup ("Round N has no weekend settings or art yet").
+
+The fields:
+
+- `circuitId`, `name` (UPPERCASE circuit), `country` (UPPERCASE): already in the row
 - `circuitId` for a new circuit: use the key it already has in `TROPHY_CODES` (`client/src/lib/trophies.ts`; every 2026 venue has a row, e.g. `singapore`, `lasvegas`, `abudhabi`). The Trophy Cabinet tile shows that row's three-letter code, since most names are too long for the tile; a circuitId with no row falls back to the first three letters of `name`.
 - `circuitName` — the proper venue name, shown on the GP card and in Regulations Art. 7, where it is used as "at the `circuitName`" ("at the Hungaroring", "at the Madring"). Pick a form that reads naturally after "the" — e.g. `'Circuit de Monaco'`, `'Silverstone Circuit'`, `'Autodromo Nazionale Monza'` — not a bare town name.
-- `trackImage` (dark silhouette import), `flagImage`
+- `trackImage` (dark silhouette import), `flagImage`, `setupTrackImage` (in `WEEKEND_ART`)
 - `rainProbability` (circuit-realistic, e.g. Silverstone 0.45, Austria 0.35)
 - `simLapCount` (real race lap count)
 - `gradient` — CSS linear-gradient in the national flag's colors

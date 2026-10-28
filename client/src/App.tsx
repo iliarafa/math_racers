@@ -32,6 +32,7 @@ import Hub from "@/pages/Hub";
 import DevCircuitMaps from "@/pages/DevCircuitMaps";
 import DrivingSchool from "@/pages/DrivingSchool";
 import TrophyCabinet from "@/pages/TrophyCabinet";
+import SeasonMap from "@/pages/SeasonMap";
 
 function Router() {
   return (
@@ -50,6 +51,7 @@ function Router() {
       <Route path="/regulations" component={Regulations} />
       <Route path="/racer-log" component={RacerLog} />
       <Route path="/trophies" component={TrophyCabinet} />
+      <Route path="/map" component={SeasonMap} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/lane-racer" component={LaneRacer} />
       <Route component={NotFound} />

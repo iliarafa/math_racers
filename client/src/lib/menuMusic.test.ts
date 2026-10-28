@@ -14,6 +14,7 @@ test('menu pages play the music and other pages do not', () => {
   assert.equal(isMenuMusicRoute('/hub'), true);
   assert.equal(isMenuMusicRoute('/game'), true);
   assert.equal(isMenuMusicRoute('/trophies'), true);
+  assert.equal(isMenuMusicRoute('/map'), true);
   assert.equal(isMenuMusicRoute('/dev/circuit-maps'), false);
   assert.equal(isMenuMusicRoute('/gamer'), false);
 });

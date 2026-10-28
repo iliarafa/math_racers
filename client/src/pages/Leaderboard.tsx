@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { GameLayout } from "@/components/layout/GameLayout";
 import { CURRENT_GRAND_PRIX } from "@/lib/currentGrandPrix";
-import { GP_HISTORY } from "@/lib/grandPrixHistory";
+import { SEASON_CALENDAR, openRounds } from "@/lib/seasonCalendar";
 import { CIRCUITS, loadSetupOperation, useGameState } from "@/lib/gameLogic";
 import {
   LEADERBOARD_OPERATIONS,
@@ -45,10 +45,13 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   pro: 'Pro',
 };
 
-const pickerIds = circuitPickerIds(CURRENT_GRAND_PRIX.circuitId, Object.keys(GP_HISTORY));
+// Every round raced so far this season (any of them can be raced from the Season Map), newest first.
+const pickerIds = circuitPickerIds(CURRENT_GRAND_PRIX.circuitId, openRounds().map((r) => r.circuitId).reverse());
 
 function circuitLabel(id: string): string {
   if (id === CURRENT_GRAND_PRIX.circuitId) return CURRENT_GRAND_PRIX.circuitName;
+  const fromCalendar = SEASON_CALENDAR.find((r) => r.circuitId === id);
+  if (fromCalendar) return fromCalendar.circuitName;
   const fromCircuits = CIRCUITS.find((c) => c.id === id);
   if (fromCircuits) return fromCircuits.name.charAt(0) + fromCircuits.name.slice(1).toLowerCase();
   return id;
