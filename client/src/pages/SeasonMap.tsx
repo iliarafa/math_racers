@@ -30,9 +30,14 @@ const F1_RED = '#e10600';
 
 /** Screen strips the title and the status line cover; regions fit between them. */
 const INSET = { top: 84, bottom: 64 };
-/** Pin and bubble footprints (centre to centre, px) that `spreadPins` keeps apart. */
+/** Pin footprint (centre to centre, px) that `spreadPins` keeps apart. */
 const PIN_SPACING = 64;
-const BUBBLE_SPACING = 100;
+/**
+ * Region bubbles: the circle is full size on desktop and shrinks to `min` on a phone-width map,
+ * `spreadPins` keeps them `size + gap` apart, and the `labelBox`-wide button stays `edge` px
+ * inside the map so a long label (ASIA-PACIFIC) is never cut off at the side.
+ */
+const BUBBLE = { max: 72, min: 52, perWidth: 0.13, gap: 28, labelBox: 120, edge: 8 };
 const GLIDE = { duration: 0.7, ease: [0.4, 0, 0.2, 1] as const };
 
 type LandPaths = { land: string; borders: string };
@@ -174,11 +179,19 @@ export default function SeasonMap() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [region, vbKey, size.w, size.h]);
 
+  const bubbleSize = Math.round(Math.min(BUBBLE.max, Math.max(BUBBLE.min, size.w * BUBBLE.perWidth)));
+  const compactBubbles = bubbleSize < BUBBLE.max;
+
   const bubbles = useMemo(() => {
     if (region || !size.w) return [];
     const centres = MAP_REGIONS.map((spec) => toPx(centreOf(roundsInRegion(spec.id)), vb, size));
-    const placed = spreadPins(centres, BUBBLE_SPACING);
-    return MAP_REGIONS.map((spec, i) => ({ spec, at: placed[i] }));
+    const placed = spreadPins(centres, bubbleSize + BUBBLE.gap);
+    const maxLeft = size.w - BUBBLE.labelBox - BUBBLE.edge;
+    return MAP_REGIONS.map((spec, i) => ({
+      spec,
+      left: Math.max(BUBBLE.edge, Math.min(maxLeft, placed[i].x - BUBBLE.labelBox / 2)),
+      top: placed[i].y - bubbleSize / 2,
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [region, vbKey, size.w, size.h]);
 
@@ -246,7 +259,7 @@ export default function SeasonMap() {
           </div>
         )}
 
-        {!region && !zooming && bubbles.map(({ spec, at }, i) => {
+        {!region && !zooming && bubbles.map(({ spec, left, top }, i) => {
           const rows = roundsInRegion(spec.id);
           const hasCurrent = rows.some((r) => r.round === CURRENT_ROUND);
           const raced = rows.filter((r) => isRoundOpen(r.round) && trophyFor(r.round)).length;
@@ -258,8 +271,11 @@ export default function SeasonMap() {
               initial={{ opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.25, delay: reduceMotion ? 0 : i * 0.05 }}
-              className="absolute flex flex-col items-center gap-1.5 outline-none rounded-xl focus-visible:ring-2 focus-visible:ring-white web-hover-brighten"
-              style={{ left: at.x - 60, top: at.y - 36, width: 120, ...OXANIUM }}
+              className={cn(
+                "absolute flex flex-col items-center outline-none rounded-xl focus-visible:ring-2 focus-visible:ring-white web-hover-brighten",
+                compactBubbles ? 'gap-1' : 'gap-1.5',
+              )}
+              style={{ left, top, width: BUBBLE.labelBox, ...OXANIUM }}
               onClick={() => { click(); goRegion(spec.id); }}
               onMouseEnter={() => setHovered(label)}
               onMouseLeave={() => setHovered(null)}
@@ -269,10 +285,10 @@ export default function SeasonMap() {
               data-testid={`map-region-${spec.id}`}
             >
               <span
-                className="relative flex items-center justify-center rounded-full text-2xl font-bold text-white"
+                className={cn("relative flex items-center justify-center rounded-full font-bold text-white", compactBubbles ? 'text-lg' : 'text-2xl')}
                 style={{
-                  width: 72,
-                  height: 72,
+                  width: bubbleSize,
+                  height: bubbleSize,
                   backgroundColor: 'rgba(23,23,23,0.85)',
                   border: `2px solid ${hasCurrent ? F1_RED : 'rgba(255,255,255,0.8)'}`,
                   boxShadow: '0 4px 18px rgba(0,0,0,0.45)',
@@ -283,7 +299,10 @@ export default function SeasonMap() {
                 )}
                 {rows.length}
               </span>
-              <span className="text-xs font-bold uppercase tracking-widest text-white" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+              <span
+                className={cn("font-bold uppercase text-white", compactBubbles ? 'text-[10px] tracking-wider' : 'text-xs tracking-widest')}
+                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
+              >
                 {spec.label}
               </span>
             </motion.button>
