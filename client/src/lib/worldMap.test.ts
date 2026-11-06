@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { MAP_SIZE, boundsBox, fitViewBox, fitViewBoxInset, landBox, project, spreadPins, toPercent } from './worldMap.ts';
+import { MAP_SIZE, boundsBox, fitViewBox, fitViewBoxInset, landBox, leaderLine, project, spreadPins, toPercent } from './worldMap.ts';
 
 test('the projection puts west on the left and north at the top', () => {
   const greenwich = project(0, 0);
@@ -74,4 +74,19 @@ test('crowded pins are pushed apart; spaced ones stay put', () => {
 
   const stacked = spreadPins([{ x: 10, y: 10 }, { x: 10, y: 10 }], 40);
   assert.ok(Math.hypot(stacked[1].x - stacked[0].x, stacked[1].y - stacked[0].y) >= 40 - 1e-6);
+});
+
+test('a pin that still covers its true spot gets no leader line', () => {
+  // Nudged 8 px: the spot (and its 3 px dot) is under the 20 px pin.
+  assert.equal(leaderLine({ x: 100, y: 100 }, { x: 108, y: 100 }, 20, 3), null);
+  // 22 px: the dot would sit on the rim, half under the pin.
+  assert.equal(leaderLine({ x: 100, y: 100 }, { x: 100, y: 122 }, 20, 3), null);
+});
+
+test('a leader line starts at the pin rim, so nothing is drawn under the pin', () => {
+  const line = leaderLine({ x: 100, y: 100 }, { x: 150, y: 100 }, 20, 3);
+  assert.deepEqual(line, { from: { x: 130, y: 100 }, to: { x: 100, y: 100 } });
+  const diagonal = leaderLine({ x: 0, y: 0 }, { x: 30, y: 40 }, 20, 3);
+  assert.ok(diagonal);
+  assert.ok(Math.abs(diagonal.from.x - 18) < 1e-9 && Math.abs(diagonal.from.y - 24) < 1e-9);
 });

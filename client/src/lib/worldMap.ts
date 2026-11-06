@@ -124,3 +124,25 @@ export function spreadPins(points: readonly MapPoint[], minDist: number, iterati
   }
   return out;
 }
+
+/**
+ * The leader line from a pin that `spreadPins` moved back to its true spot `at`, or null when
+ * the pin still covers the spot's `dotRadius` dot. The line starts at the pin's rim
+ * (`pinRadius` from its centre), so nothing is drawn under the pin: a trophy pin's fill is
+ * see-through and would show a dot or line beneath it.
+ */
+export function leaderLine(
+  at: MapPoint,
+  pin: MapPoint,
+  pinRadius: number,
+  dotRadius: number,
+): { from: MapPoint; to: MapPoint } | null {
+  const dx = at.x - pin.x;
+  const dy = at.y - pin.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist <= pinRadius + dotRadius) return null;
+  return {
+    from: { x: pin.x + (dx / dist) * pinRadius, y: pin.y + (dy / dist) * pinRadius },
+    to: { x: at.x, y: at.y },
+  };
+}

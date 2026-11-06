@@ -21,7 +21,7 @@ import {
   type CalendarRound,
   type MapRegion,
 } from "@/lib/seasonCalendar";
-import { boundsBox, fitViewBoxInset, project, spreadPins, viewBoxString, type MapPoint, type ViewBox } from "@/lib/worldMap";
+import { boundsBox, fitViewBoxInset, leaderLine, project, spreadPins, viewBoxString, type MapPoint, type ViewBox } from "@/lib/worldMap";
 import { cn } from "@/lib/utils";
 import worldMapUrl from "@/assets/world_map.svg";
 
@@ -32,6 +32,9 @@ const F1_RED = '#e10600';
 const INSET = { top: 84, bottom: 64 };
 /** Pin footprint (centre to centre, px) that `spreadPins` keeps apart. */
 const PIN_SPACING = 64;
+/** A round pin's circle (px, border included) and the dot that marks a nudged pin's true spot. */
+const PIN_SIZE = 40;
+const LEADER_DOT = 3;
 /**
  * Region bubbles: the circle is full size on desktop and shrinks to `min` on a phone-width map,
  * `spreadPins` keeps them `size + gap` apart, and the `labelBox`-wide button stays `edge` px
@@ -309,15 +312,20 @@ export default function SeasonMap() {
           );
         })}
 
-        {/* Region view: leader lines from a nudged pin back to its true spot. */}
+        {/* Region view: leader lines from a nudged pin's rim back to its true spot. A pin that
+            still covers its spot gets none, and nothing is drawn under a pin: trophy pins are
+            see-through. */}
         {region && !zooming && size.w > 0 && (
           <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true">
-            {pins.filter(({ at, pin }) => Math.hypot(pin.x - at.x, pin.y - at.y) > 3).map(({ row, at, pin }) => (
-              <g key={row.round}>
-                <line x1={at.x} y1={at.y} x2={pin.x} y2={pin.y} stroke="rgba(255,255,255,0.45)" strokeWidth={1} />
-                <circle cx={at.x} cy={at.y} r={3} fill="rgba(255,255,255,0.85)" />
-              </g>
-            ))}
+            {pins.map(({ row, at, pin }) => {
+              const line = leaderLine(at, pin, PIN_SIZE / 2, LEADER_DOT);
+              return line && (
+                <g key={row.round}>
+                  <line x1={line.to.x} y1={line.to.y} x2={line.from.x} y2={line.from.y} stroke="rgba(255,255,255,0.45)" strokeWidth={1} />
+                  <circle cx={line.to.x} cy={line.to.y} r={LEADER_DOT} fill="rgba(255,255,255,0.85)" />
+                </g>
+              );
+            })}
           </svg>
         )}
 
@@ -364,7 +372,7 @@ export default function SeasonMap() {
             >
               <span
                 className="relative flex items-center justify-center rounded-full text-sm font-bold"
-                style={{ width: 40, height: 40, boxShadow: '0 3px 12px rgba(0,0,0,0.5)', ...circle }}
+                style={{ width: PIN_SIZE, height: PIN_SIZE, boxShadow: '0 3px 12px rgba(0,0,0,0.5)', ...circle }}
               >
                 {s === 'current' && !reduceMotion && (
                   <span className="absolute inset-[-2px] rounded-full animate-ping" style={{ border: `2px solid ${F1_RED}`, opacity: 0.55 }} />
