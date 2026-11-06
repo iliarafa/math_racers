@@ -27,7 +27,7 @@ product page.
 | `08_superlicence` | Superlicence granted. | Finish Driving School and it joins your trophy cabinet |
 
 `04`, `05` and the iPad `01` (its header chip) show the current Grand Prix. They
-were last captured on Round 19 / Mexico City. `02` shows Race Day's lap count
+were last captured on Round 20 / São Paulo. `02` shows Race Day's lap count
 (`/56`, from Round 16 / Malaysia) but no circuit name. `06` shows the Reaction Test target
 (`REACTION_LICENCE_MS`, 0.40s), so retake it if that changes.
 
@@ -95,10 +95,19 @@ Captions use Oxanium, the same font as the app.
   half of it, green under it, yellow over), about 2–3 s at Karting, and each answer
   through the simulator panel takes longer than that. So, temporarily, multiply
   `question.botTime` in Game.tsx's practice colouring by 12, build, install, then
-  revert with `git checkout --`, rebuild and re-sync. Answering at a steady pace then
+  revert with `git checkout --`, rebuild and re-sync. To keep the change out of `dist/`
+  and `ios/` altogether (safe while Xcode has the workspace open for an archive), build
+  it with `NODE_ENV=production npx vite build --outDir <scratch>`, revert at once, copy
+  that `index.html` and `assets/` into a copy of the simulator `App.app/public`,
+  `codesign --force --sign - --deep` the copy and install it (done on 2026-11-06).
+  Answering at a steady pace then
   gives a mix of green and purple; wait about 45 s on one question for a yellow. On
   2026-10-27 answering within about 10 s gave purple, pausing about 7 s before ✓ gave
-  green, and a 26 s first answer gave yellow. The 2026-10-27 iPad card stops at Lap 8/30
-  (yellow, purple, green, purple, purple, green, purple) with AERO lit; the iPhone `01` card, retaken the same way, at Lap 7/30 with its next answer typed.
+  green, and a 26 s first answer gave yellow. On 2026-11-06 a single-digit answer
+  (about 11 s) gave purple, two digits (about 13-23 s) gave green or purple, and over
+  about 30 s gave yellow; the simulator tool's `text` action typed nothing into the
+  keypad, so tap each digit. The 2026-11-06 iPad card stops at Lap 8/30
+  (yellow, green, yellow, purple, green, purple, purple) with AERO lit, taken from a
+  short burst because the AERO button pulses; the iPhone `01` card (2026-10-27) at Lap 7/30 with its next answer typed.
 - **App opens in a window** on the iPad (window controls top-left, wallpaper
   around it): tap the controls, then the green button, and it stays full screen.
