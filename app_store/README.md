@@ -25,8 +25,9 @@ product page.
 | `06_driving_school` | Earn your Superlicence | Flashcards, reaction lights and lane racing |
 | `07_strategy` | The whole reference, in your garage | Times tables and number facts whenever you need them |
 | `08_superlicence` | Superlicence granted. | Finish Driving School and it joins your trophy cabinet |
+| `09_season_map` | Race any weekend of the season | Pick a round on the 2026 world map and win its trophy |
 
-`04`, `05` and the iPad `01` (its header chip) show the current Grand Prix. They
+`04`, `05`, `09` and the iPad `01` (its header chip) show the current Grand Prix. They
 were last captured on Round 20 / São Paulo. `02` shows Race Day's lap count
 (`/56`, from Round 16 / Malaysia) but no circuit name. `06` shows the Reaction Test target
 (`REACTION_LICENCE_MS`, 0.40s), so retake it if that changes.
@@ -109,5 +110,15 @@ Captions use Oxanium, the same font as the app.
   keypad, so tap each digit. The 2026-11-06 iPad card stops at Lap 8/30
   (yellow, green, yellow, purple, green, purple, purple) with AERO lit, taken from a
   short burst because the AERO button pulses; the iPhone `01` card (2026-10-27) at Lap 7/30 with its next answer typed.
+- **Season Map (`09`)** is the Americas region view (Hub, MAP, then the AMERICAS
+  bubble), so it shows every pin state: trophy rings, open rounds, this week's red
+  pin and a dimmed future round with its date. The trophies are seeded, like `08`:
+  terminate the app, then append to the `trophies` array in `f1-math-racer-state`
+  (same database and encoding as `08`) Canada gold (`gp:2026:5:canada`) and Miami
+  silver (`gp:2026:4:miami`), each `{ id, season, round, circuitId, name, tier,
+  operation, at }`. Keep trophies off pins that `spreadPins` nudges (Austin and Mexico
+  City here): a trophy pin's fill is see-through, so the leader-line dot under it
+  shows. This week's pin pulses, so take a short burst and pick a frame with the ring.
+  Remove the seeded trophies afterwards.
 - **App opens in a window** on the iPad (window controls top-left, wallpaper
   around it): tap the controls, then the green button, and it stays full screen.
