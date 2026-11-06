@@ -15,7 +15,7 @@
 export const CURRENT_SEASON = 2026;
 
 /** This week's round. */
-export const CURRENT_ROUND = 19;
+export const CURRENT_ROUND = 20;
 
 export type MapRegion = 'americas' | 'europe' | 'middle-east' | 'asia-pacific';
 
@@ -264,8 +264,14 @@ export const SEASON_CALENDAR: readonly CalendarRound[] = [
     },
   },
   {
-    round: 20, circuitId: 'brazil', name: 'SÃO PAULO', circuitName: 'Interlagos', country: 'BRAZIL',
-    lat: -23.7036, lng: -46.6997, region: 'americas', raceDate: '2026-11-08',
+    round: 20, circuitId: 'brazil', name: 'SÃO PAULO', circuitName: 'Interlagos Circuit', country: 'BRAZIL',
+    lat: -23.7036, lng: -46.6997, region: 'americas',
+    weekend: {
+      rainProbability: 0.50, simLapCount: 71,
+      gradient: 'linear-gradient(90deg, #009C3B 0%, #009C3B 40%, #FFDF00 75%, #002776 100%)',
+      bannerTextColor: '#ffffff',
+      welcomeBlurb: 'This week we head to São Paulo — to Interlagos, which means "between the lakes", a hilly lap that runs anticlockwise and where a sudden rainstorm can turn the whole race upside down — for the São Paulo Grand Prix.',
+    },
   },
   {
     round: 21, circuitId: 'lasvegas', name: 'LAS VEGAS', circuitName: 'Las Vegas Strip Circuit', country: 'USA',

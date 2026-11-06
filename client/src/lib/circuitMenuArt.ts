@@ -14,6 +14,7 @@ import malaysiaSetupTrack from '@/assets/malaysia_setup_track.png';
 import singaporeSetupTrack from '@/assets/singapore_setup_track.png';
 import austinSetupTrack from '@/assets/austin_setup_track.png';
 import mexicoSetupTrack from '@/assets/mexico_setup_track.png';
+import brazilSetupTrack from '@/assets/brazil_setup_track.png';
 
 import flagBelgium from '@/assets/flag_belgium.png';
 import flagMonaco from '@/assets/flag_monaco.png';
@@ -28,6 +29,7 @@ import flagMalaysia from '@/assets/flag_malaysia.png';
 import flagSingapore from '@/assets/flag_singapore.png';
 import flagUS from '@/assets/flag_us.png';
 import flagMexico from '@/assets/flag_mexico.png';
+import flagBrazil from '@/assets/flag_brazil.png';
 
 export interface CircuitMenuArt {
   /** Thin-line `_black` silhouette, rendered inverted on the dark setup card. */
@@ -76,6 +78,8 @@ export const CIRCUIT_MENU_ART: Record<string, CircuitMenuArt> = {
   austin: { image: austinSetupTrack, flag: flagUS, invert: false },
   // Mexico City (Autódromo Hermanos Rodríguez), like the rounds before it, uses the full-colour setup map — never inverted.
   mexico: { image: mexicoSetupTrack, flag: flagMexico, invert: false },
+  // São Paulo (Interlagos), like the rounds before it, uses the full-colour setup map — never inverted.
+  brazil: { image: brazilSetupTrack, flag: flagBrazil, invert: false },
 };
 
 /**

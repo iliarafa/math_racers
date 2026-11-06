@@ -114,6 +114,7 @@ export const SIM_LAP_COUNTS: { [circuitId: string]: number } = {
   singapore: 62,
   austin: 56,
   mexico: 71,
+  brazil: 71,
 };
 
 export const getRaceLength = (circuitId: string, simMode: boolean): number => {
@@ -387,6 +388,14 @@ export const CIRCUITS: Circuit[] = [
     name: "MEXICO CITY",
     type: "Variables",
     description: "Autódromo Hermanos Rodríguez, Mexico City",
+    mapUrl: "",
+    paths: { s1: "", s2: "", s3: "" }
+  },
+  {
+    id: "brazil",
+    name: "SÃO PAULO",
+    type: "Variables",
+    description: "Interlagos Circuit, São Paulo",
     mapUrl: "",
     paths: { s1: "", s2: "", s3: "" }
   }

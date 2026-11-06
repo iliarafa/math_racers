@@ -19,6 +19,7 @@ import circuitMalaysia from '@/assets/circuit_malaysia.png';
 import circuitSingapore from '@/assets/circuit_singapore.png';
 import circuitAustin from '@/assets/circuit_austin.png';
 import circuitMexico from '@/assets/circuit_mexico.png';
+import circuitBrazil from '@/assets/circuit_brazil.png';
 
 import melbourneSetupTrack from '@/assets/melbourne_setup_track.png';
 import chinaSetupTrack from '@/assets/china_setup_track.png';
@@ -39,6 +40,7 @@ import malaysiaSetupTrack from '@/assets/malaysia_setup_track.png';
 import singaporeSetupTrack from '@/assets/singapore_setup_track.png';
 import austinSetupTrack from '@/assets/austin_setup_track.png';
 import mexicoSetupTrack from '@/assets/mexico_setup_track.png';
+import brazilSetupTrack from '@/assets/brazil_setup_track.png';
 
 import flagAustralia from '@/assets/flag_australia.png';
 import flagChina from '@/assets/flag_china.png';
@@ -57,6 +59,7 @@ import flagAzerbaijan from '@/assets/flag_azerbaijan.png';
 import flagMalaysia from '@/assets/flag_malaysia.png';
 import flagSingapore from '@/assets/flag_singapore.png';
 import flagMexico from '@/assets/flag_mexico.png';
+import flagBrazil from '@/assets/flag_brazil.png';
 
 /**
  * A raced round's art, keyed by circuitId. Flags are imported here directly, not from
@@ -94,6 +97,7 @@ const WEEKEND_ART: Record<string, WeekendArt> = {
   singapore: { trackImage: circuitSingapore, setupTrackImage: singaporeSetupTrack, flagImage: flagSingapore },
   austin: { trackImage: circuitAustin, setupTrackImage: austinSetupTrack, flagImage: flagUS },
   mexico: { trackImage: circuitMexico, setupTrackImage: mexicoSetupTrack, flagImage: flagMexico },
+  brazil: { trackImage: circuitBrazil, setupTrackImage: brazilSetupTrack, flagImage: flagBrazil },
 };
 
 /** Everything a Grand Prix weekend needs: the calendar row, its text settings and its art. */

@@ -11,6 +11,7 @@ import malaysiaDetail from "@/assets/malaysia_detail_track.png";
 import singaporeDetail from "@/assets/singapore_detail_track.png";
 import austinDetail from "@/assets/austin_detail_track.png";
 import mexicoDetail from "@/assets/mexico_detail_track.png";
+import brazilDetail from "@/assets/brazil_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -745,6 +746,68 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Pierre Gasly', team: 'Alpine', time: '1:17.546' },
         { name: 'Lance Stroll', team: 'Aston Martin', time: '1:17.606' },
         { name: 'Franco Colapinto', team: 'Alpine', time: '1:17.670' },
+      ],
+    },
+  },
+  brazil: {
+    officialName: 'FORMULA 1 MSC CRUISES GRANDE PRÊMIO DE SÃO PAULO 2026',
+    firstHeld: 1973,
+    trackLength: '4.309 km',
+    laps: 71,
+    lapRecord: { driver: 'Valtteri Bottas', time: '1:10.540', year: 2018 },
+    mostWins: { driver: 'Michael Schumacher', count: 4 },
+    summary:
+      'Interlagos means "between the lakes" in Portuguese: the track was built between two big reservoirs on the edge of São Paulo, and its official name, the Autódromo José Carlos Pace, honours the Brazilian driver who won here in 1975. It is one of the few tracks that run anticlockwise, plunging downhill through the Senna S just after the start and climbing a long hill back up to the finish line. Sudden rainstorms have made it the stage for some of the wildest title deciders in Formula 1 history. Michael Schumacher won here four times, more than anyone else.',
+    detailMapImage: brazilDetail,
+    lastYear: {
+      season: 2025,
+      // Verstappen started from the pit lane after parc fermé changes and still finished 3rd.
+      // Piastri's 10-second penalty for the restart collision is already in his gap.
+      race: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:32:01.596' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+10.388' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '+10.750' },
+        { name: 'George Russell', team: 'Mercedes', time: '+15.267' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '+15.749' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+29.630' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+52.642' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+52.873' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '+53.324' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+53.914' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+54.184' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+54.696' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+55.420' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+55.766' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+57.777' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '+58.247' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+1:09.176' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: 'DNF' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: 'DNF' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: 'DNF' },
+      ],
+      // Grand Prix qualifying (a sprint weekend). Bortoleto set no time: his car was still being
+      // rebuilt after his sprint crash, and the stewards let him start.
+      quali: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:09.511' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:09.685' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:09.805' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:09.886' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:09.931' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:09.942' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:09.962' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:09.977' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:10.002' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:10.039' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:10.001' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:10.053' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:10.100' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:10.161' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:10.472' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:10.403' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:10.438' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:10.632' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:10.711' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: 'No time' },
       ],
     },
   },
