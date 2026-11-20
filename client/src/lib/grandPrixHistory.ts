@@ -12,6 +12,7 @@ import singaporeDetail from "@/assets/singapore_detail_track.png";
 import austinDetail from "@/assets/austin_detail_track.png";
 import mexicoDetail from "@/assets/mexico_detail_track.png";
 import brazilDetail from "@/assets/brazil_detail_track.png";
+import lasVegasDetail from "@/assets/lasvegas_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -808,6 +809,68 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Franco Colapinto', team: 'Alpine', time: '1:10.632' },
         { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:10.711' },
         { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: 'No time' },
+      ],
+    },
+  },
+  lasvegas: {
+    officialName: 'FORMULA 1 HEINEKEN LAS VEGAS GRAND PRIX 2026',
+    firstHeld: 2023,
+    trackLength: '6.201 km',
+    laps: 50,
+    lapRecord: { driver: 'Max Verstappen', time: '1:33.365', year: 2025 },
+    mostWins: { driver: 'Max Verstappen', count: 2 },
+    summary:
+      'The Las Vegas Grand Prix is raced on a Saturday night, right down the famous Las Vegas Strip, past giant glowing hotels and fountains, and the track even loops around the Sphere, a huge building covered in lights. At 6.201 km it is one of the longest laps of the season, and the flat-out blast down the Strip is one of the fastest stretches in Formula 1. The cold desert night makes it hard for the drivers to get their tyres warm, so grip is hard to find. Formula 1 first raced in Las Vegas in 1981 and 1982 on a car-park track at Caesars Palace; the Strip race began in 2023, and Max Verstappen has won it twice.',
+    detailMapImage: lasVegasDetail,
+    lastYear: {
+      season: 2025,
+      // Both McLarens were disqualified after the race for excessive plank wear (Norris crossed
+      // the line 2nd, Piastri 4th). Antonelli's 5-second false-start penalty is already in his gap.
+      race: [
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:21:08.429' },
+        { name: 'George Russell', team: 'Mercedes', time: '+23.546' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+30.488' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+30.678' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+34.924' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '+45.257' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '+51.134' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+59.369' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1:00.635' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '+1:10.549' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+1:25.308' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+1:26.974' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1:31.702' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+1 lap' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1 lap' },
+        { name: 'Alexander Albon', team: 'Williams', time: 'DNF' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: 'DNF' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: 'DNF' },
+        { name: 'Lando Norris', team: 'McLaren', time: 'DSQ' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: 'DSQ' },
+      ],
+      // A wet qualifying that began on full wet tyres. Tsunoda qualified 19th but started from the
+      // pit lane after power-unit and parc fermé changes.
+      quali: [
+        { name: 'Lando Norris', team: 'McLaren', time: '1:47.934' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:48.257' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:48.296' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:48.803' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:48.961' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:49.062' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:49.466' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:49.554' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:49.872' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:51.540' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:52.781' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:52.850' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:52.987' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:53.094' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:53.683' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:56.220' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:56.314' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:56.674' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:56.798' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:57.115' },
       ],
     },
   },

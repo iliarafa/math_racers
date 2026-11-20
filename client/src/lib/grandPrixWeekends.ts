@@ -20,6 +20,7 @@ import circuitSingapore from '@/assets/circuit_singapore.png';
 import circuitAustin from '@/assets/circuit_austin.png';
 import circuitMexico from '@/assets/circuit_mexico.png';
 import circuitBrazil from '@/assets/circuit_brazil.png';
+import circuitLasVegas from '@/assets/circuit_lasvegas.png';
 
 import melbourneSetupTrack from '@/assets/melbourne_setup_track.png';
 import chinaSetupTrack from '@/assets/china_setup_track.png';
@@ -41,6 +42,7 @@ import singaporeSetupTrack from '@/assets/singapore_setup_track.png';
 import austinSetupTrack from '@/assets/austin_setup_track.png';
 import mexicoSetupTrack from '@/assets/mexico_setup_track.png';
 import brazilSetupTrack from '@/assets/brazil_setup_track.png';
+import lasVegasSetupTrack from '@/assets/lasvegas_setup_track.png';
 
 import flagAustralia from '@/assets/flag_australia.png';
 import flagChina from '@/assets/flag_china.png';
@@ -98,6 +100,7 @@ const WEEKEND_ART: Record<string, WeekendArt> = {
   austin: { trackImage: circuitAustin, setupTrackImage: austinSetupTrack, flagImage: flagUS },
   mexico: { trackImage: circuitMexico, setupTrackImage: mexicoSetupTrack, flagImage: flagMexico },
   brazil: { trackImage: circuitBrazil, setupTrackImage: brazilSetupTrack, flagImage: flagBrazil },
+  lasvegas: { trackImage: circuitLasVegas, setupTrackImage: lasVegasSetupTrack, flagImage: flagUS },
 };
 
 /** Everything a Grand Prix weekend needs: the calendar row, its text settings and its art. */

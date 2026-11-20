@@ -15,7 +15,7 @@
 export const CURRENT_SEASON = 2026;
 
 /** This week's round. */
-export const CURRENT_ROUND = 20;
+export const CURRENT_ROUND = 21;
 
 export type MapRegion = 'americas' | 'europe' | 'middle-east' | 'asia-pacific';
 
@@ -275,7 +275,13 @@ export const SEASON_CALENDAR: readonly CalendarRound[] = [
   },
   {
     round: 21, circuitId: 'lasvegas', name: 'LAS VEGAS', circuitName: 'Las Vegas Strip Circuit', country: 'USA',
-    lat: 36.1147, lng: -115.1728, region: 'americas', raceDate: '2026-11-21',
+    lat: 36.1147, lng: -115.1728, region: 'americas',
+    weekend: {
+      rainProbability: 0.10, simLapCount: 50,
+      gradient: 'linear-gradient(90deg, #B31942 0%, #6A1B9A 50%, #0A3161 100%)',
+      bannerTextColor: '#ffffff',
+      welcomeBlurb: 'This week we head to Las Vegas — racing at night under the neon lights, flat out down the famous Strip past giant glowing hotels and the huge Sphere — for the Las Vegas Grand Prix.',
+    },
   },
   {
     round: 22, circuitId: 'qatar', name: 'QATAR', circuitName: 'Lusail International Circuit', country: 'QATAR',

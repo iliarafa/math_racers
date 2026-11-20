@@ -15,6 +15,7 @@ import singaporeSetupTrack from '@/assets/singapore_setup_track.png';
 import austinSetupTrack from '@/assets/austin_setup_track.png';
 import mexicoSetupTrack from '@/assets/mexico_setup_track.png';
 import brazilSetupTrack from '@/assets/brazil_setup_track.png';
+import lasVegasSetupTrack from '@/assets/lasvegas_setup_track.png';
 
 import flagBelgium from '@/assets/flag_belgium.png';
 import flagMonaco from '@/assets/flag_monaco.png';
@@ -80,6 +81,8 @@ export const CIRCUIT_MENU_ART: Record<string, CircuitMenuArt> = {
   mexico: { image: mexicoSetupTrack, flag: flagMexico, invert: false },
   // São Paulo (Interlagos), like the rounds before it, uses the full-colour setup map — never inverted.
   brazil: { image: brazilSetupTrack, flag: flagBrazil, invert: false },
+  // Las Vegas (Strip Circuit), like the rounds before it, uses the full-colour setup map — never inverted.
+  lasvegas: { image: lasVegasSetupTrack, flag: flagUS, invert: false },
 };
 
 /**
