@@ -28,7 +28,7 @@ product page.
 | `09_season_map` | Race any weekend of the season | Pick a round on the 2026 world map and win its trophy |
 
 `04`, `05`, `09` and the iPad `01` (its header chip) show the current Grand Prix. They
-were last captured on Round 20 / São Paulo. `02` shows Race Day's lap count
+were last captured on Round 21 / Las Vegas. `02` shows Race Day's lap count
 (`/56`, from Round 16 / Malaysia) but no circuit name. `06` shows the Reaction Test target
 (`REACTION_LICENCE_MS`, 0.40s), so retake it if that changes.
 
@@ -110,6 +110,13 @@ Captions use Oxanium, the same font as the app.
   keypad, so tap each digit. The 2026-11-06 iPad card stops at Lap 8/30
   (yellow, green, yellow, purple, green, purple, purple) with AERO lit, taken from a
   short burst because the AERO button pulses; the iPhone `01` card (2026-10-27) at Lap 7/30 with its next answer typed.
+  On 2026-11-19 each panel answer took about 20 s and x12 gave only green and yellow,
+  so the bundle was rebuilt with x24: answering straight away (about 15-20 s) gave
+  purple, about 40 s green and about 70 s yellow (type the digits, then wait in a
+  background `sleep` before ✓; a long foreground sleep is blocked). A ✓ tapped right
+  after a digit was sometimes dropped, so pause about 0.5 s first. That iPad card stops
+  at Lap 8/30 (purple, green, yellow, purple, green, purple, purple) with AERO lit;
+  pick the burst frame where the AERO button is deepest blue.
 - **Season Map (`09`)** is the Americas region view (Hub, MAP, then the AMERICAS
   bubble), so it shows every pin state: trophy rings, open rounds, this week's red
   pin and a dimmed future round with its date. The trophies are seeded, like `08`:
@@ -119,6 +126,9 @@ Captions use Oxanium, the same font as the app.
   operation, at }`. Keep trophies off pins that `spreadPins` nudges (Austin and Mexico
   City here): a trophy pin's fill is see-through, so the leader-line dot under it
   shows. This week's pin pulses, so take a short burst and pick a frame with the ring.
-  Remove the seeded trophies afterwards.
+  Remove the seeded trophies afterwards. From Round 21 / Las Vegas every Americas round
+  is open, so the view has no dimmed future pin left. Rounds 22 and 23 (Qatar, Abu
+  Dhabi) put this week's red pin in the Middle East, so switch the card to that
+  region's view then.
 - **App opens in a window** on the iPad (window controls top-left, wallpaper
   around it): tap the controls, then the green button, and it stays full screen.
