@@ -13,6 +13,7 @@ import austinDetail from "@/assets/austin_detail_track.png";
 import mexicoDetail from "@/assets/mexico_detail_track.png";
 import brazilDetail from "@/assets/brazil_detail_track.png";
 import lasVegasDetail from "@/assets/lasvegas_detail_track.png";
+import qatarDetail from "@/assets/qatar_detail_track.png";
 
 export type Driver = { name: string; team: string };
 export type PodiumEntry = Driver & { time?: string };
@@ -871,6 +872,68 @@ export const GP_HISTORY: Record<string, GrandPrixHistory> = {
         { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:56.674' },
         { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:56.798' },
         { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:57.115' },
+      ],
+    },
+  },
+  qatar: {
+    officialName: 'FORMULA 1 QATAR AIRWAYS QATAR GRAND PRIX 2026',
+    firstHeld: 2021,
+    trackLength: '5.419 km',
+    laps: 57,
+    lapRecord: { driver: 'Lando Norris', time: '1:22.384', year: 2024 },
+    mostWins: { driver: 'Max Verstappen', count: 3 },
+    summary:
+      'The Qatar Grand Prix is a night race in the desert, held under bright floodlights at the Lusail International Circuit, just north of Doha. The track was built in 2004 for motorbike racing, so it is fast and flowing, full of quick sweeping corners, with a main straight more than a kilometre long. Those fast corners are so hard on the tyres that each set may only run a limited number of laps, so every driver has to stop for new tyres at least twice. Formula 1 first raced here in 2021, when Lewis Hamilton won, and Max Verstappen has won every Qatar Grand Prix since.',
+    detailMapImage: qatarDetail,
+    lastYear: {
+      season: 2025,
+      // Each set of tyres could run at most 25 laps. Stroll and Hadjar retired with punctures near
+      // the end but were still classified; Bearman and Hülkenberg were not classified.
+      race: [
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:24:38.241' },
+        { name: 'Oscar Piastri', team: 'McLaren', time: '+7.995' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '+22.665' },
+        { name: 'Lando Norris', team: 'McLaren', time: '+23.315' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '+28.317' },
+        { name: 'George Russell', team: 'Mercedes', time: '+48.599' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '+54.045' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '+56.785' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '+1:00.073' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '+1:01.770' },
+        { name: 'Alexander Albon', team: 'Williams', time: '+1:06.931' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '+1:17.730' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '+1:24.812' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '+1 lap' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '+1 lap' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '+1 lap' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: 'DNF' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: 'DNF' },
+        { name: 'Oliver Bearman', team: 'Haas', time: 'DNF' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: 'DNF' },
+      ],
+      // Bortoleto qualified 14th and started 19th after a five-place grid penalty carried over
+      // from Las Vegas; Colapinto started from the pit lane.
+      quali: [
+        { name: 'Oscar Piastri', team: 'McLaren', time: '1:19.387' },
+        { name: 'Lando Norris', team: 'McLaren', time: '1:19.495' },
+        { name: 'Max Verstappen', team: 'Red Bull', time: '1:19.651' },
+        { name: 'George Russell', team: 'Mercedes', time: '1:19.662' },
+        { name: 'Kimi Antonelli', team: 'Mercedes', time: '1:19.846' },
+        { name: 'Isack Hadjar', team: 'Racing Bulls', time: '1:20.114' },
+        { name: 'Carlos Sainz', team: 'Williams', time: '1:20.287' },
+        { name: 'Fernando Alonso', team: 'Aston Martin', time: '1:20.418' },
+        { name: 'Pierre Gasly', team: 'Alpine', time: '1:20.477' },
+        { name: 'Charles Leclerc', team: 'Ferrari', time: '1:20.561' },
+        { name: 'Nico Hülkenberg', team: 'Kick Sauber', time: '1:20.353' },
+        { name: 'Liam Lawson', team: 'Racing Bulls', time: '1:20.433' },
+        { name: 'Oliver Bearman', team: 'Haas', time: '1:20.438' },
+        { name: 'Gabriel Bortoleto', team: 'Kick Sauber', time: '1:20.534' },
+        { name: 'Alexander Albon', team: 'Williams', time: '1:20.629' },
+        { name: 'Yuki Tsunoda', team: 'Red Bull', time: '1:20.761' },
+        { name: 'Esteban Ocon', team: 'Haas', time: '1:20.864' },
+        { name: 'Lewis Hamilton', team: 'Ferrari', time: '1:20.907' },
+        { name: 'Lance Stroll', team: 'Aston Martin', time: '1:21.058' },
+        { name: 'Franco Colapinto', team: 'Alpine', time: '1:21.137' },
       ],
     },
   },

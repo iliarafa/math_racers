@@ -16,6 +16,7 @@ import austinSetupTrack from '@/assets/austin_setup_track.png';
 import mexicoSetupTrack from '@/assets/mexico_setup_track.png';
 import brazilSetupTrack from '@/assets/brazil_setup_track.png';
 import lasVegasSetupTrack from '@/assets/lasvegas_setup_track.png';
+import qatarSetupTrack from '@/assets/qatar_setup_track.png';
 
 import flagBelgium from '@/assets/flag_belgium.png';
 import flagMonaco from '@/assets/flag_monaco.png';
@@ -31,6 +32,7 @@ import flagSingapore from '@/assets/flag_singapore.png';
 import flagUS from '@/assets/flag_us.png';
 import flagMexico from '@/assets/flag_mexico.png';
 import flagBrazil from '@/assets/flag_brazil.png';
+import flagQatar from '@/assets/flag_qatar.png';
 
 export interface CircuitMenuArt {
   /** Thin-line `_black` silhouette, rendered inverted on the dark setup card. */
@@ -83,6 +85,8 @@ export const CIRCUIT_MENU_ART: Record<string, CircuitMenuArt> = {
   brazil: { image: brazilSetupTrack, flag: flagBrazil, invert: false },
   // Las Vegas (Strip Circuit), like the rounds before it, uses the full-colour setup map — never inverted.
   lasvegas: { image: lasVegasSetupTrack, flag: flagUS, invert: false },
+  // Qatar (Lusail), like the rounds before it, uses the full-colour setup map — never inverted.
+  qatar: { image: qatarSetupTrack, flag: flagQatar, invert: false },
 };
 
 /**

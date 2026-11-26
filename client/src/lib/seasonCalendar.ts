@@ -15,7 +15,7 @@
 export const CURRENT_SEASON = 2026;
 
 /** This week's round. */
-export const CURRENT_ROUND = 21;
+export const CURRENT_ROUND = 22;
 
 export type MapRegion = 'americas' | 'europe' | 'middle-east' | 'asia-pacific';
 
@@ -285,7 +285,13 @@ export const SEASON_CALENDAR: readonly CalendarRound[] = [
   },
   {
     round: 22, circuitId: 'qatar', name: 'QATAR', circuitName: 'Lusail International Circuit', country: 'QATAR',
-    lat: 25.49, lng: 51.4542, region: 'middle-east', raceDate: '2026-11-29',
+    lat: 25.49, lng: 51.4542, region: 'middle-east',
+    weekend: {
+      rainProbability: 0.05, simLapCount: 57,
+      gradient: 'linear-gradient(90deg, #5E0E26 0%, #8A1538 50%, #FFFFFF 100%)',
+      bannerTextColor: '#ffffff',
+      welcomeBlurb: 'This week we head to Qatar — a night race under bright floodlights in the desert, on a fast, flowing track first built for motorbikes, with a main straight more than a kilometre long — for the Qatar Grand Prix.',
+    },
   },
   {
     round: 23, circuitId: 'abudhabi', name: 'ABU DHABI', circuitName: 'Yas Marina Circuit', country: 'UAE',
