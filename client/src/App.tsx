@@ -12,6 +12,7 @@ import { Volume2, VolumeX } from "lucide-react";
 import { initSuperlicenceCelebration } from "@/lib/drivingSchoolLicence";
 import { applyPageMeta } from "@/lib/webMeta";
 import { Analytics } from "@vercel/analytics/react";
+import { Capacitor } from "@capacitor/core";
 
 // Decide once, before any page renders, whether the Superlicence splash is still owed.
 initSuperlicenceCelebration();
@@ -179,6 +180,13 @@ function WebMeta() {
   return null;
 }
 
+/**
+ * Vercel Web Analytics runs in browser builds only. The iPhone/iPad app is a kids'
+ * app, where Apple restricts third-party analytics, and it has no `/_vercel/insights`
+ * endpoint to send to anyway.
+ */
+const WEB_ANALYTICS = !Capacitor.isNativePlatform();
+
 function App() {
   return (
     <ErrorBoundary>
@@ -190,7 +198,7 @@ function App() {
             <MenuMusic />
             <PersistentVideo />
             <Router />
-            <Analytics />
+            {WEB_ANALYTICS && <Analytics />}
           </TooltipProvider>
         </PurchaseProvider>
       </QueryClientProvider>
