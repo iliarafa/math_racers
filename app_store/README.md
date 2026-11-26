@@ -28,7 +28,7 @@ product page.
 | `09_season_map` | Race any weekend of the season | Pick a round on the 2026 world map and win its trophy |
 
 `04`, `05`, `09` and the iPad `01` (its header chip) show the current Grand Prix. They
-were last captured on Round 21 / Las Vegas. `02` shows Race Day's lap count
+were last captured on Round 22 / Qatar. `02` shows Race Day's lap count
 (`/56`, from Round 16 / Malaysia) but no circuit name. `06` shows the Reaction Test target
 (`REACTION_LICENCE_MS`, 0.40s), so retake it if that changes.
 
@@ -116,7 +116,9 @@ Captions use Oxanium, the same font as the app.
   background `sleep` before ✓; a long foreground sleep is blocked). A ✓ tapped right
   after a digit was sometimes dropped, so pause about 0.5 s first. That iPad card stops
   at Lap 8/30 (purple, green, yellow, purple, green, purple, purple) with AERO lit;
-  pick the burst frame where the AERO button is deepest blue.
+  pick the burst frame where the AERO button is deepest blue. On 2026-11-26 (Qatar) the
+  same x24 bundle gave that sequence again: answers in under about 25 s purple, about
+  40 s green, about 70 s yellow.
 - **Season Map (`09`)** is the Americas region view (Hub, MAP, then the AMERICAS
   bubble), so it shows every pin state: trophy rings, open rounds, this week's red
   pin and a dimmed future round with its date. The trophies are seeded, like `08`:
@@ -128,7 +130,9 @@ Captions use Oxanium, the same font as the app.
   shows. This week's pin pulses, so take a short burst and pick a frame with the ring.
   Remove the seeded trophies afterwards. From Round 21 / Las Vegas every Americas round
   is open, so the view has no dimmed future pin left. Rounds 22 and 23 (Qatar, Abu
-  Dhabi) put this week's red pin in the Middle East, so switch the card to that
-  region's view then.
+  Dhabi) put this week's red pin in the Middle East, so since Round 22 the card is the
+  MIDDLE EAST view instead, with one seeded trophy: Baku gold (`gp:2026:15:baku`). It
+  holds only three pins (Baku, Qatar and Abu Dhabi), and at Round 22 that shows a
+  trophy ring, this week's red pin and Abu Dhabi dimmed with "6 DEC".
 - **App opens in a window** on the iPad (window controls top-left, wallpaper
   around it): tap the controls, then the green button, and it stays full screen.
