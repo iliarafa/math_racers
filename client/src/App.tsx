@@ -11,6 +11,7 @@ import { isMenuMusicRoute } from "@/lib/menuMusic";
 import { Volume2, VolumeX } from "lucide-react";
 import { initSuperlicenceCelebration } from "@/lib/drivingSchoolLicence";
 import { applyPageMeta } from "@/lib/webMeta";
+import { Analytics } from "@vercel/analytics/react";
 
 // Decide once, before any page renders, whether the Superlicence splash is still owed.
 initSuperlicenceCelebration();
@@ -189,6 +190,7 @@ function App() {
             <MenuMusic />
             <PersistentVideo />
             <Router />
+            <Analytics />
           </TooltipProvider>
         </PurchaseProvider>
       </QueryClientProvider>
